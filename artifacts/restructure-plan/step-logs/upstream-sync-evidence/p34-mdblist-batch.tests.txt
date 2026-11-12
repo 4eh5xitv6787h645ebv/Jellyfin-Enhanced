@@ -1,0 +1,84 @@
+# on 08b270a2 (tree of ad32d941 plus the ledger)
+$ dotnet test tests/backend/JE.Tests.csproj -c Release -p:JellyfinTarget=jf12 --no-build --filter "FullyQualifiedName~MdblistBatchAnswerTests|FullyQualifiedName~RatingSourceTests|FullyQualifiedName~TaskMetadataTests" --logger "console;verbosity=normal"
+  Passed JE.Tests.TaskMetadataTests.ArrSyncKeepsTagsOfAServiceThatCouldNotBeRead(failing: "sonarr", failure: "null")
+  Passed JE.Tests.TaskMetadataTests.ArrSyncKeepsTagsOfAServiceThatCouldNotBeRead(failing: "sonarr", failure: "network")
+  Passed JE.Tests.TaskMetadataTests.ArrSyncKeepsTagsOfAServiceThatCouldNotBeRead(failing: "sonarr", failure: "timeout")
+  Passed JE.Tests.TaskMetadataTests.ArrSyncKeepsTagsOfAServiceThatCouldNotBeRead(failing: "radarr", failure: "corrupt")
+  Passed JE.Tests.TaskMetadataTests.ArrSyncKeepsTagsOfAServiceThatCouldNotBeRead(failing: "radarr", failure: "status")
+  Passed JE.Tests.TaskMetadataTests.ArrSyncKeepsTagsOfAServiceThatCouldNotBeRead(failing: "sonarr", failure: "corrupt")
+  Passed JE.Tests.TaskMetadataTests.ArrSyncKeepsTagsOfAServiceThatCouldNotBeRead(failing: "radarr", failure: "json")
+  Passed JE.Tests.TaskMetadataTests.ArrSyncKeepsTagsOfAServiceThatCouldNotBeRead(failing: "radarr", failure: "network")
+  Passed JE.Tests.TaskMetadataTests.ArrSyncKeepsTagsOfAServiceThatCouldNotBeRead(failing: "radarr", failure: "timeout")
+  Passed JE.Tests.TaskMetadataTests.ArrSyncKeepsTagsOfAServiceThatCouldNotBeRead(failing: "radarr", failure: "null")
+  Passed JE.Tests.TaskMetadataTests.ArrSyncKeepsTagsOfAServiceThatCouldNotBeRead(failing: "sonarr", failure: "status") [< 1 ms]
+  Passed JE.Tests.TaskMetadataTests.ArrSyncKeepsTagsOfAServiceThatCouldNotBeRead(failing: "sonarr", failure: "json")
+  Passed JE.Tests.TaskMetadataTests.RatingsFetchHonorsReserveDeduplicatesAndSkipsWarmCache(remaining: 401, expectedBatches: 1, itemCount: 151)
+  Passed JE.Tests.TaskMetadataTests.RatingsFetchHonorsReserveDeduplicatesAndSkipsWarmCache(remaining: 1000, expectedBatches: 1, itemCount: 1)
+  Passed JE.Tests.TaskMetadataTests.RatingsFetchHonorsReserveDeduplicatesAndSkipsWarmCache(remaining: 400, expectedBatches: 0, itemCount: 1)
+  Passed JE.Tests.TaskMetadataTests.RatingsFetchHonorsReserveDeduplicatesAndSkipsWarmCache(remaining: 1000, expectedBatches: 2, itemCount: 151)
+  Passed JE.Tests.TaskMetadataTests.RatingsTasksCancelBeforeWritingOrFetchingMedia(fetch: False)
+  Passed JE.Tests.TaskMetadataTests.RatingsTasksCancelBeforeWritingOrFetchingMedia(fetch: True)
+  Passed JE.Tests.TaskMetadataTests.ArrSyncWithABlankPrefixUsesTheDefaultAndKeepsOtherTags(prefix: "")
+  Passed JE.Tests.TaskMetadataTests.ArrSyncWithABlankPrefixUsesTheDefaultAndKeepsOtherTags(prefix: null)
+  Passed JE.Tests.TaskMetadataTests.RatingsSyncFillsMissingPreservesOrOverwritesExistingAndIsIdempotent(overwrite: False)
+  Passed JE.Tests.TaskMetadataTests.RatingsSyncFillsMissingPreservesOrOverwritesExistingAndIsIdempotent(overwrite: True)
+  Passed JE.Tests.TaskMetadataTests.AudioLanguageSyncReplacesStalePrefixedTagsAndIsIdempotent
+  Passed JE.Tests.TaskMetadataTests.ArrSyncPreservesUnrelatedTagsFiltersLabelsAndDoesNotRewriteIdenticalResults
+  Passed JE.Tests.Features.MediaTags.RatingSourceTests.NativePostersResolveTheAnimeAndCriticSourcesOnTheirOwnScalesWithALogoEach
+  Passed JE.Tests.Features.MediaTags.RatingSourceTests.ATitleIsPendingOnlyWhileItsNamedSourceScoresAreStillDue
+  Passed JE.Tests.Features.MediaTags.RatingSourceTests.QuotaExhaustionAndFailedBatchesUseShortRetryWithoutRepeatedUpstreamCalls(remaining: 1000, status: 500)
+  Passed JE.Tests.Features.MediaTags.RatingSourceTests.QuotaExhaustionAndFailedBatchesUseShortRetryWithoutRepeatedUpstreamCalls(remaining: 5, status: 200)
+  Passed JE.Tests.Features.MediaTags.RatingSourceTests.BackgroundReconciliationAndUpdatesRespectConfiguredReserve(caller: "update", remaining: 401, expectedRequests: 1)
+  Passed JE.Tests.Features.MediaTags.RatingSourceTests.BackgroundReconciliationAndUpdatesRespectConfiguredReserve(caller: "update", remaining: 400, expectedRequests: 0)
+  Passed JE.Tests.Features.MediaTags.RatingSourceTests.BackgroundReconciliationAndUpdatesRespectConfiguredReserve(caller: "reconcile", remaining: 399, expectedRequests: 0)
+  Passed JE.Tests.Features.MediaTags.RatingSourceTests.BackgroundReconciliationAndUpdatesRespectConfiguredReserve(caller: "update", remaining: 399, expectedRequests: 0)
+  Passed JE.Tests.Features.MediaTags.RatingSourceTests.NormalizesPreferencesAndPreservesLegacyAndEmptyLists
+  Passed JE.Tests.Features.MediaTags.RatingSourceTests.NamedSourceDotsFollowTheEffectiveNativeDensity(layout: "caption", compact: False)
+  Passed JE.Tests.Features.MediaTags.RatingSourceTests.NamedSourceDotsFollowTheEffectiveNativeDensity(layout: "corners", compact: True)
+  Passed JE.Tests.Features.MediaTags.RatingSourceTests.NamedSourceDotsFollowTheEffectiveNativeDensity(layout: "bands", compact: True)
+  Passed JE.Tests.Features.MediaTags.RatingSourceTests.NamedSourceDotsFollowTheEffectiveNativeDensity(layout: "minimal", compact: False) [< 1 ms]
+  Passed JE.Tests.Features.MediaTags.RatingSourceTests.NamedSourceDotsFollowTheEffectiveNativeDensity(layout: "summary", compact: False) [< 1 ms]
+  Passed JE.Tests.Features.MediaTags.RatingSourceTests.NativeRendererDrawsEverySourceLogoOrCompactDotAndKeepsTileColoursDistinct(compact: False)
+  Passed JE.Tests.Features.MediaTags.RatingSourceTests.NativeRendererDrawsEverySourceLogoOrCompactDotAndKeepsTileColoursDistinct(compact: True)
+  Passed JE.Tests.Features.MediaTags.RatingSourceTests.NativeSourcesFollowOrderMinimumCapStylesAndDigest
+  Passed JE.Tests.Features.MediaTags.RatingSourceTests.BatchEndpointIncludesRatingsAndNeverReturnsInaccessibleItems
+  Passed JE.Tests.Features.MediaTags.RatingSourceTests.EnrichmentRequiresEnabledNamedSourceDemand(adminOn: False, userOn: True, fetches: True)
+  Passed JE.Tests.Features.MediaTags.RatingSourceTests.EnrichmentRequiresEnabledNamedSourceDemand(adminOn: False, userOn: False, fetches: False)
+  Passed JE.Tests.Features.MediaTags.RatingSourceTests.EnrichmentRequiresEnabledNamedSourceDemand(adminOn: True, userOn: False, fetches: True)
+  Passed JE.Tests.Features.MediaTags.RatingSourceTests.FlushWarmsTheChangedTitlesInBatchesOutsideTheRebuildLock(titles: 160, expectedBatches: 2)
+  Passed JE.Tests.Features.MediaTags.RatingSourceTests.FlushWarmsTheChangedTitlesInBatchesOutsideTheRebuildLock(titles: 20, expectedBatches: 1)
+  Passed JE.Tests.Features.MediaTags.RatingSourceTests.LegacyFloatProjectionMatchesBatchAndBrowserRounding(community: 0.449999988, critic: 59.5, communityText: "0.5", criticText: "60%", fresh: True) [< 1 ms]
+  Passed JE.Tests.Features.MediaTags.RatingSourceTests.LegacyFloatProjectionMatchesBatchAndBrowserRounding(community: 1.00000001E-07, critic: 59.5, communityText: "—", criticText: "60%", fresh: True) [< 1 ms]
+  Passed JE.Tests.Features.MediaTags.RatingSourceTests.BatchesAreBoundedShareFreshCacheAndStopAtQuotaFloor
+  Passed JE.Tests.Features.MediaTags.RatingSourceTests.CancelledSingleTitleFetchPublishesNothingAndRetriesImmediately(retry: "warmer")
+  Passed JE.Tests.Features.MediaTags.RatingSourceTests.CancelledSingleTitleFetchPublishesNothingAndRetriesImmediately(retry: "single")
+  Passed JE.Tests.Features.MediaTags.RatingSourceTests.CancelledEnrichmentDoesNotCacheFailureAndCanRetryImmediately(cancelPath: "/user")
+  Passed JE.Tests.Features.MediaTags.RatingSourceTests.CancelledEnrichmentDoesNotCacheFailureAndCanRetryImmediately(cancelPath: "/tmdb/movie/")
+  Passed JE.Tests.Features.MediaTags.RatingSourceTests.UnknownQuotaStatusSkipsBackgroundEnrichmentAndLeavesTitlesRetryable(userStatus: 503)
+  Passed JE.Tests.Features.MediaTags.RatingSourceTests.UnknownQuotaStatusSkipsBackgroundEnrichmentAndLeavesTitlesRetryable(userStatus: 429) [< 1 ms]
+  Passed JE.Tests.Features.MediaTags.RatingSourceTests.OnDemandBuildNeverWaitsForMdblistAndTheBackgroundWarmRetiresTheNativeMemo
+  Passed JE.Tests.Features.MediaTags.RatingSourceTests.ABrowserIsToldToAskAgainWhenAnAnswerStopsBeingCurrent
+  Passed JE.Tests.Features.MediaTags.RatingSourceTests.CacheProjectionUsesSeriesForChildrenAndRequiresKey
+  Passed JE.Tests.Features.MediaTags.RatingSourceTests.UpdatesArrivingDuringTheWarmWaitForTheNextFlushInsteadOfWarmingUnderTheRebuildLock
+  Passed JE.Tests.Features.MediaTags.RatingSourceTests.FlushWithNoWarmDemandResolvesEachChangedItemOnce
+  Passed JE.Tests.Features.MediaTags.RatingSourceTests.AnimeAndCriticSourcesMapFromMdblistInTheirNativeUnits [< 1 ms]
+  Passed JE.Tests.Features.MediaTags.RatingSourceTests.ShutdownPersistsQueuedUpdatesWithoutWaitingOnMdblist
+  Passed JE.Tests.Features.MediaTags.RatingSourceTests.AnItemLookFallingBackToCornersDrawsFullSourceIconsAndOneInCompactCornersDrawsDots
+  Passed JE.Tests.Features.MediaTags.RatingSourceTests.CacheCloneComparisonAndNativeHashesIncludeEverySourceFact
+  Passed JE.Tests.Features.MediaTags.RatingSourceTests.RemovingTheConfiguredKeyDropsCachedAndMemoizedSourceFactsWithoutMutatingTheSharedEntry [< 1 ms]
+  Passed JE.Tests.Features.MediaTags.RatingSourceTests.FlushWithLogosOnResolvesEachChangedItemOnceWithoutATmdbKey(tmdbKey: "tmdb-fixture-key", expectedLookups: 400)
+  Passed JE.Tests.Features.MediaTags.RatingSourceTests.FlushWithLogosOnResolvesEachChangedItemOnceWithoutATmdbKey(tmdbKey: "", expectedLookups: 200)
+  Passed JE.Tests.Features.MediaTags.RatingSourceTests.OverlappingBulkAndIncrementalBatchesNeverCrossTheReserve
+  Passed JE.Tests.Features.MediaTags.RatingSourceTests.ForcedAccountStatusRefreshStartedBeforeABatchIsReconciledWithItsSpend
+  Passed JE.Tests.Features.MediaTags.RatingSourceTests.LateAccountStatusFromTheBulkRunnerNeverRestoresSpentQuota
+  Passed JE.Tests.Features.MediaTags.RatingSourceTests.AvailabilityRefreshWaitsForRebuildAndPreservesNewerMetadata
+  Passed JE.Tests.Features.MediaTags.RatingSourceTests.ATagDataRequestAnswersBeforeAHeldFetchAndAFreshTitleNeverWaitsBehindIt
+  Passed JE.Tests.Features.MediaTags.RatingSourceTests.SourceDemandReadsUsersSettingsOncePerIntervalAndAUserSaveFlipsItAtOnce
+  Passed JE.Tests.Features.MediaTags.RatingSourceTests.AConfirmedAnswerReplacesKeptScoresAndAFailureWithoutScoresStaysAPlaceholder [< 1 ms]
+  Passed JE.Tests.Features.MediaTags.RatingSourceTests.MapsNormalizedAndRawNativeValuesWithoutInventingMissingScores [< 1 ms]
+  Passed JE.Tests.Features.MediaTags.RatingSourceTests.AFailedRefreshKeepsTheLastGoodScoresAndRetriesAfterTheShortTtl
+  Passed JE.Tests.Features.DetailsProviders.MdblistBatchAnswerTests.ATitleTheBatchAnswerLeavesOutOrReturnsWithoutScoresGetsItsScoresOnPosterAndDetailsPage
+  Passed JE.Tests.Features.DetailsProviders.MdblistBatchAnswerTests.ScoresTheDetailsPageLooksUpReachTheTitlesPosterInTheServerTagCache
+  Passed JE.Tests.Features.DetailsProviders.MdblistBatchAnswerTests.AnAnswerThatIsNotAListConfirmsNoTitleAndKeepsTheLastGoodScores
+$ (the same filter, default logger)
+Passed!  - Failed:     0, Passed:    80, Skipped:     0, Total:    80, Duration: … - JE.Tests.dll (net10.0)

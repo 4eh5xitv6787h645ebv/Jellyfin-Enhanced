@@ -1,0 +1,73 @@
+# Upstream dcceed784c against the rewrite's ad32d941: changed lines of the product .cs files, indentation stripped
+$ git show dcceed784c -- '*.cs' ':!tests/*'   (upstream: <)
+$ git show ad32d941 -- '*.cs' ':!tests/*'     (rewrite:  >)
+$ diff <(changed lines of upstream) <(changed lines of the rewrite)
+0a1
+> +using Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.PublicApi;
+2c3
+< +if (TagSourceRatings.FromMdblist(cached) != TagSourceRatings.FromMdblist(fetched)) TagCacheService.Instance?.PublishSourceRatings(tmdbId);
+---
+> +if (TagSourceRatings.FromMdblist(cached) != TagSourceRatings.FromMdblist(fetched)) MediaTagsApi.TagCache.PublishSourceRatings(tmdbId);
+32a34,36
+> +
+> +/// <summary><c>TagCacheService.Instance?.PublishSourceRatings(tmdbId)</c>.</summary>
+> +public static void PublishSourceRatings(string tmdbId) => TagCacheService.Instance?.PublishSourceRatings(tmdbId);
+
+# Upstream's new test file against the rewrite's
+$ diff <(git show dcceed784c:tests/backend/Integrations/MdblistBatchAnswerTests.cs) tests/backend/Features/DetailsProviders/MdblistBatchAnswerTests.cs
+3,6c3,7
+< using Jellyfin.Plugin.JellyfinEnhanced.Controllers;
+< using Jellyfin.Plugin.JellyfinEnhanced.Helpers;
+< using Jellyfin.Plugin.JellyfinEnhanced.Model;
+< using Jellyfin.Plugin.JellyfinEnhanced.Services;
+---
+> using Jellyfin.Plugin.JellyfinEnhanced.Features.DetailsProviders;
+> using Jellyfin.Plugin.JellyfinEnhanced.Features.DetailsProviders.Services;
+> using Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.Services;
+> using Jellyfin.Plugin.JellyfinEnhanced.Shared.Mdblist;
+> using Jellyfin.Plugin.JellyfinEnhanced.Shared.MediaTags;
+13c14
+< namespace JE.Tests;
+---
+> namespace JE.Tests.Features.DetailsProviders;
+64c65
+<     private static JellyfinEnhancedController DetailsPage(ApiPluginFixture plugin, IntegrationTransport transport, MdblistService service)
+---
+>     private static JeDetailsProvidersController DetailsPage(ApiPluginFixture plugin, IntegrationTransport transport, MdblistService service)
+66c67
+<         var controller = ApiAssetTests.Controller(plugin.Core, transport, service);
+---
+>         var controller = (JeDetailsProvidersController)ApiAssetTests.Controller(typeof(JeDetailsProvidersController), plugin.Core, transport, service);
+
+# The two changed tests: upstream (first) and the rewrite (second), changed lines
+--- a/tests/backend/PosterTags/RatingSourceTests.cs
++++ b/tests/backend/PosterTags/RatingSourceTests.cs
+-        Assert.Equal(fetches ? 2 : 0, requests);
++        // Status, the batch, and the title's own lookup: the batch answer ("[]") left it out.
++        Assert.Equal(fetches ? 3 : 0, requests);
+--- a/tests/backend/ScheduledTasks/TaskMetadataTests.cs
++++ b/tests/backend/ScheduledTasks/TaskMetadataTests.cs
+-            batches.Add(await request.Content!.ReadAsStringAsync(ct));
+-            return IntegrationTransport.Response("[]");
++            var batch = await request.Content!.ReadAsStringAsync(ct);
++            batches.Add(batch);
++            // MDBList answers each requested title (an answer that leaves one out sends it to its own lookup).
++            using var requested = JsonDocument.Parse(batch);
++            return IntegrationTransport.Response(JsonSerializer.Serialize(requested.RootElement.GetProperty("ids").EnumerateArray()
++                .Select(id => new { ids = new { tmdb = id.GetInt64() }, ratings = new[] { new { source = "imdb", score = 81 } } })));
+---
+--- a/tests/backend/Features/MediaTags/PosterTags/RatingSourceTests.cs
++++ b/tests/backend/Features/MediaTags/PosterTags/RatingSourceTests.cs
+-        Assert.Equal(fetches ? 2 : 0, requests);
++        // Status, the batch, and the title's own lookup: the batch answer ("[]") left it out.
++        Assert.Equal(fetches ? 3 : 0, requests);
+--- a/tests/backend/ScheduledTasks/TaskMetadataTests.cs
++++ b/tests/backend/ScheduledTasks/TaskMetadataTests.cs
+-            batches.Add(await request.Content!.ReadAsStringAsync(ct));
+-            return IntegrationTransport.Response("[]");
++            var batch = await request.Content!.ReadAsStringAsync(ct);
++            batches.Add(batch);
++            // MDBList answers each requested title (an answer that leaves one out sends it to its own lookup).
++            using var requested = JsonDocument.Parse(batch);
++            return IntegrationTransport.Response(JsonSerializer.Serialize(requested.RootElement.GetProperty("ids").EnumerateArray()
++                .Select(id => new { ids = new { tmdb = id.GetInt64() }, ratings = new[] { new { source = "imdb", score = 81 } } })));
