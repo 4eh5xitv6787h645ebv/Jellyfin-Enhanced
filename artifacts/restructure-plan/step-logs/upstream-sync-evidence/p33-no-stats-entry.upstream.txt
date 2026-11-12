@@ -1,4 +1,4 @@
-$ je12 browse '#/home' --script p33-no-stats-entry.mjs 
+$ je12 browse '#/home' --script p33-no-stats-entry.mjs
 # deployed build: upstream-c55c758ede4a
 SCRIPT {"afterFirstPress":{"nativeStats":"absent","jeOverlay":1,"actionSheets":1,"sheetVisible":true,"hidingStyles":0,"menusOpened":1},"later":{"nativeStats":"absent","jeOverlay":1,"actionSheets":1,"sheetVisible":true,"hidingStyles":0,"menusOpened":1},"afterSecondPress":{"nativeStats":"absent","jeOverlay":0,"actionSheets":1,"sheetVisible":true,"hidingStyles":0,"menusOpened":1}}
 CONSOLE Failed to load resource: the server responded with a status of 404 (Not Found) /JellyfinEnhanced/cdn/flag-icons/flags/4x3/kr.svg
