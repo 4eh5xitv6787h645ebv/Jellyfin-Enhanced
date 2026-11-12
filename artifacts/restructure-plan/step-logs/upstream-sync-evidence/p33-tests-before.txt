@@ -1,0 +1,105 @@
+$ TZ=UTC LANG=en_US.UTF-8 LC_ALL=en_US.UTF-8 node --test tests/frontend/features/player/features-playback-info.test.mjs
+# in a scratch worktree of 9d1e99e0 (the starting commit, its committed js/ outputs) with the port's test file copied in
+✖ the I shortcut toggles jellyfin-web's own stats panel through the settings menu, which is never shown (2093.582631ms)
+✖ Firefox: the OSD click guard does not swallow the clicks that open the stats panel (2012.708694ms)
+✖ a menu without the Playback Info entry is closed unseen and the plugin overlay opens instead (9.810231ms)
+✔ without the OSD settings button the plugin overlay toggles at once and nothing is hidden (7.851045ms)
+✖ a second press while the menu is still opening does not open a second menu (2011.651778ms)
+✖ leaving the player while the menu opens leaves no overlay and no hidden dialogs behind (207.530366ms)
+ℹ tests 6
+ℹ suites 0
+ℹ pass 1
+ℹ fail 5
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 6581.308661
+
+✖ failing tests:
+
+test at tests/frontend/features/player/features-playback-info.test.mjs:87:1
+✖ the I shortcut toggles jellyfin-web's own stats panel through the settings menu, which is never shown (2093.582631ms)
+  AssertionError [ERR_ASSERTION]: native stats did not open: {"stats":"absent","overlay":1,"sheets":0,"hiding":0}
+      at TestContext.<anonymous> (file://<scratch worktree of 9d1e99e0>/tests/frontend/features/player/features-playback-info.test.mjs:90:10)
+      at async Test.run (node:internal/test_runner/test:1409:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }
+
+test at tests/frontend/features/player/features-playback-info.test.mjs:102:1
+✖ Firefox: the OSD click guard does not swallow the clicks that open the stats panel (2012.708694ms)
+  AssertionError [ERR_ASSERTION]: native stats did not open: {"stats":"absent","overlay":1,"sheets":0,"hiding":0}
+      at TestContext.<anonymous> (file://<scratch worktree of 9d1e99e0>/tests/frontend/features/player/features-playback-info.test.mjs:105:10)
+      at async Test.run (node:internal/test_runner/test:1409:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:974:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }
+
+test at tests/frontend/features/player/features-playback-info.test.mjs:109:1
+✖ a menu without the Playback Info entry is closed unseen and the plugin overlay opens instead (9.810231ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:
+  + actual - expected
+  
+    {
+  +   closed: 0,
+  +   menus: 0,
+  -   closed: 1,
+  -   menus: 1,
+      sheets: 0,
+      stats: 'absent'
+    }
+  
+      at TestContext.<anonymous> (file://<scratch worktree of 9d1e99e0>/tests/frontend/features/player/features-playback-info.test.mjs:113:10)
+      at async Test.run (node:internal/test_runner/test:1409:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:974:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: { stats: 'absent', sheets: 0, menus: 0, closed: 0 },
+    expected: { stats: 'absent', sheets: 0, menus: 1, closed: 1 },
+    operator: 'deepStrictEqual',
+    diff: 'simple'
+  }
+
+test at tests/frontend/features/player/features-playback-info.test.mjs:132:1
+✖ a second press while the menu is still opening does not open a second menu (2011.651778ms)
+  AssertionError [ERR_ASSERTION]: The expression evaluated to a falsy value:
+  
+    assert.ok(await h.until(() => h.state().stats === 'shown'))
+  
+      at TestContext.<anonymous> (file://<scratch worktree of 9d1e99e0>/tests/frontend/features/player/features-playback-info.test.mjs:135:10)
+      at async Test.run (node:internal/test_runner/test:1409:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:974:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }
+
+test at tests/frontend/features/player/features-playback-info.test.mjs:141:1
+✖ leaving the player while the menu opens leaves no overlay and no hidden dialogs behind (207.530366ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  
+  0 !== 1
+  
+      at TestContext.<anonymous> (file://<scratch worktree of 9d1e99e0>/tests/frontend/features/player/features-playback-info.test.mjs:146:10)
+      at async Test.run (node:internal/test_runner/test:1409:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:974:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 0,
+    expected: 1,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }

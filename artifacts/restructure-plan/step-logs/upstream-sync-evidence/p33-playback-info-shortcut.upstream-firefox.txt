@@ -1,0 +1,12 @@
+$ je12 browse '#/home' --script p33-playback-info-shortcut.mjs --profile firefox
+# deployed build: upstream-c55c758ede4a
+PROFILE firefox 146.0.1
+SCRIPT {"item":"101 Dalmatians II: Patch's London Adventure","playing":true,"before":{"nativeStats":"absent","nativeStatsRows":0,"jeOverlay":0,"actionSheets":0,"dialogContainers":0,"hidingStyles":0,"settingsButton":1},"afterFirstPress":{"nativeStats":"absent","nativeStatsRows":0,"jeOverlay":0,"actionSheets":0,"dialogContainers":0,"hidingStyles":1,"settingsButton":1},"afterSecondPress":{"nativeStats":"absent","nativeStatsRows":0,"jeOverlay":2,"actionSheets":0,"dialogContainers":0,"hidingStyles":1,"settingsButton":1}}
+PAGEERROR [JavaScript Error: "ReferenceError: e is not defined" {file: "blob:http://172.29.90.3:8096/b819ec89-0d47-46e7-9583-9d953682f4fc" line: 1}]
+t@blob:http://172.29.90.3:8096/b819ec89-0d47-46e7-9583-9d953682f4fc:1:100
+@blob:http://172.29.90.3:8096/b819ec89-0d47-46e7-9583-9d953682f4fc:1:541369
+
+PAGEERROR Error: [object Response]
+BLOCKED https://cdn.jsdelivr.net/gh/Druidblack/jellyfin-icon-metadata@main/icons/imdb/imdb.png
+BLOCKED https://cdn.jsdelivr.net/gh/Druidblack/jellyfin-icon-metadata@main/icons/themoviedb/themoviedb.png
+URL /web/index.html#/video

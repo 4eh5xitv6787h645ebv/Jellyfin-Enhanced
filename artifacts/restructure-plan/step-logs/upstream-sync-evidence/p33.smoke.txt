@@ -1,0 +1,20 @@
+je12 smoke: started as a job, expected about 37s on 10 CPUs (help-text times are for 10). If this call is cut off, `je12 wait` collects the result.
+page admin           ok      14 tabs; Media Tags section 16 tabs (1.9s)
+page settings        ok      panel open, 24 tabs (2.0s)
+page media-tags-hub  ok      #jeMediaTagsHub visible (1.7s)
+page poster          ok      72/100 cards tagged (1.8s)
+page details         ok      101 Dalmatians II: Patch's London Adventure: 74 JE elements (2.0s)
+page hidden-content  ok      page rendered (1.3s)
+page bookmarks       ok      page rendered (1.3s)
+page calendar        ok      5 events (3.3s)
+page downloads       ok      4 items (4.8s)
+page activity        ok      Activity tab rendered (1.7s)
+page catchup         ok      Catch Up tab rendered (1.4s)
+page seerr           ok      5 Seerr cards (1.8s)
+page player          ok      playing 1.2s; OSD rating present (3.4s)
+plugin               ok      12.15.0.0 Active
+scheduled tasks      ok      16 JE tasks (keys and ids)
+openapi              ok      HTTP 200, 474 paths, 180 under /JellyfinEnhanced
+bundle wire          ok      br 200 536693B 304:yes, gzip 200 651609B 304:yes, identity 200 2408640B 304:yes; decoded bodies identical
+server log           ok      474 ERR/WRN lines, 0 new kind(s)
+smoke: pass (0 failing, 0 changed, 0 known, 0 fixed) in 35s; details /home/jake/.local/share/je12/state/je125ce284-smoke.json
