@@ -202,6 +202,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Configuration
             TagGroupOrder = null;
             TagGroupCaps = null;
             TagGroupScopes = null;
+            TagHiddenValues = null;
             TagLabelDensity = "full";
             TagScale = "default";
             TagGap = "default";
@@ -958,6 +959,8 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Configuration
         public TagGroupCaps? TagGroupCaps { get; set; }
         /// <summary>Where each tag group shows by default (item types and home rows); null shows every group everywhere.</summary>
         public TagGroupScopes? TagGroupScopes { get; set; }
+        /// <summary>Tag Styles labels whose chips never draw, per group (Hidden tags, set on the Colours tab); null hides nothing.</summary>
+        public TagHiddenValues? TagHiddenValues { get; set; }
         /// <summary>Starting label density (full or compact).</summary>
         [AnalyticsInclude]
         public string TagLabelDensity { get; set; } = "full";
