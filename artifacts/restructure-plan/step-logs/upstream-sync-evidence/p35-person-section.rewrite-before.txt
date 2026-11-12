@@ -1,0 +1,12 @@
+EVAL {"title":"More with Tim Curry","tabs":["All","Movie","Series"],"sortSelect":["Popular","Top Rated","Newest","Oldest"],"filtersButton":false,"roleLines":0,"cards":76,"first":["Duckman","Home Alone 2: Lost in New York","Mighty Ducks: The Animated Series"]}
+BLOCKED https://www.gstatic.com/cv/js/sender/v1/cast_sender.js
+BLOCKED https://cdn.jsdelivr.net/gh/Druidblack/jellyfin-icon-metadata@main/icons/themoviedb/themoviedb.png
+BLOCKED https://image.tmdb.org/t/p/w400/zg8WvrRHlyir2VhSlGGld6GNgSm.jpg
+BLOCKED https://image.tmdb.org/t/p/w400/uuitWHpJwxD1wruFl2nZHIb4UGN.jpg
+BLOCKED https://image.tmdb.org/t/p/w400/7UcgiWkqmiTBw9h9AfyQEErKr5M.jpg
+BLOCKED https://image.tmdb.org/t/p/w400/yVl7zidse4KiWtGMqHFtZCx4X3N.jpg
+BLOCKED https://image.tmdb.org/t/p/w400/r1ozWw5J7oVL4BqGOA86Pyl2Wvi.jpg
+BLOCKED https://image.tmdb.org/t/p/w400/mk8UH7JRmK8adcqJJpB1ygP7B1C.jpg
+BLOCKED https://image.tmdb.org/t/p/w400/wcfbfActZ9VZ3anFqe3YYNWOHsG.jpg
+BLOCKED https://image.tmdb.org/t/p/w400/hPNSToNIIpRO6y5Rh973leqQqNr.jpg
+URL /web/index.html#/details?id=9bb479ad68de565257117f6df776af56

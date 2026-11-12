@@ -1,0 +1,76 @@
+# p35 tests on adfefdcf (the branch's start), in a scratch worktree with this branch's new test files copied in
+
+## node --test tests/frontend/pages/pages-discovery.test.mjs
+✖ genre discovery interleaves both feeds, names the section and offers the filter once both answered (86.34518ms)
+✖ a sort change keeps the list on screen, busy, until its page 1 lands, and abandons the older load (35.172569ms)
+✖ a list page's section begins inside the list's own wrapper, after its paging line, as a plain Jellyfin section (26.856878ms)
+✖ a person's section begins in the page's primary column, after the page's own lists (26.112644ms)
+✖ the header is the title, then one row: what the titles are, in words, and filter and sort together (26.013964ms)
+✖ a section of one type has a lone sort, which shares the summary's row; the summary is said only when it is true (24.143077ms)
+✖ the sort is a quiet button that names the current order, not a form field (26.125436ms)
+✖ the sort button opens Jellyfin's action sheet with the current order ticked, and a choice re-sorts and is named on the button (30.854169ms)
+✖ the sort menu closes without a change on Escape, on a press outside it, on a remote's Back, on leaving, and when the current order is chosen (26.062577ms)
+✖ on a TV the sort menu is Jellyfin's action sheet with its title row (24.428436ms)
+✖ "Most votes" sorts a person's titles by their votes, a protected title by its hidden count (26.289946ms)
+✖ the section's place is held with empty cards of the page's own shape until the first page lands (23.89917ms)
+✖ the header keeps to the top of the screen just under Jellyfin's own header (27.087301ms)
+✖ a collection's missing titles are a section of the page's primary column, with a translated title (26.249903ms)
+✖ a person's lookup that fails says Seerr did not answer, with Jellyfin's button to try again (8.818392ms)
+✖ filter and sort primitives keep their published contract (37.929754ms)
+✖ a grouped menu says what is set in each group, opens one group at a time and clears them all (3.389597ms)
+✖ the scroll engine's retry row says Seerr did not answer, with Jellyfin's button to try again (10.730867ms)
+ℹ tests 18
+ℹ pass 0
+ℹ fail 18
+
+## node --test tests/frontend/pages/pages-discovery-roles.test.mjs
+✖ a person's titles say what the person did in each: the parts played, then the jobs held, once each (82.058267ms)
+✔ a list page's cards have no such line (37.327977ms)
+✖ a card with no credit gets no line, and TMDB's "Creator" is said as the Role filter says it (37.211279ms)
+✖ several parts of one credit ("A / B") are each a part, said once (4.80012ms)
+✖ a line that fits stays whole; the jobs a Role filter asks for lead their line (4.863206ms)
+✖ a line that does not fit loses whole jobs from its end and says how many; one part too long loses its brackets, then whole words (4.260835ms)
+✖ Jellyfin's own loading circle, in the markup its loading module draws (4.124351ms)
+✖ a list being rebuilt keeps its height and gets the circle once; released, it takes its own height; outside a section nothing happens (4.446981ms)
+✖ a list released under a held header starts again right under it (4.81211ms)
+✖ a second change keeps the list held past the first change's give-up time, and the page moves once, when its cards land (8.488752ms)
+✖ a new order keeps the old cards, dimmed and out of reach, with the circle, until its first page lands (27.378714ms)
+ℹ tests 11
+ℹ pass 1
+ℹ fail 10
+
+## node --test tests/frontend/pages/pages-discovery-filters.test.mjs
+✖ dayOf reads a year, a month or a day as its first or last day, month ends and leap years included (61.055814ms)
+✖ numberOf and isBound keep each filter to its own limits (5.600505ms)
+✖ isReversed is true only for two usable bounds the wrong way round (3.991837ms)
+✖ feedFilterQuery asks each kind by its own names, in a fixed order, and asks for nothing where a kind cannot match (3.700046ms)
+✖ keepByFilters keeps a person's titles by role, period, score, votes, every genre and any language (3.913299ms)
+✖ offeredFilters leaves out what the admin turned off; a missing switch is on (3.791329ms)
+✖ rolesOf offers acting first, then departments by how many credits, the catch-all last (3.664049ms)
+✖ the lists are asked once per visit, named and ordered for the eye; a failed list is asked again (3.83918ms)
+✖ what is set is said piece by piece: a range once, in the viewer's numbers, a list per thing ticked (4.234196ms)
+✖ the services and the feed ask for the admin's region; an unusable region is the US (4.210934ms)
+✖ a list page's further filters are typed or ticked, and asked of Seerr: ranges by each feed's own names, lists whole (4.487624ms)
+✖ nothing matches: the section says so and offers the way out; the admin's switches take a filter away for good (3.792445ms)
+✖ a person's titles are filtered here: by role, by years, by score and votes, by genre and language (3.77431ms)
+✖ the tabs' choice repaints the button: a type other than All is said beside the icon where the tabs are out of sight (3.974057ms)
+ℹ tests 14
+ℹ pass 0
+ℹ fail 14
+
+## node --test --test-name-pattern 'Most votes' tests/frontend/pages/pages-recommendations-boundaries.test.mjs
+✖ the Recommendations category sorts through the same button and menu, "Most votes" included (81.525103ms)
+ℹ tests 1
+ℹ pass 0
+ℹ fail 1
+
+## dotnet test --filter PrivacySeerrRedactionTests.ListsKeepAHiddenVoteCountForSorting|APersonsCreditsDropTheGuardedTitlesPart
+  Failed JE.Tests.Features.SpoilerGuard.PrivacySeerrRedactionTests.ListsKeepAHiddenVoteCountForSorting [118 ms]
+Expected: 26000
+Actual:   null
+  Failed JE.Tests.Features.SpoilerGuard.PrivacySeerrRedactionTests.APersonsCreditsDropTheGuardedTitlesPart [12 ms]
+Expected: False
+Actual:   True
+Failed!  - Failed:     2, Passed:     0, Skipped:     0, Total:     2, Duration: 138 ms - JE.Tests.dll (net10.0)
+
+## IntegrationDiscoverFiltersTests and the new ApiSeerrTests: not run there, they do not compile without DiscoverFilters and the filters routes

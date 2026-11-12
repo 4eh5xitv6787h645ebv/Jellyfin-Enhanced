@@ -1,0 +1,22 @@
+SCRIPT {"page":{"title":"More in Action","nameKeptWhole":"Action","summary":"Not in the library","tabs":["All (on)","Movies","Series"],"filtersButton":"Filters","sort":"Popular","jumpLine":"Go to More in Action, not in the library","besideTheLibraryList":true,"placeholders":0,"setLine":[],"message":null,"cards":37},"firstRequests":["jellyseerr/discover/movies/genre/28?page=1","jellyseerr/discover/movies/genre/28?page=2","jellyseerr/discover/movies/genre/28?page=3","jellyseerr/discover/tv/genre/10759?page=1","jellyseerr/discover/tv/genre/10759?page=2","jellyseerr/discover/tv/genre/10759?page=3"],"filterGroups":["Released: Any","Score: Any","Votes: Any","Runtime: Any","Genres: Any","Original language: Any","Content rating: Any","Streaming services: Any","Keywords: Any","Without keywords: Any"],"genreGiven":["Action (true)"],"genreCount":27,"filterGroupsAfter":["Released: Any","Score: From 7,5","Votes: Any","Runtime: Any","Genres: Any","Original language: Any","Content rating: Any","Streaming services: Any","Keywords: Any","Without keywords: Any"],"scoreRequests":["jellyseerr/discover/movies/genre/28?page=1&voteAverageGte=7.5","jellyseerr/discover/tv/genre/10759?page=1&voteAverageGte=7.5"],"filtered":{"title":"More in Action","nameKeptWhole":"Action","summary":"Not in the library","tabs":["All (on)","Movies","Series"],"filtersButton":"Filters: 1","sort":"Popular","jumpLine":"Go to More in Action, not in the library","besideTheLibraryList":true,"placeholders":0,"setLine":["Score from 7,5"],"message":null,"cards":0}}
+CONSOLE Failed to load resource: the server responded with a status of 404 (Not Found) /JellyfinEnhanced/cdn/flag-icons/flags/4x3/fi.svg
+CONSOLE Failed to load resource: the server responded with a status of 404 (Not Found) /JellyfinEnhanced/cdn/flag-icons/flags/4x3/hu.svg
+CONSOLE Failed to load resource: the server responded with a status of 404 (Not Found) /JellyfinEnhanced/cdn/flag-icons/flags/4x3/no.svg
+CONSOLE Failed to load resource: the server responded with a status of 404 (Not Found) /JellyfinEnhanced/cdn/flag-icons/flags/4x3/pl.svg
+CONSOLE Failed to load resource: the server responded with a status of 404 (Not Found) /JellyfinEnhanced/cdn/flag-icons/flags/4x3/ro.svg
+CONSOLE Failed to load resource: the server responded with a status of 404 (Not Found) /JellyfinEnhanced/cdn/flag-icons/flags/4x3/se.svg
+CONSOLE Failed to load resource: the server responded with a status of 500 (Internal Server Error) /JellyfinEnhanced/jellyseerr/discover/tv/genre/10759
+CONSOLE Failed to load resource: the server responded with a status of 500 (Internal Server Error) /JellyfinEnhanced/jellyseerr/discover/movies/genre/28
+BLOCKED https://www.gstatic.com/cv/js/sender/v1/cast_sender.js
+BLOCKED https://image.tmdb.org/t/p/w400/lHfmc6d8pOVFrD0eOKPiDbjeucG.jpg
+BLOCKED https://image.tmdb.org/t/p/w400/8eJf0hxgIhE6QSxbtuNCekTddy1.jpg
+BLOCKED https://image.tmdb.org/t/p/w400/krVa7rKCQb4OBfsr2LTJv4rTz5q.jpg
+BLOCKED https://image.tmdb.org/t/p/w400/wHIMMLFsk32wIzDmawWkYVbxFCS.jpg
+BLOCKED https://image.tmdb.org/t/p/w400/wXln4DUrwcyjcFPwgQxFPYTlG1Z.jpg
+BLOCKED https://image.tmdb.org/t/p/w400/rnMgIX5Uc9S4r8WvZZByczz2kF7.jpg
+BLOCKED https://image.tmdb.org/t/p/w400/6VY1ZKgpsc8CfGsQcCGiYEgHdH0.jpg
+BLOCKED https://image.tmdb.org/t/p/w400/bQLrHIRNEkE3PdIWQrZHynQZazu.jpg
+BLOCKED https://image.tmdb.org/t/p/w400/bjiS5ipwxb9JFy3XRRN4OAilSeX.jpg
+HTTP5XX 500 /JellyfinEnhanced/jellyseerr/discover/tv/genre/10759
+HTTP5XX 500 /JellyfinEnhanced/jellyseerr/discover/movies/genre/28
+URL /web/index.html#/list?genreId=ce06903d834d2c3417e0889dd4049f3b&serverId=0202511b0eac4284ab045b3ba556d72e

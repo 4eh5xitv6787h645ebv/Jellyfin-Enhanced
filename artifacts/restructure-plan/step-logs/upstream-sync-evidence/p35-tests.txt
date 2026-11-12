@@ -1,0 +1,43 @@
+# p35 tests on the port (1e9a06e0)
+
+## node --test tests/frontend/pages/pages-discovery.test.mjs
+ℹ tests 18
+ℹ pass 18
+ℹ fail 0
+
+## node --test tests/frontend/pages/pages-discovery-roles.test.mjs
+ℹ tests 11
+ℹ pass 11
+ℹ fail 0
+
+## node --test tests/frontend/pages/pages-discovery-filters.test.mjs
+ℹ tests 14
+ℹ pass 14
+ℹ fail 0
+
+## node --test tests/frontend/pages/pages-discovery-boundaries.test.mjs
+ℹ tests 38
+ℹ pass 38
+ℹ fail 0
+
+## node --test tests/frontend/pages/pages-recommendations-boundaries.test.mjs
+ℹ tests 38
+ℹ pass 38
+ℹ fail 0
+
+## node --test tests/frontend/pages/pages-seerr-details-scroll.test.mjs
+ℹ tests 13
+ℹ pass 13
+ℹ fail 0
+
+## dotnet test (IntegrationDiscoverFiltersTests, the new ApiSeerrTests, the two new PrivacySeerrRedactionTests)
+Passed!  - Failed:     0, Passed:    11, Skipped:     0, Total:    11, Duration: 210 ms - JE.Tests.dll (net10.0)
+
+## dotnet test --filter Architecture, with the contract additions
+Passed!  - Failed:     0, Passed:    24, Skipped:     0, Total:    24, Duration: 554 ms - JE.Tests.dll (net10.0)
+
+## BundleBudgetTests before / after the budget entry
+  Failed JE.Tests.BundleBudgetTests.ServedBundleIsWithinTheCheckedInBudget [228 ms]
+   bundle.js is 2,504,784 bytes raw, over the 2,494,625 budget in client/bundle-budget.json. Make it smaller, or raise the budget in a new history entry with a reason.
+Failed!  - Failed:     1, Passed:     1, Skipped:     0, Total:     2, Duration: 242 ms - JE.Tests.dll (net10.0)
+Passed!  - Failed:     0, Passed:     2, Skipped:     0, Total:     2, Duration: 232 ms - JE.Tests.dll (net10.0)

@@ -1,0 +1,40 @@
+== live check
+before: je12 browse '#/home' --script /home/jake/projects/je-upstream-auto/artifacts/restructure-plan/step-logs/upstream-sync-evidence/p35-person-section.mjs --wait 1000
+  deployed upstream-ec470d75cd48 (dll 45046962ecb485b3) on lab je125ce284, 2026-11-13 01:31:52
+  | SCRIPT {"page":{"title":"More with Tim Curry","nameKeptWhole":"Tim Curry","summary":"Not in the library","tabs":["All (on)","Movies","Series"],"filtersButton":"Filters","sort":"Popular","setLine":[],"none":null,"inPrimaryColumn":true,"cards":40,"first":["Duckman | as King Chicken (voice) +6","Home Alone 2: Lost in New York | as Concierge","Mighty Ducks: The Animated Series | as Lord Dragaunus (voice)","The Hunt for Red October | as Dr. Yevgeni Petrov…","The Legend of Prince Valiant | as Gawain (voice)","The Three Musketeers | as Cardinal Richelieu"]},"sortMenu":["Popular (ticked)","Top rated","Most votes","Newest","Oldest"],"mostVotes":{"title":"More with Tim Curry","nameKeptWhole":"Tim Curry","summary":"Not in the library","tabs":["All (on)","Movies","Series"],"filtersButton":"Filters","sort":"Most votes","setLine":[],"none":null,"inPrimaryColumn":true,"cards":37,"first":["Criminal Minds | as Billy Flynn","Home Alone 2: Lost in New York | as Concierge","It | as Pennywise","Scary Movie 2 | as Professor","Star Wars: The Clone Wars | as Chancellor Palpatine… +2","Charlie's Angels | as Roger Corwin"]},"filterGroups":["Role: Any","Released: Any","Score: Any","Votes: Any","Genres: Any","Original language: Any"],"roles":["Acting","Production","Other crew"],"roleTicked":{"title":"More with Tim Curry","nameKeptWhole":"Tim Curry","summary":"Not in the library","tabs":["All (on)","Movies","Series"],"filtersButton":"Filters: 1 (on)","sort":"Most votes","setLine":["Other crew"],"none":null,"inPrimaryColumn":true,"cards":1,"first":["Barbie in the Nutcracker | as The Rat King's Father… / In Memory Of"]},"filterGroupsAfter":["Role: Other crew","Released: 1985 to 1995-06","Score: Any","Votes: Any","Genres: Any","Original language: Any"],"menuClosed":true,"filtered":{"title":"More with Tim Curry","nameKeptWhole":"Tim Curry","summary":"Not in the library","tabs":["All (on)","Movies","Series"],"filtersButton":"Filters: 2 (on)","sort":"Most votes","setLine":["Other crew","Released 1985 to 1995-06"],"none":"Nothing matches these filters.","inPrimaryColumn":true,"cards":0,"first":[]}}
+  | BLOCKED https://www.gstatic.com/cv/js/sender/v1/cast_sender.js
+  | BLOCKED https://image.tmdb.org/t/p/w400/zg8WvrRHlyir2VhSlGGld6GNgSm.jpg
+  | BLOCKED https://image.tmdb.org/t/p/w400/uuitWHpJwxD1wruFl2nZHIb4UGN.jpg
+  | BLOCKED https://image.tmdb.org/t/p/w400/7UcgiWkqmiTBw9h9AfyQEErKr5M.jpg
+  | BLOCKED https://image.tmdb.org/t/p/w400/yVl7zidse4KiWtGMqHFtZCx4X3N.jpg
+  | BLOCKED https://image.tmdb.org/t/p/w400/r1ozWw5J7oVL4BqGOA86Pyl2Wvi.jpg
+  | BLOCKED https://image.tmdb.org/t/p/w400/mk8UH7JRmK8adcqJJpB1ygP7B1C.jpg
+  | BLOCKED https://image.tmdb.org/t/p/w400/wcfbfActZ9VZ3anFqe3YYNWOHsG.jpg
+  | BLOCKED https://image.tmdb.org/t/p/w400/hPNSToNIIpRO6y5Rh973leqQqNr.jpg
+  | BLOCKED https://image.tmdb.org/t/p/w400/oSDZ9YpDvAbXxzbC3YdknfyBR3W.jpg
+  | URL /web/index.html#/details?id=9bb479ad68de565257117f6df776af56
+after: je12 browse '#/home' --script /home/jake/projects/je-upstream-auto/artifacts/restructure-plan/step-logs/upstream-sync-evidence/p35-person-section.mjs --wait 1000
+  deployed e2827445 (dll 1dfde602ff27c7ec) on lab je125ce284, 2026-11-13 01:34:50
+  | SCRIPT {"page":{"title":"More with Tim Curry","nameKeptWhole":"Tim Curry","summary":"Not in the library","tabs":["All (on)","Movies","Series"],"filtersButton":"Filters","sort":"Popular","setLine":[],"none":null,"inPrimaryColumn":true,"cards":40,"first":["Duckman | as King Chicken (voice) +6","Home Alone 2: Lost in New York | as Concierge","Mighty Ducks: The Animated Series | as Lord Dragaunus (voice)","The Hunt for Red October | as Dr. Yevgeni Petrov…","The Legend of Prince Valiant | as Gawain (voice)","The Three Musketeers | as Cardinal Richelieu"]},"sortMenu":["Popular (ticked)","Top rated","Most votes","Newest","Oldest"],"mostVotes":{"title":"More with Tim Curry","nameKeptWhole":"Tim Curry","summary":"Not in the library","tabs":["All (on)","Movies","Series"],"filtersButton":"Filters","sort":"Most votes","setLine":[],"none":null,"inPrimaryColumn":true,"cards":37,"first":["Criminal Minds | as Billy Flynn","Home Alone 2: Lost in New York | as Concierge","It | as Pennywise","Scary Movie 2 | as Professor","Star Wars: The Clone Wars | as Chancellor Palpatine… +2","Charlie's Angels | as Roger Corwin"]},"filterGroups":["Role: Any","Released: Any","Score: Any","Votes: Any","Genres: Any","Original language: Any"],"roles":["Acting","Production","Other crew"],"roleTicked":{"title":"More with Tim Curry","nameKeptWhole":"Tim Curry","summary":"Not in the library","tabs":["All (on)","Movies","Series"],"filtersButton":"Filters: 1 (on)","sort":"Most votes","setLine":["Other crew"],"none":null,"inPrimaryColumn":true,"cards":1,"first":["Barbie in the Nutcracker | as The Rat King's Father… / In Memory Of"]},"filterGroupsAfter":["Role: Other crew","Released: 1985 to 1995-06","Score: Any","Votes: Any","Genres: Any","Original language: Any"],"menuClosed":true,"filtered":{"title":"More with Tim Curry","nameKeptWhole":"Tim Curry","summary":"Not in the library","tabs":["All (on)","Movies","Series"],"filtersButton":"Filters: 2 (on)","sort":"Most votes","setLine":["Other crew","Released 1985 to 1995-06"],"none":"Nothing matches these filters.","inPrimaryColumn":true,"cards":0,"first":[]}}
+  | BLOCKED https://www.gstatic.com/cv/js/sender/v1/cast_sender.js
+  | BLOCKED https://image.tmdb.org/t/p/w400/zg8WvrRHlyir2VhSlGGld6GNgSm.jpg
+  | BLOCKED https://image.tmdb.org/t/p/w400/uuitWHpJwxD1wruFl2nZHIb4UGN.jpg
+  | BLOCKED https://image.tmdb.org/t/p/w400/7UcgiWkqmiTBw9h9AfyQEErKr5M.jpg
+  | BLOCKED https://image.tmdb.org/t/p/w400/yVl7zidse4KiWtGMqHFtZCx4X3N.jpg
+  | BLOCKED https://image.tmdb.org/t/p/w400/r1ozWw5J7oVL4BqGOA86Pyl2Wvi.jpg
+  | BLOCKED https://image.tmdb.org/t/p/w400/mk8UH7JRmK8adcqJJpB1ygP7B1C.jpg
+  | BLOCKED https://image.tmdb.org/t/p/w400/wcfbfActZ9VZ3anFqe3YYNWOHsG.jpg
+  | BLOCKED https://image.tmdb.org/t/p/w400/hPNSToNIIpRO6y5Rh973leqQqNr.jpg
+  | BLOCKED https://image.tmdb.org/t/p/w400/oSDZ9YpDvAbXxzbC3YdknfyBR3W.jpg
+  | URL /web/index.html#/details?id=9bb479ad68de565257117f6df776af56
+same command before and after: yes; after's build is a clean commit
+== checks
+smoke: smoke: pass (0 failing, 1 changed, 0 known, 0 fixed) in 37s vs baseline adfefdcf82a1; openapi changed (2026-11-13 01:38:57, tree e2827445)
+inv: PASS in 0.0 min (2026-11-13 01:40:14, tree 3031aabf+dirty); log /home/jake/.local/share/je12/jobs/5ce28416-gate-inv-014013.log
+== lab
+real services: seerr seerr-3; mocked: sonarr, radarr
+lab je125ce284 still exists (running): run je12 down
+found bugs filed: NEW-20261111-003541-upstream-docs-enhanced-tags-md-still-says-the-ma, NEW-20261111-030922-upstream-23281542-dismiss-on-what-s-new-leaves-t, NEW-20261111-030922-upstream-23281542-every-settings-search-query-mo, NEW-20261111-030922-a-collection-s-just-added-does-not-follow-a-date, NEW-20261111-041606-upstream-bcd6574a-download-of-a-guarded-mp4-epis, NEW-20261111-045054-upstream-910d1da4-the-native-resolver-s-version-, NEW-20261111-061608-upstream-53ebf043-a-failed-page-of-maintainerr-c, NEW-20261111-061608-upstream-53ebf043-the-paged-members-replace-the-, NEW-20261111-061609-upstream-53ebf043-a-maintainerr-collection-whose, NEW-20261111-061609-upstream-53ebf043-its-own-leavingsoontests-fail-, NEW-20261111-153725-a-page-load-by-a-non-admin-logs-one-wrn-line-per, NEW-20261111-174741-scripts-generate-technical-ratios-py-fails-when-, NEW-20261111-181006-upstream-8fe1e705-a-later-page-of-maintainerr-me, NEW-20261112-213650-upstream-c55c758e-the-playback-info-shortcut-lea
+tree now: 3031aabf+dirty
+missing:
+  test: je12 test
