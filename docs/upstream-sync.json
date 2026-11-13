@@ -1111,7 +1111,9 @@
         "Jellyfin.Plugin.JellyfinEnhanced/js/locales/ (30 files)"
       ],
       "status": "ported",
-      "rewriteCommits": [],
+      "rewriteCommits": [
+        "dd0e10be5f0a68b14df5177521490bb79817da9d"
+      ],
       "notes": "Applied as is (git show 24fbd7b0 | git apply --3way, clean): the 30 locale files under Jellyfin.Plugin.JellyfinEnhanced/js/locales/ are byte-identical to upstream's at 24fbd7b0. It adds 74 keys to each, all discovery_* strings of the discovery join (#1044, ported here as row 35): the Filters menu, its groups and hints, the sort labels, the role lines and the retry and not-in-library lines. No key changes or goes; every new value has the same {placeholders} as en.json; every key exists in this tree's en.json. No key the server reads for poster tag captions (StatusRules) changes, so no resolver version moves. The 49 keys only this tree's en.json has stay untranslated in these languages, as before. No difference from upstream.",
       "evidence": "artifacts/restructure-plan/step-logs/upstream-sync-evidence/p36-*"
     }
