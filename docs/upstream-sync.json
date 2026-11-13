@@ -1378,7 +1378,9 @@
         "Jellyfin.Plugin.JellyfinEnhanced/Services/PosterTags/PosterTagImageFilter.cs"
       ],
       "status": "ported",
-      "rewriteCommits": [],
+      "rewriteCommits": [
+        "105ea35edae61e7f13f47f80e4dbeab302544fb5"
+      ],
       "notes": "Applied as is at the moved paths (git show e0c8763d, Services/PosterTags/ to Features/MediaTags/PosterTags/, git apply --3way, clean): NativePosterTagStamper stamps an item's own Thumb tag the way it stamps its Primary (same owner, look, flags and pinned data hash) and re-keys that image type's blurhash under the new tag (ReKeyPrimaryBlurhash becomes ReKeyBlurhash with the image type); PosterTagImageFilter takes Thumb image requests as well as Primary ones. The two files were identical to upstream's before the commit apart from namespaces, and the composer already picks the landscape layout from the decoded image's aspect, so the Thumb composite is drawn landscape. Differences from upstream: one comment in the filter's fast path names Thumb too. No cached-output version moves: the composite cache is content-addressed by the base image (a Thumb never shares a key with a Primary), the tags resolved for the same settings and data do not change (ResolverVersion), and a Primary composite's pixels do not change (CompositionVersion). Tests added (upstream has none for this commit): tests/backend/Features/MediaTags/PosterTags/NativeThumbTagsTests.cs, two failing before the port.",
       "evidence": "artifacts/restructure-plan/step-logs/upstream-sync-evidence/p43-*"
     },
@@ -1437,7 +1439,9 @@
         "tests/frontend/features/features-maintainerr-menu.test.mjs"
       ],
       "status": "ported",
-      "rewriteCommits": [],
+      "rewriteCommits": [
+        "a56b4ca32cb5df2f7af105719dcfe2cd48c4e806"
+      ],
       "unmappedPaths": [
         "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs",
         "Jellyfin.Plugin.JellyfinEnhanced/Controllers/MaintainerrController.cs",
