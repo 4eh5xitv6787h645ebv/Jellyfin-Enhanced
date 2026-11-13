@@ -1,0 +1,6 @@
+# je12 browse '#/home' --profile locale-de --script artifacts/restructure-plan/step-logs/upstream-sync-evidence/p41-german-not-loaded-string.mjs
+# deployed: deployed f503a2d199b9 (dll 95c2c9ee5f277055)
+PROFILE locale-de {"htmlLang":"de"}
+SCRIPT {"served":{"status":200,"keys":1436,"has":false,"value":null},"shown":"Your hidden items could not be loaded, so this change was not made. Please reload and retry.","german":"Einstellungen"}
+BLOCKED https://www.gstatic.com/cv/js/sender/v1/cast_sender.js
+URL /web/index.html#/home

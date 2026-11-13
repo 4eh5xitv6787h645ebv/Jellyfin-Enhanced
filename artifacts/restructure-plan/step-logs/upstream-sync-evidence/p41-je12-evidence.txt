@@ -1,0 +1,16 @@
+== live check
+before: je12 browse '#/home' --profile locale-de --script artifacts/restructure-plan/step-logs/upstream-sync-evidence/p41-german-not-loaded-string.mjs
+  deployed upstream-31969cbac00e (dll e522c40580b067f5) on lab je125ce284, 2026-11-13 19:10:14
+  | PROFILE locale-de {"htmlLang":"de"}
+  | SCRIPT {"served":{"status":200,"keys":1437,"has":true,"value":"Your hidden items could not be loaded, so this change was not made. Please reload and retry."},"shown":"Your hidden items could not be loaded, so this change was not made. Please reload and retry.","german":"Einstellungen"}
+  | BLOCKED https://www.gstatic.com/cv/js/sender/v1/cast_sender.js
+  | URL /web/index.html#/home
+after: je12 browse '#/home' --profile locale-de --script artifacts/restructure-plan/step-logs/upstream-sync-evidence/p41-german-not-loaded-string.mjs
+  deployed 701770f1 (dll 93f232466d3313db) on lab je125ce284, 2026-11-13 19:10:33
+  | PROFILE locale-de {"htmlLang":"de"}
+  | SCRIPT {"served":{"status":200,"keys":1437,"has":true,"value":"Your hidden items could not be loaded, so this change was not made. Please reload and retry."},"shown":"Your hidden items could not be loaded, so this change was not made. Please reload and retry.","german":"Einstellungen"}
+  | BLOCKED https://www.gstatic.com/cv/js/sender/v1/cast_sender.js
+  | URL /web/index.html#/home
+same command before and after: yes; after's build is a clean commit
+== checks
+smoke: smoke: pass (0 failing, 0 changed, 0 known, 0 fixed) in 34s vs baseline 701770f12f8c (2026-11-13 19:11:11, tree 701770f1)
