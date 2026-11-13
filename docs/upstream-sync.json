@@ -1536,8 +1536,9 @@
       "paths": [
         ".github/workflows/docs.yml"
       ],
-      "status": "pending",
-      "rewriteCommits": []
+      "status": "ported",
+      "rewriteCommits": [],
+      "notes": "Applied as is (git show 9eb07d86 | git apply --3way, clean): .github/workflows/docs.yml is byte-identical to upstream's at 9eb07d86. The workflow's default token permission is read and only the deploy job may write; the unused cache step goes; dev is titled main in the version picker, and a release deployed as latest is titled latest (12.15) while the release it replaces gets its plain version title back (mike retitle). Nothing the plugin ships changes."
     }
   ]
 }
