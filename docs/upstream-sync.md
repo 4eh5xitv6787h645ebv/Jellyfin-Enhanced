@@ -4,7 +4,7 @@
 
 What the rewrite has taken from [upstream](https://github.com/n00bcodr/Jellyfin-Enhanced) (`main`) since it branched at `2e0f9251bf`. The source of truth is [`upstream-sync.json`](upstream-sync.json); the procedure is [upstream-sync-procedure.md](upstream-sync-procedure.md).
 
-37 upstream commits: 36 ported, 1 already-present.
+38 upstream commits: 37 ported, 1 already-present.
 
 | # | Upstream | Date | Class | Features | Subject | Status | Rewrite commit | Note |
 |---|---|---|---|---|---|---|---|---|
@@ -45,3 +45,4 @@ What the rewrite has taken from [upstream](https://github.com/n00bcodr/Jellyfin-
 | 35 | [`ec470d75`](https://github.com/n00bcodr/Jellyfin-Enhanced/commit/ec470d75cd4863f8827029368f1405d3508f6f90) | 2026-11-12 | feature | seerr, spoiler-guard, admin, platform | feat(seerr): the discovery sections join the page, with Jellyfin's controls, a Filters menu and role lines (#1044) | ported | `1e9a06e0` | artifacts/restructure-plan/step-logs/upstream-sync-evidence/p35-* |
 | 36 | [`24fbd7b0`](https://github.com/n00bcodr/Jellyfin-Enhanced/commit/24fbd7b02494e68717bdc22deb505a7115801f1d) | 2026-11-13 | translation | platform, seerr | Translations update from Hosted Weblate (#1049) | ported | `dd0e10be` | artifacts/restructure-plan/step-logs/upstream-sync-evidence/p36-* |
 | 37 | [`20700ef2`](https://github.com/n00bcodr/Jellyfin-Enhanced/commit/20700ef22658a0cf2d0dc1d980027f0fbf55085c) | 2026-11-13 | performance | media-tags | perf(tags): stop every tag-cache delta re-sending a rebuild's entries (#1053) | ported | `9b8a1aa3` | artifacts/restructure-plan/step-logs/upstream-sync-evidence/p37-* |
+| 38 | [`0dba36b6`](https://github.com/n00bcodr/Jellyfin-Enhanced/commit/0dba36b6b4ab8a4247c42dfbf3964994b84b24a6) | 2026-11-13 | fix | media-tags, admin, details-providers | fix(arr): keep synced tags when Radarr or Sonarr can't be read, and make a blank Tag Prefix mean the default (#1054) | ported |  | artifacts/restructure-plan/step-logs/upstream-sync-evidence/p38-* |
