@@ -1,0 +1,9 @@
+{"watchProviders": [
+  {"iso_3166_1": "US", "link": "https://www.themoviedb.org/movie/431580/watch?locale=US",
+   "flatrate": [{"id": 8, "name": "Netflix", "logoPath": "/pbpMk2JmcoNnQwx5JGpXngfoWtp.jpg", "displayPriority": 1}],
+   "buy": [{"id": 2, "name": "Apple TV", "logoPath": "/9ghgSC0MA082EL6HLCW3GalykFD.jpg", "displayPriority": 2}]},
+  {"iso_3166_1": "GB", "link": "https://www.themoviedb.org/movie/431580/watch?locale=GB",
+   "flatrate": [{"id": 39, "name": "Now TV", "logoPath": "/g0E9h3JQjMJ3FCKzQ3ZEW0Ra0Cr.jpg", "displayPriority": 3}]},
+  {"iso_3166_1": "DE", "link": "https://www.themoviedb.org/movie/431580/watch?locale=DE",
+   "flatrate": [{"id": 337, "name": "Disney Plus", "logoPath": "/97yvRBw1GzX7fXprcF80er19ot.jpg", "displayPriority": 1}]}
+]}

@@ -1,0 +1,25 @@
+# p42 tests on the base fc8dff6d: the new and changed test files copied onto it, run against its own built js/ (node 26.2.0):
+# TZ=UTC node --test --test-name-pattern '<the 13 new tests>' <the five test files>
+✖ Elsewhere follows the user's Seerr streaming region when the admin option is on, and keeps the saved country (11.503294ms)
+✖ Elsewhere keeps the saved country when Seerr gives no region, and asks again for the next user (20.681023ms)
+✔ Elsewhere stays off with neither a TMDB key nor Seerr, and never asks for a Seerr region without Seerr (44.113963ms)
+✖ Elsewhere without a TMDB key reads the providers from Seerr's title detail, and offers no per-season lookup (81.208369ms)
+ℹ fail 12
+ℹ pass 1
+ℹ tests 13
+✖ poster provider icons come from Seerr when there is no TMDB key (160.055016ms)
+✖ poster provider icons follow the user's Seerr streaming region when the admin option is on (127.899221ms)
+✖ the Seerr region switch is off by default, saved with the form, and announced as new (822.12538ms)
+✖ the Seerr streaming region is read once per user when the admin option is on, and only then (71.223749ms)
+✖ the streaming row follows the user's Seerr streaming region when the admin option is on (14.317165ms)
+✖ the streaming row needs no TMDB key and then shows only the user's own region (98.425551ms)
+✖ with neither a TMDB key nor Seerr, Elsewhere asks for one of them and the Seerr region asks for Seerr (880.225415ms)
+✖ without a TMDB key, Seerr unlocks Elsewhere and the poster icons; per-season providers still need TMDB (1062.426636ms)
+✖ with the admin option the services and the feed ask for the user's Seerr streaming region (3143.864776ms)
+
+# Upstream's backend test (tests/backend/Shared/IntegrationWatchProvidersTests.cs) on the base: dotnet build tests/backend/JE.Tests.csproj -c Release -p:JellyfinTarget=jf12
+tests/backend/Shared/IntegrationWatchProvidersTests.cs(61,45): error CS0117: 'WatchProvidersBatch' does not contain a definition for 'ExtractSeerrFlatrate'
+tests/backend/Shared/IntegrationWatchProvidersTests.cs(64,42): error CS0117: 'WatchProvidersBatch' does not contain a definition for 'ExtractSeerrFlatrate'
+tests/backend/Shared/IntegrationWatchProvidersTests.cs(65,42): error CS0117: 'WatchProvidersBatch' does not contain a definition for 'ExtractSeerrFlatrate'
+tests/backend/Shared/IntegrationWatchProvidersTests.cs(66,41): error CS0117: 'WatchProvidersBatch' does not contain a definition for 'ExtractSeerrFlatrate'
+tests/backend/Shared/IntegrationWatchProvidersTests.cs(67,41): error CS0117: 'WatchProvidersBatch' does not contain a definition for 'ExtractSeerrFlatrate'

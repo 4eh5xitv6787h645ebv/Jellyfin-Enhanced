@@ -1,0 +1,3 @@
+SCRIPT {"api":{"streamingRegion":{"region":"DE","source":"user"},"watchProviders":{"region":"US","results":{"movie:431580":["Netflix"],"movie:990101":["Netflix"]}}},"elsewhere":{"title":"Also available in Germany on:","services":["Disney Plus"]},"posters":[{"region":"DE","items":"movie:990001,movie:990002,movie:990003,tv:990101,tv:990102","status":200,"results":{"movie:990001":["Disney Plus"],"movie:990002":["Disney Plus"],"movie:990003":["Disney Plus"],"tv:990101":["Disney Plus"],"tv:990102":["Disney Plus"]}}],"moreInfo":{"region":"DE","services":["Disney Plus"]}}
+URL /web/index.html#/details?id=06de48d758074756c732c7de70aa79f8
+kept as the 'before' evidence (je12 evidence shows it)

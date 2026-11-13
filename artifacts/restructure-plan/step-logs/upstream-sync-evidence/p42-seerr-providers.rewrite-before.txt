@@ -1,0 +1,5 @@
+SCRIPT {"api":{"streamingRegion":404,"watchProviders":503},"elsewhere":"no panel","posters":"no provider request","moreInfo":"no streaming row"}
+CONSOLE Failed to load resource: the server responded with a status of 404 (Not Found) /JellyfinEnhanced/jellyseerr/streaming-region
+CONSOLE Failed to load resource: the server responded with a status of 503 (Service Unavailable) /JellyfinEnhanced/watch-providers
+HTTP5XX 503 /JellyfinEnhanced/watch-providers
+URL /web/index.html#/details?id=06de48d758074756c732c7de70aa79f8

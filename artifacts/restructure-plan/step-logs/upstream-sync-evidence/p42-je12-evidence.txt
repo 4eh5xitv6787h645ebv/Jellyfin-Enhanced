@@ -1,0 +1,26 @@
+== live check
+before: je12 browse '#/home' --script p42-seerr-providers.mjs
+  deployed upstream-79a90422714e (dll a3778e2ca17d870b) on lab je12092a14, 2026-11-13 21:51:32
+  | SCRIPT {"api":{"streamingRegion":{"region":"DE","source":"user"},"watchProviders":{"region":"US","results":{"movie:431580":["Netflix"],"movie:990101":["Netflix"]}}},"elsewhere":{"title":"Also available in Germany on:","services":["Disney Plus"]},"posters":[{"region":"DE","items":"movie:990001,movie:990002,movie:990003,tv:990101,tv:990102","status":200,"results":{"movie:990001":["Disney Plus"],"movie:990002":["Disney Plus"],"movie:990003":["Disney Plus"],"tv:990101":["Disney Plus"],"tv:990102":["Disney Plus"]}}],"moreInfo":{"region":"DE","services":["Disney Plus"]}}
+  | BLOCKED https://www.gstatic.com/cv/js/sender/v1/cast_sender.js
+  | BLOCKED https://image.tmdb.org/t/p/w92/97yvRBw1GzX7fXprcF80er19ot.jpg
+  | BLOCKED https://cdn.jsdelivr.net/gh/Druidblack/jellyfin-icon-metadata@main/icons/imdb/imdb.png
+  | BLOCKED https://cdn.jsdelivr.net/gh/Druidblack/jellyfin-icon-metadata@main/icons/themoviedb/themoviedb.png
+  | URL /web/index.html#/details?id=06de48d758074756c732c7de70aa79f8
+after: je12 browse '#/home' --script p42-seerr-providers.mjs
+  deployed 4961f605 (dll ef238625353c43d1) on lab je12092a14, 2026-11-13 21:51:06
+  | SCRIPT {"api":{"streamingRegion":{"region":"DE","source":"user"},"watchProviders":{"region":"US","results":{"movie:431580":["Netflix"],"movie:990101":["Netflix"]}}},"elsewhere":{"title":"Also available in Germany on:","services":["Disney Plus"]},"posters":[{"region":"DE","items":"tv:990101,tv:990102,movie:990002,movie:990001,movie:990003","status":200,"results":{"tv:990101":["Disney Plus"],"tv:990102":["Disney Plus"],"movie:990002":["Disney Plus"],"movie:990001":["Disney Plus"],"movie:990003":["Disney Plus"]}}],"moreInfo":{"region":"DE","services":["Disney Plus"]}}
+  | BLOCKED https://www.gstatic.com/cv/js/sender/v1/cast_sender.js
+  | BLOCKED https://image.tmdb.org/t/p/w92/97yvRBw1GzX7fXprcF80er19ot.jpg
+  | BLOCKED https://cdn.jsdelivr.net/gh/Druidblack/jellyfin-icon-metadata@main/icons/imdb/imdb.png
+  | BLOCKED https://cdn.jsdelivr.net/gh/Druidblack/jellyfin-icon-metadata@main/icons/themoviedb/themoviedb.png
+  | URL /web/index.html#/details?id=06de48d758074756c732c7de70aa79f8
+same command before and after: yes; after's build is a clean commit
+== checks
+smoke: smoke: pass (0 failing, 1 changed, 0 known, 0 fixed) in 35s vs baseline fc8dff6da69f; openapi changed (2026-11-13 21:56:04, tree 4961f605)
+== lab
+lab je12092a14 still exists (running): run je12 down
+tree now: 4961f605
+missing:
+  test: je12 test
+  gates: je12 gate all (and je12 gate browser when client code changed), or je12 gate final

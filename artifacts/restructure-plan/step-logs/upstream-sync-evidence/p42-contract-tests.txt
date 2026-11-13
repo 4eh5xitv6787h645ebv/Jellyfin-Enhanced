@@ -1,0 +1,19 @@
+# p42: the five Architecture tests on the port's working tree before the contract commit (je12 test --dotnet, the repository's quick mode), with the -/+ lines each printed
+== JE.Tests.Architecture.RouteAuthSnapshotTests.RouteVerbAuthAndBindingMatchTheSnapshot
+   route-auth.snapshot.json differs from the checked-in snapshot. Snapshots are never regenerated to pass a refactor step.
++   {"verb":"GET","route":"JellyfinEnhanced/jellyseerr/streaming-region","requiresAuth":true,"auth":"","action":"GetSeerrStreamingRegion","apiBehavior":true,"parameters":[]},
+== JE.Tests.Architecture.AuthHelperCallSnapshotTests.AuthHelperCallsPerActionMatchTheSnapshot
+   auth-helper-calls.snapshot.json differs from the checked-in snapshot. Snapshots are never regenerated to pass a refactor step.
+-   "GetWatchProvidersBatch": {"User":1,"UserHelper.GetCurrentUserId":1},
++   "GetSeerrStreamingRegion": {"User":1,"UserHelper.GetCurrentUserId":1},
++   "GetWatchProvidersBatch": {"IsAdminUser":5,"User":2,"UserHelper.GetCurrentUserId":2},
+== JE.Tests.Architecture.AuthHelperCallSnapshotTests.EveryRoutedActionIsCounted
+   Assert.Equal() Failure: Collections differ
+== JE.Tests.Architecture.AuthReadClosureSnapshotTests.TransitiveAuthReadsPerRouteMatchRestructureBase
+   auth-reads-by-route.base.json is anchored to restructure-base and is never regenerated from a later tree. Subject: referenced plugin (current tree).
+-     "GET JellyfinEnhanced/watch-providers": {"User":1,"UserHelper.GetCurrentUserId":1},
++     "GET JellyfinEnhanced/jellyseerr/streaming-region": {"User":1,"UserHelper.GetCurrentUserId":1},
++     "GET JellyfinEnhanced/watch-providers": {"IsAdminUser":5,"User":2,"UserHelper.GetCurrentUserId":2},
+== JE.Tests.Architecture.AuthReadClosureSnapshotTests.RoutesMatchGateA
+   Assert.Equal() Failure: Collections differ
+Failed!  - Failed:     5, Passed:  2512, Skipped:     0, Total:  2517, Duration: 41 s
