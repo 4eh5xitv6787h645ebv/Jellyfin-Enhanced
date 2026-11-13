@@ -1357,6 +1357,96 @@
       "rewriteCommits": [],
       "reason": "The port changes two existing contract lines, which an unattended sync may not land: upstream's watch-providers batch reads Seerr's title detail through ProxyJellyseerrRequest when there is no TMDB key, so GetWatchProvidersBatch in auth-helper-calls.snapshot.json and GET watch-providers in auth-reads-by-route.base.json grow from {User 1, UserHelper.GetCurrentUserId 1} to {IsAdminUser 5, User 2, UserHelper.GetCurrentUserId 2} (the proxy's own reads). Reading Seerr outside the proxy to keep those lines would skip its permission checks and parental gating, a weaker check than upstream's. Everything else in the port only adds (one route, GET jellyseerr/streaming-region).",
       "needs": "A maintainer's review of the last commit of branch sync/contract-79a90422, `contract: upstream sync additions and two changed lines`: the finished port (tests, lab parity with upstream's build) with the snapshot lines for the new route (route-auth.snapshot.json, auth-helper-calls.snapshot.json, auth-reads-by-route.base.json, baselines/inventory-routes.txt, ExpectedRoutes 206 to 207) and the two changed lines above. Accepted, that branch lands as it is and marks this entry ported."
+    },
+    {
+      "sha": "e0c8763dcea4ecc0be47c852a2938eadbe7355d5",
+      "date": "2026-11-13T19:23:38+00:00",
+      "subject": "feat(poster-tags): draw native poster tags on Thumb images",
+      "class": "feature",
+      "features": [
+        "media-tags"
+      ],
+      "issues": [],
+      "release": null,
+      "size": {
+        "files": 2,
+        "insertions": 14,
+        "deletions": 5
+      },
+      "paths": [
+        "Jellyfin.Plugin.JellyfinEnhanced/Services/PosterTags/NativePosterTagStamper.cs",
+        "Jellyfin.Plugin.JellyfinEnhanced/Services/PosterTags/PosterTagImageFilter.cs"
+      ],
+      "status": "ported",
+      "rewriteCommits": [],
+      "notes": "Applied as is at the moved paths (git show e0c8763d, Services/PosterTags/ to Features/MediaTags/PosterTags/, git apply --3way, clean): NativePosterTagStamper stamps an item's own Thumb tag the way it stamps its Primary (same owner, look, flags and pinned data hash) and re-keys that image type's blurhash under the new tag (ReKeyPrimaryBlurhash becomes ReKeyBlurhash with the image type); PosterTagImageFilter takes Thumb image requests as well as Primary ones. The two files were identical to upstream's before the commit apart from namespaces, and the composer already picks the landscape layout from the decoded image's aspect, so the Thumb composite is drawn landscape. Differences from upstream: one comment in the filter's fast path names Thumb too. No cached-output version moves: the composite cache is content-addressed by the base image (a Thumb never shares a key with a Primary), the tags resolved for the same settings and data do not change (ResolverVersion), and a Primary composite's pixels do not change (CompositionVersion). Tests added (upstream has none for this commit): tests/backend/Features/MediaTags/PosterTags/NativeThumbTagsTests.cs, two failing before the port.",
+      "evidence": "artifacts/restructure-plan/step-logs/upstream-sync-evidence/p43-*"
+    },
+    {
+      "sha": "481a10eea0843e73b40101c917fed8db0426ef72",
+      "date": "2026-11-13T19:24:35+00:00",
+      "subject": "feat(maintainerr): mark, keep and postpone removals from the item menu, and a Leaving soon home row",
+      "class": "feature",
+      "features": [
+        "admin",
+        "media-tags",
+        "platform",
+        "settings"
+      ],
+      "issues": [],
+      "release": null,
+      "size": {
+        "files": 42,
+        "insertions": 2362,
+        "deletions": 248
+      },
+      "paths": [
+        "Jellyfin.Plugin.JellyfinEnhanced/Configuration/PluginConfiguration.cs",
+        "Jellyfin.Plugin.JellyfinEnhanced/Configuration/configPage.html",
+        "Jellyfin.Plugin.JellyfinEnhanced/Configuration/admin/sections.js",
+        "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs",
+        "Jellyfin.Plugin.JellyfinEnhanced/Controllers/MaintainerrController.cs",
+        "Jellyfin.Plugin.JellyfinEnhanced/Helpers/MediaTagsPageFields.cs",
+        "Jellyfin.Plugin.JellyfinEnhanced/Helpers/MediaTagsPortable.cs",
+        "Jellyfin.Plugin.JellyfinEnhanced/Helpers/PluginConfigurationPatch.cs",
+        "Jellyfin.Plugin.JellyfinEnhanced/JellyfinEnhanced.cs",
+        "Jellyfin.Plugin.JellyfinEnhanced/PluginServiceRegistrator.cs",
+        "Jellyfin.Plugin.JellyfinEnhanced/Services/LeavingSoonHomeSection.cs",
+        "Jellyfin.Plugin.JellyfinEnhanced/Services/LeavingSoonService.cs",
+        "Jellyfin.Plugin.JellyfinEnhanced/Services/MaintainerrActions.cs",
+        "Jellyfin.Plugin.JellyfinEnhanced/Services/MaintainerrHttp.cs",
+        "Jellyfin.Plugin.JellyfinEnhanced/js/component-scripts.json",
+        "Jellyfin.Plugin.JellyfinEnhanced/js/core/ui-kit.js",
+        "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/admintags/sections/badges.js",
+        "Jellyfin.Plugin.JellyfinEnhanced/js/locales/en.json",
+        "Jellyfin.Plugin.JellyfinEnhanced/js/tags/maintainerr-item-menu.js",
+        "docs/advanced/admin-media-tags.md",
+        "docs/advanced/api.md",
+        "docs/advanced/config-flag-groups.json",
+        "docs/enhanced/tags.md",
+        "docs/images/tags/ (8 files)",
+        "scripts/tag-translation-coverage.mjs",
+        "tests/backend/Api/ApiMediaTagsPageTests.cs",
+        "tests/backend/Api/ApiMediaTagsPortableTests.cs",
+        "tests/backend/Integrations/IntegrationMaintainerrActionsTests.cs",
+        "tests/backend/PosterTags/LeavingSoonTests.cs",
+        "tests/docs/production-inventory.json",
+        "tests/fixtures/admin-tags-page-fields.json",
+        "tests/frontend/features/features-admin-tags-page-colours-status.test.mjs",
+        "tests/frontend/features/features-admin-tags-page-server.test.mjs",
+        "tests/frontend/features/features-admin-tags-page.old-form-fields.json",
+        "tests/frontend/features/features-maintainerr-menu.test.mjs"
+      ],
+      "status": "pending",
+      "rewriteCommits": [],
+      "unmappedPaths": [
+        "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs",
+        "Jellyfin.Plugin.JellyfinEnhanced/Controllers/MaintainerrController.cs",
+        "Jellyfin.Plugin.JellyfinEnhanced/Services/LeavingSoonHomeSection.cs",
+        "Jellyfin.Plugin.JellyfinEnhanced/Services/MaintainerrActions.cs",
+        "Jellyfin.Plugin.JellyfinEnhanced/Services/MaintainerrHttp.cs",
+        "Jellyfin.Plugin.JellyfinEnhanced/js/component-scripts.json"
+      ]
     }
   ]
 }
