@@ -1302,7 +1302,9 @@
         "Jellyfin.Plugin.JellyfinEnhanced/js/locales/ (32 files)"
       ],
       "status": "ported",
-      "rewriteCommits": [],
+      "rewriteCommits": [
+        "6b4c05cfcddd2e617f197590899daf0ba1c6f70f"
+      ],
       "notes": "Applied as is (git show 31969cba | git apply --3way, clean): the 32 locale files under Jellyfin.Plugin.JellyfinEnhanced/js/locales/ are byte-identical to upstream's at 31969cba. It adds one key to each, hidden_content_not_loaded, the message of the Hidden Content saves follow-ups (#1056, ported here as row 40) shown when an edit is refused because the hidden list did not load. Every one of the 32 values is the English source text, the same as en.json here and upstream (Weblate seeding a new key), so a user reads what the English fallback already gave them. No key changes or goes; the value has no {placeholders}; the key exists in this tree's en.json. No key the server reads for poster tag captions (StatusRules) changes, so no resolver version moves. No difference from upstream.",
       "evidence": "artifacts/restructure-plan/step-logs/upstream-sync-evidence/p41-*"
     }
