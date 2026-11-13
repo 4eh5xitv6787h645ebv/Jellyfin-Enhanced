@@ -1,0 +1,23 @@
+ℹ fail 12
+ℹ pass 118
+ℹ tests 130
+✖ Status badges › Leaving soon: says which plugin is missing for the home row (398.344602ms)
+✖ Status badges › Leaving soon: shows the live state and the home row, links to the Maintainerr settings, and edits only the collections list (475.42601ms)
+✖ What's New: the server's text readers find exactly the baseline ids in the generated files (1.76441ms)
+✖ a listed item gets Keep and Postpone; Postpone opens a chooser whose day buttons, custom count and reset post accordingly (36.494172ms)
+✖ a refused action shows the server's reason and offers no Undo (31.25808ms)
+✖ a user switch while an action is on its way shows the next user nothing, and asks again whether they are an administrator (30.956349ms)
+✖ an administrator gets Mark for removal on an unlisted movie, before Share; Mark posts and offers Undo, which posts the opposite (117.914559ms)
+✖ failing tests:
+✖ preservation: defaults, conversions and field order survive collect (237.206258ms)
+✖ preservation: the page keeps every control, section, per-user flag and setting id of the baseline (178.741019ms)
+✖ the *arr tab has the Maintainerr card with its settings, Services has its linked copy, and Refresh reads the server (1000.801483ms)
+✖ the Overview lists Maintainerr as not set up without an address, and the card says what is missing (1501.620421ms)
+✖ the server, What's New and the docs generator read the same declarations from the generated modules as from the hand-written ones (5.771586ms)
+
+dotnet build of tests/backend with the port's backend tests copied onto 105ea35e: 7 compile errors (the types and members the port adds do not exist there), first five:
+tests/backend/Features/MediaTags/IntegrationMaintainerrActionsTests.cs(116,20): error CS0246: The type or namespace name 'MaintainerrCollection' could not be found (are you missing a using directive or an assembly reference?) 
+tests/backend/Features/MediaTags/IntegrationMaintainerrActionsTests.cs(119,134): error CS0246: The type or namespace name 'MaintainerrArrServer' could not be found (are you missing a using directive or an assembly reference?) 
+tests/backend/Features/MediaTags/IntegrationMaintainerrActionsTests.cs(119,185): error CS0246: The type or namespace name 'MaintainerrArrServer' could not be found (are you missing a using directive or an assembly reference?) 
+tests/backend/Features/MediaTags/IntegrationMaintainerrActionsTests.cs(119,25): error CS0246: The type or namespace name 'MaintainerrMatch' could not be found (are you missing a using directive or an assembly reference?) 
+tests/backend/Features/MediaTags/IntegrationMaintainerrActionsTests.cs(119,93): error CS0246: The type or namespace name 'MaintainerrCollection' could not be found (are you missing a using directive or an assembly reference?) 

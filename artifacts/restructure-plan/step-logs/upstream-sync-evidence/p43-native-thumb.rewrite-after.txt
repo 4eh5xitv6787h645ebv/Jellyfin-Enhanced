@@ -1,0 +1,4 @@
+SCRIPT {"name":"101 Dalmatians II: Patch's London Adventure","Primary":{"stamped":true,"blurhashUnderTag":true,"composite":true,"served":"200 1000x1500 cache-control: no-cache, no-store, must-revalidate","original":"200 1000x1500"},"Thumb":{"stamped":true,"blurhashUnderTag":true,"composite":true,"served":"200 1920x1080 cache-control: no-cache, no-store, must-revalidate","original":"200 1920x1080"}}
+BLOCKED https://www.gstatic.com/cv/js/sender/v1/cast_sender.js
+URL /web/index.html#/home
+kept as the 'after' evidence (je12 evidence shows it)

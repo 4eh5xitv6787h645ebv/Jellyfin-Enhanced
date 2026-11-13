@@ -1,0 +1,19 @@
+The two new tests of tests/backend/Features/MediaTags/PosterTags/NativeThumbTagsTests.cs on 7fbe7d90 with only the test file added (dotnet test --filter NativeThumbTagsTests):
+[xUnit.net 00:00:00.83]     JE.Tests.Features.MediaTags.NativeThumbTagsTests.AnItemsOwnThumbIsStampedAndItsBlurhashFollowsTheNewTag [FAIL]
+[xUnit.net 00:00:00.85]     JE.Tests.Features.MediaTags.NativeThumbTagsTests.AStampedThumbRequestIsTheFiltersOwnLikeAPrimaryOne(imageType: "Thumb", handled: True) [FAIL]
+  Failed JE.Tests.Features.MediaTags.NativeThumbTagsTests.AnItemsOwnThumbIsStampedAndItsBlurhashFollowsTheNewTag [274 ms]
+  Error Message:
+   Assert.NotNull() Failure: Value is null
+  Stack Trace:
+     at JE.Tests.Features.MediaTags.NativeThumbTagsTests.AnItemsOwnThumbIsStampedAndItsBlurhashFollowsTheNewTag() in tests/backend/Features/MediaTags/PosterTags/NativeThumbTagsTests.cs:line 67
+   at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)
+   at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+  Failed JE.Tests.Features.MediaTags.NativeThumbTagsTests.AStampedThumbRequestIsTheFiltersOwnLikeAPrimaryOne(imageType: "Thumb", handled: True) [1 ms]
+  Error Message:
+   Assert.Equal() Failure: Values differ
+Expected: True
+Actual:   False
+  Stack Trace:
+     at JE.Tests.Features.MediaTags.NativeThumbTagsTests.AStampedThumbRequestIsTheFiltersOwnLikeAPrimaryOne(String imageType, Boolean handled) in tests/backend/Features/MediaTags/PosterTags/NativeThumbTagsTests.cs:line 107
+--- End of stack trace from previous location ---
+Failed!  - Failed:     2, Passed:     2, Skipped:     0, Total:     4, Duration: 300 ms - JE.Tests.dll (net10.0)

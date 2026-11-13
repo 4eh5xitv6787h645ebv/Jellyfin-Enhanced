@@ -1,0 +1,5 @@
+SCRIPT {"bootstrapFlag":true,"routes":{"status":"HTTP 403","listed":"HTTP 403","unlisted":"HTTP 403"},"unlistedMenu":["addtoplaylist: Add to playlist","download: Download","copy-stream: Copy Stream URL","moremediainfo: Media Info","je-media-tags: Media Tags"],"listedMenu":["addtoplaylist: Add to playlist","download: Download","copy-stream: Copy Stream URL","moremediainfo: Media Info","je-media-tags: Media Tags"]}
+HTTP 403
+
+HTTP 403
+

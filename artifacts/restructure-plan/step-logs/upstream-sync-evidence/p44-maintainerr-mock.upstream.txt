@@ -1,0 +1,15 @@
+      1 GET    200 rule      /api/collections
+      1 GET    200 rule      /api/collections/media/7/content/1?size=500
+      1 GET    200 rule      /api/collections/media/8/content/1?size=500
+      2 GET    200 rule      /api/collections
+      1 GET    200 rule      /api/collections/media/7/content/1?size=500
+      1 GET    200 rule      /api/collections/media/8/content/1?size=500
+      1 POST   201 rule      /api/collections/media/add
+      1 GET    200 rule      /api/collections
+      1 GET    200 rule      /api/collections/media/7/content/1?size=500
+      1 GET    200 rule      /api/collections/media/8/content/1?size=500
+      1 GET    200 rule      /api/collections
+      1 POST   200 rule      /api/collections/media/postpone
+      1 GET    200 rule      /api/collections
+      1 GET    200 rule      /api/collections/media/7/content/1?size=500
+      1 GET    200 rule      /api/collections/media/8/content/1?size=500

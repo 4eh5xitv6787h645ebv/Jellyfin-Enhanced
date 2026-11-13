@@ -1,0 +1,1 @@
+{"mode": "on", "marked": {"id": "0ff8461bed0a2658ec63487586efdbd3", "name": "101 Dalmatians II: Patch's London Adventure"}, "unmarked": {"id": "06de48d758074756c732c7de70aa79f8", "name": "Abominable"}, "status": {"Configured": true, "Maintainerr": true, "Actions": true, "HomeRow": "hss-missing", "Items": 1, "Dated": 1, "LastError": null}}

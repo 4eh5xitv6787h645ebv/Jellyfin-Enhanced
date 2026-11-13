@@ -1,0 +1,38 @@
+== live check
+before: je12 browse '#/home' --script <evidence>/p44-maintainerr-menu.mjs
+  deployed 105ea35edae6 (dll a6dbb5a77f27c339) on lab je1275af9e, 2026-11-14 04:21:52
+  | SCRIPT {"bootstrapFlag":null,"routes":{"status":{"Items":1,"Maintainerr":true},"listed":"HTTP 404","unlisted":"HTTP 404"},"unlistedMenu":["addtocollection: Add to collection","addtoplaylist: Add to playlist","download: Download","copy-stream: Copy Stream URL","delete: Delete media","edit: Edit metadata","editimages: Edit images","editsubtitles: Edit subtitles","identify: Identify","moremediainfo: Media Info","refresh: Refresh metadata","je-media-tags: Media Tags"],"listedMenu":["addtocollection: Add to collection","addtoplaylist: Add to playlist","download: Download","copy-stream: Copy Stream URL","delete: Delete media","edit: Edit metadata","editimages: Edit images","editsubtitles: Edit subtitles","identify: Identify","moremediainfo: Media Info","refresh: Refresh metadata","je-media-tags: Media Tags"]}
+  | CONSOLE Failed to load resource: the server responded with a status of 404 (Not Found) /JellyfinEnhanced/maintainerr/item/0ff8461bed0a2658ec63487586efdbd3
+  | CONSOLE Failed to load resource: the server responded with a status of 404 (Not Found) /JellyfinEnhanced/maintainerr/item/06de48d758074756c732c7de70aa79f8
+  | CONSOLE Failed to load resource: the server responded with a status of 404 (Not Found) /JellyfinEnhanced/cdn/flag-icons/flags/4x3/fi.svg
+  | CONSOLE Failed to load resource: the server responded with a status of 404 (Not Found) /JellyfinEnhanced/cdn/flag-icons/flags/4x3/kr.svg
+  | CONSOLE Failed to load resource: the server responded with a status of 404 (Not Found) /JellyfinEnhanced/cdn/flag-icons/flags/4x3/is.svg
+  | CONSOLE Failed to load resource: the server responded with a status of 404 (Not Found) /JellyfinEnhanced/cdn/flag-icons/flags/4x3/no.svg
+  | CONSOLE Failed to load resource: the server responded with a status of 404 (Not Found) /JellyfinEnhanced/cdn/flag-icons/flags/4x3/se.svg
+  | BLOCKED https://www.gstatic.com/cv/js/sender/v1/cast_sender.js
+  | BLOCKED https://cdn.jsdelivr.net/gh/Druidblack/jellyfin-icon-metadata@main/icons/imdb/imdb.png
+  | BLOCKED https://cdn.jsdelivr.net/gh/Druidblack/jellyfin-icon-metadata@main/icons/themoviedb/themoviedb.png
+  | STORM 15x POST /JellyfinEnhanced/tag-data/7ef882cd307344279240d0eca8333a9f
+  | URL /web/index.html#/details?id=0ff8461bed0a2658ec63487586efdbd3
+after: je12 browse '#/home' --script <evidence>/p44-maintainerr-menu.mjs
+  deployed 416ed073 (dll bc384660d00796e7) on lab je1275af9e, 2026-11-14 04:19:31
+  | SCRIPT {"bootstrapFlag":true,"routes":{"status":{"Actions":true,"HomeRow":"hss-missing","Items":1,"Maintainerr":true},"listed":{"ItemId":"0ff8461bed0a2658ec63487586efdbd3","Marked":true,"CollectionId":7,"Supported":true},"unlisted":{"ItemId":"06de48d758074756c732c7de70aa79f8","Marked":false,"Supported":true}},"unlistedMenu":["addtocollection: Add to collection","addtoplaylist: Add to playlist","download: Download","copy-stream: Copy Stream URL","delete: Delete media","edit: Edit metadata","editimages: Edit images","editsubtitles: Edit subtitles","identify: Identify","moremediainfo: Media Info","refresh: Refresh metadata","je-maintainerr-mark: Mark for removal","je-media-tags: Media Tags"],"markToast":{"text":"Marked for removal","action":"Undo"},"listedMenu":["addtocollection: Add to collection","addtoplaylist: Add to playlist","download: Download","copy-stream: Copy Stream URL","delete: Delete media","edit: Edit metadata","editimages: Edit images","editsubtitles: Edit subtitles","identify: Identify","moremediainfo: Media Info","refresh: Refresh metadata","je-maintainerr-keep: Keep (cancel removal)","je-maintainerr-postpone: Postpone removal","je-media-tags: Media Tags"],"chooser":{"title":"Postpone removal","hint":"Leaves in Nd.","days":["+7 days","+14 days","+30 days","+90 days"],"custom":"Days","reset":"Reset timer (count from today)","cancel":"Cancel"},"postponeToast":{"text":"Removal postponed · leaves in 17d","action":null}}
+  | CONSOLE Failed to load resource: the server responded with a status of 404 (Not Found) /JellyfinEnhanced/cdn/flag-icons/flags/4x3/is.svg
+  | CONSOLE Failed to load resource: the server responded with a status of 404 (Not Found) /JellyfinEnhanced/cdn/flag-icons/flags/4x3/fi.svg
+  | CONSOLE Failed to load resource: the server responded with a status of 404 (Not Found) /JellyfinEnhanced/cdn/flag-icons/flags/4x3/kr.svg
+  | CONSOLE Failed to load resource: the server responded with a status of 404 (Not Found) /JellyfinEnhanced/cdn/flag-icons/flags/4x3/se.svg
+  | CONSOLE Failed to load resource: the server responded with a status of 404 (Not Found) /JellyfinEnhanced/cdn/flag-icons/flags/4x3/no.svg
+  | BLOCKED https://www.gstatic.com/cv/js/sender/v1/cast_sender.js
+  | BLOCKED https://cdn.jsdelivr.net/gh/Druidblack/jellyfin-icon-metadata@main/icons/imdb/imdb.png
+  | BLOCKED https://cdn.jsdelivr.net/gh/Druidblack/jellyfin-icon-metadata@main/icons/themoviedb/themoviedb.png
+  | STORM 15x POST /JellyfinEnhanced/tag-data/7ef882cd307344279240d0eca8333a9f
+  | URL /web/index.html#/details?id=0ff8461bed0a2658ec63487586efdbd3
+same command before and after: yes; after's build is a clean commit
+== checks
+smoke: smoke: pass (0 failing, 1 changed, 0 known, 0 fixed) in 38s vs baseline 105ea35edae6; openapi changed (2026-11-14 04:25:33, tree 416ed073)
+== lab
+lab je1275af9e still exists (running): run je12 down
+tree now: 416ed073
+missing:
+  test: je12 test
+  gates: je12 gate all (and je12 gate browser when client code changed), or je12 gate final
