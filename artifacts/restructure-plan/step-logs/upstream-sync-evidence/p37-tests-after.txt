@@ -1,0 +1,7 @@
+# On 9b8a1aa3's tree (NextStamp also clears the cursor):
+$ dotnet test tests/backend/JE.Tests.csproj -c Release -p:JellyfinTarget=jf12 -p:UseSharedCompilation=false --filter 'FullyQualifiedName~CustomTagRulesTests|FullyQualifiedName~PerfRound2TagCacheResponseTests'
+Passed!  - Failed:     0, Passed:    95, Skipped:     0, Total:    95, Duration: 938 ms - JE.Tests.dll (net10.0)
+$ dotnet test tests/backend/JE.Tests.csproj -c Release -p:JellyfinTarget=jf12 -p:UseSharedCompilation=false --no-build --filter 'FullyQualifiedName~CustomTagRulesTests.AStampIsAlwaysLaterThanTheCursorAPassPublished'   # three times
+Passed!  - Failed:     0, Passed:     1, Skipped:     0, Total:     1, Duration: 86 ms - JE.Tests.dll (net10.0)
+Passed!  - Failed:     0, Passed:     1, Skipped:     0, Total:     1, Duration: 99 ms - JE.Tests.dll (net10.0)
+Passed!  - Failed:     0, Passed:     1, Skipped:     0, Total:     1, Duration: 99 ms - JE.Tests.dll (net10.0)

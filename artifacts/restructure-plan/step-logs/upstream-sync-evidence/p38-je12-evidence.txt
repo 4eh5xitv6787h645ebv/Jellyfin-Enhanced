@@ -1,0 +1,21 @@
+== live check
+before: je12 browse '#/home' --script /home/jake/.local/share/je12/out/je125ce284/p38-arr-sync-unread.mjs
+  deployed upstream-0dba36b6b4ab (dll dc52e7598923a1e1) on lab je125ce284, 2026-11-13 12:42:09
+  | SCRIPT {"task":"Sync Tags from *arr to Jellyfin","instances":{"radarr":1,"sonarr":1},"state":"Idle","status":"Failed","error":"Radarr could not be read: the tags already on its items were kept and the other tags were synced. Check that every enabled instance answers, or disable an instance that is no longer used."}
+  | BLOCKED https://www.gstatic.com/cv/js/sender/v1/cast_sender.js
+  | URL /web/index.html#/home
+after: je12 browse '#/home' --script /home/jake/.local/share/je12/out/je125ce284/p38-arr-sync-unread.mjs
+  deployed de25632b (dll 1c7aa6881cdcb866) on lab je125ce284, 2026-11-13 12:42:29
+  | SCRIPT {"task":"Sync Tags from *arr to Jellyfin","instances":{"radarr":1,"sonarr":1},"state":"Idle","status":"Failed","error":"Radarr could not be read: the tags already on its items were kept and the other tags were synced. Check that every enabled instance answers, or disable an instance that is no longer used."}
+  | BLOCKED https://www.gstatic.com/cv/js/sender/v1/cast_sender.js
+  | URL /web/index.html#/home
+same command before and after: yes; after's build is a clean commit
+== checks
+smoke: smoke: pass (0 failing, 0 changed, 0 known, 0 fixed) in 39s vs baseline de25632ba82a (2026-11-13 12:43:44, tree de25632b)
+== lab
+lab je125ce284 still exists (running): run je12 down
+found bugs filed: NEW-20261111-003541-upstream-docs-enhanced-tags-md-still-says-the-ma, NEW-20261111-030922-upstream-23281542-dismiss-on-what-s-new-leaves-t, NEW-20261111-030922-upstream-23281542-every-settings-search-query-mo, NEW-20261111-030922-a-collection-s-just-added-does-not-follow-a-date, NEW-20261111-041606-upstream-bcd6574a-download-of-a-guarded-mp4-epis, NEW-20261111-045054-upstream-910d1da4-the-native-resolver-s-version-, NEW-20261111-061608-upstream-53ebf043-a-failed-page-of-maintainerr-c, NEW-20261111-061608-upstream-53ebf043-the-paged-members-replace-the-, NEW-20261111-061609-upstream-53ebf043-a-maintainerr-collection-whose, NEW-20261111-061609-upstream-53ebf043-its-own-leavingsoontests-fail-, NEW-20261111-153725-a-page-load-by-a-non-admin-logs-one-wrn-line-per, NEW-20261111-174741-scripts-generate-technical-ratios-py-fails-when-, NEW-20261111-181006-upstream-8fe1e705-a-later-page-of-maintainerr-me, NEW-20261112-213650-upstream-c55c758e-the-playback-info-shortcut-lea, NEW-20261113-014101-upstream-ec470d75-a-discovery-string-s-english-f
+tree now: de25632b
+missing:
+  test: je12 test
+  gates: je12 gate all (and je12 gate browser when client code changed), or je12 gate final

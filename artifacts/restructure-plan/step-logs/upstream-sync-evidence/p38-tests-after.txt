@@ -1,0 +1,3 @@
+# On a7962a31's tree (the run reports itself failed; TaskMetadataTests.ArrSyncKeepsTagsOfAServiceThatCouldNotBeRead expects it):
+$ dotnet test tests/backend/JE.Tests.csproj -c Release -p:JellyfinTarget=jf12 -p:UseSharedCompilation=false --filter 'FullyQualifiedName~ArrTagsSyncTests|FullyQualifiedName~ProviderFailuresDoNotEscapeOrStartSecondRequest|FullyQualifiedName~TaskMetadataTests.ArrSync|FullyQualifiedName~TaskRegressionTests|FullyQualifiedName~TaskVisibilityTests|FullyQualifiedName~IntegrationArrTests'
+Passed!  - Failed:     0, Passed:    92, Skipped:     0, Total:    92, Duration: 387 ms - JE.Tests.dll (net10.0)

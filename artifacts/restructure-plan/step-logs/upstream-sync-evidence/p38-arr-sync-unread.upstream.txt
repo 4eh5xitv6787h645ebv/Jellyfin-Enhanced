@@ -1,0 +1,4 @@
+SCRIPT {"task":"Sync Tags from *arr to Jellyfin","instances":{"radarr":1,"sonarr":1},"state":"Idle","status":"Failed","error":"Radarr could not be read: the tags already on its items were kept and the other tags were synced. Check that every enabled instance answers, or disable an instance that is no longer used."}
+BLOCKED https://www.gstatic.com/cv/js/sender/v1/cast_sender.js
+URL /web/index.html#/home
+kept as the 'before' evidence (je12 evidence shows it)

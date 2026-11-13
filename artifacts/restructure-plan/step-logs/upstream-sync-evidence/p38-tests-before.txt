@@ -1,0 +1,8 @@
+# On 5efdc94f's ArrTagsSyncTask.cs plus upstream's ArrTagsSyncTests (tests/backend/Features/MediaTags/), the 'null' case and the unchanged TaskMetadataTests:
+$ dotnet test tests/backend/JE.Tests.csproj -c Release -p:JellyfinTarget=jf12 -p:UseSharedCompilation=false --filter 'FullyQualifiedName~ArrTagsSyncTests|FullyQualifiedName~ProviderFailuresDoNotEscapeOrStartSecondRequest|FullyQualifiedName~TaskMetadataTests.ArrSync'
+[xUnit.net 00:00:00.60]     JE.Tests.Features.MediaTags.ArrTagsSyncTests.EveryInstanceDownChangesNoItem(failure: "network") [FAIL]
+[xUnit.net 00:00:00.60]     JE.Tests.Features.MediaTags.ArrTagsSyncTests.EveryInstanceDownChangesNoItem(failure: "503") [FAIL]
+[xUnit.net 00:00:00.60]     JE.Tests.Features.MediaTags.ArrTagsSyncTests.EveryInstanceDownChangesNoItem(failure: "timeout") [FAIL]
+[xUnit.net 00:00:00.61]     JE.Tests.Features.MediaTags.ArrTagsSyncTests.ARunThatCouldNotReadAServiceFinishesThenReportsFailed(service: "sonarr") [FAIL]
+[xUnit.net 00:00:00.61]     JE.Tests.Features.MediaTags.ArrTagsSyncTests.ARunThatCouldNotReadAServiceFinishesThenReportsFailed(service: "radarr") [FAIL]
+Failed!  - Failed:     5, Passed:    46, Skipped:     0, Total:    51, Duration: 203 ms - JE.Tests.dll (net10.0)

@@ -1,0 +1,6 @@
+$ je12 mock radarr clear   # Radarr answers again; Sonarr still answers [] for tags and series
+$ je12 browse '#/home' --script /home/jake/.local/share/je12/out/je125ce284/p38-arr-sync-unread.mjs
+# deployed: de25632b (dll 1c7aa6881cdcb866); baseline commit de25632ba82a; screenshots go to /home/jake/.local/share/je12/out/je125ce284
+SCRIPT {"task":"Sync Tags from *arr to Jellyfin","instances":{"radarr":1,"sonarr":1},"state":"Idle","status":"Completed","error":null}
+BLOCKED https://www.gstatic.com/cv/js/sender/v1/cast_sender.js
+URL /web/index.html#/home

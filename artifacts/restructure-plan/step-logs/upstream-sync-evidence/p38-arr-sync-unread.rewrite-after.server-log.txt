@@ -1,0 +1,2 @@
+[2026-11-13 04:42:28.642 +00:00] [ERR] [20] Jellyfin.Plugin.JellyfinEnhanced: "Failed to fetch Radarr tags. Status: ServiceUnavailable"
+[2026-11-13 04:42:28.643 +00:00] [WRN] [20] Jellyfin.Plugin.JellyfinEnhanced: "Radarr could not be read: movie tags already on items are left as they are this run"
