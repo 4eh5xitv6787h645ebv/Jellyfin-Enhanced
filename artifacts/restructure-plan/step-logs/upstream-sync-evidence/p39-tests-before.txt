@@ -1,0 +1,8 @@
+# On 488fa5b2's source (the rewrite before the port) with the port's tests:
+$ dotnet test tests/backend/JE.Tests.csproj -c Release -p:JellyfinTarget=jf12 -p:UseSharedCompilation=false --filter 'FullyQualifiedName~ApiItemInfoAccessTests|FullyQualifiedName~ApiPersonInfoAccessTests|FullyQualifiedName~ApiItemByProvidersAccessTests|FullyQualifiedName~SeerrParentalCertificationTests|FullyQualifiedName~ApiSeerrTests|FullyQualifiedName~PrivacyPolicyTests'
+[xUnit.net 00:00:00.53]     JE.Tests.Features.Seerr.ApiItemInfoAccessTests.AStudioOrGenreIsNamedForAnySignedInCallerAsJellyfinsOwnRoutesDo(route: "genre") [FAIL]
+[xUnit.net 00:00:00.53]     JE.Tests.Features.Seerr.ApiPersonInfoAccessTests.APersonIsNamedForAnySignedInCallerAsJellyfinsOwnRouteAndPeopleInfoDo [FAIL]
+[xUnit.net 00:00:00.53]     JE.Tests.Features.Seerr.ApiItemInfoAccessTests.AStudioOrGenreIsNamedForAnySignedInCallerAsJellyfinsOwnRoutesDo(route: "studio") [FAIL]
+[xUnit.net 00:00:00.54]     JE.Tests.Features.Calendar.ApiItemByProvidersAccessTests.ALookupOfAnIdOnManyItemsChecksAtMostTheFirstHundred [FAIL]
+[xUnit.net 00:00:01.32]     JE.Tests.Features.Seerr.SeerrParentalCertificationTests.ASeriesWhoseLocalEntryHasAnEmptyRatingStaysUnratedLikeJellyfin(blockUnrated: False, refused: False) [FAIL]
+Failed!  - Failed:     5, Passed:    96, Skipped:     0, Total:   101, Duration: 898 ms - JE.Tests.dll (net10.0)

@@ -1,0 +1,5 @@
+# On 7d96b61d's tree:
+$ dotnet test tests/backend/JE.Tests.csproj -c Release -p:JellyfinTarget=jf12 -p:UseSharedCompilation=false --filter 'FullyQualifiedName~ApiItemInfoAccessTests|FullyQualifiedName~ApiPersonInfoAccessTests|FullyQualifiedName~ApiItemByProvidersAccessTests|FullyQualifiedName~SeerrParentalCertificationTests|FullyQualifiedName~ApiSeerrTests|FullyQualifiedName~PrivacyPolicyTests'
+Passed!  - Failed:     0, Passed:   101, Skipped:     0, Total:   101, Duration: 878 ms - JE.Tests.dll (net10.0)
+$ dotnet test tests/backend/JE.Tests.csproj -c Release -p:JellyfinTarget=jf12 -p:UseSharedCompilation=false --filter 'FullyQualifiedName~Architecture|FullyQualifiedName~Parental|FullyQualifiedName~Privacy'
+Passed!  - Failed:     0, Passed:   294, Skipped:     0, Total:   294, Duration: 4 s - JE.Tests.dll (net10.0)

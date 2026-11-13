@@ -1,0 +1,6 @@
+SCRIPT {"jellyfin":{"userItemStudio":404,"studiosByName":{"status":200,"name":"2.0 Entertainment"}},"je":{"studio":{"status":200,"name":"2.0 Entertainment"},"genre":{"status":200,"name":"Action"}},"seerr":{"tvEmptyGermanRating":200,"tvGerman16Control":403}}
+CONSOLE Failed to load resource: the server responded with a status of 404 (Not Found) /Items/80ae90c0629e00f2b24f51c18b5b308c
+CONSOLE Failed to load resource: the server responded with a status of 403 (Forbidden) /JellyfinEnhanced/jellyseerr/tv/990102
+BLOCKED https://www.gstatic.com/cv/js/sender/v1/cast_sender.js
+URL /web/index.html#/home
+kept as the 'before' evidence (je12 evidence shows it)

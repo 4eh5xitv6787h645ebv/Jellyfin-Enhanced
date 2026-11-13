@@ -1,0 +1,10 @@
+$ je12 browse '#/home' --user viewer --script /home/jake/.local/share/je12/out/je125ce284/p39-seerr-access.mjs
+# deployed: 488fa5b2ed12 (dll 65f9ae289328b2a3); baseline commit cd1538f449a8; screenshots go to /home/jake/.local/share/je12/out/je125ce284
+SCRIPT {"jellyfin":{"userItemStudio":404,"studiosByName":{"status":200,"name":"2.0 Entertainment"}},"je":{"studio":{"status":404,"name":null},"genre":{"status":404,"name":null}},"seerr":{"tvEmptyGermanRating":403,"tvGerman16Control":403}}
+CONSOLE Failed to load resource: the server responded with a status of 404 (Not Found) /Items/80ae90c0629e00f2b24f51c18b5b308c
+CONSOLE Failed to load resource: the server responded with a status of 404 (Not Found) /JellyfinEnhanced/studio/80ae90c0629e00f2b24f51c18b5b308c
+CONSOLE Failed to load resource: the server responded with a status of 404 (Not Found) /JellyfinEnhanced/genre/ce06903d834d2c3417e0889dd4049f3b
+CONSOLE Failed to load resource: the server responded with a status of 403 (Forbidden) /JellyfinEnhanced/jellyseerr/tv/990101
+CONSOLE Failed to load resource: the server responded with a status of 403 (Forbidden) /JellyfinEnhanced/jellyseerr/tv/990102
+BLOCKED https://www.gstatic.com/cv/js/sender/v1/cast_sender.js
+URL /web/index.html#/home
