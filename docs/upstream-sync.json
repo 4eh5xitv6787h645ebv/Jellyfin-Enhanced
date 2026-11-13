@@ -1516,8 +1516,9 @@
       "paths": [
         ".github/workflows/docs.yml"
       ],
-      "status": "pending",
-      "rewriteCommits": []
+      "status": "ported",
+      "rewriteCommits": [],
+      "notes": "Applied as is (git show 85c99447 | git apply --3way, clean): .github/workflows/docs.yml is byte-identical to upstream's at 85c99447. A manual run can build an older tag or branch (ref) and publish it without moving the latest alias (latest off); the tooling always comes from the requirements on the repository's main branch, the npm and flag-group steps are skipped where the built ref lacks them, and a ref whose mkdocs.yml has no mike provider is built with an extra config that inherits it and adds the version switcher. Nothing the plugin ships changes."
     },
     {
       "sha": "9eb07d86c538255df5aa9a3ab47a94215702d5a9",
