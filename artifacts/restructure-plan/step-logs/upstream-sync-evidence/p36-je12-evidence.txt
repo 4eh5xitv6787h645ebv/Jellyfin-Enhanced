@@ -1,0 +1,24 @@
+== live check
+before: je12 browse '#/home' --profile locale-de --script artifacts/restructure-plan/step-logs/upstream-sync-evidence/p36-german-discovery-strings.mjs
+  deployed upstream-24fbd7b02494 (dll 7be6e0cd13975f21) on lab je125ce284, 2026-11-13 08:22:30
+  | PROFILE locale-de {"htmlLang":"de"}
+  | SCRIPT {"served":{"status":200,"keys":1436,"discoveryKeys":78,"values":["Filters","Popular","Most votes","as {role}","Nothing matches these filters.","Not in the library"]},"shown":["Filters","Popular","Most votes","as King Chicken","Nothing matches these filters.","Not in the library"],"german":"Einstellungen"}
+  | BLOCKED https://www.gstatic.com/cv/js/sender/v1/cast_sender.js
+  | URL /web/index.html#/home
+after: je12 browse '#/home' --profile locale-de --script artifacts/restructure-plan/step-logs/upstream-sync-evidence/p36-german-discovery-strings.mjs
+  deployed 248fc17c (dll 9414cd2426e5085b) on lab je125ce284, 2026-11-13 08:22:51
+  | PROFILE locale-de {"htmlLang":"de"}
+  | SCRIPT {"served":{"status":200,"keys":1436,"discoveryKeys":78,"values":["Filters","Popular","Most votes","as {role}","Nothing matches these filters.","Not in the library"]},"shown":["Filters","Popular","Most votes","as King Chicken","Nothing matches these filters.","Not in the library"],"german":"Einstellungen"}
+  | BLOCKED https://www.gstatic.com/cv/js/sender/v1/cast_sender.js
+  | URL /web/index.html#/home
+same command before and after: yes; after's build is a clean commit
+== checks
+smoke: smoke: pass (0 failing, 0 changed, 0 known, 0 fixed) in 5s vs baseline 248fc17c85a7 (2026-11-13 08:27:12, tree 248fc17c)
+== lab
+real services: seerr seerr-3; mocked: sonarr, radarr
+lab je125ce284 still exists (running): run je12 down
+found bugs filed: NEW-20261111-003541-upstream-docs-enhanced-tags-md-still-says-the-ma, NEW-20261111-030922-upstream-23281542-dismiss-on-what-s-new-leaves-t, NEW-20261111-030922-upstream-23281542-every-settings-search-query-mo, NEW-20261111-030922-a-collection-s-just-added-does-not-follow-a-date, NEW-20261111-041606-upstream-bcd6574a-download-of-a-guarded-mp4-epis, NEW-20261111-045054-upstream-910d1da4-the-native-resolver-s-version-, NEW-20261111-061608-upstream-53ebf043-a-failed-page-of-maintainerr-c, NEW-20261111-061608-upstream-53ebf043-the-paged-members-replace-the-, NEW-20261111-061609-upstream-53ebf043-a-maintainerr-collection-whose, NEW-20261111-061609-upstream-53ebf043-its-own-leavingsoontests-fail-, NEW-20261111-153725-a-page-load-by-a-non-admin-logs-one-wrn-line-per, NEW-20261111-174741-scripts-generate-technical-ratios-py-fails-when-, NEW-20261111-181006-upstream-8fe1e705-a-later-page-of-maintainerr-me, NEW-20261112-213650-upstream-c55c758e-the-playback-info-shortcut-lea, NEW-20261113-014101-upstream-ec470d75-a-discovery-string-s-english-f
+tree now: 248fc17c
+missing:
+  test: je12 test
+  gates: je12 gate all (and je12 gate browser when client code changed), or je12 gate final

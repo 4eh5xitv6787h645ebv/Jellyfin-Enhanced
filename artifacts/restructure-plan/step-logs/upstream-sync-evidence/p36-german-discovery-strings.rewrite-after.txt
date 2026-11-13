@@ -1,0 +1,7 @@
+# je12 browse '#/home' --profile locale-de --script artifacts/restructure-plan/step-logs/upstream-sync-evidence/p36-german-discovery-strings.mjs --keep after
+# deployed: deployed 248fc17c (dll 9414cd2426e5085b)
+PROFILE locale-de {"htmlLang":"de"}
+SCRIPT {"served":{"status":200,"keys":1436,"discoveryKeys":78,"values":["Filters","Popular","Most votes","as {role}","Nothing matches these filters.","Not in the library"]},"shown":["Filters","Popular","Most votes","as King Chicken","Nothing matches these filters.","Not in the library"],"german":"Einstellungen"}
+BLOCKED https://www.gstatic.com/cv/js/sender/v1/cast_sender.js
+URL /web/index.html#/home
+kept as the 'after' evidence (je12 evidence shows it)

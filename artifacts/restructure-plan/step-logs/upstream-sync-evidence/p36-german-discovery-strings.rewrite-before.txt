@@ -1,0 +1,6 @@
+# je12 browse '#/home' --profile locale-de --script artifacts/restructure-plan/step-logs/upstream-sync-evidence/p36-german-discovery-strings.mjs
+# deployed: deployed ddabc0f0da56 (dll 3287d9c40c12506e)
+PROFILE locale-de {"htmlLang":"de"}
+SCRIPT {"served":{"status":200,"keys":1362,"discoveryKeys":4,"values":[null,null,null,null,null,null]},"shown":["Filters","Popular","Most votes","as King Chicken","Nothing matches these filters.","Not in the library"],"german":"Einstellungen"}
+BLOCKED https://www.gstatic.com/cv/js/sender/v1/cast_sender.js
+URL /web/index.html#/home
