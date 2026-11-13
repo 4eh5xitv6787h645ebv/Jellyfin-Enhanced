@@ -1482,7 +1482,9 @@
       "subject": "Translated using Weblate (Korean)",
       "class": "translation",
       "features": [
-        "platform"
+        "platform",
+        "media-tags",
+        "details-providers"
       ],
       "issues": [],
       "release": null,
@@ -1494,8 +1496,9 @@
       "paths": [
         "Jellyfin.Plugin.JellyfinEnhanced/js/locales/ (32 files)"
       ],
-      "status": "pending",
-      "rewriteCommits": []
+      "status": "ported",
+      "rewriteCommits": [],
+      "notes": "Applied as is (git show 3e7bb922 | git apply --3way, clean): the 32 locale files under Jellyfin.Plugin.JellyfinEnhanced/js/locales/ are byte-identical to upstream's at 3e7bb922. It adds 20 keys to each (1,437 to 1,457 keys), and every value is the English source text (Weblate seeding new keys), so nothing a user reads changes. Nineteen are the maintainerr_* strings of the Maintainerr item-menu actions (upstream 481a10ee, ported here as row 44), all in this tree's en.json with the same text. One, elsewhere_settings_seerr_region, belongs to the Seerr streaming providers port (79a90422, row 42), deferred for a contract review: this tree's en.json gains it when that port lands (branch sync/contract-79a90422 adds it with the same text), and until then nothing reads it (scripts/validate-translations.js lists it as an extra key, a warning). No key changes or goes; every value has the same {placeholders} as its source. No key the server reads for poster tag captions changes, so no resolver version moves. No difference from upstream."
     },
     {
       "sha": "85c994478dc2c39b8a70bbfec6ca5897960f21c6",
