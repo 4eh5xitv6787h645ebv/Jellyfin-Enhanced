@@ -1,0 +1,10 @@
+$ je12 deploy --base   (deployed 67e5e7ad6d27, dll 8ccf4f1476930807); p40-hc-not-loaded.setup.sh (stage)
+$ je12 browse '#/home' --script p40-hc-not-loaded.mjs
+(the script stops at its own GET of hidden-content.json, which answers 500: the unparseable file is never set aside)
+Node.js v26.2.0
+CONSOLE Failed to load resource: the server responded with a status of 500 (Internal Server Error) /JellyfinEnhanced/user-settings/7ef882cd307344279240d0eca8333a9f/hidden-content.json
+BLOCKED https://www.gstatic.com/cv/js/sender/v1/cast_sender.js
+HTTP5XX 500 /JellyfinEnhanced/user-settings/7ef882cd307344279240d0eca8333a9f/hidden-content.json
+URL /web/index.html#/home
+set aside: hidden-content.json.corrupt-*: 
+hidden-content.json now: {"Items":{"kept":

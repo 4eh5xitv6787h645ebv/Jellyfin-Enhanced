@@ -1,0 +1,52 @@
+# Upstream 7649dda9: the port's tests on 7c2204e5
+
+$ node --test tests/frontend/features/hidden-content/features-hidden-save.test.mjs tests/frontend/features/hidden-content/features-hidden-manage-button.test.mjs
+✔ Manage Hidden Content opens the management dialog when the page is a native Home tab
+✔ Manage Hidden Content opens the management dialog when the page is a Custom Tabs tab
+✔ Manage Hidden Content opens the management dialog when the page is a Plugin Page
+✔ Manage Hidden Content opens the page when no placement is set
+✔ Manage Hidden Content opens the page when Plugin Pages is chosen but not installed
+✔ Manage Hidden Content opens the management dialog when Hidden Content is off server-wide
+✔ a hidden list that failed to load is not saved over the stored one
+✔ a settings panel switch goes back when the change is refused (list not loaded)
+✔ a settings panel switch saves its change (list loaded)
+✔ a list that loads later becomes writable
+✔ a loaded list, empty or not, is writable
+✔ between a user switch and the incoming list loading, nothing is saved
+✔ a hide on another device is kept when this tab saves
+✔ an unhide on another device is not undone when this tab saves
+✔ an administrator's hides and unhides for the user survive the user's next change
+✔ a setting changed elsewhere is kept; this tab writes only the settings it changed
+✔ unhiding an item this tab knew removes it; items added elsewhere stay
+✔ a change made while a save's read is in flight is kept and saved
+✔ a change made while a save's write is in flight is kept and saved
+✔ a save whose read fails writes nothing and retries onto the list stored then
+✔ a change undone before it is saved writes nothing
+✔ a Continue Watching hide the server dropped on playback is not written back by the next save
+✔ adding back to Continue Watching right after removing it sticks
+✔ a save in flight when Continue Watching removal starts finishes first and keeps the entry
+✔ a save whose read never gets an answer gives up, so later saves and Continue Watching removal go ahead
+✔ a save whose write never gets an answer gives up, so later saves and Continue Watching removal go ahead
+✔ a row-only hide made here does not replace a global hide another device stored for the same title
+✔ unhiding one entry leaves a separate TMDB entry for the same title alone
+✔ a save waiting to retry is still retried after the pagehide of a view jellyfin-web leaves
+✔ a save waiting to retry is still retried after the pagehide of a back/forward cache hide
+✔ a save waiting to retry is dropped on the pagehide of the page being unloaded
+✔ a name stored HTML-escaped reads as its title, and is not rewritten by other changes
+✔ a refresh keeps a change this tab has not saved yet
+ℹ tests 33
+ℹ pass 33
+ℹ fail 0
+
+$ node --test --test-name-pattern 'left out of the bootstrap|shape the server answers' tests/frontend/bootstrap/bootstrap.test.mjs
+✔ real loader reads a hidden list or shortcut list left out of the bootstrap on its own, never as empty
+✔ a hidden list booted and saved in the shape the server answers and stores keeps every change
+ℹ tests 2
+ℹ pass 2
+ℹ fail 0
+
+$ dotnet test tests/backend/JE.Tests.csproj -c Release -p:JellyfinTarget=jf12 --no-build --filter 'FullyQualifiedName~ApiUserDocumentReadTests|FullyQualifiedName~BootstrapContractTests'
+Passed!  - Failed:     0, Passed:    19, Skipped:     0, Total:    19, Duration: 2 s - JE.Tests.dll (net10.0)
+
+# je12 test --dotnet (hidden-content, platform, settings, settings-panel; the repo's quick mode) on the working tree that became 262770ba:
+QUICK: node 1479 passed, 0 failed; dotnet: Passed! - Failed: 0, Passed: 189; restructure-gates: quick passed

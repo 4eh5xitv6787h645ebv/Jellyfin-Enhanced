@@ -1,0 +1,5 @@
+$ JE12=… python3 scripts/upstream_lab_deploy.py 7649dda978ac84eec0a25146e6e45be063ed4c17   (deployed upstream-7649dda978ac, dll 5300c91b242b0eba)
+$ je12 browse '#/home' --script p40-hc-parity.mjs --keep before
+SCRIPT {"shownAtLoad":["tmdb-7=Tom & Jerry"],"removedFromContinueWatching":true,"storedAfterRemoval":["0932a8ba-3335-d82b-0aae-3f9b1d4b3269","tmdb-7"],"storedAfterUnhideAndHide":["aaaaaaaaaaaaaaaaaaaaaaaaaaaaaa01","tmdb-7"],"storedSeerrName":"Tom &amp; Jerry"}
+BLOCKED https://www.gstatic.com/cv/js/sender/v1/cast_sender.js
+URL /web/index.html#/home

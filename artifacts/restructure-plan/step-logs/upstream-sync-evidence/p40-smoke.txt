@@ -1,0 +1,20 @@
+$ je12 smoke   (lab je125ce284, deployed 7c2204e5; baseline 67e5e7ad6d27 recorded by je12 up)
+page admin           ok      14 tabs; Media Tags section 7 tabs (2.0s)
+page settings        ok      panel open, 24 tabs (2.1s)
+page media-tags-hub  ok      #jeMediaTagsHub visible (2.0s)
+page poster          ok      100/100 cards tagged (1.8s)
+page details         ok      101 Dalmatians II: Patch's London Adventure: 78 JE elements (2.0s)
+page hidden-content  ok      page rendered (1.3s)
+page bookmarks       ok      page rendered (1.3s)
+page calendar        ok      5 events (3.3s)
+page downloads       ok      4 items (4.7s)
+page activity        ok      Activity tab rendered (1.7s)
+page catchup         ok      Catch Up tab rendered (1.4s)
+page seerr           ok      5 Seerr cards (1.7s)
+page player          ok      playing 1.0s; OSD rating present (2.8s)
+plugin               ok      12.15.0.0 Active
+scheduled tasks      ok      16 JE tasks (keys and ids)
+openapi              ok      HTTP 200, 477 paths, 183 under /JellyfinEnhanced
+bundle wire          ok      br 200 561588B 304:yes, gzip 200 680200B 304:yes, identity 200 2505817B 304:yes; decoded bodies identical
+server log           ok      168 ERR/WRN lines, 0 new kind(s)
+smoke: pass (0 failing, 0 changed, 0 known, 0 fixed) in 35s; details <je12 state>

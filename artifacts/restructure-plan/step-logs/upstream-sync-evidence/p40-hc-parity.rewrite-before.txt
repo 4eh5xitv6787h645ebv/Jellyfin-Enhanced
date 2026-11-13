@@ -1,0 +1,6 @@
+$ je12 deploy --base   (deployed 67e5e7ad6d27, dll 8ccf4f1476930807)
+$ je12 browse '#/home' --script p40-hc-parity.mjs
+SCRIPT {"shownAtLoad":["tmdb-7=Tom & Jerry"],"removedFromContinueWatching":true,"storedAfterRemoval":["0932a8ba-3335-d82b-0aae-3f9b1d4b3269","tmdb-7"],"storedAfterUnhideAndHide":["0932a8ba-3335-d82b-0aae-3f9b1d4b3269","aaaaaaaaaaaaaaaaaaaaaaaaaaaaaa01","tmdb-7"],"storedSeerrName":"Tom & Jerry"}
+BLOCKED https://www.gstatic.com/cv/js/sender/v1/cast_sender.js
+STORM 26x POST /JellyfinEnhanced/tag-data/7ef882cd307344279240d0eca8333a9f
+URL /web/index.html#/home

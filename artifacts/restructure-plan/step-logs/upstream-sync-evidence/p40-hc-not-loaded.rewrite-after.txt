@@ -1,0 +1,7 @@
+$ je12 deploy (deployed 7c2204e5, dll 39157c48c40b2d90); p40-hc-not-loaded.setup.sh (stage)
+$ je12 browse '#/home' --script p40-hc-not-loaded.mjs
+SCRIPT {"hiddenCountAtLoad":0,"toasts":["Your hidden items could not be loaded, so this change was not made. Please reload and retry."],"threw":null,"asked":false,"hidden":false,"nextReadItems":[]}
+BLOCKED https://www.gstatic.com/cv/js/sender/v1/cast_sender.js
+URL /web/index.html#/home
+set aside: hidden-content.json.corrupt-20261113055428394-67c1fbad: {"Items":{"kept":
+hidden-content.json now: {"Items":{},"Settings":{"Enabled":true,"FilterLibrary":true,"FilterDiscovery":true,"FilterUpcoming":true,"FilterCalendar
