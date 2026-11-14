@@ -1,0 +1,22 @@
+# Upstream 3e7bb922 (Weblate), on the Lenovo, working tree of the port before its commit (f708c41a + the 32 locale files)
+
+## je12 test platform media-tags details-providers (je12 v2.4.1, the repository's quick mode)
+  QUICK: node 3308 passed, 0 failed
+test: pass in 115s (the repo's quick mode)
+
+## dotnet test tests/backend/JE.Tests.csproj -c Release -p:JellyfinTarget=jf12 --filter FullyQualifiedName~PackedResourcesTests
+## (the assembly budget, client/assembly-budget.json, with the packed locales)
+Passed!  - Failed:     0, Passed:     5, Skipped:     0, Total:     5, Duration: 250 ms - JE.Tests.dll (net10.0)
+
+## Packed growth of the 32 locale files, brotli quality 5 as scripts/pack-embedded.mjs packs them
+packed 775,900 -> 783,321 bytes (+7,421); raw +34,432
+
+## The 20 new keys in each of the 32 locales, compared with en.json here
+640 values (32 x 20) equal to the English source text, 0 translated, 0 placeholder mismatches; every file 1,457 keys.
+19 keys (maintainerr_*) are in this tree's en.json; elsewhere_settings_seerr_region is not (row 42, deferred).
+
+## node scripts/validate-translations.js validate de, the lines about the new key
+⚠ Found 2 warning(s):
+Extra 1 key(s) not in base translation:
+  - elsewhere_settings_seerr_region
+ℹ Completion: 97% (1457/1505 keys)

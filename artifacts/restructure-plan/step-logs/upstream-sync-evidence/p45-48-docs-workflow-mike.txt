@@ -1,0 +1,43 @@
+# The 'Publish docs version' step of .github/workflows/docs.yml at 18c926f1 (all three docs commits applied), run
+# locally on the Lenovo, 2026-11-14. Tooling: .github/docs/requirements.txt installed with pip --require-hashes in a venv
+# (MkDocs 1.6.1, mike 2.1.3). The step's script was read from the workflow file and run with bash -e in a scratch clone
+# of the branch whose origin was a scratch bare repository, so every 'mike ... --push' landed there and nowhere else.
+# scripts/generate_config_flag_groups.py ran first, as in the workflow (no change to its output).
+
+## Runs, in order (environment -> exit code)
+1. GITHUB_REF=refs/heads/main, no inputs (a push to main)              -> exit 0
+2. GITHUB_REF=refs/tags/12.15.0.0 (a tag push)                         -> exit 0
+3. manual run on main, release=12.16, latest=true                      -> exit 0
+4. manual run with ref=c463ce4a (mkdocs.yml without the mike provider),
+   release=12.14, latest=false (back fill)                             -> exit 0
+
+## gh-pages history in the scratch remote, newest first
+Deployed c463ce4a to 12.14 with MkDocs 1.6.1 and mike 2.1.3
+Set title of 12.15 to 12.15 with mike 2.1.3
+Deployed 18c926f1 to 12.16 with MkDocs 1.6.1 and mike 2.1.3
+Set default version to latest with mike 2.1.3
+Deployed 18c926f1 to 12.15 with MkDocs 1.6.1 and mike 2.1.3
+Deployed 18c926f1 to dev with MkDocs 1.6.1 and mike 2.1.3
+
+## gh-pages:versions.json after run 3
+[{"version":"dev","title":"main","aliases":[]},{"version":"12.16","title":"latest (12.16)","aliases":["latest"]},{"version":"12.15","title":"12.15","aliases":[]}]
+
+## gh-pages:versions.json after run 4
+[{"version":"dev","title":"main","aliases":[]},{"version":"12.16","title":"latest (12.16)","aliases":["latest"]},{"version":"12.15","title":"12.15","aliases":[]},{"version":"12.14","title":"12.14","aliases":[]}]
+
+## run 4: the extra config the step wrote, since mkdocs.yml at c463ce4a has no 'provider: mike'
+INHERIT: mkdocs.yml
+extra:
+  version:
+    provider: mike
+    default: latest
+
+## the back-filled 12.14 pages carry the version switcher: 12.14/index.html lines naming mike or versions.json
+1
+
+## default page (gh-pages:index.html) redirects to
+url=latest/
+
+## mkdocs warnings in run 1 (the build is not strict; a plain 'mkdocs build' of c463ce4a, before the port, prints the same two)
+WARNING -  The following pages exist in the docs directory, but are not included in the "nav" configuration:
+WARNING -  Doc file 'rewrite/README.md' contains a link '../../REVIEW.md', but the target '../REVIEW.md' is not found among documentation files.
