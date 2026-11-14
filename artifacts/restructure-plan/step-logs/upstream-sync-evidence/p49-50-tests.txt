@@ -1,0 +1,27 @@
+# Upstream c8b464cf (+ 709b583f): tests, on the Lenovo (je12 v2.4.1, the repository's quick mode)
+
+## The new entry-point test before the port: the test file with the old one-argument constructor, the production code unchanged
+## je12 test --dotnet (media-tags): node 2024 passed, 0 failed; dotnet 1 failed of 1938
+[xUnit.net 00:00:20.09]     JE.Tests.Features.MediaTags.LeavingSoonTests.The_scheduled_refresh_asks_Maintainerr_only_while_a_badge_home_row_or_action_uses_the_facts [FAIL]
+  Failed JE.Tests.Features.MediaTags.LeavingSoonTests.The_scheduled_refresh_asks_Maintainerr_only_while_a_badge_home_row_or_action_uses_the_facts [8 ms]
+  Error Message:
+   Assert.Equal() Failure: Values differ
+Expected: 0
+Actual:   1
+  Stack Trace:
+     at JE.Tests.Features.MediaTags.LeavingSoonTests.The_scheduled_refresh_asks_Maintainerr_only_while_a_badge_home_row_or_action_uses_the_facts() in tests/backend/Features/MediaTags/PosterTags/LeavingSoonTests.cs:line 214
+--- End of stack trace from previous location ---
+
+Failed!  - Failed:     1, Passed:  1937, Skipped:     0, Total:  1938, Duration: 31 s - JE.Tests.dll (net10.0)
+
+## After the port (working tree of b34bb1b5 before its commit): je12 test --dotnet (media-tags)
+  QUICK: node 2024 passed, 0 failed
+Passed!  - Failed:     0, Passed:  1939, Skipped:     0, Total:  1939, Duration: 31 s - JE.Tests.dll (net10.0)
+test: pass in 101s (the repo's quick mode)
+(1939 = the 1938 above, now passing, plus upstream's test of LeavingSoonService.Consumed.)
+
+## je12 regen after the port: tests/docs/production-inventory.json, the same change as upstream's 709b583f
++      "literal": "settings.json",
++      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/MediaTags/Tasks/RefreshLeavingSoonTagsTask.cs"
+-    "storage_references": 96,
++    "storage_references": 97,

@@ -1,0 +1,22 @@
+# Upstream c8b464cf (+ 709b583f): Refresh Leaving Soon Tags on upstream's build and on the port, one je12 lab (Jellyfin 12.4, docker backend, no route out), on the Lenovo
+
+The script is p49-50-leaving-task.mjs beside this file (run from the lab's out/ dir). It logs in as the lab admin and, through the
+Jellyfin API: sets the Leaving soon source to the collection name "Leaving Soon" (no Maintainerr URL) with the badge default, the
+home row and the Maintainerr actions off (neither lab user has the badge on), runs the task and prints the [LeavingSoon] lines the
+run added to the enhanced log; then turns the badge default (StatusTagsLeaving) on and does the same again; then prints the task's
+name, visibility and description. "before" is upstream's build of c8b464cf (scripts/upstream_lab_deploy.py), "after" this port.
+
+before: je12 browse '#/home' --script <lab out>/leaving-task.mjs --wait 1000
+  deployed upstream-c8b464cf5a21 (dll cf5270894e777a1a) on lab je125ce284, 2026-11-14 19:25:36
+  | SCRIPT {"task":{"name":"Refresh Leaving Soon Tags","hidden":false,"description":"Reads which items Maintainerr (or the configured leaving collections) will remove, for the Leaving soon status badge. Runs when the configured refresh interval has passed, and only while something uses the Leaving soon data."},"nothingUsesIt":{"badgeDefault":false,"configSaved":204,"runStarted":204,"result":"Completed","leavingLog":["[DEBUG] [LeavingSoon] Scheduled refresh skipped: no source is set, or nothing uses the Leaving soon data."]},"badgeDefaultOn":{"badgeDefault":true,"configSaved":204,"runStarted":204,"result":"Completed","leavingLog":["[DEBUG] [LeavingSoon] Scheduled refresh checked (it only contacts the source once the refresh interval has passed)."]}}
+  | BLOCKED https://www.gstatic.com/cv/js/sender/v1/cast_sender.js
+  | URL /web/index.html#/home
+after: je12 browse '#/home' --script <lab out>/leaving-task.mjs --wait 1000
+  deployed b34bb1b5 (dll 019351950be755d8) on lab je125ce284, 2026-11-14 19:25:55
+  | SCRIPT {"task":{"name":"Refresh Leaving Soon Tags","hidden":false,"description":"Reads which items Maintainerr (or the configured leaving collections) will remove, for the Leaving soon status badge. Runs when the configured refresh interval has passed, and only while something uses the Leaving soon data."},"nothingUsesIt":{"badgeDefault":false,"configSaved":204,"runStarted":204,"result":"Completed","leavingLog":["[DEBUG] [LeavingSoon] Scheduled refresh skipped: no source is set, or nothing uses the Leaving soon data."]},"badgeDefaultOn":{"badgeDefault":true,"configSaved":204,"runStarted":204,"result":"Completed","leavingLog":["[DEBUG] [LeavingSoon] Scheduled refresh checked (it only contacts the source once the refresh interval has passed)."]}}
+  | BLOCKED https://www.gstatic.com/cv/js/sender/v1/cast_sender.js
+  | URL /web/index.html#/home
+same command before and after: yes; after's build is a clean commit
+
+## je12 smoke on the port (b34bb1b5 deployed)
+smoke: smoke: pass (0 failing, 0 changed, 0 known, 0 fixed) in 35s vs baseline b34bb1b5c616 (2026-11-14 19:26:36, tree b34bb1b5)
