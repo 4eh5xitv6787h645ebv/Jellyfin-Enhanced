@@ -1473,7 +1473,9 @@
         "mkdocs.yml"
       ],
       "status": "ported",
-      "rewriteCommits": [],
+      "rewriteCommits": [
+        "f708c41a54a48ce8c2c12d7e9b7c598ecee9887c"
+      ],
       "notes": "Applied as is (git show dbaf4729 | git apply --3way, clean): .github/workflows/docs.yml, .github/docs/requirements.in and .github/docs/requirements.txt are byte-identical to upstream's at dbaf4729, and mkdocs.yml gains the same extra.version block (provider mike, default latest). The docs workflow publishes with mike to the gh-pages branch (dev on a push to main, major.minor plus the latest alias on a tag push or a manual run with release set) instead of uploading a Pages artifact. This tree's mkdocs.yml keeps its own exclude of upstream-sync*. Nothing the plugin ships changes; this tree is never pushed, so the workflow only runs where upstream's does."
     },
     {
@@ -1497,7 +1499,9 @@
         "Jellyfin.Plugin.JellyfinEnhanced/js/locales/ (32 files)"
       ],
       "status": "ported",
-      "rewriteCommits": [],
+      "rewriteCommits": [
+        "2fdbb8fa91a8038d862e3d78cea95f4a12356918"
+      ],
       "notes": "Applied as is (git show 3e7bb922 | git apply --3way, clean): the 32 locale files under Jellyfin.Plugin.JellyfinEnhanced/js/locales/ are byte-identical to upstream's at 3e7bb922. It adds 20 keys to each (1,437 to 1,457 keys), and every value is the English source text (Weblate seeding new keys), so nothing a user reads changes. Nineteen are the maintainerr_* strings of the Maintainerr item-menu actions (upstream 481a10ee, ported here as row 44), all in this tree's en.json with the same text. One, elsewhere_settings_seerr_region, belongs to the Seerr streaming providers port (79a90422, row 42), deferred for a contract review: this tree's en.json gains it when that port lands (branch sync/contract-79a90422 adds it with the same text), and until then nothing reads it (scripts/validate-translations.js lists it as an extra key, a warning). No key changes or goes; every value has the same {placeholders} as its source. No key the server reads for poster tag captions changes, so no resolver version moves. No difference from upstream."
     },
     {
@@ -1517,7 +1521,9 @@
         ".github/workflows/docs.yml"
       ],
       "status": "ported",
-      "rewriteCommits": [],
+      "rewriteCommits": [
+        "fb4b9fdefd9083b7894da8aa0fdbfb022924fa44"
+      ],
       "notes": "Applied as is (git show 85c99447 | git apply --3way, clean): .github/workflows/docs.yml is byte-identical to upstream's at 85c99447. A manual run can build an older tag or branch (ref) and publish it without moving the latest alias (latest off); the tooling always comes from the requirements on the repository's main branch, the npm and flag-group steps are skipped where the built ref lacks them, and a ref whose mkdocs.yml has no mike provider is built with an extra config that inherits it and adds the version switcher. Nothing the plugin ships changes."
     },
     {
@@ -1537,7 +1543,9 @@
         ".github/workflows/docs.yml"
       ],
       "status": "ported",
-      "rewriteCommits": [],
+      "rewriteCommits": [
+        "18c926f13783281d279f68b8af231e989518d175"
+      ],
       "notes": "Applied as is (git show 9eb07d86 | git apply --3way, clean): .github/workflows/docs.yml is byte-identical to upstream's at 9eb07d86. The workflow's default token permission is read and only the deploy job may write; the unused cache step goes; dev is titled main in the version picker, and a release deployed as latest is titled latest (12.15) while the release it replaces gets its plain version title back (mike retitle). Nothing the plugin ships changes."
     }
   ]
