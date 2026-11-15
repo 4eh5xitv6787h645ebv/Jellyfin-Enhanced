@@ -23,6 +23,7 @@ export interface TagRulesBridge {
             excludes(group: string, element: HTMLElement): boolean;
         };
         tagHidden?: import('./pipeline/tag-hidden').TagHidden;
+        tagText?: import('./pipeline/tag-text').TagText;
     };
     currentSettings?: LanguageSettings & RatingSettings & import('./layout/layout-rules').LayoutDocument;
     pluginConfig?: LanguageConfig & RatingConfig & import('./layout/layout-rules').LayoutDocument;

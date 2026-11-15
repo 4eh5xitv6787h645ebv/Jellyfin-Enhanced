@@ -120,6 +120,7 @@
     "TagStyleTarget",
     "TagStylesAllowUserPreset",
     "TagStylesEnabled",
+    "TagTextOverrides",
     "TagsCacheTtlDays",
     "TagsHideOnHover",
     "VersionsTagOrder",

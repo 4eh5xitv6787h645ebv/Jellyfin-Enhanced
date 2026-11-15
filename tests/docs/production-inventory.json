@@ -1054,6 +1054,10 @@
       "category": "Shared"
     },
     {
+      "path": "Jellyfin.Plugin.JellyfinEnhanced/Shared/MediaTags/PosterTags/TagTextRules.cs",
+      "category": "Shared"
+    },
+    {
       "path": "Jellyfin.Plugin.JellyfinEnhanced/Shared/MediaTags/SeriesQualityAggregation.cs",
       "category": "Shared"
     },
@@ -5867,6 +5871,14 @@
       "class": "PluginConfiguration",
       "name": "TagHiddenValues",
       "type": "TagHiddenValues?",
+      "initializer": null,
+      "constructor_assignment": "null",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Configuration/PluginConfiguration.cs"
+    },
+    {
+      "class": "PluginConfiguration",
+      "name": "TagTextOverrides",
+      "type": "string?",
       "initializer": null,
       "constructor_assignment": "null",
       "file": "Jellyfin.Plugin.JellyfinEnhanced/Configuration/PluginConfiguration.cs"
@@ -10943,9 +10955,9 @@
   ],
   "counts": {
     "build_targets": 1,
-    "files": 556,
+    "files": 557,
     "routes": 210,
-    "configuration_properties": 772,
+    "configuration_properties": 773,
     "storage_references": 97,
     "scheduled_tasks": 16,
     "locales": 33

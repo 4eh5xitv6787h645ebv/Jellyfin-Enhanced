@@ -72,9 +72,9 @@ const toCss = (c: Rgba): string => 'rgba(' + Math.round(c.r) + ', ' + Math.round
  * @param root - Holds the editor markup.
  * @param customLabels - The Custom rules table's labels (unsaved edits included).
  * @param isCurrent - Whether the page that built it is still the live one.
- * @param hiddenStore - Where Hidden tags are kept (tag-hidden-editor.ts); without one no tag can be hidden.
+ * @param hiddenStore, textStore - Where Hidden tags and Tag text are kept (tag-hidden-editor.ts); without one no tag can be hidden or renamed.
  */
-const createTagStylesEditor: CreateTagStylesEditor = (root, customLabels = () => [], isCurrent = () => true, hiddenStore = null): TagStylesEditor => {
+const createTagStylesEditor: CreateTagStylesEditor = (root, customLabels = () => [], isCurrent = () => true, hiddenStore = null, textStore = null): TagStylesEditor => {
     let cat: Catalog | null = null;
     let state: StyleState = emptyState();
     let current = 'quality';
@@ -144,7 +144,7 @@ const createTagStylesEditor: CreateTagStylesEditor = (root, customLabels = () =>
     };
     const labelKey = (g: string, l: string): string => g + ':' + l;
     const hidden = createHiddenTags({
-        root, store: hiddenStore, customLabels, labelsOf, rebuildKeepingFocus, renderTabs, renderTargets, renderGroup, renderSample, renderPreview,
+        root, store: hiddenStore, texts: textStore, customLabels, labelsOf, rebuildKeepingFocus, renderTabs, renderTargets, renderGroup, renderSample, renderPreview,
         ages: () => cat?.age || [],
         current: () => current,
         target: () => target,

@@ -4,16 +4,22 @@
  * TagHiddenValues ({ Genre: ['drama'], … }), kept by the Colours section through the store the editor
  * is given. The editor (tag-styles-editor.ts) owns what is picked and drawn; this module owns the
  * lists, the Hide switch, the hidden line and marks, and the words for what a tile hides.
+ *
+ * Tag text sits with it: a tile of a group whose chips are plain words (quality, genre, status, awards)
+ * can show other words than its own ("Season Finale" -> "End of Season"). The texts live in
+ * TagTextOverrides ({ status: { seasonFinale: 'End of Season' } }), kept by the Colours section too.
  */
 import { find } from './dom';
 import { fmt } from './format';
 import type { AgeBoard, Label } from './tag-styles-model';
 import { ALL, el, GROUPS } from './tag-styles-parts';
-import type { HiddenStore } from './types';
+import type { HiddenStore, TextStore } from './types';
 
 const T = fmt;
 // Flag and Language codes colour every flag or code, so they are not tags to hide.
 const NOT_HIDEABLE: Readonly<Record<string, readonly string[]>> = { language: ['flag', 'code'] };
+// Only groups whose chips are plain words take a text.
+const TEXT_GROUPS = ['quality', 'genre', 'status', 'awards'];
 const pascal = (g: string): string => g.charAt(0).toUpperCase() + g.slice(1);
 // A rating keeps its hyphen on one line ("TV-14", never "TV-" / "14").
 const nb = (text: string): string => text.replace(/-/g, '‑');
@@ -27,6 +33,7 @@ const hiddenIcon = (cls = 'material-icons'): HTMLElement => {
 export interface HiddenEditorHost {
     root: HTMLElement;
     store: HiddenStore | null;
+    texts: TextStore | null;
     /** The catalog's age rating boards (empty before the catalog is in). */
     ages(): readonly AgeBoard[];
     /** The Custom rules' labels, without the hidden labels whose rule is gone. */
@@ -49,7 +56,7 @@ export interface HiddenEditorHost {
 }
 
 export function createHiddenTags(h: HiddenEditorHost) {
-    const { root, store } = h;
+    const { root, store, texts } = h;
     const ratingsOf = (board: string): string[] => h.ages().find((a) => a.id === board)?.ratings || [];
     const hideable = (g: string, l: string): boolean => !!store && l !== ALL && !(NOT_HIDEABLE[g] || []).includes(l);
     /** The group's hidden labels. */
@@ -69,6 +76,35 @@ export function createHiddenTags(h: HiddenEditorHost) {
     function withOrphans(rules: Label[]): Label[] {
         if (!store) return rules;
         return rules.concat(list('custom').filter((l) => !rules.some((r) => r.key === l)).map((l) => ({ key: l, name: T('{name} (no rule)', { name: l }) })));
+    }
+
+    const renamable = (g: string, l: string): boolean => !!texts && l !== ALL && TEXT_GROUPS.includes(g);
+    /** The tag's text from the administrator, or ''. */
+    const textOf = (g: string, l: string): string => (texts ? texts.get()[g]?.[l] : '') || '';
+
+    /** The picked tag's Text field: empty keeps the tag's own words (its placeholder). */
+    function buildTextRow(g: string, picked: Label): HTMLElement {
+        const row = el('div', 'je-ts-text-row');
+        const label = el('label', 'je-ta-switch-name', T('Text'));
+        label.htmlFor = 'tagStyleText';
+        const input = el('input');
+        input.type = 'text';
+        input.id = 'tagStyleText';
+        input.maxLength = 32;
+        input.placeholder = picked.name;
+        input.value = textOf(g, picked.key);
+        input.setAttribute('aria-describedby', 'tagStyleTextHint');
+        // Saved when the field is left (or Enter is pressed): the row itself is not redrawn, so typing keeps focus.
+        input.addEventListener('change', () => {
+            texts?.set(g, picked, input.value.trim());
+            h.renderTargets();
+            h.renderSample();
+            h.renderPreview();
+        });
+        const scope = el('span', 'je-ts-hide-scope', T('Replaces the whole chip text for everyone. Leave empty to keep "{name}".', { name: picked.name }));
+        scope.id = 'tagStyleTextHint';
+        row.append(label, input, scope);
+        return row;
     }
 
     /** A language tile's code with its English name ("EN (English)"), as the page is in English. */
@@ -182,7 +218,18 @@ export function createHiddenTags(h: HiddenEditorHost) {
     /** A tile's sample chip; a hidden tile says so: dimmed, with the hidden mark on its chip's corner and in its name. */
     function tile(cell: HTMLElement, sample: HTMLElement, label: Label): void {
         const g = h.current();
-        if (!shownHidden(g, label.key)) { cell.appendChild(sample); return; }
+        if (!shownHidden(g, label.key)) {
+            const text = textOf(g, label.key);
+            if (!text) { cell.appendChild(sample); return; }
+            // A renamed tile says so: the pencil mark, and the new words in its tooltip.
+            cell.title = T('{name} shows as "{text}"', { name: cell.title, text });
+            const renamed = el('span', 'je-ts-chip-wrap');
+            const pencil = el('i', 'material-icons je-ts-hidden-mark je-ts-renamed-mark', 'edit');
+            pencil.setAttribute('aria-hidden', 'true');
+            renamed.append(sample, pencil);
+            cell.appendChild(renamed);
+            return;
+        }
         cell.classList.add('je-ts-target-hidden');
         const name = cell.getAttribute('aria-label') || '';
         cell.setAttribute('aria-label', coveredBy(g, label.key) && !isHidden(g, label.key) ? T('{name}, hidden by Dual and Multi badges', { name }) : T('{name}, hidden', { name }));
@@ -195,7 +242,8 @@ export function createHiddenTags(h: HiddenEditorHost) {
     /** The hint under the list's title, with the view it shows or how far it scrolls. */
     function hint(scrolls: boolean): string {
         const g = h.current();
-        const base = T(store ? 'Choose a tag to change its colours or hide it.' : 'Choose a tag to change only its colours.');
+        const base = T(!store ? 'Choose a tag to change only its colours.'
+            : texts && TEXT_GROUPS.includes(g) ? 'Choose a tag to change its colours or text, or hide it.' : 'Choose a tag to change its colours or hide it.');
         if (h.hiddenOnly()) return base + ' ' + T('Showing the {count} hidden tags only.', { count: countOf(g) });
         return base + (scrolls ? ' ' + T('{count} tags; scroll for more.', { count: h.labelsOf(g).length }) : '');
     }
@@ -253,6 +301,7 @@ export function createHiddenTags(h: HiddenEditorHost) {
                 back.dataset.jeGoto = 'groups:' + g;
                 line.append(T('Hiding works per tag. To turn the whole group off for new users, see '), back, '.');
                 box.appendChild(line);
+                if (texts && TEXT_GROUPS.includes(g)) box.appendChild(el('p', 'je-ts-hide-none', T('To change the words a tag shows, choose it in the list: its Text field is at the top of its settings.')));
                 return;
             }
             // Hidden only through the Dual and Multi badges tag: a way to that tag's switch. (Hidden on its own
@@ -291,6 +340,7 @@ export function createHiddenTags(h: HiddenEditorHost) {
             sw.append(input, text);
             box.appendChild(sw);
             if (coveredBy(g, picked.key)) box.appendChild(coveredLine());
+            if (renamable(g, picked.key)) box.appendChild(buildTextRow(g, picked));
             // An age board's every rating, on request (the switch reads only the short sentence).
             const ratings = g === 'ageRating' ? ratingsOf(picked.key) : [];
             if (ratings.length > 3) {

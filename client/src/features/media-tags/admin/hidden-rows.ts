@@ -1,6 +1,6 @@
 /**
  * @file Hidden tags on the Groups tab: each group row points to its tags in the colour editor's tag
- * list (Colours tab), where single tags are hidden for everyone, and says how many are hidden.
+ * list (Colours and text tab), where single tags are hidden for everyone, and says how many are hidden.
  */
 import { find } from './dom';
 import type { TextKit } from './fields';
@@ -10,7 +10,7 @@ import type { Config } from './values';
 /** The row's link to the group's tag list on the Colours tab (every group with tags there). */
 export function hiddenLinkHtml(groups: readonly string[] | undefined, groupId: string, name: string, { esc }: TextKit): string {
     if (!groups?.includes(groupId)) return '';
-    return `<a class="je-ta-link je-ta-crosslink" href="#" data-je-goto="colours" data-je-colours-group="${esc(groupId)}"><span class="je-ta-link-text">${esc(fmt('Hidden {group} tags (Colours)', { group: name }))}</span><span class="material-icons" aria-hidden="true">arrow_forward</span></a>`;
+    return `<a class="je-ta-link je-ta-crosslink" href="#" data-je-goto="colours" data-je-colours-group="${esc(groupId)}"><span class="je-ta-link-text">${esc(fmt('Hidden {group} tags (Colours and text)', { group: name }))}</span><span class="material-icons" aria-hidden="true">arrow_forward</span></a>`;
 }
 
 /**
@@ -29,5 +29,5 @@ export function syncHiddenRow(row: HTMLElement, summary: string, config: Config,
     const sum = row.querySelector('.je-ta-grow-sum');
     if (sum) sum.textContent = summary + hidden;
     const link = find(row, '[data-je-colours-group] .je-ta-link-text');
-    if (link) link.textContent = fmt(count ? 'Hidden {group} tags (Colours)' : 'Hide individual {group} tags (Colours)', { group: title });
+    if (link) link.textContent = fmt(count ? 'Hidden {group} tags (Colours and text)' : 'Hide individual {group} tags (Colours and text)', { group: title });
 }

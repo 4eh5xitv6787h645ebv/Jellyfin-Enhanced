@@ -104,6 +104,7 @@
   // client/src/features/media-tags/admin/tag-hidden-editor.ts
   var T2 = fmt;
   var NOT_HIDEABLE = { language: ["flag", "code"] };
+  var TEXT_GROUPS = ["quality", "genre", "status", "awards"];
   var pascal = (g) => g.charAt(0).toUpperCase() + g.slice(1);
   var nb = (text) => text.replace(/-/g, "‑");
   var hiddenIcon = (cls = "material-icons") => {
@@ -112,7 +113,7 @@
     return icon;
   };
   function createHiddenTags(h) {
-    const { root, store } = h;
+    const { root, store, texts } = h;
     const ratingsOf = (board) => h.ages().find((a) => a.id === board)?.ratings || [];
     const hideable = (g, l) => !!store && l !== ALL && !(NOT_HIDEABLE[g] || []).includes(l);
     function list(g) {
@@ -128,6 +129,30 @@
     function withOrphans(rules) {
       if (!store) return rules;
       return rules.concat(list("custom").filter((l) => !rules.some((r) => r.key === l)).map((l) => ({ key: l, name: T2("{name} (no rule)", { name: l }) })));
+    }
+    const renamable = (g, l) => !!texts && l !== ALL && TEXT_GROUPS.includes(g);
+    const textOf = (g, l) => (texts ? texts.get()[g]?.[l] : "") || "";
+    function buildTextRow(g, picked) {
+      const row = el("div", "je-ts-text-row");
+      const label = el("label", "je-ta-switch-name", T2("Text"));
+      label.htmlFor = "tagStyleText";
+      const input = el("input");
+      input.type = "text";
+      input.id = "tagStyleText";
+      input.maxLength = 32;
+      input.placeholder = picked.name;
+      input.value = textOf(g, picked.key);
+      input.setAttribute("aria-describedby", "tagStyleTextHint");
+      input.addEventListener("change", () => {
+        texts?.set(g, picked, input.value.trim());
+        h.renderTargets();
+        h.renderSample();
+        h.renderPreview();
+      });
+      const scope = el("span", "je-ts-hide-scope", T2('Replaces the whole chip text for everyone. Leave empty to keep "{name}".', { name: picked.name }));
+      scope.id = "tagStyleTextHint";
+      row.append(label, input, scope);
+      return row;
     }
     function languageName(label) {
       const code = label.name.toUpperCase();
@@ -229,7 +254,17 @@
     function tile(cell, sample, label) {
       const g = h.current();
       if (!shownHidden(g, label.key)) {
-        cell.appendChild(sample);
+        const text = textOf(g, label.key);
+        if (!text) {
+          cell.appendChild(sample);
+          return;
+        }
+        cell.title = T2('{name} shows as "{text}"', { name: cell.title, text });
+        const renamed = el("span", "je-ts-chip-wrap");
+        const pencil = el("i", "material-icons je-ts-hidden-mark je-ts-renamed-mark", "edit");
+        pencil.setAttribute("aria-hidden", "true");
+        renamed.append(sample, pencil);
+        cell.appendChild(renamed);
         return;
       }
       cell.classList.add("je-ts-target-hidden");
@@ -242,7 +277,7 @@
     }
     function hint(scrolls) {
       const g = h.current();
-      const base = T2(store ? "Choose a tag to change its colours or hide it." : "Choose a tag to change only its colours.");
+      const base = T2(!store ? "Choose a tag to change only its colours." : texts && TEXT_GROUPS.includes(g) ? "Choose a tag to change its colours or text, or hide it." : "Choose a tag to change its colours or hide it.");
       if (h.hiddenOnly()) return base + " " + T2("Showing the {count} hidden tags only.", { count: countOf(g) });
       return base + (scrolls ? " " + T2("{count} tags; scroll for more.", { count: h.labelsOf(g).length }) : "");
     }
@@ -294,6 +329,7 @@
           back.dataset.jeGoto = "groups:" + g;
           line.append(T2("Hiding works per tag. To turn the whole group off for new users, see "), back, ".");
           box.appendChild(line);
+          if (texts && TEXT_GROUPS.includes(g)) box.appendChild(el("p", "je-ts-hide-none", T2("To change the words a tag shows, choose it in the list: its Text field is at the top of its settings.")));
           return;
         }
         const coveredLine = () => {
@@ -333,6 +369,7 @@
         sw.append(input, text);
         box.appendChild(sw);
         if (coveredBy(g, picked.key)) box.appendChild(coveredLine());
+        if (renamable(g, picked.key)) box.appendChild(buildTextRow(g, picked));
         const ratings = g === "ageRating" ? ratingsOf(picked.key) : [];
         if (ratings.length > 3) {
           const more = el("details", "je-ts-hide-ratings");
@@ -504,7 +541,7 @@
   var FILTER_MIN = 12;
   var toHex = (c) => "#" + [c.r, c.g, c.b].map((n) => Math.round(n).toString(16).padStart(2, "0")).join("");
   var toCss = (c) => "rgba(" + Math.round(c.r) + ", " + Math.round(c.g) + ", " + Math.round(c.b) + ", " + Math.round(c.a * 1e3) / 1e3 + ")";
-  var createTagStylesEditor = (root, customLabels = () => [], isCurrent = () => true, hiddenStore = null) => {
+  var createTagStylesEditor = (root, customLabels = () => [], isCurrent = () => true, hiddenStore = null, textStore = null) => {
     let cat = null;
     let state = emptyState();
     let current = "quality";
@@ -559,6 +596,7 @@
     const hidden = createHiddenTags({
       root,
       store: hiddenStore,
+      texts: textStore,
       customLabels,
       labelsOf,
       rebuildKeepingFocus,

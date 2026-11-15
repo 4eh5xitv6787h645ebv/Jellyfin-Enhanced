@@ -45,13 +45,31 @@
    *  to the sections this module registers and to what those readers found in the JavaScript module.
   registerSection({
       tab: 'colours',
-      title: 'Tag colours',
-      writes: ['TagStyleOverrides', 'TagStylePreset', 'TagHiddenValues'],
+      title: 'Tag colours and text',
+      writes: ['TagStyleOverrides', 'TagStylePreset', 'TagHiddenValues', 'TagTextOverrides'],
           { id: 'tagStylesEnabled', key: 'TagStylesEnabled', type: 'switch', label: 'Use tag colours' },
           { id: 'tagStyleTarget', key: 'TagStyleTarget', type: 'pills', label: 'Apply to' },
           { id: 'tagStylesAllowUserPreset', key: 'TagStylesAllowUserPreset', type: 'switch', label: 'Let users pick their own preset' },
   */
   var RENDERERS = ["quality", "genre", "rating", "agerating", "status", "language", "awards", "logos", "custom"];
+  var TEXT_RENDERERS = ["quality", "genre", "status", "awards"];
+  function textDoc(value) {
+    const doc = {};
+    let parsed = null;
+    try {
+      parsed = typeof value === "string" && value ? JSON.parse(value) : null;
+    } catch {
+      return doc;
+    }
+    if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) return doc;
+    for (const [group, labels] of Object.entries(parsed)) {
+      if (!labels || typeof labels !== "object" || Array.isArray(labels)) continue;
+      const texts = {};
+      for (const [label, text] of Object.entries(labels)) if (typeof text === "string") texts[label] = text;
+      doc[group] = texts;
+    }
+    return doc;
+  }
   function hiddenDoc(value) {
     if (!value || typeof value !== "object" || Array.isArray(value)) return null;
     const doc = {};
@@ -70,9 +88,9 @@
       id: "colours",
       tab: "colours",
       order: 10,
-      title: "Tag colours",
-      hint: "Colours for quality, age rating, rating, genre, status, language, awards, logo and custom tags.",
-      writes: ["TagStyleOverrides", "TagStylePreset", "TagHiddenValues"],
+      title: "Tag colours and text",
+      hint: "Colours for quality, age rating, rating, genre, status, language, awards, logo and custom tags, and the words of quality, genre, status and awards tags.",
+      writes: ["TagStyleOverrides", "TagStylePreset", "TagHiddenValues", "TagTextOverrides"],
       fields: [
         { id: "tagStylesEnabled", key: "TagStylesEnabled", type: "switch", label: "Use tag colours", desc: "Off shows the original colours (custom CSS keeps working). Your edits are kept. Hidden tags apply either way.", master: true },
         { id: "tagStyleTarget", key: "TagStyleTarget", type: "pills", label: "Apply to", desc: "Web recolours the overlays and wins over custom CSS colours. Native posters draws the colours into the posters of apps such as Android TV (needs Native Poster Tags; status tags are not drawn there).", options: [["web", "Web"], ["native", "Native posters"], ["both", "Both"]], read: (v) => typeof v === "string" && ["web", "native", "both"].includes(v) ? v : "both", when: (c) => c.TagStylesEnabled === true },
@@ -144,7 +162,29 @@
             });
           }
         };
-        const own = create(ctx.root, customLabels, () => ctx.isCurrent(), hiddenStore);
+        const setTextDoc = (docText) => {
+          ctx.setMany({ TagTextOverrides: docText }, { redraw: false });
+          if (JE.pluginConfig) Object.assign(JE.pluginConfig, { TagTextOverrides: docText });
+          for (const name of TEXT_RENDERERS) JE.core.tagRenderer?.reinitialize?.(name);
+        };
+        const textStore = {
+          get: () => textDoc(ctx.config.TagTextOverrides),
+          set(group, label2, text) {
+            const before = typeof ctx.config.TagTextOverrides === "string" && ctx.config.TagTextOverrides ? ctx.config.TagTextOverrides : null;
+            const doc = textDoc(before);
+            const labels = { ...doc[group] || {} };
+            if (text) labels[label2.key] = text;
+            else delete labels[label2.key];
+            if (Object.keys(labels).length) doc[group] = labels;
+            else delete doc[group];
+            setTextDoc(Object.keys(doc).length ? JSON.stringify(doc) : null);
+            ctx.snack(text ? A.fmt('{name} now reads "{text}"', { name: label2.name, text }) : A.fmt("{name} shows its own text again", { name: label2.name }), () => {
+              setTextDoc(before);
+              editor?.refreshHidden();
+            });
+          }
+        };
+        const own = create(ctx.root, customLabels, () => ctx.isCurrent(), hiddenStore, textStore);
         editor = own;
         ctx.root.addEventListener("je-custom-labels", () => {
           if (ctx.isCurrent()) own.refreshLabels();

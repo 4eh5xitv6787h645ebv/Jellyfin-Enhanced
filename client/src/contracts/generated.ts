@@ -382,6 +382,7 @@ export interface BootstrapPublicConfig {
   "TagStylePreset": string;
   "TagStyleWebActive": boolean;
   "TagStylesAllowUserPreset": boolean;
+  "TagTextOverrides": string | null;
   "TagsCacheTtlDays": number;
   "TagsHideOnHover": boolean;
   "ThemeSelectorEnabled": boolean;

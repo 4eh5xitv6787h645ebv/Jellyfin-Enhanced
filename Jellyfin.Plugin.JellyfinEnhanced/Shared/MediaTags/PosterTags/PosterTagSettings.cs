@@ -369,6 +369,9 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Shared.MediaTags.PosterTags
         /// <summary>The Tag Styles labels whose chips never draw (Hidden tags, the administrator's).</summary>
         public TagHiddenSet Hidden { get; private init; } = TagHiddenSet.Empty;
 
+        /// <summary>The texts shown instead of a tag's own (Tag text, the administrator's).</summary>
+        public TagTextSet Texts { get; private init; } = TagTextSet.Empty;
+
         /// <summary>
         /// Whether a group shows on a card of this item type (its "Where to show" switch for the type: personal,
         /// else the administrator's, else on). Rating keeps its own switches (RatingRules.IsExcludedByScope); the
@@ -653,6 +656,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Shared.MediaTags.PosterTags
                 PersonalScopes = TagLayoutRules.NormalizeScopes(user.TagGroupScopes),
                 AdminScopes = TagLayoutRules.NormalizeScopes(config.TagGroupScopes),
                 Hidden = TagHiddenSet.For(config.TagHiddenValues),
+                Texts = TagTextSet.For(config.TagTextOverrides),
                 RatingTagsOnMovies = TagLayoutRules.RatingScope(user, config, "movies"),
                 RatingTagsOnSeries = TagLayoutRules.RatingScope(user, config, "series"),
                 RatingTagsOnSeasons = TagLayoutRules.RatingScope(user, config, "seasons"),
@@ -1341,6 +1345,12 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Shared.MediaTags.PosterTags
             foreach (var group in TagHiddenRules.Groups)
             {
                 if (Hidden.Any(group) && Shows(GroupOf(group))) values["hidden." + group] = Hidden.DigestOf(group);
+            }
+
+            // Tag text: same rule as hidden tags, a shown group with overrides only.
+            foreach (var group in TagTextRules.Groups)
+            {
+                if (Texts.Any(group) && Shows(GroupOf(group))) values["text." + group] = Texts.DigestOf(group);
             }
 
             // "Where to show": only switches that hide a shown group on some item type, so a document

@@ -2337,6 +2337,16 @@ export const bootstrapSchema = {
         "TagStylesAllowUserPreset": {
           "type": "boolean"
         },
+        "TagTextOverrides": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
         "TagsCacheTtlDays": {
           "type": "integer"
         },
@@ -2668,6 +2678,7 @@ export const bootstrapSchema = {
         "TagStylePreset",
         "TagStyleWebActive",
         "TagStylesAllowUserPreset",
+        "TagTextOverrides",
         "TagsCacheTtlDays",
         "TagsHideOnHover",
         "ThemeSelectorEnabled",

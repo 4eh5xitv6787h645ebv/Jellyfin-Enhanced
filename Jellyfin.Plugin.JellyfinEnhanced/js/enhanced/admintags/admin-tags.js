@@ -474,7 +474,7 @@
   // client/src/features/media-tags/admin/hidden-rows.ts
   function hiddenLinkHtml(groups, groupId, name, { esc: esc2 }) {
     if (!groups?.includes(groupId)) return "";
-    return `<a class="je-ta-link je-ta-crosslink" href="#" data-je-goto="colours" data-je-colours-group="${esc2(groupId)}"><span class="je-ta-link-text">${esc2(fmt("Hidden {group} tags (Colours)", { group: name }))}</span><span class="material-icons" aria-hidden="true">arrow_forward</span></a>`;
+    return `<a class="je-ta-link je-ta-crosslink" href="#" data-je-goto="colours" data-je-colours-group="${esc2(groupId)}"><span class="je-ta-link-text">${esc2(fmt("Hidden {group} tags (Colours and text)", { group: name }))}</span><span class="material-icons" aria-hidden="true">arrow_forward</span></a>`;
   }
   function syncHiddenRow(row, summary, config, groupId, title, ageRatings) {
     const lists = config.TagHiddenValues;
@@ -485,7 +485,7 @@
     const sum = row.querySelector(".je-ta-grow-sum");
     if (sum) sum.textContent = summary + hidden;
     const link = find(row, "[data-je-colours-group] .je-ta-link-text");
-    if (link) link.textContent = fmt(count ? "Hidden {group} tags (Colours)" : "Hide individual {group} tags (Colours)", { group: title });
+    if (link) link.textContent = fmt(count ? "Hidden {group} tags (Colours and text)" : "Hide individual {group} tags (Colours and text)", { group: title });
   }
 
   // client/src/features/media-tags/admin/page.ts
@@ -1565,7 +1565,7 @@
     { id: "layout", icon: "view_quilt", nameKey: "Layout defaults", shortKey: "Layout", descKey: "The layout, label density, group order, positions and limits new users start with.", lead: "card" },
     { id: "groups", icon: "label", nameKey: "Groups", descKey: "Turn each tag group on or off for new users, and open a group for its server settings.", lead: "card" },
     { id: "rules", icon: "rule", nameKey: "Rules", descKey: "Give some cards a different look by library, type, genre or age rating.", lead: "card" },
-    { id: "colours", icon: "palette", nameKey: "Colours", descKey: "The colours of the tags, on the web and in native posters, and which tags to hide.", lead: "card" },
+    { id: "colours", icon: "palette", nameKey: "Colours and text", descKey: "The colours and words of the tags, on the web and in native posters, and which tags to hide.", lead: "card" },
     { id: "badges", icon: "new_releases", nameKey: "Status badges", shortKey: "Badges", descKey: "Which status badges new users start with, and how long a title counts as new.", lead: "card" },
     { id: "server", icon: "dns", nameKey: "Server", descKey: "The tag data the server keeps, and tags drawn into poster images for other apps.", lead: "card" }
   ];

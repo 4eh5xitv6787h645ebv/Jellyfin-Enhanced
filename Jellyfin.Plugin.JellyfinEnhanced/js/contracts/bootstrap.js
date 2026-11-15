@@ -2340,6 +2340,16 @@
           "TagStylesAllowUserPreset": {
             "type": "boolean"
           },
+          "TagTextOverrides": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "TagsCacheTtlDays": {
             "type": "integer"
           },
@@ -2671,6 +2681,7 @@
           "TagStylePreset",
           "TagStyleWebActive",
           "TagStylesAllowUserPreset",
+          "TagTextOverrides",
           "TagsCacheTtlDays",
           "TagsHideOnHover",
           "ThemeSelectorEnabled",

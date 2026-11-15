@@ -180,7 +180,13 @@ export interface HiddenStore {
     /** @param ageRatings - The ratings on the hidden age rating boards (the web matches badges by them). */
     set(doc: Record<string, string[]> | null, ageRatings: string[], change: HiddenChange): void;
 }
-export type CreateTagStylesEditor = (root: HTMLElement, customLabels?: () => string[], isCurrent?: () => boolean, hiddenStore?: HiddenStore | null) => TagStylesEditor;
+/** Where the editor keeps Tag text: the page's TagTextOverrides document ({ group: { label: text } }), kept by the Colours section. */
+export interface TextStore {
+    get(): Record<string, Record<string, string>>;
+    /** @param text - The words the label's chips show; empty goes back to their own. */
+    set(group: string, label: { key: string; name: string }, text: string): void;
+}
+export type CreateTagStylesEditor = (root: HTMLElement, customLabels?: () => string[], isCurrent?: () => boolean, hiddenStore?: HiddenStore | null, textStore?: TextStore | null) => TagStylesEditor;
 /** The contrast helpers of the Tag Styles editor (pure). */
 export interface TagStyleContrast {
     rgbaOf(css: unknown): { r: number; g: number; b: number; a: number } | null;

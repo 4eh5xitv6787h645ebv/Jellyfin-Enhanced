@@ -169,6 +169,7 @@ public sealed class BootstrapPublicConfig
     public required TagGroupScopes? TagGroupScopes { get; init; }
     public required TagHiddenValues? TagHiddenValues { get; init; }
     public required string[] TagHiddenAgeRatings { get; init; }
+    public required string? TagTextOverrides { get; init; }
     public required string TagLabelDensity { get; init; }
     public required string TagScale { get; init; }
     public required string TagGap { get; init; }

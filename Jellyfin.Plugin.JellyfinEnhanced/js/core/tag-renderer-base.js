@@ -894,10 +894,33 @@
     console.log("🪼 Jellyfin Enhanced: Tag renderer core initialized");
   }
 
+  // client/src/features/media-tags/pipeline/tag-text.ts
+  function createTagText(plugin) {
+    let memo = { doc: void 0, map: {} };
+    return {
+      of(group, label) {
+        const doc = plugin()?.TagTextOverrides;
+        if (memo.doc !== doc) {
+          let map = {};
+          try {
+            map = typeof doc === "string" && doc ? JSON.parse(doc) : {};
+          } catch {
+          }
+          memo = { doc, map: isRecord(map) ? map : {} };
+        }
+        if (label === null || label === void 0) return null;
+        const labels = own(memo.map, group);
+        const text2 = isRecord(labels) ? own(labels, String(label)) : null;
+        return typeof text2 === "string" && text2 ? text2 : null;
+      }
+    };
+  }
+
   // client/src/features/media-tags/pipeline/tag-renderer-base-entry.ts
   var JE = tagRuntimeHost();
   createTagRenderer(JE);
   JE.core.tagHidden = createTagHidden(() => JE.pluginConfig);
+  JE.core.tagText = createTagText(() => JE.pluginConfig);
 })();
 })();
 //# sourceMappingURL=tag-renderer-base.js.map

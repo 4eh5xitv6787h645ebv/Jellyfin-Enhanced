@@ -4,7 +4,7 @@
 
 What the rewrite has taken from [upstream](https://github.com/n00bcodr/Jellyfin-Enhanced) (`main`) since it branched at `2e0f9251bf`. The source of truth is [`upstream-sync.json`](upstream-sync.json); the procedure is [upstream-sync-procedure.md](upstream-sync-procedure.md).
 
-62 upstream commits: 10 pending, 50 ported, 1 already-present, 1 deferred.
+62 upstream commits: 8 pending, 52 ported, 1 already-present, 1 deferred.
 
 | # | Upstream | Date | Class | Features | Subject | Status | Rewrite commit | Note |
 |---|---|---|---|---|---|---|---|---|
@@ -60,8 +60,8 @@ What the rewrite has taken from [upstream](https://github.com/n00bcodr/Jellyfin-
 | 50 | [`709b583f`](https://github.com/n00bcodr/Jellyfin-Enhanced/commit/709b583f0b7f0bf29068a5033eed972bb4071f49) | 2026-11-14 | test |  | chore(tests): regenerate production inventory | ported | `b34bb1b5` | With `c8b464cf`. Upstream's bot regenerating its production inventory for c8b464cf. This tree's tests/docs/production-inventory.json is generated (je12 regen) in the commit of c8b464cf, with the same change: the task's "settings.json" literal, storage_references 96 to 97. |
 | 51 | [`c165a07b`](https://github.com/n00bcodr/Jellyfin-Enhanced/commit/c165a07b4251daa6056f52edb64adda78f51096e) | 2026-11-14 (12.16.0.0) | fix | chrome, seerr | fix(recommendations): keep tab content, fix Back handling on mobile, drop row masks on touch | ported |  | artifacts/restructure-plan/step-logs/upstream-sync-evidence/p51-* |
 | 52 | [`e907396d`](https://github.com/n00bcodr/Jellyfin-Enhanced/commit/e907396d513a2d45773355083d6c59777966c9eb) | 2026-11-14 (12.16.0.0) | feature | media-tags, platform | feat(tags): hide individual tags from the Colours tag list | ported |  | artifacts/restructure-plan/step-logs/upstream-sync-evidence/p52-* |
-| 53 | [`25a168ae`](https://github.com/n00bcodr/Jellyfin-Enhanced/commit/25a168aeecae9e36cc5c79ee8dd4cff02497d0c6) | 2026-11-14 (12.16.0.0) | feature | admin, media-tags, settings | feat(tags): set the text of quality, genre, status and awards tags from the Colours and text tab (#1063) | pending |  |  |
-| 54 | [`186121ed`](https://github.com/n00bcodr/Jellyfin-Enhanced/commit/186121ed49db5fb60c547fee68ad0c4df5840d93) | 2026-11-14 (12.16.0.0) | test |  | chore(tags): regenerate the inventory and config flag groups for tag text | pending |  |  |
+| 53 | [`25a168ae`](https://github.com/n00bcodr/Jellyfin-Enhanced/commit/25a168aeecae9e36cc5c79ee8dd4cff02497d0c6) | 2026-11-14 (12.16.0.0) | feature | media-tags, platform, admin | feat(tags): set the text of quality, genre, status and awards tags from the Colours and text tab (#1063) | ported |  | artifacts/restructure-plan/step-logs/upstream-sync-evidence/p53-54-* |
+| 54 | [`186121ed`](https://github.com/n00bcodr/Jellyfin-Enhanced/commit/186121ed49db5fb60c547fee68ad0c4df5840d93) | 2026-11-14 (12.16.0.0) | test |  | chore(tags): regenerate the inventory and config flag groups for tag text | ported |  | With `25a168ae`. artifacts/restructure-plan/step-logs/upstream-sync-evidence/p53-54-* |
 | 55 | [`90c721ef`](https://github.com/n00bcodr/Jellyfin-Enhanced/commit/90c721efd25cd9086a9b38987e743a432a47a7f5) | 2026-11-14 (12.16.0.0) | fix | media-tags | fix(tags): keep incomplete custom rules when the editor auto-saves | pending |  |  |
 | 56 | [`6916b31b`](https://github.com/n00bcodr/Jellyfin-Enhanced/commit/6916b31b23b2ed4bbc35c4b81fa02552e3fe23e8) | 2026-11-14 (12.16.0.0) | feature | admin, downloads, platform, seerr, settings | feat(seerr): remove watched requests automatically and add a Remove request button (#1050) | pending |  |  |
 | 57 | [`9d1d5e8f`](https://github.com/n00bcodr/Jellyfin-Enhanced/commit/9d1d5e8fe3105d85b985df4803968afd887da34a) | 2026-11-14 (12.16.0.0) | feature | admin, chrome, media-tags, platform, player, settings, settings-panel | feat(player): sync subtitles to the line you just heard (#1068) | pending |  |  |
