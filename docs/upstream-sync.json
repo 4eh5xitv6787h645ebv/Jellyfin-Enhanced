@@ -1596,6 +1596,435 @@
       ],
       "with": "c8b464cf5a21f269e32179bc1af64d671d2658e8",
       "notes": "Upstream's bot regenerating its production inventory for c8b464cf. This tree's tests/docs/production-inventory.json is generated (je12 regen) in the commit of c8b464cf, with the same change: the task's \"settings.json\" literal, storage_references 96 to 97."
+    },
+    {
+      "sha": "c165a07b4251daa6056f52edb64adda78f51096e",
+      "date": "2026-11-14T13:42:06+00:00",
+      "subject": "fix(recommendations): keep tab content, fix Back handling on mobile, drop row masks on touch",
+      "class": "fix",
+      "features": [
+        "chrome",
+        "seerr"
+      ],
+      "issues": [
+        "#1064"
+      ],
+      "release": "12.16.0.0",
+      "size": {
+        "files": 4,
+        "insertions": 89,
+        "deletions": 28
+      },
+      "paths": [
+        "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/native-tabs.js",
+        "Jellyfin.Plugin.JellyfinEnhanced/js/jellyseerr/recommendations/recommendations-category.js",
+        "Jellyfin.Plugin.JellyfinEnhanced/js/jellyseerr/recommendations/recommendations-custom-tab.js",
+        "Jellyfin.Plugin.JellyfinEnhanced/js/jellyseerr/recommendations/recommendations-styles.js"
+      ],
+      "status": "ported",
+      "rewriteCommits": [],
+      "notes": "Re-implemented in client/src/features/seerr/recommendations and client/src/features/chrome/native-tabs.ts. (1) recommendations-custom-tab.ts: a mounted tab that is only hidden (another Home tab selected, or the category page over #indexPage) keeps its rows, so coming back neither rebuilds nor reloads them. (2) recommendations-category.ts: an open category page pushes one copy of the current URL as its history entry ({ jeCategory: true }); its Back button goes through history.back() while the entry is held; a pop closes the page unless it lands back on that entry; closing by navigating away gives the entry up. (3) native-tabs.ts: the Android app's NavigationHelper.goBack is wrapped once it exists: when the router cannot go back it closes an open More Info modal or category page through history.back(), or selects the Home tab from a JE tab and spends the URL's deep link, and otherwise calls the app's own goBack. (4) native-tabs.ts: a jeTab without tab=N (N >= 2) beside it is not followed. (5) recommendation-tiles.css: the row edge masks sit inside @media (hover: hover). Differences from upstream: the rewrite still disposes the tab's render when the user leaves Home or its container is dropped (its DISCOVERY-RECOMMENDATIONS-003 rule; upstream never disposes), so two existing tests that expected a hidden tab to be emptied now expect upstream's behaviour; the popstate listener exists only while the category page is open (leak guard); Back from a category opened on the standalone page still returns to that page, on a pop as well as on the button; the wrapper looks for NavigationHelper with a capped retry (40 tries, 500 ms apart, as upstream) built on setTimeout instead of setInterval (performance guard R5); and one upstream fault is not ported: in upstream's build the first pop after a page load is reported as a navigation and closes the category even when it lands on the category's own entry (More Info closing above it right after a reload), which handleNavigation here leaves alone (filed: je12 found-bug NEW-20261116-071714). Upstream has no tests for this commit; here 11 node tests fail before the port (tests/frontend/bootstrap/bootstrap-native-tabs.test.mjs, tests/frontend/pages/pages-recommendations-boundaries.test.mjs) and pass after. Lab parity (je12 lab, Jellyfin 12.4, Recommendations native tab on): one je12 browse script prints the same result on upstream's build of c165a07b and on this port, and the faults on the tree before the port.",
+      "evidence": "artifacts/restructure-plan/step-logs/upstream-sync-evidence/p51-*"
+    },
+    {
+      "sha": "e907396d513a2d45773355083d6c59777966c9eb",
+      "date": "2026-11-14T16:00:15+00:00",
+      "subject": "feat(tags): hide individual tags from the Colours tag list",
+      "class": "feature",
+      "features": [
+        "hidden-content",
+        "media-tags",
+        "settings"
+      ],
+      "issues": [
+        "#1043"
+      ],
+      "release": "12.16.0.0",
+      "size": {
+        "files": 27,
+        "insertions": 1396,
+        "deletions": 48
+      },
+      "paths": [
+        "Jellyfin.Plugin.JellyfinEnhanced/Configuration/PluginConfiguration.cs",
+        "Jellyfin.Plugin.JellyfinEnhanced/Configuration/TagHiddenValues.cs",
+        "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs",
+        "Jellyfin.Plugin.JellyfinEnhanced/Helpers/MediaTagsPageFields.cs",
+        "Jellyfin.Plugin.JellyfinEnhanced/Services/PosterTags/PosterTagResolver.cs",
+        "Jellyfin.Plugin.JellyfinEnhanced/Services/PosterTags/PosterTagSettings.cs",
+        "Jellyfin.Plugin.JellyfinEnhanced/Services/PosterTags/Resolution/LanguageFlagRules.cs",
+        "Jellyfin.Plugin.JellyfinEnhanced/js/core/tag-layout.js",
+        "Jellyfin.Plugin.JellyfinEnhanced/js/core/tag-renderer-base.js",
+        "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/admintags/admin-tags.css",
+        "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/admintags/admin-tags.js",
+        "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/admintags/tag-styles-editor.js",
+        "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/admintags/sections/colours.js",
+        "Jellyfin.Plugin.JellyfinEnhanced/js/tags/languagetags.js",
+        "Jellyfin.Plugin.JellyfinEnhanced/js/tags/logotags.js",
+        "docs/advanced/admin-media-tags.md",
+        "docs/advanced/api.md",
+        "docs/advanced/project-structure.md",
+        "docs/enhanced/tags.md",
+        "docs/images/tags/tag-hidden-tags.webp",
+        "tests/backend/Core/CoreTagHiddenValuesTests.cs",
+        "tests/backend/JE.Tests.csproj",
+        "tests/docs/production-inventory.json",
+        "tests/fixtures/admin-tags-page-fields.json",
+        "tests/fixtures/hidden-tag-labels.json",
+        "tests/frontend/features/features-admin-tags-page-colours-status.test.mjs",
+        "tests/frontend/features/features-tag-hidden.test.mjs"
+      ],
+      "status": "pending",
+      "rewriteCommits": [],
+      "unmappedPaths": [
+        "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs",
+        "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/admintags/admin-tags.css"
+      ]
+    },
+    {
+      "sha": "25a168aeecae9e36cc5c79ee8dd4cff02497d0c6",
+      "date": "2026-11-14T16:00:15+00:00",
+      "subject": "feat(tags): set the text of quality, genre, status and awards tags from the Colours and text tab (#1063)",
+      "class": "feature",
+      "features": [
+        "admin",
+        "media-tags",
+        "settings"
+      ],
+      "issues": [
+        "#1063"
+      ],
+      "release": "12.16.0.0",
+      "size": {
+        "files": 19,
+        "insertions": 510,
+        "deletions": 16
+      },
+      "paths": [
+        "Jellyfin.Plugin.JellyfinEnhanced/Configuration/PluginConfiguration.cs",
+        "Jellyfin.Plugin.JellyfinEnhanced/Configuration/TagTextOverrides.cs",
+        "Jellyfin.Plugin.JellyfinEnhanced/Configuration/configPage.html",
+        "Jellyfin.Plugin.JellyfinEnhanced/Configuration/admin/sections.js",
+        "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs",
+        "Jellyfin.Plugin.JellyfinEnhanced/Helpers/MediaTagsPageFields.cs",
+        "Jellyfin.Plugin.JellyfinEnhanced/Services/PosterTags/PosterTagResolver.cs",
+        "Jellyfin.Plugin.JellyfinEnhanced/Services/PosterTags/PosterTagSettings.cs",
+        "Jellyfin.Plugin.JellyfinEnhanced/js/core/tag-layout.js",
+        "Jellyfin.Plugin.JellyfinEnhanced/js/core/tag-renderer-base.js",
+        "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/admintags/admin-tags.css",
+        "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/admintags/admin-tags.js",
+        "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/admintags/tag-styles-editor.js",
+        "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/admintags/sections/colours.js",
+        "docs/advanced/project-structure.md",
+        "docs/enhanced/tags.md",
+        "tests/backend/Core/CoreTagTextOverridesTests.cs",
+        "tests/fixtures/admin-tags-page-fields.json",
+        "tests/frontend/features/features-tag-text.test.mjs"
+      ],
+      "status": "pending",
+      "rewriteCommits": [],
+      "unmappedPaths": [
+        "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs",
+        "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/admintags/admin-tags.css"
+      ]
+    },
+    {
+      "sha": "186121ed49db5fb60c547fee68ad0c4df5840d93",
+      "date": "2026-11-14T16:00:15+00:00",
+      "subject": "chore(tags): regenerate the inventory and config flag groups for tag text",
+      "class": "test",
+      "features": [],
+      "issues": [],
+      "release": "12.16.0.0",
+      "size": {
+        "files": 3,
+        "insertions": 18,
+        "deletions": 6
+      },
+      "paths": [
+        "docs/advanced/admin-media-tags.md",
+        "docs/advanced/config-flag-groups.json",
+        "tests/docs/production-inventory.json"
+      ],
+      "status": "pending",
+      "rewriteCommits": []
+    },
+    {
+      "sha": "90c721efd25cd9086a9b38987e743a432a47a7f5",
+      "date": "2026-11-14T17:17:17+00:00",
+      "subject": "fix(tags): keep incomplete custom rules when the editor auto-saves",
+      "class": "fix",
+      "features": [
+        "media-tags"
+      ],
+      "issues": [
+        "#1066"
+      ],
+      "release": "12.16.0.0",
+      "size": {
+        "files": 2,
+        "insertions": 15,
+        "deletions": 5
+      },
+      "paths": [
+        "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/admintags/custom-rules-editor.js",
+        "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/admintags/sections/custom.js"
+      ],
+      "status": "pending",
+      "rewriteCommits": []
+    },
+    {
+      "sha": "6916b31b23b2ed4bbc35c4b81fa02552e3fe23e8",
+      "date": "2026-11-14T17:39:39+00:00",
+      "subject": "feat(seerr): remove watched requests automatically and add a Remove request button (#1050)",
+      "class": "feature",
+      "features": [
+        "admin",
+        "downloads",
+        "platform",
+        "seerr",
+        "settings"
+      ],
+      "issues": [
+        "#1050"
+      ],
+      "release": "12.16.0.0",
+      "size": {
+        "files": 23,
+        "insertions": 1365,
+        "deletions": 20
+      },
+      "paths": [
+        "Jellyfin.Plugin.JellyfinEnhanced/Configuration/PluginConfiguration.cs",
+        "Jellyfin.Plugin.JellyfinEnhanced/Configuration/configPage.html",
+        "Jellyfin.Plugin.JellyfinEnhanced/Configuration/admin/sections.js",
+        "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs",
+        "Jellyfin.Plugin.JellyfinEnhanced/PluginServiceRegistrator.cs",
+        "Jellyfin.Plugin.JellyfinEnhanced/ScheduledTasks/AutoRequestRemovalTask.cs",
+        "Jellyfin.Plugin.JellyfinEnhanced/Services/RequestRemovalPlanner.cs",
+        "Jellyfin.Plugin.JellyfinEnhanced/js/arr/requests/requests-page-data.js",
+        "Jellyfin.Plugin.JellyfinEnhanced/js/arr/requests/requests-page-render-cards.js",
+        "Jellyfin.Plugin.JellyfinEnhanced/js/arr/requests/requests-page-render.js",
+        "Jellyfin.Plugin.JellyfinEnhanced/js/arr/requests/requests-page-styles.js",
+        "Jellyfin.Plugin.JellyfinEnhanced/js/locales/en.json",
+        "docs/advanced/api.md",
+        "docs/advanced/config-flag-groups.json",
+        "docs/arr/troubleshooting-support.md",
+        "docs/seerr/seerr-features.md",
+        "docs/seerr/seerr-settings.md",
+        "tests/backend/Api/ApiSeerrTests.cs",
+        "tests/backend/ScheduledTasks/AutoRequestRemovalTests.cs",
+        "tests/backend/ScheduledTasks/TaskVisibilityTests.cs",
+        "tests/docs/coverage-matrix.md",
+        "tests/docs/production-inventory.json",
+        "tests/frontend/requests/requests-remove-request.test.mjs"
+      ],
+      "status": "pending",
+      "rewriteCommits": [],
+      "unmappedPaths": [
+        "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs",
+        "Jellyfin.Plugin.JellyfinEnhanced/ScheduledTasks/AutoRequestRemovalTask.cs",
+        "Jellyfin.Plugin.JellyfinEnhanced/Services/RequestRemovalPlanner.cs"
+      ]
+    },
+    {
+      "sha": "9d1d5e8fe3105d85b985df4803968afd887da34a",
+      "date": "2026-11-14T23:28:51+00:00",
+      "subject": "feat(player): sync subtitles to the line you just heard (#1068)",
+      "class": "feature",
+      "features": [
+        "admin",
+        "chrome",
+        "media-tags",
+        "platform",
+        "player",
+        "settings",
+        "settings-panel"
+      ],
+      "issues": [
+        "#1061",
+        "#1068"
+      ],
+      "release": "12.16.0.0",
+      "size": {
+        "files": 42,
+        "insertions": 2869,
+        "deletions": 35
+      },
+      "paths": [
+        "Jellyfin.Plugin.JellyfinEnhanced/Configuration/PluginConfiguration.cs",
+        "Jellyfin.Plugin.JellyfinEnhanced/Configuration/UserConfiguration.cs",
+        "Jellyfin.Plugin.JellyfinEnhanced/Configuration/configPage.html",
+        "Jellyfin.Plugin.JellyfinEnhanced/Configuration/admin/per-user.js",
+        "Jellyfin.Plugin.JellyfinEnhanced/Configuration/admin/sections.js",
+        "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs",
+        "Jellyfin.Plugin.JellyfinEnhanced/js/component-scripts.json",
+        "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/config.js",
+        "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/events.js",
+        "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/player/pausescreen.js",
+        "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/player/playback.js",
+        "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/player/subtitle-sync.js",
+        "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/settingspanel/ui-panel-settings.js",
+        "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/settingspanel/ui-panel-shortcut-editor.js",
+        "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/settingspanel/ui-panel-template.js",
+        "Jellyfin.Plugin.JellyfinEnhanced/js/fonts/materialsymbolsrounded-subset.woff2",
+        "Jellyfin.Plugin.JellyfinEnhanced/js/locales/en.json",
+        "README.md",
+        "docs/advanced/api.md",
+        "docs/advanced/config-flag-groups.json",
+        "docs/advanced/css-customization.md",
+        "docs/advanced/project-structure.md",
+        "docs/enhanced/enhanced-features.md",
+        "docs/enhanced/enhanced-settings.md",
+        "docs/images/admin/subtitle-defaults.webp",
+        "docs/images/enhanced/panel-subtitles.webp",
+        "docs/images/enhanced/subtitle-sync.mp4",
+        "docs/images/enhanced/subtitle-sync.webp",
+        "scripts/material-symbols/subset.py",
+        "tests/browser/helpers/settings-surfaces.cjs",
+        "tests/docs/production-inventory.json",
+        "tests/frontend/bootstrap/ (7 files)",
+        "tests/frontend/features/features-pause.test.mjs",
+        "tests/frontend/features/features-subtitle-sync.test.mjs",
+        "tests/frontend/features/features-tag-styles.test.mjs",
+        "tests/poster/parity/PosterTagParity/Program.cs"
+      ],
+      "status": "pending",
+      "rewriteCommits": [],
+      "unmappedPaths": [
+        "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs",
+        "Jellyfin.Plugin.JellyfinEnhanced/js/component-scripts.json",
+        "Jellyfin.Plugin.JellyfinEnhanced/js/fonts/materialsymbolsrounded-subset.woff2"
+      ]
+    },
+    {
+      "sha": "65cc4ba9654191f32df27c8e39439ba740fc0dd9",
+      "date": "2026-11-15T10:52:41+00:00",
+      "subject": "Translations update from Hosted Weblate (#1067)",
+      "class": "translation",
+      "features": [
+        "platform"
+      ],
+      "issues": [
+        "#1067"
+      ],
+      "release": "12.16.0.0",
+      "size": {
+        "files": 32,
+        "insertions": 1184,
+        "deletions": 32
+      },
+      "paths": [
+        "Jellyfin.Plugin.JellyfinEnhanced/js/locales/ (32 files)"
+      ],
+      "status": "pending",
+      "rewriteCommits": []
+    },
+    {
+      "sha": "3f8e472435ad61f0a665d2eb5162a4ae97caae11",
+      "date": "2026-11-15T10:59:50+00:00",
+      "subject": "fix(player): run player shortcuts in Jellyfin Desktop's mpv player (#1069)",
+      "class": "fix",
+      "features": [
+        "bookmarks",
+        "chrome",
+        "platform",
+        "player"
+      ],
+      "issues": [
+        "#835",
+        "#1062",
+        "#1069"
+      ],
+      "release": "12.16.0.0",
+      "size": {
+        "files": 15,
+        "insertions": 1621,
+        "deletions": 35
+      },
+      "paths": [
+        "Jellyfin.Plugin.JellyfinEnhanced/js/component-scripts.json",
+        "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/bookmarks/bookmarks.js",
+        "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/events.js",
+        "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/player/osd-playback.js",
+        "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/player/playback.js",
+        "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/player/subtitle-sync.js",
+        "Jellyfin.Plugin.JellyfinEnhanced/js/locales/en.json",
+        "docs/advanced/project-structure.md",
+        "docs/enhanced/enhanced-features.md",
+        "docs/getting-started/compatibility.md",
+        "tests/docs/production-inventory.json",
+        "tests/frontend/features/features-bookmarks.test.mjs",
+        "tests/frontend/features/features-osd-playback.test.mjs",
+        "tests/frontend/features/features-playback.test.mjs",
+        "tests/frontend/features/features-subtitle-sync.test.mjs"
+      ],
+      "status": "pending",
+      "rewriteCommits": [],
+      "unmappedPaths": [
+        "Jellyfin.Plugin.JellyfinEnhanced/js/component-scripts.json"
+      ]
+    },
+    {
+      "sha": "005c5b459eee16c20bebaf6be32f282341878308",
+      "date": "2026-11-15T11:05:42+00:00",
+      "subject": "Translations update from Hosted Weblate (#1070)",
+      "class": "translation",
+      "features": [
+        "platform"
+      ],
+      "issues": [
+        "#1070"
+      ],
+      "release": "12.16.0.0",
+      "size": {
+        "files": 32,
+        "insertions": 64,
+        "deletions": 32
+      },
+      "paths": [
+        "Jellyfin.Plugin.JellyfinEnhanced/js/locales/ (32 files)"
+      ],
+      "status": "pending",
+      "rewriteCommits": []
+    },
+    {
+      "sha": "321701aeb2f27eee5d9514a8ec8ce87b90074247",
+      "date": "2026-11-15T11:16:04+00:00",
+      "subject": "v12.16.0.0",
+      "class": "release",
+      "features": [],
+      "issues": [],
+      "release": "12.16.0.0",
+      "size": {
+        "files": 1,
+        "insertions": 2,
+        "deletions": 2
+      },
+      "paths": [
+        "Jellyfin.Plugin.JellyfinEnhanced/JellyfinEnhanced.csproj"
+      ],
+      "status": "pending",
+      "rewriteCommits": []
+    },
+    {
+      "sha": "4c10732a6250fc731a7189bf0066f6b2b833daac",
+      "date": "2026-11-15T11:43:50+00:00",
+      "subject": "v12.16.0.0 - Jellyfin Enhanced (synced from jellyfin-plugins)",
+      "class": "release",
+      "features": [],
+      "issues": [],
+      "release": null,
+      "size": {
+        "files": 1,
+        "insertions": 16,
+        "deletions": 0
+      },
+      "paths": [
+        "manifest.json"
+      ],
+      "status": "pending",
+      "rewriteCommits": []
     }
   ]
 }
