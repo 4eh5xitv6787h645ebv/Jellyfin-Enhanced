@@ -105,6 +105,7 @@
     "TagGroupCaps",
     "TagGroupOrder",
     "TagGroupScopes",
+    "TagHiddenValues",
     "TagKindLooks",
     "TagLabelDensity",
     "TagLayout",

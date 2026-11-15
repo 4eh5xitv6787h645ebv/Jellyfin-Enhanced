@@ -2180,8 +2180,42 @@ ${scoped} {${original}}`;
 
   // client/src/features/media-tags/layout/present.ts
   var PILL_MAX_FACTS = 3;
+  var RATING_CHIP_LABELS = [["rating-tag-tmdb", "community"], ["rating-tag-critic", "critic"], ["rating-tag-userreview", "userReview"]];
   function createPresent(s, JE, deps) {
+    function isHiddenChip(group, chip) {
+      const H = JE.core.tagHidden;
+      if (!H?.any(group)) return false;
+      switch (group) {
+        case "quality":
+          return H.hides(group, chip.dataset.quality);
+        case "genre":
+          return H.hides(group, chip.dataset.jeGenre);
+        case "status":
+          return H.hides(group, chip.dataset.jeStatus);
+        case "awards":
+          return H.hides(group, chip.dataset.jeAward);
+        case "custom":
+          return H.hides(group, chip.dataset.jeCustom);
+        case "logos":
+          return H.hides(group, chip.dataset.jeLogoStyle);
+        case "ageRating":
+          return H.hidesAgeRating(chip.querySelector("[rating]")?.getAttribute("rating") ?? chip.getAttribute("rating"));
+        case "rating": {
+          const own = chip.dataset.jeRatingSource || chip.querySelector("[data-je-rating-source]")?.getAttribute("data-je-rating-source");
+          return H.hides(group, own || RATING_CHIP_LABELS.find(([cls]) => chip.classList.contains(cls))?.[1]);
+        }
+        case "language": {
+          const kind = chip.dataset.jeLanguage;
+          if (kind === "subtitles") return H.hides(group, "subtitles");
+          if (kind === "countBadge") return H.hides(group, "countBadge") || H.hides(group, chip.dataset.jeLanguageLabel);
+          return false;
+        }
+        default:
+          return false;
+      }
+    }
     function applyDensityAndCap(group, node, conf) {
+      for (const chip of childrenOf(node)) if (isHiddenChip(group, chip)) chip.remove();
       if (conf.density === "compact") {
         if (group === "quality") {
           for (const chip of node.querySelectorAll(".quality-overlay-label")) {
@@ -2839,7 +2873,10 @@ ${scoped} {${original}}`;
       ui: { injectCss: (id, css) => bridge.core?.ui?.injectCss(id, css) },
       dom: { afterNextPaint: (callback) => bridge.core?.dom?.afterNextPaint ? bridge.core.dom.afterNextPaint(callback) : requestAnimationFrame(callback) },
       tagRenderer: { isIgnoredContext: (element) => bridge.core?.tagRenderer?.isIgnoredContext(element) ?? false },
-      tagScopes: { excludes: (group, element) => bridge.core?.tagScopes?.excludes(group, element) ?? false }
+      tagScopes: { excludes: (group, element) => bridge.core?.tagScopes?.excludes(group, element) ?? false },
+      get tagHidden() {
+        return bridge.core?.tagHidden;
+      }
     },
     // Resolve these services at call time: their ordered entries follow the layout.
     tagPosterColours: {

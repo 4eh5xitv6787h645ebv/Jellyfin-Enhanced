@@ -167,6 +167,8 @@ public sealed class BootstrapPublicConfig
     public required List<string>? TagGroupOrder { get; init; }
     public required TagGroupCaps? TagGroupCaps { get; init; }
     public required TagGroupScopes? TagGroupScopes { get; init; }
+    public required TagHiddenValues? TagHiddenValues { get; init; }
+    public required string[] TagHiddenAgeRatings { get; init; }
     public required string TagLabelDensity { get; init; }
     public required string TagScale { get; init; }
     public required string TagGap { get; init; }

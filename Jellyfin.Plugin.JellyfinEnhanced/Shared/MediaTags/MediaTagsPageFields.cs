@@ -274,6 +274,9 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Shared.MediaTags
                 case "TagGroupScopes":
                     normalized = TagLayoutRules.NormalizeScopes((TagGroupScopes?)value);
                     return true;
+                case "TagHiddenValues":
+                    normalized = TagHiddenRules.Normalize((TagHiddenValues?)value);
+                    return true;
                 case "TagShapeOverrides":
                     normalized = TagShapeRules.Normalize((TagShapeOverrides?)value);
                     return true;

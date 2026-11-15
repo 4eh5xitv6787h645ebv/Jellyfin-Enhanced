@@ -165,8 +165,22 @@ export interface TagStylesEditor {
     settings(): { preset: string };
     snapshot(): string;
     refreshLabels(): void;
+    /** Redraw after the hidden lists changed elsewhere (another administrator, an import, Undo). */
+    refreshHidden(): void;
+    /** Say, beside the colour rows, that tag colours are off; `focusSwitch` takes the user to the switch. */
+    setColoursOffNote(off: boolean, focusSwitch?: () => void): void;
+    /** Open a group with its tag list (the Groups tab's pointers). */
+    openGroup(group: string): void;
 }
-export type CreateTagStylesEditor = (root: HTMLElement, customLabels?: () => string[], isCurrent?: () => boolean) => TagStylesEditor;
+/** One Hide switch change, as the editor reports it. */
+export interface HiddenChange { group: string; label: { key: string; name: string }; hidden: boolean; count: number; orphan: boolean; noun: string }
+/** Where the editor keeps Hidden tags: the page's TagHiddenValues, kept by the Colours section. */
+export interface HiddenStore {
+    get(): unknown;
+    /** @param ageRatings - The ratings on the hidden age rating boards (the web matches badges by them). */
+    set(doc: Record<string, string[]> | null, ageRatings: string[], change: HiddenChange): void;
+}
+export type CreateTagStylesEditor = (root: HTMLElement, customLabels?: () => string[], isCurrent?: () => boolean, hiddenStore?: HiddenStore | null) => TagStylesEditor;
 /** The contrast helpers of the Tag Styles editor (pure). */
 export interface TagStyleContrast {
     rgbaOf(css: unknown): { r: number; g: number; b: number; a: number } | null;

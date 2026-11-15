@@ -5,6 +5,8 @@ import type { CardController, LayoutHost } from './layout-runtime-types';
 import { childrenOf, cloneElement, type LayoutFns, type LayoutState } from './state';
 
 const PILL_MAX_FACTS = 3;
+// Community, critic and user-review rating chips by their class (named sources carry data-je-rating-source).
+const RATING_CHIP_LABELS: ReadonlyArray<readonly [string, string]> = [['rating-tag-tmdb', 'community'], ['rating-tag-critic', 'critic'], ['rating-tag-userreview', 'userReview']];
 
 /**
  * Presentation: chips, dots, pills and slots for each group, and tearing a card's presentation down.
@@ -13,7 +15,40 @@ const PILL_MAX_FACTS = 3;
  * @param deps - The other layout modules' functions, filled in by createTagLayout.
  */
 export function createPresent(s: LayoutState, JE: LayoutHost, deps: LayoutFns) {
+    /**
+     * Whether a chip is hidden (Hidden tags, JE.core.tagHidden): its Tag Styles label, read from the
+     * attributes the colours match it by, is on its group's list. Languages and logos are dropped by their
+     * renderers before their grouping and limit; a language chip is checked here only for its kind.
+     * @param chip - A child of the group's display copy.
+     */
+    function isHiddenChip(group: Group, chip: HTMLElement): boolean {
+        const H = JE.core.tagHidden;
+        if (!H?.any(group)) return false;
+        switch (group) {
+            case 'quality': return H.hides(group, chip.dataset.quality);
+            case 'genre': return H.hides(group, chip.dataset.jeGenre);
+            case 'status': return H.hides(group, chip.dataset.jeStatus);
+            case 'awards': return H.hides(group, chip.dataset.jeAward);
+            case 'custom': return H.hides(group, chip.dataset.jeCustom);
+            case 'logos': return H.hides(group, chip.dataset.jeLogoStyle);
+            case 'ageRating': return H.hidesAgeRating(chip.querySelector('[rating]')?.getAttribute('rating') ?? chip.getAttribute('rating'));
+            case 'rating': {
+                const own = chip.dataset.jeRatingSource || chip.querySelector('[data-je-rating-source]')?.getAttribute('data-je-rating-source');
+                return H.hides(group, own || RATING_CHIP_LABELS.find(([cls]) => chip.classList.contains(cls))?.[1]);
+            }
+            case 'language': {
+                const kind = chip.dataset.jeLanguage;
+                if (kind === 'subtitles') return H.hides(group, 'subtitles');
+                if (kind === 'countBadge') return H.hides(group, 'countBadge') || H.hides(group, chip.dataset.jeLanguageLabel);
+                return false;
+            }
+            default: return false;
+        }
+    }
+
     function applyDensityAndCap(group: Group, node: HTMLElement, conf: LayoutSettings) {
+        // Hidden tags leave first, so the next chips take their places within the limit.
+        for (const chip of childrenOf(node)) if (isHiddenChip(group, chip)) chip.remove();
         if (conf.density === 'compact') {
             if (group === 'quality') {
                 for (const chip of node.querySelectorAll<HTMLElement>('.quality-overlay-label')) {

@@ -1632,9 +1632,8 @@
       "subject": "feat(tags): hide individual tags from the Colours tag list",
       "class": "feature",
       "features": [
-        "hidden-content",
         "media-tags",
-        "settings"
+        "platform"
       ],
       "issues": [
         "#1043"
@@ -1674,12 +1673,14 @@
         "tests/frontend/features/features-admin-tags-page-colours-status.test.mjs",
         "tests/frontend/features/features-tag-hidden.test.mjs"
       ],
-      "status": "pending",
+      "status": "ported",
       "rewriteCommits": [],
       "unmappedPaths": [
         "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs",
         "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/admintags/admin-tags.css"
-      ]
+      ],
+      "notes": "Server side applied at the moved paths (git show e907396d, Services/PosterTags/ to Shared/MediaTags/PosterTags/ and Features/MediaTags/PosterTags/, Helpers/MediaTagsPageFields.cs to Shared/MediaTags/, git apply --3way; two conflicts, both from rewrite-only neighbours: the resolver's usings and the TagKindLooks line of the page-fields fixture): PluginConfiguration.TagHiddenValues, the page-field allowlist and its normalizer, the native resolver (hidden genres and logos leave before the limit, quality after the best resolution is chosen, hidden languages leave the flags while Dual/Multi still counts them, rating sources, age boards, status, awards and Custom by their label) and the settings digest (hidden.<group> only for a shown group that hides something, so a configuration without a list keeps every poster URL; no cached-output version moves, as upstream). Differences from upstream on the server: the TagHiddenValues model stays in Configuration/TagHiddenValues.cs, while TagHiddenRules and TagHiddenSet live in Shared/MediaTags/PosterTags/TagHiddenRules.cs (folder = namespace; tools/ClientContracts compiles the configuration model without the poster-tag rules); the public configuration is typed here, so Transport/BootstrapConfig.cs gains TagHiddenValues and TagHiddenAgeRatings, set in Features/Platform/JePlatformController.Bootstrap.cs, and the generated client contracts follow (je12 regen --contracts). Client re-implemented in client/src/features/media-tags: pipeline/tag-hidden.ts (JE.core.tagHidden, installed by the tag-renderer-base entry because tag-renderer-base.ts is at its size cap), layout/present.ts (hidden chips leave before density and the limit), types/language/languagetags.ts and types/logo/logotags.ts (every valid logo is cached, hidden styles leave before the two-logo limit), and on the admin tab admin/tag-hidden-editor.ts (the Hide switch, the hidden line and view, tile and tab marks, the words for what a tile hides, the colours-off note, openGroup), hooks in admin/tag-styles-editor.ts, admin/sections/colours.ts (writes TagHiddenValues, Undo, redraws this dashboard's tags, the editor stays open with tag colours off) and admin/hidden-rows.ts (each Groups row's link to its tags on the Colours tab and its hidden count; page.ts is at its size cap). To stay under the editor's size ratchet its fixed tables and element helper moved to admin/tag-styles-parts.ts (a pure move); the editor shrank from 1119 to 1106 lines and its size-baseline entry is lowered. Two strings are built with esc(fmt(…)) and escapeText(…) instead of tx(…) and a bare count, for the escape guard; the output is the same. js/enhanced/admintags/admin-tags.css is hand-written here too and takes upstream's hunk as is. Docs applied as is (docs/advanced/admin-media-tags.md, api.md, project-structure.md, docs/enhanced/tags.md, the screenshot), with project-structure naming the rewrite's TagHiddenRules.cs. Tests: upstream's CoreTagHiddenValuesTests (tests/backend/Features/MediaTags, 23 cases), features-tag-hidden.test.mjs, the three Colours page tests and the fixtures, with paths and namespaces adjusted; the admin-tags declarations record and the page-fields fixture gain TagHiddenValues. Nine of upstream's frontend tests fail on the tree before the port; the backend tests need the new types. Lab parity (je12 lab, Jellyfin 12.4): one je12 browse script hides the most common genre (Animation) from the Colours tag list as an administrator does and prints the same switch name and scope, confirmation, tile, tab and Groups-row texts, stored and public TagHiddenValues, and movie-page chips (292 genre chips with 82 Animation before; 268 with none after, the next genres in their places) on upstream's build of e907396d and on this port.",
+      "evidence": "artifacts/restructure-plan/step-logs/upstream-sync-evidence/p52-*"
     },
     {
       "sha": "25a168aeecae9e36cc5c79ee8dd4cff02497d0c6",

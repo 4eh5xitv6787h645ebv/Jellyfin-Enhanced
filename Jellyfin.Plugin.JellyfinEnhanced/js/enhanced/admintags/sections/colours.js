@@ -46,12 +46,19 @@
   registerSection({
       tab: 'colours',
       title: 'Tag colours',
-      writes: ['TagStyleOverrides', 'TagStylePreset'],
+      writes: ['TagStyleOverrides', 'TagStylePreset', 'TagHiddenValues'],
           { id: 'tagStylesEnabled', key: 'TagStylesEnabled', type: 'switch', label: 'Use tag colours' },
           { id: 'tagStyleTarget', key: 'TagStyleTarget', type: 'pills', label: 'Apply to' },
           { id: 'tagStylesAllowUserPreset', key: 'TagStylesAllowUserPreset', type: 'switch', label: 'Let users pick their own preset' },
   */
-  installSection((A) => {
+  var RENDERERS = ["quality", "genre", "rating", "agerating", "status", "language", "awards", "logos", "custom"];
+  function hiddenDoc(value) {
+    if (!value || typeof value !== "object" || Array.isArray(value)) return null;
+    const doc = {};
+    for (const [group, list] of Object.entries(value)) if (Array.isArray(list)) doc[group] = list.map(String);
+    return doc;
+  }
+  installSection((A, JE) => {
     let editor = null;
     let last = "";
     function load(ctx) {
@@ -65,9 +72,9 @@
       order: 10,
       title: "Tag colours",
       hint: "Colours for quality, age rating, rating, genre, status, language, awards, logo and custom tags.",
-      writes: ["TagStyleOverrides", "TagStylePreset"],
+      writes: ["TagStyleOverrides", "TagStylePreset", "TagHiddenValues"],
       fields: [
-        { id: "tagStylesEnabled", key: "TagStylesEnabled", type: "switch", label: "Use tag colours", desc: "Off shows the original colours (custom CSS keeps working). Your edits are kept.", master: true },
+        { id: "tagStylesEnabled", key: "TagStylesEnabled", type: "switch", label: "Use tag colours", desc: "Off shows the original colours (custom CSS keeps working). Your edits are kept. Hidden tags apply either way.", master: true },
         { id: "tagStyleTarget", key: "TagStyleTarget", type: "pills", label: "Apply to", desc: "Web recolours the overlays and wins over custom CSS colours. Native posters draws the colours into the posters of apps such as Android TV (needs Native Poster Tags; status tags are not drawn there).", options: [["web", "Web"], ["native", "Native posters"], ["both", "Both"]], read: (v) => typeof v === "string" && ["web", "native", "both"].includes(v) ? v : "both", when: (c) => c.TagStylesEnabled === true },
         { id: "tagStylesAllowUserPreset", key: "TagStylesAllowUserPreset", type: "switch", label: "Let users pick their own preset", desc: "Shows a colour preset choice in each user's Media Tags settings. Your group and label colours stay on top of their preset.", break: true }
       ],
@@ -119,10 +126,32 @@
           }
           return [...new Set(labels)];
         };
-        const own = create(ctx.root, customLabels, () => ctx.isCurrent());
+        const setHiddenDoc = (doc, ages) => {
+          ctx.setMany({ TagHiddenValues: doc }, { redraw: false });
+          if (JE.pluginConfig) Object.assign(JE.pluginConfig, { TagHiddenValues: doc, TagHiddenAgeRatings: ages });
+          for (const name of RENDERERS) JE.core.tagRenderer?.reinitialize?.(name);
+        };
+        const hiddenStore = {
+          get: () => ctx.config.TagHiddenValues || null,
+          set(doc, ages, change) {
+            const before = hiddenDoc(ctx.config.TagHiddenValues);
+            const beforeAges = Array.isArray(JE.pluginConfig?.TagHiddenAgeRatings) ? JE.pluginConfig.TagHiddenAgeRatings.map(String) : [];
+            setHiddenDoc(doc, ages);
+            const message = change.orphan && !change.hidden ? A.fmt("{name} is no longer hidden", { name: change.label.key }) : change.count > 1 ? A.fmt(change.hidden ? "{count} ratings hidden" : "{count} ratings show again", { count: change.count }) : A.fmt(change.hidden ? "{name} hidden" : "{name} shown again", { name: change.noun || change.label.name });
+            ctx.snack(message, () => {
+              setHiddenDoc(before, beforeAges);
+              editor?.refreshHidden();
+            });
+          }
+        };
+        const own = create(ctx.root, customLabels, () => ctx.isCurrent(), hiddenStore);
         editor = own;
         ctx.root.addEventListener("je-custom-labels", () => {
           if (ctx.isCurrent()) own.refreshLabels();
+        }, { signal: ctx.signal });
+        ctx.root.addEventListener("click", (e) => {
+          const link = e.target instanceof Element ? e.target.closest("[data-je-colours-group]") : null;
+          if (link && ctx.isCurrent()) setTimeout(() => editor?.openGroup(link.dataset.jeColoursGroup || ""));
         }, { signal: ctx.signal });
         const changed = () => {
           const now = own.snapshot();
@@ -150,8 +179,13 @@
       },
       load,
       refresh(ctx, body) {
-        const box = find(body, "#tagStylesBody");
-        if (box) box.style.display = ctx.config.TagStylesEnabled === true ? "" : "none";
+        find(body, "#tagStylesBody")?.classList.toggle("je-ts-colours-off", ctx.config.TagStylesEnabled !== true);
+        editor?.setColoursOffNote(ctx.config.TagStylesEnabled !== true, () => {
+          const input = find(ctx.root, "#tagStylesEnabled");
+          input?.scrollIntoView?.({ block: "center" });
+          input?.focus();
+        });
+        editor?.refreshHidden();
       }
     });
   });

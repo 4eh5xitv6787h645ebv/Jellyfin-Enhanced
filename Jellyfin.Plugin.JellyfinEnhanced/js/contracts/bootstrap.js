@@ -772,6 +772,140 @@
         ],
         "additionalProperties": false
       },
+      "TagHiddenValues": {
+        "type": "object",
+        "properties": {
+          "AgeRating": {
+            "anyOf": [
+              {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "Awards": {
+            "anyOf": [
+              {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "Custom": {
+            "anyOf": [
+              {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "Genre": {
+            "anyOf": [
+              {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "Language": {
+            "anyOf": [
+              {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "Logos": {
+            "anyOf": [
+              {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "Quality": {
+            "anyOf": [
+              {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "Rating": {
+            "anyOf": [
+              {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "Status": {
+            "anyOf": [
+              {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "AgeRating",
+          "Awards",
+          "Custom",
+          "Genre",
+          "Language",
+          "Logos",
+          "Quality",
+          "Rating",
+          "Status"
+        ],
+        "additionalProperties": false
+      },
       "TagKindLook": {
         "type": "object",
         "properties": {
@@ -2113,6 +2247,22 @@
               }
             ]
           },
+          "TagHiddenAgeRatings": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "TagHiddenValues": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/TagHiddenValues"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "TagKindLooks": {
             "anyOf": [
               {
@@ -2508,6 +2658,8 @@
           "TagGroupCaps",
           "TagGroupOrder",
           "TagGroupScopes",
+          "TagHiddenAgeRatings",
+          "TagHiddenValues",
           "TagKindLooks",
           "TagLabelDensity",
           "TagLayout",

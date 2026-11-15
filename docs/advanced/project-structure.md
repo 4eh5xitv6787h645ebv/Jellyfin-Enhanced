@@ -72,6 +72,7 @@ Jellyfin.Plugin.JellyfinEnhanced/
 │   ├── TagShapeSettings.cs         # Per-shape layout/density/slot/cap validation and defaults
 │   ├── TagLookSettings.cs
 │   ├── CustomTagRuleSet.cs        # Custom tag rules: model, validation and the matcher
+│   ├── TagHiddenValues.cs         # Hidden tags: the hidden Tag Styles labels per group (rules: Shared/MediaTags/PosterTags/TagHiddenRules.cs)
 │   ├── UserConfigurationManager.cs
 │   ├── configPage.html
 │   ├── mediaTagsPage.html          # Old Media Tags page address: forwards to the Media Tags tab
@@ -223,7 +224,7 @@ These indexes group client modules and relevant supporting server files by web f
 | `navigation.js` | Deduplicated SPA navigation notifications through `onNavigate` and `onViewPage`. |
 | `session.js` | Hooks `ApiClient.setAuthenticationInfo`, follows navigation notifications and reconciles every five seconds. Runs `JE.session.onUserChange` reset handlers and emits `je:user-changed`; supplies identity epochs for async work. |
 | `media-language.js` | Shared language/region-to-flag resolution (`resolveFlag`) and canonical ISO language bases (`canonicalBase`) through `JE.core.mediaLanguage`. |
-| `tag-renderer-base.js` | Overlay creation, deduplication, caching and reinitialization for the genre, language, quality, rating, age-rating and status tags; hands each group to `tag-layout.js`. People and user-review renderers are independent. |
+| `tag-renderer-base.js` | Overlay creation, deduplication, caching and reinitialization for the genre, language, quality, rating, age-rating and status tags; hands each group to `tag-layout.js`. People and user-review renderers are independent. Also holds **Where to show** (`JE.core.tagScopes`) and the hidden tag lists (`JE.core.tagHidden`), which `tag-layout.js` applies before each group's limit. |
 | `tag-layout.js` | Poster tag layouts (`JE.core.tagLayout`): resolves the user's layout, slots, group order, caps and label density (with the migration for settings saved before layouts), keeps one controller per card and presents each group's chips in slots, the caption outlet, the summary pill, quality dots and the hover scrim. `JE.reinitializeTagLayout()` re-presents every card; Status Tags supply translated compact labels through `data-je-compact`. `resolveLayout()` picks each card's look: lock, then first matching rule, then the default. |
 | `tag-look.js` | Tag look rules and locks (`JE.core.tagLook`): normalization, condition matching, card facts from cache entries, saving rules, locking and unlocking. |
 | `ui-kit.js` | HTML escaping, toasts, deduplicated CSS injection and scroll-friendly direct/delegated tap listeners. |
@@ -522,6 +523,7 @@ Per-user setting in the Enhanced panel:
 | `CompositeImageCache.cs` | Byte-bounded memory LRU and disk cache under Jellyfin's cache path, in-flight coalescing and bounded render concurrency. |
 | `Shared/MediaTags/PosterTags/TagStyles.cs` | The versioned Tag Styles document (preset, group and label overrides): strict save validation, version 1 reading, per-chip resolution and the web model; plus the shipped colour catalog. |
 | `Shared/MediaTags/PosterTags/TagStylePalettes.cs` | Group, label and preset ids, the preset palettes and built-in colours shared by web CSS, the config page and native drawing, and the WCAG contrast check. |
+| `Shared/MediaTags/PosterTags/TagHiddenRules.cs` | Hidden tags: validation of `TagHiddenValues`, the Tag Styles label each chip is matched by, and the immutable set the native resolver and the settings digest read. |
 | `Shared/MediaTags/PosterTags/PosterColour.cs` | The Poster preset's colours: an artwork's dominant colour (downscaled histogram) normalised for legible text, its worst-case contrast, and the example colours; the renderer samples each poster with it. |
 | `Resolution/` | `LogoRules.cs` (logo validation and name-chip text), `RatingRules.cs`. The rules Shared code also reads are in `Shared/MediaTags/PosterTags/Resolution/`: `AgeRatingRules.cs`, `GenreIcons.cs`, `JsText.cs`, `LanguageFlagRules.cs`, `LanguageNames.cs`, `QualityTagRules.cs` (including source/edition categories, order and low-quality gate), `StatusRules.cs`, `ResolutionData.g.cs`. |
 | `Rendering/` | `PosterTagAssets.cs`, `PosterTagCss.cs` (in `Shared/MediaTags/PosterTags/Rendering/`), `PosterTagImageScaler.cs`, `PosterTagPlan.cs`, `PosterTagRenderer.cs`, `PosterTagText.cs`, `PosterTagTileCache.cs`: embedded assets, layout, scaling, text shaping, drawing and reusable tile caching. |

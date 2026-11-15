@@ -40,6 +40,8 @@ export interface LayoutHost {
         tagScopes?: {
             excludes(group: string, element: HTMLElement): boolean;
         };
+        /** Hidden tags (pipeline/tag-hidden.ts), read at call time. */
+        tagHidden?: Pick<import('../pipeline/tag-hidden').TagHidden, 'any' | 'hides' | 'hidesAgeRating'> | undefined;
     };
     tagPosterColours?: Pick<PosterColours, 'track' | 'release'>;
     session?: {

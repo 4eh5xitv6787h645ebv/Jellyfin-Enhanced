@@ -369,6 +369,8 @@ export interface BootstrapPublicConfig {
   "TagGroupCaps": TagGroupCaps | null;
   "TagGroupOrder": Array<string> | null;
   "TagGroupScopes": TagGroupScopes | null;
+  "TagHiddenAgeRatings": Array<string>;
+  "TagHiddenValues": TagHiddenValues | null;
   "TagKindLooks": Array<TagKindLook> | null;
   "TagLabelDensity": string;
   "TagLayout": string;
@@ -806,6 +808,18 @@ export interface TagGroupScopes {
   "Quality": TagScopeSet | null;
   "Rating": TagScopeSet | null;
   "Status": TagScopeSet | null;
+}
+
+export interface TagHiddenValues {
+  "AgeRating": Array<string> | null;
+  "Awards": Array<string> | null;
+  "Custom": Array<string> | null;
+  "Genre": Array<string> | null;
+  "Language": Array<string> | null;
+  "Logos": Array<string> | null;
+  "Quality": Array<string> | null;
+  "Rating": Array<string> | null;
+  "Status": Array<string> | null;
 }
 
 export interface TagKindLook {
