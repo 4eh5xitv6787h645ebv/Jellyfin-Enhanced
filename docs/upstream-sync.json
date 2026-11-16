@@ -1937,10 +1937,11 @@
       "subject": "fix(player): run player shortcuts in Jellyfin Desktop's mpv player (#1069)",
       "class": "fix",
       "features": [
+        "player",
         "bookmarks",
         "chrome",
-        "platform",
-        "player"
+        "shared",
+        "platform"
       ],
       "issues": [
         "#835",
@@ -1970,11 +1971,13 @@
         "tests/frontend/features/features-playback.test.mjs",
         "tests/frontend/features/features-subtitle-sync.test.mjs"
       ],
-      "status": "pending",
+      "status": "ported",
       "rewriteCommits": [],
       "unmappedPaths": [
         "Jellyfin.Plugin.JellyfinEnhanced/js/component-scripts.json"
-      ]
+      ],
+      "evidence": "artifacts/restructure-plan/step-logs/upstream-sync-evidence/p59-*",
+      "notes": "Client re-implemented in TypeScript. Upstream's new osd-playback.js is client/src/features/shared/osd-playback.ts (stateless reads of jellyfin-web's OSD and seeks through its position slider): component-scripts.json is pinned, so there is no new script entry; the module is bundled into enhanced/player/playback.js, which publishes it as JE.internals.osdPlayback as upstream does (tests/frontend/architecture/internals-owners.json names player as its owner), and into enhanced/bookmarks/bookmarks.js, which imports it instead of reading another feature's internals slot. Upstream's additions to playback.js are split by what they do: player/osd-seek-history.ts (the seek history kept from the OSD, JE.watchOsdPosition, JE.stopWatchingOsdPosition, Jump to Last Position and Jump to % through the slider), player/osd-settings-menu.ts (speed and aspect ratio through jellyfin-web's settings menu, one press after another), skipIntroOutroViaOsd in player/segment-controls.ts, and the no-<video> branches in playback.ts, frame-seek.ts, normal-aspect.ts and playback-info.ts; the toast text is playerUnsupportedText in player/context.ts. The position to jump back to is one object shared by the <video> history and the OSD's, as upstream's one variable is. now-playing.ts takes the OSD's duration in place of an element for the session lookup. chrome/events.ts no longer needs a <video> for player shortcuts and starts and stops the OSD watch; subtitle-sync/dialog.ts keeps its button off and says the dialog is not available; bookmarks use bookmarks/player-surface.ts (position, duration, seek and the OSD key) so bookmarks.ts shrinks (849 to 842 lines, baseline lowered). en.json gains toast_player_unsupported; docs as upstream (docs/advanced/project-structure.md says where the module is in this tree). Differences from upstream: the document listeners that watch for seeks are added when the OSD watch starts and removed when it stops, and the kept state is dropped on a navigation or an account change, as this tree's player state is; the aspect ratio's name is escaped before it goes into a toast; a skip of a segment that is neither intro nor outro says toast_skipped as the <video> path does here; a settings-menu press that outlives its page or account does nothing. Deleting the last bookmark removes its marker here and leaves it on upstream's build, which this tree did before the port too (found bug NEW-20261116-092505). Tests: upstream's features-osd-playback.test.mjs (38 cases) in tests/frontend/features/player with this tree's import path, no load of the separate script and an escapeHtml stub; its two bookmark tests, its playback test and its subtitle sync test and label change as they are; one bookmark test of this tree now has a <video>, since a player whose position can't be read is offered no bookmark. Lab (p59-mpv-player.mjs): Jellyfin Desktop's mpv can't run in the lab's browser, so the page's document.querySelector never returns a <video> while jellyfin-web plays its own; before the port no shortcut does anything; with it, jump back after a timeline seek and after jellyfin-web's own key seek, jump to 50 %, speed 1.25 / 1.5 / 1.25 / normal and aspect Zoom / Stretch / Auto through the settings menu with no sheet left behind, the not-available toasts for frame step and Subtitle Sync, the skip fallback, and a bookmark added at the OSD's time, shown on the timeline, jumped to and deleted are the same on upstream's build and on the port."
     },
     {
       "sha": "005c5b459eee16c20bebaf6be32f282341878308",

@@ -876,6 +876,10 @@
       for (const [name, v] of Object.entries(params || {})) text = text.split(`{${name}}`).join(String(v));
       return text;
     }
+    const toastText = (key, fallback) => {
+      const value = JE2.t(key);
+      return value && value !== key ? value : fallback;
+    };
     const getVideo = () => ctx2.own.player?.getVideo?.() || document.querySelector("video");
     const watch = createSubtitleWatch(getVideo);
     const view = createView(watch, tr);
@@ -1118,8 +1122,9 @@
         closeDialog({ resume: false });
       }
       const video = getVideo();
-      if (!video || typeof JE2.isVideoPage === "function" && !JE2.isVideoPage()) {
-        JE2.toast?.(JE2.t("toast_no_video_found"));
+      const onVideoPage = typeof JE2.isVideoPage !== "function" || JE2.isVideoPage();
+      if (!video || !onVideoPage) {
+        JE2.toast?.(video || !onVideoPage ? JE2.t("toast_no_video_found") : toastText("toast_player_unsupported", "{{icon:info}} Not available with this player"));
         return;
       }
       injectStyles();
@@ -1242,12 +1247,16 @@
         existing?.remove();
         return;
       }
+      if (!getVideo()) {
+        existing?.remove();
+        return;
+      }
       const subtitlesButton = document.querySelector(".videoOsdBottom .btnSubtitles");
       if (!subtitlesButton) return;
       if (existing && existing.previousElementSibling === subtitlesButton) return;
       existing?.remove();
       injectStyles();
-      const label = tr("subtitle_sync_button", "Search subtitles");
+      const label = tr("subtitle_sync_button", "Sync subtitles");
       const button = document.createElement("button");
       button.id = BUTTON_ID;
       button.type = "button";

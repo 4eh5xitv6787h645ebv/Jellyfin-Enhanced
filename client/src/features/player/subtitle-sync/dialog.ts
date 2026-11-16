@@ -72,6 +72,11 @@ export function installSubtitleSync({ JE, ApiClient, ctx }: SubtitleSyncHost): v
         return text;
     }
 
+    /** A toast's words (a toast renders markup): the locale's string, else the English one. */
+    const toastText = (key: string, fallback: string): string => {
+        const value = JE.t(key);
+        return value && value !== key ? value : fallback;
+    };
     const getVideo = (): HTMLVideoElement | null => ctx.own.player?.getVideo?.() || document.querySelector('video');
     const watch = createSubtitleWatch(getVideo);
     const view = createView(watch, tr);
@@ -360,8 +365,11 @@ export function installSubtitleSync({ JE, ApiClient, ctx }: SubtitleSyncHost): v
             closeDialog({ resume: false });
         }
         const video = getVideo();
-        if (!video || (typeof JE.isVideoPage === 'function' && !JE.isVideoPage())) {
-            JE.toast?.(JE.t('toast_no_video_found'));
+        const onVideoPage = typeof JE.isVideoPage !== 'function' || JE.isVideoPage();
+        if (!video || !onVideoPage) {
+            // On the player page without a <video> the player draws its own subtitles (mpv in Jellyfin
+            // Desktop): there are no cues to check the lines against and no element to seek.
+            JE.toast?.(video || !onVideoPage ? JE.t('toast_no_video_found') : toastText('toast_player_unsupported', '{{icon:info}} Not available with this player'));
             return;
         }
         injectStyles();
@@ -514,12 +522,17 @@ export function installSubtitleSync({ JE, ApiClient, ctx }: SubtitleSyncHost): v
             existing?.remove();
             return;
         }
+        // A player without a <video> (mpv in Jellyfin Desktop) draws its own subtitles: nothing to sync.
+        if (!getVideo()) {
+            existing?.remove();
+            return;
+        }
         const subtitlesButton = document.querySelector('.videoOsdBottom .btnSubtitles');
         if (!subtitlesButton) return;
         if (existing && existing.previousElementSibling === subtitlesButton) return;
         existing?.remove();
         injectStyles();
-        const label = tr('subtitle_sync_button', 'Search subtitles');
+        const label = tr('subtitle_sync_button', 'Sync subtitles');
         const button = document.createElement('button');
         button.id = BUTTON_ID;
         button.type = 'button';

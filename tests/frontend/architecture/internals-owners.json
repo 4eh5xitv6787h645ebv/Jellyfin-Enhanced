@@ -15,6 +15,7 @@
   "jellyseerrUi": ["seerr"],
   "moreInfoModal": ["seerr"],
   "nowPlaying": ["player"],
+  "osdPlayback": ["player"],
   "peopleTags": ["media-tags"],
   "player": ["player"],
   "recommendationsPage": ["seerr"],

@@ -165,7 +165,6 @@
       if (document.activeElement?.hasAttribute("data-je-key-recorder")) return;
       const key = event.key;
       const combo = JE.keyCombo(event);
-      const video = document.querySelector("video");
       const shortcuts = canonicalShortcuts(JE.state.activeShortcuts);
       if (combo === shortcuts.OpenSearch) {
         event.preventDefault();
@@ -188,7 +187,7 @@
         event.preventDefault();
         document.getElementById("randomItemButton")?.click();
       }
-      if (!JE.isVideoPage() || !video) return;
+      if (!JE.isVideoPage()) return;
       const action = playerActions(event).find(([name]) => combo === shortcuts[name]);
       if (action) {
         event.preventDefault();
@@ -208,8 +207,10 @@
           JE.applySavedStylesWhenReady?.();
           const video = document.querySelector("video");
           if (video) JE.attachSeekTracker?.(video);
+          JE.watchOsdPosition?.();
         } else {
           JE.stopAutoSkip?.();
+          JE.stopWatchingOsdPosition?.();
         }
       };
       JE.helpers.createObserver("dom-observer", JE.helpers.throttle(() => {

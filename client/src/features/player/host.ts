@@ -1,6 +1,7 @@
 import type { Session } from '../../core/session';
 import type { Lifecycle } from '../../core/lifecycle';
 import type { MediaSegment, PlayingSession } from './wire';
+import type { OsdPlayback } from '../shared/osd-playback';
 import { featureContext, type FeatureContext } from '../../host/context';
 export interface Subscription { unsubscribe(): void }
 export interface PlayerSettings {
@@ -14,7 +15,8 @@ export interface NowPlaying {
     normalizeId(id: unknown): string | null;
     itemIdFromSource(video?: HTMLVideoElement | null): string | null;
     itemIdFromRoute(): string | null;
-    itemIdFromSession(video?: HTMLVideoElement | null): Promise<string | null>;
+    /** `video` may be a player without an element (mpv): the duration its OSD shows. */
+    itemIdFromSession(video?: HTMLVideoElement | { duration: number } | null): Promise<string | null>;
     resolveItemId(video?: HTMLVideoElement | null): Promise<string | null>;
 }
 export interface AutoSkipDependencies {
@@ -51,12 +53,16 @@ export interface PlayerBridge {
         player?: { getVideo(): HTMLVideoElement | null; getCurrentVideoItemId(): string | null; probeOwnSession?(): Promise<PlayingSession | null> };
         nowPlaying: NowPlaying;
         autoSkip?: { TICKS_PER_SECOND: number; MIN_SEGMENT_TICKS: number; createAutoSkipEngine(deps: AutoSkipDependencies): SkipEngine; createSessionItemResolver(options: ResolverOptions): (video: HTMLVideoElement) => string | null; parseTranscodeOffsetTicksFromSrc(src: string): number; parseItemIdFromVideosSrc(src: string): string | null; segmentTypeEnabled(type: string | undefined): boolean };
+        /** jellyfin-web's OSD read and driven for a player without a `<video>` (shared/osd-playback.ts). */
+        osdPlayback?: OsdPlayback;
         /** Subtitle sync's pure rules and waits (subtitle-sync/dialog.ts), for unit tests. */
         subtitleSync?: import('./subtitle-sync/dialog').SubtitleSyncInternals;
     };
     openSettings(callback: () => void): void;
     adjustPlaybackSpeed(direction: string): void; resetPlaybackSpeed(): void; jumpToPercentage(percentage: number): void;
     frameStep(direction: string): Promise<void>; attachSeekTracker(video: HTMLVideoElement): void; jumpToLastPosition(): void;
+    /** Keep, and stop keeping, the seek history of a player without a `<video>` from jellyfin-web's OSD. */
+    watchOsdPosition(): void; stopWatchingOsdPosition(): void;
     skipIntroOutro(): void; cycleSubtitleTrack(): void; cycleAudioTrack(): void; cycleAspect(): void; togglePlaybackInfo(): Promise<void>;
     adjustSubtitleOffset(deltaSeconds: number): void;
     /** Sets jellyfin-web's subtitle offset through its sync control; false when the player has none. */
@@ -100,7 +106,7 @@ export function playerHost() {
     const JE = host.JellyfinEnhanced;
     if (!JE) throw new Error('Player loaded before Jellyfin Enhanced');
     const ctx: PlayerFeatureContext = featureContext<PlayerOwn, PlayerPeers, PlayerBridge>('player', JE, {
-        internalSlots: ['player', 'nowPlaying', 'autoSkip', 'subtitleSync'],
+        internalSlots: ['player', 'nowPlaying', 'autoSkip', 'subtitleSync', 'osdPlayback'],
         internalsObject: () => JE.internals = JE.internals || {} as PlayerBridge['internals'],
     });
     // Read the active API for every operation; Jellyfin replaces it on server changes.
