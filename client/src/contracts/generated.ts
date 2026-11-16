@@ -362,6 +362,7 @@ export interface BootstrapPublicConfig {
   "StatusTagsSchedule": boolean;
   "StatusTagsSeriesStatus": boolean;
   "StatusTagsTrending": boolean;
+  "SubtitleSyncButtonEnabled": boolean;
   "SyncJellyseerrWatchlist": boolean;
   "TagCacheServerMode": boolean;
   "TagEdgeSpacing": string;
@@ -516,6 +517,7 @@ export interface BootstrapSettings {
   "StatusTagsSeriesStatus": boolean;
   "StatusTagsTrending": boolean;
   "SubtitleHorizontalPosition": number;
+  "SubtitleSyncButtonEnabled": boolean;
   "SubtitleVerticalPosition": number;
   "TagEdgeSpacing": string | null;
   "TagGap": string | null;
@@ -700,6 +702,7 @@ export interface JellyfinEnhancedUserSettings {
   "StatusTagsSeriesStatus": boolean;
   "StatusTagsTrending": boolean;
   "SubtitleHorizontalPosition": number;
+  "SubtitleSyncButtonEnabled": boolean;
   "SubtitleVerticalPosition": number;
   "TagEdgeSpacing": string | null;
   "TagGap": string | null;

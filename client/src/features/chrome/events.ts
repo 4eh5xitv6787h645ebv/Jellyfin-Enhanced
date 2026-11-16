@@ -28,6 +28,7 @@ export interface EventsBridge {
     resetPlaybackSpeed?(): void; adjustPlaybackSpeed?(direction: 'increase' | 'decrease'): void;
     skipIntroOutro?(): void; frameStep?(direction: 'back' | 'forward'): void;
     adjustSubtitleOffset?(deltaSeconds: number): void;
+    toggleSubtitleSync?(): void; addSubtitleSyncButton?(): void;
     jumpToLastPosition?(): void; jumpToPercentage?(percent: number): void;
     addOsdSettingsButton?(): void; initializeAutoSkipObserver?(): void; applySavedStylesWhenReady?(): void;
     attachSeekTracker?(video: HTMLVideoElement): void; stopAutoSkip?(): void;
@@ -136,13 +137,16 @@ export function createEvents(ctx: EventsContext) {
             ['FrameStepForward', () => JE.frameStep?.('forward')],
             ['DecreaseSubtitleOffset', () => JE.adjustSubtitleOffset?.(-0.1)],
             ['IncreaseSubtitleOffset', () => JE.adjustSubtitleOffset?.(0.1)],
-            ['JumpToLastPosition', () => JE.jumpToLastPosition?.()]
+            ['JumpToLastPosition', () => JE.jumpToLastPosition?.()],
+            ['SubtitleSync', () => { if (!event.repeat) JE.toggleSubtitleSync?.(); }]
         ];
     }
 
     /** The main shortcut listener; JE.keyListener keeps this identity for add/remove callers. */
     function keyListener(event: KeyboardEvent): void {
         if (isTyping()) return;
+        // A JE dialog that handles its own keys (subtitle sync) is focused.
+        if (event.target instanceof Element && event.target.closest('[data-je-own-keys]')) return;
         // A key recorder (admin shortcut grid) is capturing the next press.
         if (document.activeElement?.hasAttribute('data-je-key-recorder')) return;
         const key = event.key;
@@ -188,6 +192,7 @@ export function createEvents(ctx: EventsContext) {
         const runPageSpecificFunctions = (): void => {
             if (JE.isVideoPage()) {
                 JE.addOsdSettingsButton?.();
+                JE.addSubtitleSyncButton?.();
                 JE.initializeAutoSkipObserver?.();
                 JE.applySavedStylesWhenReady?.();
                 const video = document.querySelector('video');

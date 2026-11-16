@@ -464,6 +464,7 @@
   "spoilerStripSeriesOverview",
   "spoilerStripTaglines",
   "spoilerStripTags",
+  "subtitleSyncButtonEnabled",
   "syncJellyfinWatchlistToSeerr",
   "syncJellyseerrWatchlist",
   "testCustomPluginLinksBtn",
@@ -602,7 +603,8 @@
   "reviewsExpandedByDefault",
   "showAudioLanguages",
   "showFileSizes",
-  "showWatchProgress"
+  "showWatchProgress",
+  "subtitleSyncButtonEnabled"
  ],
  "mainToggles": [
   "activeStreamsEnabled",
@@ -879,6 +881,7 @@
   "spoilerStripSeriesOverview",
   "spoilerStripTaglines",
   "spoilerStripTags",
+  "subtitleSyncButtonEnabled",
   "syncJellyfinWatchlistToSeerr",
   "syncJellyseerrWatchlist",
   "testCustomPluginLinksBtn",
@@ -993,6 +996,7 @@
   "AutoSkipIntro": false,
   "AutoSkipOutro": false,
   "DisableCustomSubtitleStyles": false,
+  "SubtitleSyncButtonEnabled": false,
   "DefaultSubtitleStyle": 0,
   "DefaultSubtitleSize": 0,
   "DefaultSubtitleFont": 0,

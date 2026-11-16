@@ -2232,6 +2232,9 @@
           "StatusTagsTrending": {
             "type": "boolean"
           },
+          "SubtitleSyncButtonEnabled": {
+            "type": "boolean"
+          },
           "SyncJellyseerrWatchlist": {
             "type": "boolean"
           },
@@ -2691,6 +2694,7 @@
           "StatusTagsSchedule",
           "StatusTagsSeriesStatus",
           "StatusTagsTrending",
+          "SubtitleSyncButtonEnabled",
           "SyncJellyseerrWatchlist",
           "TagCacheServerMode",
           "TagEdgeSpacing",
@@ -3643,6 +3647,9 @@
           "SubtitleHorizontalPosition": {
             "type": "integer"
           },
+          "SubtitleSyncButtonEnabled": {
+            "type": "boolean"
+          },
           "SubtitleVerticalPosition": {
             "type": "integer"
           },
@@ -3939,6 +3946,7 @@
           "StatusTagsSeriesStatus",
           "StatusTagsTrending",
           "SubtitleHorizontalPosition",
+          "SubtitleSyncButtonEnabled",
           "SubtitleVerticalPosition",
           "TagEdgeSpacing",
           "TagGap",
@@ -4653,6 +4661,9 @@
           "SubtitleHorizontalPosition": {
             "type": "integer"
           },
+          "SubtitleSyncButtonEnabled": {
+            "type": "boolean"
+          },
           "SubtitleVerticalPosition": {
             "type": "integer"
           },
@@ -4948,6 +4959,7 @@
           "StatusTagsSeriesStatus",
           "StatusTagsTrending",
           "SubtitleHorizontalPosition",
+          "SubtitleSyncButtonEnabled",
           "SubtitleVerticalPosition",
           "TagEdgeSpacing",
           "TagGap",
@@ -5392,6 +5404,7 @@
       calendarDefaultViewMode: "agenda",
       disableAllShortcuts: false,
       longPress2xEnabled: false,
+      subtitleSyncButtonEnabled: false,
       lastOpenedTab: "shortcuts"
     };
     const pluginDefaultAliases = {

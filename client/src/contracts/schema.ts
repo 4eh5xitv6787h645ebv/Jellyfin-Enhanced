@@ -2199,6 +2199,9 @@ export const bootstrapSchema = {
         "StatusTagsTrending": {
           "type": "boolean"
         },
+        "SubtitleSyncButtonEnabled": {
+          "type": "boolean"
+        },
         "SyncJellyseerrWatchlist": {
           "type": "boolean"
         },
@@ -2658,6 +2661,7 @@ export const bootstrapSchema = {
         "StatusTagsSchedule",
         "StatusTagsSeriesStatus",
         "StatusTagsTrending",
+        "SubtitleSyncButtonEnabled",
         "SyncJellyseerrWatchlist",
         "TagCacheServerMode",
         "TagEdgeSpacing",
@@ -3610,6 +3614,9 @@ export const bootstrapSchema = {
         "SubtitleHorizontalPosition": {
           "type": "integer"
         },
+        "SubtitleSyncButtonEnabled": {
+          "type": "boolean"
+        },
         "SubtitleVerticalPosition": {
           "type": "integer"
         },
@@ -3906,6 +3913,7 @@ export const bootstrapSchema = {
         "StatusTagsSeriesStatus",
         "StatusTagsTrending",
         "SubtitleHorizontalPosition",
+        "SubtitleSyncButtonEnabled",
         "SubtitleVerticalPosition",
         "TagEdgeSpacing",
         "TagGap",
@@ -4620,6 +4628,9 @@ export const bootstrapSchema = {
         "SubtitleHorizontalPosition": {
           "type": "integer"
         },
+        "SubtitleSyncButtonEnabled": {
+          "type": "boolean"
+        },
         "SubtitleVerticalPosition": {
           "type": "integer"
         },
@@ -4915,6 +4926,7 @@ export const bootstrapSchema = {
         "StatusTagsSeriesStatus",
         "StatusTagsTrending",
         "SubtitleHorizontalPosition",
+        "SubtitleSyncButtonEnabled",
         "SubtitleVerticalPosition",
         "TagEdgeSpacing",
         "TagGap",

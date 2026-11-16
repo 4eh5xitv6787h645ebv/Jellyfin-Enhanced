@@ -27,6 +27,7 @@ public sealed class BootstrapPublicConfig
     public required bool AutoSkipIntro { get; init; }
     public required bool AutoSkipOutro { get; init; }
     public required bool LongPress2xEnabled { get; init; }
+    public required bool SubtitleSyncButtonEnabled { get; init; }
     public required bool RandomButtonEnabled { get; init; }
     public required bool RandomIncludeMovies { get; init; }
     public required bool RandomIncludeShows { get; init; }

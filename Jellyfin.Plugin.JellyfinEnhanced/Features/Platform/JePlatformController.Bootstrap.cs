@@ -201,6 +201,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Features.Platform
                 AutoSkipIntro = config.AutoSkipIntro,
                 AutoSkipOutro = config.AutoSkipOutro,
                 LongPress2xEnabled = config.LongPress2xEnabled,
+                SubtitleSyncButtonEnabled = config.SubtitleSyncButtonEnabled,
                 RandomButtonEnabled = config.RandomButtonEnabled,
                 RandomIncludeMovies = config.RandomIncludeMovies,
                 RandomIncludeShows = config.RandomIncludeShows,

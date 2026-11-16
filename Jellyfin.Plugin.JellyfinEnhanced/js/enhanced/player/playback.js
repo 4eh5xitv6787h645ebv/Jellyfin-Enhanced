@@ -46,7 +46,7 @@
   function stream(v) {
     const r = record(v);
     const fps = (v2) => typeof v2 === "string" ? v2 : number(v2);
-    return { Type: text(r.Type), Index: number(r.Index), ReferenceFrameRate: fps(r.ReferenceFrameRate), RealFrameRate: fps(r.RealFrameRate), AverageFrameRate: fps(r.AverageFrameRate), DisplayTitle: text(r.DisplayTitle), Title: text(r.Title), Language: text(r.Language), Codec: text(r.Codec) };
+    return { Type: text(r.Type), Index: number(r.Index), ReferenceFrameRate: fps(r.ReferenceFrameRate), RealFrameRate: fps(r.RealFrameRate), AverageFrameRate: fps(r.AverageFrameRate), DisplayTitle: text(r.DisplayTitle), Title: text(r.Title), Language: text(r.Language), Codec: text(r.Codec), IsTextSubtitleStream: typeof r.IsTextSubtitleStream === "boolean" ? r.IsTextSubtitleStream : void 0 };
   }
   function decodeItem(v) {
     const r = record(v);
@@ -59,7 +59,7 @@
   function decodeSessions(v) {
     return list(v).map((v2) => {
       const r = record(v2), p = record(r.PlayState), t = record(r.TranscodingInfo);
-      return { Id: text(r.Id), DeviceId: text(r.DeviceId), NowPlayingItem: decodeItem(r.NowPlayingItem), PlayState: { PlayMethod: text(p.PlayMethod), MediaSourceId: text(p.MediaSourceId), AudioStreamIndex: number(p.AudioStreamIndex), SubtitleStreamIndex: number(p.SubtitleStreamIndex) }, TranscodingInfo: r.TranscodingInfo ? { CompletionPercentage: number(t.CompletionPercentage), Container: text(t.Container), VideoCodec: text(t.VideoCodec), AudioCodec: text(t.AudioCodec), Bitrate: number(t.Bitrate), TranscodeReasons: typeof t.TranscodeReasons === "string" ? [t.TranscodeReasons] : strings(t.TranscodeReasons) } : null };
+      return { Id: text(r.Id), DeviceId: text(r.DeviceId), NowPlayingItem: decodeItem(r.NowPlayingItem), LastPlaybackCheckIn: text(r.LastPlaybackCheckIn), PlayState: { PlayMethod: text(p.PlayMethod), MediaSourceId: text(p.MediaSourceId), AudioStreamIndex: number(p.AudioStreamIndex), SubtitleStreamIndex: number(p.SubtitleStreamIndex), IsPaused: typeof p.IsPaused === "boolean" ? p.IsPaused : void 0, PositionTicks: number(p.PositionTicks) }, TranscodingInfo: r.TranscodingInfo ? { CompletionPercentage: number(t.CompletionPercentage), Container: text(t.Container), VideoCodec: text(t.VideoCodec), AudioCodec: text(t.AudioCodec), Bitrate: number(t.Bitrate), TranscodeReasons: typeof t.TranscodeReasons === "string" ? [t.TranscodeReasons] : strings(t.TranscodeReasons) } : null };
     });
   }
   function decodeSegments(v) {
@@ -145,7 +145,7 @@
     const JE2 = host.JellyfinEnhanced;
     if (!JE2) throw new Error("Player loaded before Jellyfin Enhanced");
     const ctx2 = featureContext("player", JE2, {
-      internalSlots: ["player", "nowPlaying", "autoSkip"],
+      internalSlots: ["player", "nowPlaying", "autoSkip", "subtitleSync"],
       internalsObject: () => JE2.internals = JE2.internals || {}
     });
     const requireApi = () => {
@@ -857,18 +857,23 @@
       offsetPanel?.classList.add("hide");
       offsetPanel = offsetPanelTimer = null;
     };
-    JE2.adjustSubtitleOffset = (deltaSeconds) => {
-      const slider = document.querySelector(".subtitleSyncSlider");
+    const syncSlider = () => document.querySelector(".subtitleSyncSlider");
+    JE2.setSubtitleOffset = (seconds) => {
+      const slider = syncSlider();
       const box = document.querySelector(".subtitleSyncContainer");
-      if (!slider || !box || typeof slider.updateOffset !== "function") {
-        JE2.toast(tWithFallback2("toast_subtitle_offset_unavailable", "Subtitle offset is not available"));
-        return;
-      }
-      slider.updateOffset(Math.round(((parseFloat(slider.value) || 0) + deltaSeconds) * 10) / 10);
+      if (!slider || !box || typeof slider.updateOffset !== "function") return false;
+      slider.updateOffset(Math.round(seconds * 10) / 10);
       hideOffsetPanel();
       box.classList.remove("hide");
       offsetPanel = box;
       offsetPanelTimer = lifetime2.timeout(hideOffsetPanel, 2e3);
+      return true;
+    };
+    JE2.adjustSubtitleOffset = (deltaSeconds) => {
+      const slider = syncSlider();
+      if (!slider || !JE2.setSubtitleOffset((parseFloat(slider.value) || 0) + deltaSeconds)) {
+        JE2.toast(tWithFallback2("toast_subtitle_offset_unavailable", "Subtitle offset is not available"));
+      }
     };
     lifetime2.onReset(() => {
       hideOffsetPanel();
@@ -1337,7 +1342,7 @@
   installAspect(context);
   installPlaybackInfo(context, tracks.probeOwnSession, tracks.trackDisplayName, menu);
   installLongPress(context);
-  ctx.own.player = Object.assign(ctx.own.player || {}, { getVideo, getCurrentVideoItemId });
+  ctx.own.player = Object.assign(ctx.own.player || {}, { getVideo, getCurrentVideoItemId, probeOwnSession: tracks.probeOwnSession });
 })();
 })();
 //# sourceMappingURL=playback.js.map

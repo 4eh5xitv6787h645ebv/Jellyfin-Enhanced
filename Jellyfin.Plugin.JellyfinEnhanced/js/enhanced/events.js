@@ -153,11 +153,15 @@
         ["FrameStepForward", () => JE.frameStep?.("forward")],
         ["DecreaseSubtitleOffset", () => JE.adjustSubtitleOffset?.(-0.1)],
         ["IncreaseSubtitleOffset", () => JE.adjustSubtitleOffset?.(0.1)],
-        ["JumpToLastPosition", () => JE.jumpToLastPosition?.()]
+        ["JumpToLastPosition", () => JE.jumpToLastPosition?.()],
+        ["SubtitleSync", () => {
+          if (!event.repeat) JE.toggleSubtitleSync?.();
+        }]
       ];
     }
     function keyListener(event) {
       if (isTyping()) return;
+      if (event.target instanceof Element && event.target.closest("[data-je-own-keys]")) return;
       if (document.activeElement?.hasAttribute("data-je-key-recorder")) return;
       const key = event.key;
       const combo = JE.keyCombo(event);
@@ -199,6 +203,7 @@
       const runPageSpecificFunctions = () => {
         if (JE.isVideoPage()) {
           JE.addOsdSettingsButton?.();
+          JE.addSubtitleSyncButton?.();
           JE.initializeAutoSkipObserver?.();
           JE.applySavedStylesWhenReady?.();
           const video = document.querySelector("video");

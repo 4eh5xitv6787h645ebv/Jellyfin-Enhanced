@@ -96,6 +96,7 @@ import { defineAllSections } from './sections';
  *  { id: 'autoSkipIntro', type: 'toggle' }
  *  { id: 'autoSkipOutro', type: 'toggle' }
  *  { id: 'disableCustomSubtitleStyles', type: 'toggle' }
+ *  { id: 'subtitleSyncButtonEnabled', type: 'toggle' }
  *  { id: 'DefaultSubtitleStyle', type: 'select' }
  *  { id: 'DefaultSubtitleSize', type: 'select' }
  *  { id: 'DefaultSubtitleFont', type: 'select' }

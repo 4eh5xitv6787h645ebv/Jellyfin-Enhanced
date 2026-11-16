@@ -1841,13 +1841,12 @@
       "subject": "feat(player): sync subtitles to the line you just heard (#1068)",
       "class": "feature",
       "features": [
-        "admin",
-        "chrome",
-        "media-tags",
-        "platform",
         "player",
+        "settings-panel",
+        "chrome",
         "settings",
-        "settings-panel"
+        "admin",
+        "platform"
       ],
       "issues": [
         "#1061",
@@ -1897,13 +1896,15 @@
         "tests/frontend/features/features-tag-styles.test.mjs",
         "tests/poster/parity/PosterTagParity/Program.cs"
       ],
-      "status": "pending",
+      "status": "ported",
       "rewriteCommits": [],
       "unmappedPaths": [
         "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs",
         "Jellyfin.Plugin.JellyfinEnhanced/js/component-scripts.json",
         "Jellyfin.Plugin.JellyfinEnhanced/js/fonts/materialsymbolsrounded-subset.woff2"
-      ]
+      ],
+      "evidence": "artifacts/restructure-plan/step-logs/upstream-sync-evidence/p57-*",
+      "notes": "Client re-implemented in TypeScript in client/src/features/player/subtitle-sync: lines.ts (the pure rules: the lines, the search, the offset arithmetic), watch.ts (what draws the subtitles and the offset jellyfin-web applied), track.ts (which track plays, from this device's session once it describes the screen, and its lines from Stream.js), view.ts (the dialog's markup and what it shows), dialog.ts (opening, choosing a line, jumping, the OSD button) and subtitle-sync.css (upstream's rules as written). component-scripts.json is pinned, so upstream's new script entry is not added: the module is bundled into enhanced/player/auto-skip.js, which calls installSubtitleSync. JE.toggleSubtitleSync, JE.addSubtitleSyncButton, JE.setSubtitleOffset (track-controls.ts) and JE.internals.subtitleSync are the same surface as upstream's (tests/frontend/architecture/internals-owners.json names the owner); probeOwnSession is shared on ctx.own.player. chrome/events.ts has the SubtitleSync shortcut (not on key repeat), the data-je-own-keys guard and the button call on a video-page update; pausescreen.ts leaves keys and focus to a dialog with data-je-own-keys (the stored-credentials parse moved to pause-view.ts to keep the file under its line cap). The personal toggle is in the settings panel (ui-panel-template.ts, ui-panel-settings.ts through the player's addSubtitleSyncButton peer), the shortcut in settings/defaults.ts and shortcut-rules.ts; SubtitleSyncButtonEnabled is in PluginConfiguration, UserConfiguration, Transport/BootstrapConfig.cs, the platform bootstrap, the settings controller and Shared/Settings/SettingsDefaults.cs; the admin control is in client/src/admin/config/sections/playback.ts with its shortcut row, What's New index line, per-user badge (per-user-props.ts regenerated) and tests/fixtures/admin-config-baseline.json; docs/advanced/config-flag-groups.json regenerated. Differences from upstream: the three toasts go through JE.t with the offset escaped, because this tree's toast renders markup; the accent colour reaches the stylesheet only when it is a plain CSS colour (isSafeCssColor), else the stylesheet's own fallback applies; the dialog's listeners are removed through AbortSignals; the panel toggle's box colours are CSS custom properties set from ui-panel.ts (CSS guard) rather than template interpolations; the session is read through the typed decoders in player/wire.ts. en.json (32 strings), the Material Symbols subset font and scripts/material-symbols/subset.py, README.md and the docs are upstream's (docs/advanced/api.md keeps this tree's rows, docs/advanced/project-structure.md says where the module is in this tree). Tests: upstream's features-subtitle-sync.test.mjs (54 cases) in tests/frontend/features/player with the import paths of this tree and an escapeHtml stub, upstream's pause-screen test appended to features-pause.test.mjs, its settings-panel test in bootstrap-settings-panel.test.mjs, the other fixture lines as upstream. Lab (p57-subtitle-sync.mjs, one external SRT uploaded to the lab movie): the panel toggle and the button beside Subtitles, the dialog with subtitles off and its Choose subtitles action, the seven lines with their times, the search, arrow keys, choosing a line (+7.0 s on jellyfin-web's slider, the toast), the offset and Reset on the next open, the jump and the button going away are the same on upstream's build and on the port, step for step. The session reads while a dialog waits for jellyfin-web's next report vary from run to run on both builds (38 to 79 on upstream's)."
     },
     {
       "sha": "65cc4ba9654191f32df27c8e39439ba740fc0dd9",

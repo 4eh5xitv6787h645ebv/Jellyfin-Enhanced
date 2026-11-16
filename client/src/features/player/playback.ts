@@ -109,4 +109,6 @@ const tracks = installTrackControls(context, menu.cycleTrackMenu);
 installAspect(context);
 installPlaybackInfo(context, tracks.probeOwnSession, tracks.trackDisplayName, menu);
 installLongPress(context);
-ctx.own.player = Object.assign(ctx.own.player || {}, { getVideo, getCurrentVideoItemId });
+// Shared with the sibling player modules (auto-skip.ts, subtitle-sync/) so the video-element lookup, the
+// video-page item-id parse and the own-session probe live in exactly one place.
+ctx.own.player = Object.assign(ctx.own.player || {}, { getVideo, getCurrentVideoItemId, probeOwnSession: tracks.probeOwnSession });

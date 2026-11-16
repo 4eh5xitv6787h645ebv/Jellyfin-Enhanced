@@ -701,6 +701,14 @@
             label: "Disable Custom Subtitle Styles by default",
             desc: "Globally disables Jellyfin's custom subtitle style overrides so the source subtitle styling is shown unmodified."
           },
+          {
+            id: "subtitleSyncButtonEnabled",
+            prop: "SubtitleSyncButtonEnabled",
+            type: "toggle",
+            perUser: true,
+            label: "Show Subtitle Sync Button in the Player",
+            desc: "Adds a button next to Subtitles in the player that syncs the subtitles to the line you just heard, from a list of the subtitle lines with their times that can also be searched and jumped through. The Sync Subtitles shortcut (Shift+S) opens the list with or without the button."
+          },
           { type: "group", title: "Default appearance for new users", open: true, items: [
             {
               id: "DefaultSubtitleStyle",
@@ -2574,6 +2582,7 @@
    *  { id: 'autoSkipIntro', type: 'toggle' }
    *  { id: 'autoSkipOutro', type: 'toggle' }
    *  { id: 'disableCustomSubtitleStyles', type: 'toggle' }
+   *  { id: 'subtitleSyncButtonEnabled', type: 'toggle' }
    *  { id: 'DefaultSubtitleStyle', type: 'select' }
    *  { id: 'DefaultSubtitleSize', type: 'select' }
    *  { id: 'DefaultSubtitleFont', type: 'select' }

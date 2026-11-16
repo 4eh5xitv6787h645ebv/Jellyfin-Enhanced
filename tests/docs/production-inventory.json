@@ -4566,6 +4566,14 @@
     },
     {
       "class": "PluginConfiguration",
+      "name": "SubtitleSyncButtonEnabled",
+      "type": "bool",
+      "initializer": null,
+      "constructor_assignment": "false",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Configuration/PluginConfiguration.cs"
+    },
+    {
+      "class": "PluginConfiguration",
       "name": "RandomButtonEnabled",
       "type": "bool",
       "initializer": null,
@@ -8550,6 +8558,14 @@
     },
     {
       "class": "JellyfinEnhancedUserSettings",
+      "name": "SubtitleSyncButtonEnabled",
+      "type": "bool",
+      "initializer": null,
+      "constructor_assignment": null,
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Configuration/UserConfiguration.cs"
+    },
+    {
+      "class": "JellyfinEnhancedUserSettings",
       "name": "PauseScreenEnabled",
       "type": "bool",
       "initializer": null,
@@ -10987,7 +11003,7 @@
     "build_targets": 1,
     "files": 559,
     "routes": 211,
-    "configuration_properties": 774,
+    "configuration_properties": 776,
     "storage_references": 97,
     "scheduled_tasks": 17,
     "locales": 33
