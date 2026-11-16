@@ -1999,8 +1999,10 @@
       "paths": [
         "Jellyfin.Plugin.JellyfinEnhanced/js/locales/ (32 files)"
       ],
-      "status": "pending",
-      "rewriteCommits": []
+      "status": "ported",
+      "rewriteCommits": [],
+      "evidence": "artifacts/restructure-plan/step-logs/upstream-sync-evidence/p60-*",
+      "notes": "Applied as is: the 32 locale files are byte for byte upstream's at this commit. Each gains one key, toast_player_unsupported (row 59), with the English source text, so nothing a user reads changes. No key changes or goes."
     },
     {
       "sha": "321701aeb2f27eee5d9514a8ec8ce87b90074247",
