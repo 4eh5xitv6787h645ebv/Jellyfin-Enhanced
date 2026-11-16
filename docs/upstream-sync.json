@@ -1926,8 +1926,10 @@
       "paths": [
         "Jellyfin.Plugin.JellyfinEnhanced/js/locales/ (32 files)"
       ],
-      "status": "pending",
-      "rewriteCommits": []
+      "status": "ported",
+      "rewriteCommits": [],
+      "evidence": "artifacts/restructure-plan/step-logs/upstream-sync-evidence/p58-*",
+      "notes": "Applied as is: the 32 locale files are byte for byte upstream's at this commit. Each gains 36 keys (the subtitle sync strings of row 57 and the Remove request strings of row 56), all with the English source text, so nothing a user reads changes; every key is in this tree's en.json. No key changes or goes."
     },
     {
       "sha": "3f8e472435ad61f0a665d2eb5162a4ae97caae11",
