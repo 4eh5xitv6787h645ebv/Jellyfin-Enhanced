@@ -1776,8 +1776,10 @@
         "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/admintags/custom-rules-editor.js",
         "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/admintags/sections/custom.js"
       ],
-      "status": "pending",
-      "rewriteCommits": []
+      "status": "ported",
+      "rewriteCommits": [],
+      "notes": "Re-implemented in client/src/features/media-tags/admin: custom-rules-editor.ts gains matches(config) (the stored rules, read and collected as the table's rows are, equal the table's complete rules) and sections/custom.ts skips the editor reload when it holds. The rewrite had its own guard for this (input and change listeners that remembered the stored rules as text), and it did not work: the server stores a rule without its Icon member when it has none, while the table collects every rule with one, so the two texts never matched and the first keystroke in a new row saved, reloaded the table and dropped the half-filled rule, exactly upstream's #1066. That guard is removed; upstream's comparison of collected rules does not depend on how the server writes a rule. Upstream has no test; here one page test (tests/frontend/features/media-tags/admin/features-admin-tags-page-server.test.mjs, with a server stand-in that leaves the Icon member out as the real one does) types only a name into a new rule, renames a complete rule so it auto-saves, and still finds the half-filled rule, then checks that rules changed elsewhere do reload the table; it fails on the tree before the port. Lab parity (je12 lab, Jellyfin 12.4): one je12 browse script does the same on Media Tags > Groups > Custom; the tree before the port loses the half-filled rule on the first keystroke, upstream's build of 90c721ef and this port keep it through the auto-save, with the same table and stored rules.",
+      "evidence": "artifacts/restructure-plan/step-logs/upstream-sync-evidence/p55-*"
     },
     {
       "sha": "6916b31b23b2ed4bbc35c4b81fa02552e3fe23e8",

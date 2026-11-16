@@ -201,6 +201,8 @@ export type CustomRule = { Match: string; Value: string; Label: string; Icon: st
 /** The Custom rules editor (custom-rules-editor.ts). */
 export interface CustomRulesEditor {
     load(config: Config): void;
+    /** Whether the stored rules are what the table already holds (its incomplete rows left out). */
+    matches(config: Config): boolean;
     collect(config: Config): void;
     labels(): string[];
     snapshot(): string;
