@@ -2172,7 +2172,9 @@
         ".github/workflows/security-scan.yml"
       ],
       "status": "ported",
-      "rewriteCommits": [],
+      "rewriteCommits": [
+        "2b5b4e60bbe0c362ef9df14d01c0818f0c51201c"
+      ],
       "notes": "Applied as is: the same trufflesecurity/trufflehog pin (3.99.9, commit 3bd2b588) in .github/workflows/security-scan.yml. No workflow that only the rewrite has pins TruffleHog; dependency-review.yml names it in a licence allow-list without a version, so nothing else changes."
     }
   ]
