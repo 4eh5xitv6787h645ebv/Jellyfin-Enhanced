@@ -2087,7 +2087,9 @@
         "Jellyfin.Plugin.JellyfinEnhanced/js/jellyseerr/discovery/discovery-section.js"
       ],
       "status": "ported",
-      "rewriteCommits": [],
+      "rewriteCommits": [
+        "63452c52e03d8ae104fdfa8abe4650527b4773ae"
+      ],
       "evidence": "artifacts/restructure-plan/step-logs/upstream-sync-evidence/p63-*",
       "notes": "placeSection in client/src/features/seerr/discovery/section.ts gives a detail page's section the inline order 99, as upstream's does, and the fallback placement in section-chassis.ts (used when the section module has not loaded) does the same. A list page's section still takes no inline style. Test: one new case in tests/frontend/pages/pages-discovery.test.mjs (the person section's order), failing before and passing after; upstream's commit has no test. Lab (p63-detail-section-order.mjs, the mock Seerr answering one person's credits): with the stock stylesheet the primary column is a block and the section is last on every build; with a theme's rules added (the column a flex column, order 3 on its own children) the section is above the page's two own lists before the port and after them on upstream's build and on the port."
     }
