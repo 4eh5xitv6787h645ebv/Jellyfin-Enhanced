@@ -13,6 +13,7 @@ using MediaBrowser.Controller.Entities;
 using MediaBrowser.Controller.Entities.Movies;
 using MediaBrowser.Controller.Entities.TV;
 using MediaBrowser.Controller.Library;
+using MediaBrowser.Model.Dto;
 using MediaBrowser.Model.Entities;
 
 namespace Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.Services
@@ -70,9 +71,10 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.Services
 
         /// <summary>
         /// Whether a Radarr/Sonarr server of Maintainerr's holds the item: by the movie's TMDB id or the series'
-        /// TVDB id. Null when it could not say (unreachable, refused). Tests replace it.
+        /// TVDB id, and for a movie whose version was picked, that version's file. Null when it could not say
+        /// (unreachable, refused). Tests replace it.
         /// </summary>
-        internal Func<MaintainerrArrServer, string, BaseItem, CancellationToken, Task<bool?>> ArrHolds { get; set; }
+        internal Func<MaintainerrArrServer, string, BaseItem, MediaSourceInfo?, CancellationToken, Task<bool?>> ArrHolds { get; set; }
 
         public MaintainerrActions(IHttpClientFactory http, ILibraryManager library, LeavingSoonService leaving, TagCacheService cache, Logger logger)
         {
@@ -153,15 +155,44 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.Services
 
         private static string Names(IEnumerable<MaintainerrCollection> collections) => string.Join(", ", collections.Select(c => c.Title));
 
-        /// <summary>Add the item to the manual collection that fits it, then refresh the facts.</summary>
-        public async Task<MaintainerrItemState> MarkAsync(BaseItem item, PluginConfiguration config, CancellationToken token)
+        /// <summary>The movie's version (media source) picked on the item page, or null when none was sent or the movie has no such version.</summary>
+        private static MediaSourceInfo? FindVersion(BaseItem item, string? mediaSourceId)
+        {
+            if (string.IsNullOrWhiteSpace(mediaSourceId) || item is not Movie movie) return null;
+            var wanted = mediaSourceId.Replace("-", string.Empty, StringComparison.Ordinal);
+            try { return movie.GetMediaSources(false).FirstOrDefault(s => string.Equals(s.Id?.Replace("-", string.Empty, StringComparison.Ordinal), wanted, StringComparison.OrdinalIgnoreCase)); }
+            catch (Exception ex) when (ex is not OperationCanceledException) { return null; }
+        }
+
+        private static string FileName(string? path) => (path ?? string.Empty).Split('/', '\\').LastOrDefault() ?? string.Empty;
+
+        /// <summary>
+        /// Whether a Radarr movie's file is the picked version: the same file name (Radarr and Jellyfin may mount the
+        /// library at different paths). True when either side gives no file name to compare.
+        /// </summary>
+        internal static bool FileMatchesVersion(JsonElement movie, MediaSourceInfo version)
+        {
+            if (!movie.TryGetProperty("movieFile", out var file) || file.ValueKind != JsonValueKind.Object) return true;
+            var path = file.TryGetProperty("path", out var p) && p.ValueKind == JsonValueKind.String ? p.GetString() : null;
+            var wanted = FileName(version.Path);
+            if (string.IsNullOrEmpty(path) || wanted.Length == 0) return true;
+            return string.Equals(FileName(path), wanted, StringComparison.OrdinalIgnoreCase);
+        }
+
+        /// <summary>
+        /// Add the item to the manual collection that fits it, then refresh the facts. <paramref name="mediaSourceId"/>
+        /// is the version picked on the item page: when one library has a collection per Radarr (4K and 1080p), the
+        /// one whose Radarr holds that version's file is chosen.
+        /// </summary>
+        public async Task<MaintainerrItemState> MarkAsync(BaseItem item, PluginConfiguration config, CancellationToken token, string? mediaSourceId = null)
         {
             var type = MediaType(item) ?? throw new ActionException("Only movies and series can be marked.");
             var collections = await GetCollectionsAsync(config, token).ConfigureAwait(false);
             var existing = await MembershipAsync(item, config, token).ConfigureAwait(false);
             if (existing != null && collections.Any(c => c.Id == existing)) throw new ActionException("This item is already marked for removal.");
             var libraryId = ItemLibraryResolver.Resolve(_library, item);
-            var match = await MatchAsync(item, libraryId, collections, kind => GetArrServersAsync(config, kind, token), (server, kind) => ArrHolds(server, kind, item, token)).ConfigureAwait(false);
+            var version = FindVersion(item, mediaSourceId);
+            var match = await MatchAsync(item, libraryId, collections, kind => GetArrServersAsync(config, kind, token), (server, kind) => ArrHolds(server, kind, item, version, token)).ConfigureAwait(false);
             if (match.Collection == null) throw new ActionException(match.Error ?? "No Maintainerr collection fits this item.");
             await SendAsync(config, HttpMethod.Post, "/api/collections/media/add", new { action = 0, mediaId = item.Id.ToString("N"), context = new { id = item.Id.ToString("N"), type }, collectionId = match.Collection.Id }, token).ConfigureAwait(false);
             _logger.Info($"[Maintainerr] Marked '{item.Name}' for removal in collection '{match.Collection.Title}'.");
@@ -268,10 +299,11 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.Services
 
         /// <summary>
         /// Ask one of Maintainerr's Radarr/Sonarr servers whether it holds the item (<c>GET /api/v3/movie?tmdbId=</c>,
-        /// <c>GET /api/v3/series?tvdbId=</c>), with the key Maintainerr gave. The address goes through the same guard
-        /// as every *arr address. Null when the item has no such id or the server could not be asked.
+        /// <c>GET /api/v3/series?tvdbId=</c>), with the key Maintainerr gave; with a picked <paramref name="version"/>,
+        /// whether one of its movies has that version's file. The address goes through the same guard as every *arr
+        /// address. Null when the item has no such id or the server could not be asked.
         /// </summary>
-        private async Task<bool?> ProbeArrAsync(MaintainerrArrServer server, string kind, BaseItem item, CancellationToken token)
+        private async Task<bool?> ProbeArrAsync(MaintainerrArrServer server, string kind, BaseItem item, MediaSourceInfo? version, CancellationToken token)
         {
             var providerId = kind == "movie" ? item.GetProviderId(MetadataProvider.Tmdb) : item.GetProviderId(MetadataProvider.Tvdb);
             if (string.IsNullOrWhiteSpace(providerId) || !providerId.All(char.IsAsciiDigit) || server.Url.Length == 0) return null;
@@ -288,7 +320,8 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.Services
                 using var response = await client.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, limit.Token).ConfigureAwait(false);
                 if (!response.IsSuccessStatusCode) return null;
                 using var doc = JsonDocument.Parse(await response.Content.ReadAsStringAsync(limit.Token).ConfigureAwait(false));
-                return doc.RootElement.ValueKind == JsonValueKind.Array ? doc.RootElement.GetArrayLength() > 0 : doc.RootElement.ValueKind == JsonValueKind.Object;
+                var held = doc.RootElement.ValueKind == JsonValueKind.Array ? doc.RootElement.EnumerateArray().ToList() : doc.RootElement.ValueKind == JsonValueKind.Object ? new List<JsonElement> { doc.RootElement } : new List<JsonElement>();
+                return version == null || kind != "movie" ? held.Count > 0 : held.Any(m => FileMatchesVersion(m, version));
             }
             catch (Exception ex) when (ex is not OperationCanceledException || !token.IsCancellationRequested)
             {

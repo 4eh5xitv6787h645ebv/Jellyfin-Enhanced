@@ -120,6 +120,20 @@ public sealed class IntegrationMaintainerrActionsTests : IDisposable
         => MaintainerrActions.MatchAsync(item, library, collections.ToList(), _ => Task.FromResult<IReadOnlyList<MaintainerrArrServer>>(servers), (s, _) => Task.FromResult(holds?.Invoke(s)));
 
     [Fact]
+    public void A_radarr_file_matches_only_the_selected_version()
+    {
+        var v4k = new MediaBrowser.Model.Dto.MediaSourceInfo { Path = "/media/Film (2024)/Film.2160p.mkv", MediaStreams = new List<MediaStream> { new() { Type = MediaStreamType.Video, Height = 2160 } } };
+        var fhd = new MediaBrowser.Model.Dto.MediaSourceInfo { Path = "/media/Film (2024)/Film.1080p.mkv", MediaStreams = new List<MediaStream> { new() { Type = MediaStreamType.Video, Height = 1080 } } };
+        using var radarr4k = JsonDocument.Parse("{\"movieFile\":{\"path\":\"/data/Film.2160p.mkv\",\"quality\":{\"quality\":{\"resolution\":2160}}}}");
+        Assert.True(MaintainerrActions.FileMatchesVersion(radarr4k.RootElement, v4k));
+        Assert.False(MaintainerrActions.FileMatchesVersion(radarr4k.RootElement, fhd));
+        // Nothing to compare (no file in Radarr, or a version without a path): the movie counts as held.
+        using var noFile = JsonDocument.Parse("{\"tmdbId\":603}");
+        Assert.True(MaintainerrActions.FileMatchesVersion(noFile.RootElement, fhd));
+        Assert.True(MaintainerrActions.FileMatchesVersion(radarr4k.RootElement, new MediaBrowser.Model.Dto.MediaSourceInfo()));
+    }
+
+    [Fact]
     public async Task An_item_goes_to_the_one_manual_collection_of_its_type_on_its_library()
     {
         var movie = new Movie { Id = Guid.NewGuid(), Name = "Film" };
@@ -156,6 +170,67 @@ public sealed class IntegrationMaintainerrActionsTests : IDisposable
         Assert.Contains("Leaving Soon (Movies4K)", unknown.Error);
         // A collection whose server Maintainerr no longer lists cannot be chosen, and says so.
         Assert.Contains("could not be asked", (await Match(movie, LibMovies, two, _ => false, servers[0])).Error);
+    }
+
+    /// <summary>A movie with several versions (media sources), as Jellyfin groups a 4K and a 1080p file.</summary>
+    private sealed class VersionedMovie : Movie
+    {
+        public List<MediaBrowser.Model.Dto.MediaSourceInfo> Sources { get; init; } = new();
+
+        public override List<MediaBrowser.Model.Dto.MediaSourceInfo> GetMediaSources(bool enablePathSubstitution) => Sources;
+    }
+
+    [Fact]
+    public async Task Mark_picks_the_collection_whose_Radarr_holds_the_version_selected_on_the_item_page()
+    {
+        var hd = new MediaBrowser.Model.Dto.MediaSourceInfo { Id = Guid.NewGuid().ToString("N"), Path = "/media/Film (2024)/Film.1080p.mkv" };
+        var uhd = new MediaBrowser.Model.Dto.MediaSourceInfo { Id = Guid.NewGuid().ToString("N"), Path = "/media/Film (2024)/Film.2160p.mkv" };
+        var movie = new VersionedMovie { Id = Guid.NewGuid(), Name = "Film", Sources = new() { hd, uhd } };
+        movie.SetProviderId(MetadataProvider.Tmdb, "603");
+        _items.Add(movie);
+        // Maintainerr, which is also the HD Radarr; the 4K Radarr is a second server. Both hold the movie, each its own file.
+        using var server = new Server();
+        using var radarr4k = new Server();
+        server.Answer = (method, path, body) =>
+        {
+            if (path == "/api/collections") return (200, Collections((1, "Leaving Soon (Movies)", LibMovies, "movie", 1, null, true, Array.Empty<(string, string)>()), (2, "Leaving Soon (Movies 4K)", LibMovies, "movie", 2, null, true, Array.Empty<(string, string)>())));
+            if (path.Contains("/content/")) return (200, "{\"items\":[],\"totalSize\":0}");
+            if (path == "/api/settings/radarr") return (200, "[{\"id\":1,\"serverName\":\"Radarr\",\"url\":\"" + server.Url + "\",\"apiKey\":\"r1\"},{\"id\":2,\"serverName\":\"Radarr 4K\",\"url\":\"" + radarr4k.Url + "\",\"apiKey\":\"r2\"}]");
+            if (path == "/api/v3/movie?tmdbId=603") return (200, "[{\"tmdbId\":603,\"movieFile\":{\"path\":\"/movies/Film (2024)/Film.1080p.mkv\"}}]");
+            if (method == "POST" && path == "/api/collections/media/add") return (201, "{}");
+            return (404, "{}");
+        };
+        radarr4k.Answer = (method, path, body) => path == "/api/v3/movie?tmdbId=603" ? (200, "[{\"tmdbId\":603,\"movieFile\":{\"path\":\"/movies/Film (2024)/Film.2160p.mkv\"}}]") : (404, "{}");
+        var (actions, _, cache) = Services(server);
+        using (cache)
+        {
+            var admin = new User("admin", "default", "default") { Id = Guid.NewGuid() };
+            var users = new Mock<IUserManager>();
+            users.Setup(u => u.GetUserById(admin.Id)).Returns(admin);
+            var controller = (JeMediaTagsController)ApiAssetTests.Controller(typeof(JeMediaTagsController), _f.Core, users.Object, _library.Object, cache);
+            controller.HttpContext.User = global::JE.Tests.Features.SpoilerGuard.PrivacyPolicyTests.Principal(admin.Id, admin: true);
+            // The body as the item menu sends it, read as Jellyfin's API reads JSON.
+            MaintainerrActionRequest Body(string? version) => JsonSerializer.Deserialize<MaintainerrActionRequest>(version == null
+                ? "{\"itemId\":\"" + movie.Id.ToString("N") + "\"}"
+                : "{\"itemId\":\"" + movie.Id.ToString("N") + "\",\"mediaSourceId\":\"" + version + "\"}", Jellyfin.Extensions.Json.JsonDefaults.Options)!;
+            int Posted() => JsonDocument.Parse(server.Posts.Last().Body).RootElement.GetProperty("collectionId").GetInt32();
+
+            // The 4K version selected (written with dashes here): the collection of the Radarr whose file it is.
+            Assert.IsType<OkObjectResult>(await controller.MarkForMaintainerrRemoval(Body(Guid.ParseExact(uhd.Id, "N").ToString()), actions, CancellationToken.None));
+            Assert.Equal(2, Posted());
+            Assert.IsType<OkObjectResult>(await controller.MarkForMaintainerrRemoval(Body(hd.Id), actions, CancellationToken.None));
+            Assert.Equal(1, Posted());
+            Assert.Equal(2, server.Posts.Count);
+
+            // No version (a card's menu), or one the movie does not have: both Radarrs hold the movie, as before.
+            foreach (var version in new[] { null, Guid.NewGuid().ToString("N") })
+            {
+                var refused = Assert.IsType<BadRequestObjectResult>(await controller.MarkForMaintainerrRemoval(Body(version), actions, CancellationToken.None));
+                Assert.Contains("more than one Radarr/Sonarr server has it", JsonSerializer.Serialize(refused.Value));
+            }
+
+            Assert.Equal(2, server.Posts.Count);
+        }
     }
 
     private (MaintainerrActions Actions, LeavingSoonService Leaving, TagCacheService Cache) Services(Server server)

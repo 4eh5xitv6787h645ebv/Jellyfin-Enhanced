@@ -12,7 +12,10 @@ import CSS from './maintainerr-item-menu.css';
 //
 // Mark and Keep apply at once and show a toast with Undo (which runs the
 // opposite call); there is no confirm dialog. Postpone opens a small chooser
-// (a few day counts, a custom count, or a timer reset).
+// (a few day counts, a custom count, or a timer reset). Marking from the
+// detail page's ⋮ also sends the version picked on that page (its
+// .selectSource), so the server can tell a 4K copy's collection from a
+// 1080p one's (upstream 06837783); a card's menu sends none.
 //
 // The rows are appended to the sheet the way tag-item-menu.ts appends "Media
 // Tags" (jellyfin-web's itemContextMenu and actionsheet are not reachable
@@ -139,6 +142,13 @@ export function createMaintainerrMenu(JE: TagRuntimeBridge): MaintainerrMenuPart
             if (el && (el.offsetParent !== null || el.getClientRects().length)) return el;
         }
         return scrollers[scrollers.length - 1] || null;
+    }
+
+    /** The version (media source id) picked on the detail page whose own ⋮ opened the menu; none from a card's ⋮. */
+    function pickedVersion(opener: HTMLElement | null): Readonly<Record<string, string>> {
+        const page = opener?.matches('.btnMoreCommands') ? opener.closest('#itemDetailPage') : null;
+        const value = page?.querySelector<HTMLSelectElement>('select.selectSource')?.value;
+        return value ? { mediaSourceId: value } : {};
     }
 
     /** A row with the native rows' markup. */
@@ -340,13 +350,13 @@ export function createMaintainerrMenu(JE: TagRuntimeBridge): MaintainerrMenuPart
         const rows: HTMLButtonElement[] = [];
         if (current.Marked) {
             const keep = buildRow(scroller, ROWS.keep, 'restore', JE.t('maintainerr_keep'));
-            keep.addEventListener('click', () => { setTimeout(() => { void act('unmark', { itemId }, 'maintainerr_kept', { path: 'mark', body: { itemId }, doneKey: 'maintainerr_marked' }); }, 0); });
+            keep.addEventListener('click', () => { setTimeout(() => { void act('unmark', { itemId }, 'maintainerr_kept', { path: 'mark', body: { itemId, ...pickedVersion(opener) }, doneKey: 'maintainerr_marked' }); }, 0); });
             const later = buildRow(scroller, ROWS.postpone, 'more_time', JE.t('maintainerr_postpone'));
             later.addEventListener('click', () => { setTimeout(() => postpone(itemId, current, opener), 0); });
             rows.push(keep, later);
         } else {
             const mark = buildRow(scroller, ROWS.mark, 'auto_delete', JE.t('maintainerr_mark'));
-            mark.addEventListener('click', () => { setTimeout(() => { void act('mark', { itemId }, 'maintainerr_marked', { path: 'unmark', body: { itemId }, doneKey: 'maintainerr_kept' }); }, 0); });
+            mark.addEventListener('click', () => { setTimeout(() => { void act('mark', { itemId, ...pickedVersion(opener) }, 'maintainerr_marked', { path: 'unmark', body: { itemId }, doneKey: 'maintainerr_kept' }); }, 0); });
             rows.push(mark);
         }
         const anchor = scroller.querySelector('[data-id="je-media-tags"], [data-id="share"]');
