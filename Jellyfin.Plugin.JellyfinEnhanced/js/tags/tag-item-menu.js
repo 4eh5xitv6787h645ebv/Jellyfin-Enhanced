@@ -175,7 +175,7 @@
   function createMaintainerrMenu(JE) {
     const ROWS = Object.freeze({ mark: "je-maintainerr-mark", keep: "je-maintainerr-keep", postpone: "je-maintainerr-postpone" });
     const ROW_SELECTOR = Object.values(ROWS).map((id) => `[data-id="${id}"]`).join(", ");
-    const TYPES = /* @__PURE__ */ new Set(["Movie", "Series"]);
+    const TYPES = /* @__PURE__ */ new Set(["Movie", "Series", "Season"]);
     const CONTEXT_TTL_MS = 5e3;
     const DAY_MS = 864e5;
     const QUICK_DAYS = [7, 14, 30, 90];

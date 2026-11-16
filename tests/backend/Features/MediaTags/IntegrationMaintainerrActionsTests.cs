@@ -120,6 +120,66 @@ public sealed class IntegrationMaintainerrActionsTests : IDisposable
         => MaintainerrActions.MatchAsync(item, library, collections.ToList(), _ => Task.FromResult<IReadOnlyList<MaintainerrArrServer>>(servers), (s, _) => Task.FromResult(holds?.Invoke(s)));
 
     [Fact]
+    public async Task A_season_goes_to_the_season_collection_on_its_library()
+    {
+        var season = new Season { Id = Guid.NewGuid(), Name = "S1", SeriesId = Guid.NewGuid() };
+        var all = new[] { C(1, "Leaving Soon (Shows)", LibShows, "show", sonarr: 1), C(2, "Leaving Soon (Seasons)", LibShows, "season", sonarr: 1) };
+        Assert.Equal("season", MaintainerrActions.MediaType(season));
+        Assert.Equal(2, (await Match(season, LibShows, all)).Collection!.Id);
+    }
+
+    [Fact]
+    public async Task Marking_a_season_asks_the_Sonarr_servers_by_its_series_and_adds_the_season()
+    {
+        var series = new Series { Id = Guid.NewGuid(), Name = "Show" };
+        series.SetProviderId(MetadataProvider.Tvdb, "372577");
+        var season = new Season { Id = Guid.NewGuid(), Name = "Season 1", SeriesId = series.Id };
+        _items.AddRange(new BaseItem[] { series, season });
+        // Maintainerr, which is also the first Sonarr; the second Sonarr does not have the series.
+        using var server = new Server();
+        using var sonarr4k = new Server();
+        server.Answer = (method, path, body) =>
+        {
+            if (path == "/api/collections") return (200, Collections((11, "Leaving Soon (Seasons 4K)", LibShows, "season", null, 2, true, Array.Empty<(string, string)>()), (10, "Leaving Soon (Seasons)", LibShows, "season", null, 1, true, Array.Empty<(string, string)>()), (8, "Leaving Soon (Shows)", LibShows, "show", null, 1, true, Array.Empty<(string, string)>())));
+            if (path.Contains("/content/")) return (200, "{\"items\":[],\"totalSize\":0}");
+            if (path == "/api/settings/sonarr") return (200, "[{\"id\":1,\"serverName\":\"Sonarr\",\"url\":\"" + server.Url + "\",\"apiKey\":\"s1\"},{\"id\":2,\"serverName\":\"Sonarr 4K\",\"url\":\"" + sonarr4k.Url + "\",\"apiKey\":\"s2\"}]");
+            if (path == "/api/v3/series?tvdbId=372577") return (200, "[{\"tvdbId\":372577,\"title\":\"Show\"}]");
+            if (method == "POST" && path == "/api/collections/media/add") return (201, "{}");
+            return (404, "{}");
+        };
+        sonarr4k.Answer = (method, path, body) => path.StartsWith("/api/v3/series", StringComparison.Ordinal) ? (200, "[]") : (404, "{}");
+        var (actions, _, cache) = Services(server);
+        using (cache)
+        {
+            var admin = new User("admin", "default", "default") { Id = Guid.NewGuid() };
+            var users = new Mock<IUserManager>();
+            users.Setup(u => u.GetUserById(admin.Id)).Returns(admin);
+            var controller = (JeMediaTagsController)ApiAssetTests.Controller(typeof(JeMediaTagsController), _f.Core, users.Object, _library.Object, cache);
+            controller.HttpContext.User = global::JE.Tests.Features.SpoilerGuard.PrivacyPolicyTests.Principal(admin.Id, admin: true);
+
+            var state = Assert.IsType<OkObjectResult>(controller.GetMaintainerrItemState(season.Id, actions)).Value as MaintainerrItemState;
+            Assert.True(state!.Supported);
+            Assert.IsType<OkObjectResult>(await controller.MarkForMaintainerrRemoval(new MaintainerrActionRequest { ItemId = season.Id }, actions, CancellationToken.None));
+            using var sent = JsonDocument.Parse(Assert.Single(server.Posts).Body);
+            Assert.Equal(0, sent.RootElement.GetProperty("action").GetInt32());
+            Assert.Equal(season.Id.ToString("N"), sent.RootElement.GetProperty("mediaId").GetString());
+            Assert.Equal("season", sent.RootElement.GetProperty("context").GetProperty("type").GetString());
+            Assert.Equal(season.Id.ToString("N"), sent.RootElement.GetProperty("context").GetProperty("id").GetString());
+            Assert.Equal(10, sent.RootElement.GetProperty("collectionId").GetInt32());
+            // Both Sonarrs were asked about the series (the season has no TVDB id of its own).
+            Assert.Contains(sonarr4k.Seen, s => s.Path == "/api/v3/series?tvdbId=372577");
+
+            // An episode is still refused, naming the kinds that can be marked.
+            var episode = new Episode { Id = Guid.NewGuid(), Name = "Pilot", SeriesId = series.Id, SeasonId = season.Id };
+            _items.Add(episode);
+            Assert.False((Assert.IsType<OkObjectResult>(controller.GetMaintainerrItemState(episode.Id, actions)).Value as MaintainerrItemState)!.Supported);
+            var refused = Assert.IsType<BadRequestObjectResult>(await controller.MarkForMaintainerrRemoval(new MaintainerrActionRequest { ItemId = episode.Id }, actions, CancellationToken.None));
+            Assert.Contains("Only movies, series and seasons can be marked.", JsonSerializer.Serialize(refused.Value));
+            Assert.Single(server.Posts);
+        }
+    }
+
+    [Fact]
     public void A_radarr_file_matches_only_the_selected_version()
     {
         var v4k = new MediaBrowser.Model.Dto.MediaSourceInfo { Path = "/media/Film (2024)/Film.2160p.mkv", MediaStreams = new List<MediaStream> { new() { Type = MediaStreamType.Video, Height = 2160 } } };
@@ -145,7 +205,7 @@ public sealed class IntegrationMaintainerrActionsTests : IDisposable
         // Without a library id of its own, the item's type alone picks when that leaves one.
         Assert.Equal(2, (await Match(new Series { Id = Guid.NewGuid() }, null, all)).Collection!.Id);
 
-        Assert.Contains("Only movies and series", (await Match(new Episode { Id = Guid.NewGuid() }, LibShows, all)).Error);
+        Assert.Contains("Only movies, series and seasons", (await Match(new Episode { Id = Guid.NewGuid() }, LibShows, all)).Error);
         Assert.Contains("no active manual collection", (await Match(movie, LibMovies, new[] { C(3, "Rule list", LibMovies, "movie", manual: false) })).Error);
         var noMovies = await Match(movie, LibMovies, new[] { C(2, "Leaving Soon (Shows)", LibShows, "show") });
         Assert.Contains("no manual collection for movies", noMovies.Error);

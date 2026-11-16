@@ -5,6 +5,7 @@ import { createHarness } from '../../helpers/harness.mjs';
 const MOVIE = 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa';
 const SERIES = 'cccccccccccccccccccccccccccccccc';
 const EPISODE = 'dddddddddddddddddddddddddddddddd';
+const SEASON = 'eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee';
 
 /** A Jellyfin 12 card with its ⋮ button. */
 const card = (id, type) => `<div class="card" data-id="${id}" data-type="${type}"><div class="cardBox"><button is="paper-icon-button-light" data-action="menu" class="cardOverlayButton">⋮</button><div class="cardText">t</div></div></div>`;
@@ -198,6 +199,27 @@ test('Mark from the detail page sends the version picked there (and so does Keep
   k.click(k.$('.jellyfin-enhanced-toast-action'));
   await k.settle();
   assert.deepEqual(k.requests.at(-1), { type: 'POST', path: 'mark', body: { itemId: MOVIE, mediaSourceId: VERSION_4K } });
+});
+
+test('a season gets the rows too, from its card and from its own page; an episode still gets none', async t => {
+  const h = setup(t, { html: card(SEASON, 'Season') + card(EPISODE, 'Episode'), states: { [SEASON]: { Marked: false }, [EPISODE]: { Marked: false } } });
+  await h.open(SEASON);
+  assert.deepEqual(h.rowIds(), ['je-maintainerr-mark']);
+  h.click(h.$('[data-id="je-maintainerr-mark"]'));
+  await h.settle();
+  assert.deepEqual(h.requests.at(-1), { type: 'POST', path: 'mark', body: { itemId: SEASON } });
+  h.$('#sheets').textContent = '';
+  const asked = h.requests.length;
+  await h.open(EPISODE);
+  assert.deepEqual(h.rowIds(), []);
+  assert.equal(h.requests.length, asked, 'an episode is not asked about');
+
+  // The season's own detail page (its type comes from the item read when ⋮ is pressed).
+  const page = '<div id="itemDetailPage" class="page"><div class="detailButtons"><button is="emby-button" class="btnMoreCommands detailButton">⋮</button></div></div>';
+  const p = setup(t, { url: `http://jellyfin.test/web/index.html#/details?id=${SEASON}`, html: page, states: { [SEASON]: { Marked: true, CollectionId: 10 } } });
+  p.window.ApiClient.getItem = async (userId, id) => ({ Id: id, Type: 'Season' });
+  await p.openFrom('#itemDetailPage .btnMoreCommands');
+  assert.deepEqual(p.rowIds(), ['je-maintainerr-keep', 'je-maintainerr-postpone']);
 });
 
 test('no rows for non-administrators, with the actions off, on unsupported items, on other menus, or when the server does not know the item', async t => {

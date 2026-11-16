@@ -5,10 +5,11 @@ import CSS from './maintainerr-item-menu.css';
 // Maintainerr actions in Jellyfin's item menu (the ⋮ action sheet of the
 // detail page and of cards), for administrators only: "Mark for removal" on
 // an item Maintainerr does not list, and "Keep" plus "Postpone removal" on one
-// it does. Movies and series. The rows call the plugin's admin-only
-// /JellyfinEnhanced/maintainerr routes; the Maintainerr address and key never
-// reach the browser, and the server refuses non-administrators regardless of
-// what this module shows (upstream 481a10ee, tags/maintainerr-item-menu.js).
+// it does. Movies, series and seasons (seasons: upstream 8f902bf7). The rows
+// call the plugin's admin-only /JellyfinEnhanced/maintainerr routes; the
+// Maintainerr address and key never reach the browser, and the server refuses
+// non-administrators regardless of what this module shows (upstream 481a10ee,
+// tags/maintainerr-item-menu.js).
 //
 // Mark and Keep apply at once and show a toast with Undo (which runs the
 // opposite call); there is no confirm dialog. Postpone opens a small chooser
@@ -73,7 +74,7 @@ export interface MaintainerrMenuParts { menu: MaintainerrMenu; capture(e: Event)
 export function createMaintainerrMenu(JE: TagRuntimeBridge): MaintainerrMenuParts {
     const ROWS = Object.freeze({ mark: 'je-maintainerr-mark', keep: 'je-maintainerr-keep', postpone: 'je-maintainerr-postpone' });
     const ROW_SELECTOR = Object.values(ROWS).map((id) => `[data-id="${id}"]`).join(', ');
-    const TYPES = new Set(['Movie', 'Series']);
+    const TYPES = new Set(['Movie', 'Series', 'Season']);
     const CONTEXT_TTL_MS = 5000;
     const DAY_MS = 86400000;
     const QUICK_DAYS = [7, 14, 30, 90];
