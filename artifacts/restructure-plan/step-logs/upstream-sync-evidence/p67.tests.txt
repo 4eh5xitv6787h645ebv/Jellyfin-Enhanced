@@ -1,0 +1,5 @@
+tests/frontend/features/media-tags/features-quality-display.test.mjs :: a refresh of the item page that refills the picker goes back to the remembered pick, and a pick made meanwhile stays
+  FAILED on ea67fae2+dirty@8c417342 at 2026-11-17 05:22:57: AssertionError: the picker follows the pick again, as the poster does / 'first' !== 'second'
+  passed on ea67fae2+dirty@ebbb009c at 2026-11-17 05:26:38
+  passed on 273529d9 at 2026-11-17 05:32:57
+  => failed on ea67fae2+dirty@8c417342 (2026-11-17 05:22:57), passes on 273529d9 (2026-11-17 05:32:57); the commit 273529d9 has exactly the files of that run

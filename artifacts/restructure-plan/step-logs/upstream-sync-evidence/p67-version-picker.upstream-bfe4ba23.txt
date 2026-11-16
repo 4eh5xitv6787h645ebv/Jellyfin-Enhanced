@@ -1,0 +1,29 @@
+# before:upstream-version-picker (je12 evidence)
+command: je12 browse '#/home' --script p67-version-picker.mjs
+deployed: upstream-bfe4ba232f0f
+at: 2026-11-17 05:28:39
+
+SCRIPT {"versions":["Abominable (2019)","101 Dalmatians II Patchs London Adventure (2003)"],"remembered":"101 Dalmatians II Patchs London Adventure (2003)","opened":"picker: 101 Dalmatians II Patchs London Adventure (2003); poster badges: 1080p WEB H264 Dolby Digital+ 5.1","backToPage":"picker: 101 Dalmatians II Patchs London Adventure (2003); poster badges: 1080p WEB H264 Dolby Digital+ 5.1","refilled":"picker: Abominable (2019); poster badges: 1080p WEB H264 Dolby Digital+ 5.1","refilledPlus1500ms":"picker: 101 Dalmatians II Patchs London Adventure (2003); poster badges: 1080p WEB H264 Dolby Digital+ 5.1","changeEventsAfterRefill":1}
+CONSOLE Failed to load resource: the server responded with a status of 404 (Not Found) /JellyfinEnhanced/cdn/flag-icons/flags/4x3/fi.svg
+CONSOLE Failed to load resource: the server responded with a status of 404 (Not Found) /JellyfinEnhanced/cdn/flag-icons/flags/4x3/is.svg
+CONSOLE Failed to load resource: the server responded with a status of 404 (Not Found) /JellyfinEnhanced/cdn/flag-icons/flags/4x3/no.svg
+CONSOLE Failed to load resource: the server responded with a status of 404 (Not Found) /JellyfinEnhanced/cdn/flag-icons/flags/4x3/kr.svg
+CONSOLE Failed to load resource: the server responded with a status of 404 (Not Found) /JellyfinEnhanced/cdn/flag-icons/flags/4x3/se.svg
+BLOCKED https://www.gstatic.com/cv/js/sender/v1/cast_sender.js
+BLOCKED https://cdn.jsdelivr.net/gh/Druidblack/jellyfin-icon-metadata@main/icons/imdb/imdb.png
+BLOCKED https://cdn.jsdelivr.net/gh/Druidblack/jellyfin-icon-metadata@main/icons/themoviedb/themoviedb.png
+URL /web/index.html#/details?id=06de48d758074756c732c7de70aa79f8
+
+# the SCRIPT result, formatted
+{
+  "versions": [
+    "Abominable (2019)",
+    "101 Dalmatians II Patchs London Adventure (2003)"
+  ],
+  "remembered": "101 Dalmatians II Patchs London Adventure (2003)",
+  "opened": "picker: 101 Dalmatians II Patchs London Adventure (2003); poster badges: 1080p WEB H264 Dolby Digital+ 5.1",
+  "backToPage": "picker: 101 Dalmatians II Patchs London Adventure (2003); poster badges: 1080p WEB H264 Dolby Digital+ 5.1",
+  "refilled": "picker: Abominable (2019); poster badges: 1080p WEB H264 Dolby Digital+ 5.1",
+  "refilledPlus1500ms": "picker: 101 Dalmatians II Patchs London Adventure (2003); poster badges: 1080p WEB H264 Dolby Digital+ 5.1",
+  "changeEventsAfterRefill": 1
+}
