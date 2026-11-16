@@ -1,0 +1,9 @@
+{
+  "id": 52703,
+  "cast": [
+    { "id": 990001, "mediaType": "movie", "title": "Mock Movie One", "originalTitle": "Mock Movie One", "character": "Himself", "releaseDate": "2019-05-01", "posterPath": null, "backdropPath": null, "overview": "A mock title.", "voteAverage": 7.1, "voteCount": 1200, "popularity": 40.5, "adult": false, "genreIds": [35], "originalLanguage": "en" },
+    { "id": 990002, "mediaType": "movie", "title": "Mock Movie Two", "originalTitle": "Mock Movie Two", "character": "Coach", "releaseDate": "2021-09-10", "posterPath": null, "backdropPath": null, "overview": "A mock title.", "voteAverage": 6.4, "voteCount": 800, "popularity": 22.0, "adult": false, "genreIds": [18], "originalLanguage": "en" },
+    { "id": 990101, "mediaType": "tv", "name": "Mock Show One", "originalName": "Mock Show One", "character": "Guest", "firstAirDate": "2017-02-03", "posterPath": null, "backdropPath": null, "overview": "A mock show.", "voteAverage": 8.0, "voteCount": 300, "popularity": 12.0, "adult": false, "genreIds": [35], "originalLanguage": "en", "episodeCount": 2 }
+  ],
+  "crew": []
+}

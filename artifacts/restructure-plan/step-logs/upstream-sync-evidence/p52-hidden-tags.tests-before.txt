@@ -1,0 +1,55 @@
+# Upstream's frontend tests for e907396d on the tree before the port (a scratch worktree of 45539fb5 with the two test files and the fixture copied in)
+je12 test --only tests/frontend/features/media-tags/features-tag-hidden.test.mjs: started as a job, expected about 3s on 10 CPUs (help-text times are for 10). If this call is cut off, `je12 wait` collects the result.
+ok   client build                   2s
+ok   inventory                      1s
+only: every node test in tests/frontend/features/media-tags/features-tag-hidden.test.mjs (node), on 45539fb5+dirty@ca66fefa
+ok   tests/frontend/features/media-tags/features-tag-hidden.test.mjs :: chips take the label the shared fixture names (native posters read the same rows)
+FAIL tests/frontend/features/media-tags/features-tag-hidden.test.mjs :: the lists come from the public configuration, either key case, and a replaced configuration is read again
+       TypeError: Cannot read properties of undefined (reading 'hides')
+FAIL tests/frontend/features/media-tags/features-tag-hidden.test.mjs :: a hidden genre label hides every spelling before the limit, so the next genres take their places
+       AssertionError: Expected values to be strictly deep-equal:
+       [
+       'Fantasy',
+FAIL tests/frontend/features/media-tags/features-tag-hidden.test.mjs :: quality hides by colour label (audio without its channels) after the best resolution is chosen
+       AssertionError: hiding 4K never promotes 1080p: 4K,HEVC,Dolby Digital+
+FAIL tests/frontend/features/media-tags/features-tag-hidden.test.mjs :: a hidden language leaves the flags, the Dual badge still counts it; Subtitles and Dual hide by kind
+       AssertionError: Expected values to be strictly deep-equal:
+       [
+       'badge',
+FAIL tests/frontend/features/media-tags/features-tag-hidden.test.mjs :: age rating boards, awards, logos and Custom chips hide by their label
+       AssertionError: "Not Rated" shows as NR, on a hidden board
+       + [
+       +   HTMLDivElement {}
+FAIL tests/frontend/features/media-tags/features-tag-hidden.test.mjs :: the logo renderer caches every logo, so showing a hidden kind again needs no refetch
+       AssertionError: Expected values to be strictly deep-equal:
+       [
+       +   'HBO',
+  log: /home/jake/.local/share/je12/logs/00388b93/only-node.log
+test --only: FAIL (6 failed, 1 passed) in 3s on 45539fb5+dirty@ca66fefa; recorded for je12 evidence
+je12: FAILED (in your change): 6 test(s) failed on 45539fb5+dirty@ca66fefa (recorded)
+next: a test written before its fix should fail here, and je12 evidence now shows that; otherwise fix what the message says. After the fix, rerun the same je12 test --only
+je12 test --only tests/frontend/features/media-tags/admin/features-admin-tags-page-colours-status.test.mjs: started as a job, expected about 3s on 10 CPUs (help-text times are for 10). If this call is cut off, `je12 wait` collects the result.
+ok   client build                   2s
+ok   inventory                      1s
+only: every node test in tests/frontend/features/media-tags/admin/features-admin-tags-page-colours-status.test.mjs (node), on 45539fb5+dirty@ca66fefa
+FAIL tests/frontend/features/media-tags/admin/features-admin-tags-page-colours-status.test.mjs :: Colours: editor edits save the Tag Styles document; Reset all asks, saves and can be undone
+       TypeError: Cannot read properties of null (reading 'hidden')
+FAIL tests/frontend/features/media-tags/admin/features-admin-tags-page-colours-status.test.mjs :: Colours: Hide this tag writes TagHiddenValues for the picked tile, marks it, and Undo puts it back
+       AssertionError: a picked tag has the switch
+FAIL tests/frontend/features/media-tags/admin/features-admin-tags-page-colours-status.test.mjs :: Colours: the hidden-only view lists the hidden tags and ends with the last one shown again
+       TypeError: Cannot read properties of null (reading 'textContent')
+ok   tests/frontend/features/media-tags/admin/features-admin-tags-page-colours-status.test.mjs :: Status badges: family switches and windows (clamped to 1-365)
+ok   tests/frontend/features/media-tags/admin/features-admin-tags-page-colours-status.test.mjs :: Status badges › Collections: one switch between the families and the windows, on until the administrator turns it off for every
+ok   tests/frontend/features/media-tags/admin/features-admin-tags-page-colours-status.test.mjs :: Status badges › Leaving soon: shows the live state and the home row, links to the Maintainerr settings, and edits only the coll
+ok   tests/frontend/features/media-tags/admin/features-admin-tags-page-colours-status.test.mjs :: boxes for long values (URLs, keys, lists) are wide, short ones are not, and the stylesheet draws both the width and the mask
+ok   tests/frontend/features/media-tags/admin/features-admin-tags-page-colours-status.test.mjs :: Status badges › Leaving soon: says which plugin is missing for the home row
+ok   tests/frontend/features/media-tags/admin/features-admin-tags-page-colours-status.test.mjs :: Status badges › Leaving soon: a replacement view loads its own status; the old view's late answer changes nothing
+ok   tests/frontend/features/media-tags/admin/features-admin-tags-page-colours-status.test.mjs :: Status badges › Leaving soon: a replacement view loads its own status; the old view's late rejection changes nothing
+ok   tests/frontend/features/media-tags/admin/features-admin-tags-page-colours-status.test.mjs :: the preview draws the saved server Tag Styles, scoped to it, whatever this browser's own styles are
+ok   tests/frontend/features/media-tags/admin/features-admin-tags-page-colours-status.test.mjs :: a returning view, and Take theirs, draw the preview with Tag Styles saved elsewhere
+ok   tests/frontend/features/media-tags/admin/features-admin-tags-page-colours-status.test.mjs :: selected pills, tabs, status text and the preview's captions are legible in the dark and light themes
+ok   tests/frontend/features/media-tags/admin/features-admin-tags-page-colours-status.test.mjs :: Scenes-only admin preview follows saved server defaults without changing personal settings
+  log: /home/jake/.local/share/je12/logs/00388b93/only-node.log
+test --only: FAIL (3 failed, 11 passed) in 8s on 45539fb5+dirty@ca66fefa; recorded for je12 evidence
+je12: FAILED (in your change): 3 test(s) failed on 45539fb5+dirty@ca66fefa (recorded)
+next: a test written before its fix should fail here, and je12 evidence now shows that; otherwise fix what the message says. After the fix, rerun the same je12 test --only

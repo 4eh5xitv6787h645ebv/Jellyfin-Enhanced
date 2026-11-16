@@ -1,0 +1,33 @@
+# The same test, and the whole file, on the port's working tree (a8f33bf6 + the fix)
+je12 test --only a detail page's section is ordered last: started as a job, expected about 3s on 10 CPUs (help-text times are for 10). If this call is cut off, `je12 wait` collects the result.
+ok   client build                   2s
+ok   inventory                      1s
+only: the node tests whose name matches /a detail page's section is ordered last/; no test file's text matches it, so in the 185 file(s) of the features the diff touches (node), on a8f33bf6+dirty@5fe1f68c
+ok   tests/frontend/pages/pages-discovery.test.mjs :: a detail page's section is ordered last, so a theme that orders Jellyfin's own lists can't lift it above them
+  log: /home/jake/.local/share/je12/logs/5ce28416/only-node.log
+test --only: pass (0 failed, 1 passed) in 8s on a8f33bf6+dirty@5fe1f68c; recorded for je12 evidence
+je12 test --only tests/frontend/pages/pages-discovery.test.mjs: started as a job, expected about 3s on 10 CPUs (help-text times are for 10). If this call is cut off, `je12 wait` collects the result.
+ok   client build                   2s
+ok   inventory                      1s
+only: every node test in tests/frontend/pages/pages-discovery.test.mjs (node), on a8f33bf6+dirty@5fe1f68c
+ok   tests/frontend/pages/pages-discovery.test.mjs :: genre discovery interleaves both feeds, names the section and offers the filter once both answered
+ok   tests/frontend/pages/pages-discovery.test.mjs :: a sort change keeps the list on screen, busy, until its page 1 lands, and abandons the older load
+ok   tests/frontend/pages/pages-discovery.test.mjs :: a list page's section begins inside the list's own wrapper, after its paging line, as a plain Jellyfin section
+ok   tests/frontend/pages/pages-discovery.test.mjs :: a person's section begins in the page's primary column, after the page's own lists
+ok   tests/frontend/pages/pages-discovery.test.mjs :: a detail page's section is ordered last, so a theme that orders Jellyfin's own lists can't lift it above them
+ok   tests/frontend/pages/pages-discovery.test.mjs :: the header is the title, then one row: what the titles are, in words, and filter and sort together
+ok   tests/frontend/pages/pages-discovery.test.mjs :: a section of one type has a lone sort, which shares the summary's row; the summary is said only when it is true
+ok   tests/frontend/pages/pages-discovery.test.mjs :: the sort is a quiet button that names the current order, not a form field
+ok   tests/frontend/pages/pages-discovery.test.mjs :: the sort button opens Jellyfin's action sheet with the current order ticked, and a choice re-sorts and is named on the button
+ok   tests/frontend/pages/pages-discovery.test.mjs :: the sort menu closes without a change on Escape, on a press outside it, on a remote's Back, on leaving, and when the current order is chosen
+ok   tests/frontend/pages/pages-discovery.test.mjs :: on a TV the sort menu is Jellyfin's action sheet with its title row
+ok   tests/frontend/pages/pages-discovery.test.mjs :: "Most votes" sorts a person's titles by their votes, a protected title by its hidden count
+ok   tests/frontend/pages/pages-discovery.test.mjs :: the section's place is held with empty cards of the page's own shape until the first page lands
+ok   tests/frontend/pages/pages-discovery.test.mjs :: the header keeps to the top of the screen just under Jellyfin's own header
+ok   tests/frontend/pages/pages-discovery.test.mjs :: a collection's missing titles are a section of the page's primary column, with a translated title
+ok   tests/frontend/pages/pages-discovery.test.mjs :: a person's lookup that fails says Seerr did not answer, with Jellyfin's button to try again
+ok   tests/frontend/pages/pages-discovery.test.mjs :: filter and sort primitives keep their published contract
+ok   tests/frontend/pages/pages-discovery.test.mjs :: a grouped menu says what is set in each group, opens one group at a time and clears them all
+ok   tests/frontend/pages/pages-discovery.test.mjs :: the scroll engine's retry row says Seerr did not answer, with Jellyfin's button to try again
+  log: /home/jake/.local/share/je12/logs/5ce28416/only-node.log
+test --only: pass (0 failed, 19 passed) in 3s on a8f33bf6+dirty@5fe1f68c; recorded for je12 evidence

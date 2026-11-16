@@ -1,0 +1,4 @@
+SCRIPT {"stock":{"title":"More with A.C. Peterson","cards":3,"inPrimaryColumn":true,"columnDisplay":"block","sectionOrder":"0","nativeListsShown":2,"nativeOrders":["0"],"afterEveryNativeList":true,"lastInTheColumnsMarkup":true},"themeOrdersTheNativeLists":{"title":"More with A.C. Peterson","cards":3,"inPrimaryColumn":true,"columnDisplay":"flex","sectionOrder":"0","nativeListsShown":2,"nativeOrders":["3"],"afterEveryNativeList":false,"lastInTheColumnsMarkup":true}}
+BLOCKED https://www.gstatic.com/cv/js/sender/v1/cast_sender.js
+BLOCKED https://cdn.jsdelivr.net/gh/Druidblack/jellyfin-icon-metadata@main/icons/themoviedb/themoviedb.png
+URL /web/index.html#/details?id=b31e70f9618b4345b21e33626a3aa4d6

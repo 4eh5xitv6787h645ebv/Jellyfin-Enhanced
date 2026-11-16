@@ -1,0 +1,20 @@
+# Upstream 005c5b45 (Weblate #1070), on the Lenovo, working tree of the port before its commit (ae9a6458 + the 32 locale files)
+
+## The upstream commit's locale changes, and this tree's 32 files compared with upstream's at 005c5b45
+32 files; identical to upstream: 32; differing: 0
+keys added: 1 distinct, 32 lines, 32 with the English text
+keys changed: {}
+keys removed: {}
+added keys not in en.json here: []
+added keys: ['toast_player_unsupported']
+
+## node scripts/validate-translations.js validate de (summary lines)
+⚠ Found 2 warning(s):
+Extra 1 key(s) not in base translation:
+  - elsewhere_settings_seerr_region
+ℹ Completion: 97% (1494/1542 keys)
+✗ Some translations have errors!
+
+## je12 test --only tests/frontend/core/core-translate-plural.test.mjs and core-translations.test.mjs (je12 v2.5.0)
+test --only: pass (0 failed, 4 passed) in 3s on ae9a6458+dirty@a0f30e7b; recorded for je12 evidence
+test --only: pass (0 failed, 13 passed) in 3s on ae9a6458+dirty@a0f30e7b; recorded for je12 evidence

@@ -1,0 +1,6 @@
+SCRIPT {"loaded":[{"name":"Kids","label":"Kids"}],"afterTypingOnlyAName":{"table":[{"name":"Kids","label":"Kids"},{"name":"Classic","label":""}],"stored":["tag:Kids=Kids"]},"afterRenamingTheFirstRule":{"table":[{"name":"Kids","label":"Kids films"},{"name":"Classic","label":""}],"stored":["tag:Kids=Kids films"]},"halfFilledRuleKept":true,"restored":[]}
+CONSOLE Failed to load resource: the server responded with a status of 404 (Not Found) /JellyfinEnhanced/cdn/selfhst/svg/maintainerr.svg
+CONSOLE Failed to load resource: the server responded with a status of 404 (Not Found) /JellyfinEnhanced/cdn/selfhst/svg/tmdb.svg
+BLOCKED https://www.gstatic.com/cv/js/sender/v1/cast_sender.js
+URL /web/index.html#/configurationpage?name=Jellyfin%20Enhanced
+kept as the 'after' half of the pair 'p55' (je12 evidence shows it)

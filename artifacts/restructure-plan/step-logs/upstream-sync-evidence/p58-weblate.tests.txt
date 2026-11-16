@@ -1,0 +1,22 @@
+# Upstream 65cc4ba9 (Weblate #1067), on the Lenovo, working tree of the port before its commit (aab2b636 + the 32 locale files)
+
+## The upstream commit's locale changes, and this tree's 32 files compared with upstream's at 65cc4ba9
+32 files; identical to upstream: 32; differing: 0
+keys added: 36 distinct, 1152 lines, 1152 with the English text
+keys changed: {}
+keys removed: {}
+added keys not in en.json here: []
+added keys: ['feature_subtitle_sync_button', 'panel_settings_subtitle_sync_button', 'panel_settings_subtitle_sync_button_desc', 'requests_remove_request', 'requests_remove_request_confirm', 'requests_remove_request_failed', 'requests_remove_request_success', 'shortcut_SubtitleSync', 'subtitle_sync_button', 'subtitle_sync_choose_track', 'subtitle_sync_close', 'subtitle_sync_count', 'subtitle_sync_empty', 'subtitle_sync_error_load', 'subtitle_sync_error_session', 'subtitle_sync_hint', 'subtitle_sync_hint_burned', 'subtitle_sync_hint_unavailable', 'subtitle_sync_image', 'subtitle_sync_jump', 'subtitle_sync_jump_unavailable', 'subtitle_sync_loading', 'subtitle_sync_no_match', 'subtitle_sync_none', 'subtitle_sync_offset', 'subtitle_sync_offset_reset', 'subtitle_sync_placeholder', 'subtitle_sync_reload', 'subtitle_sync_reset', 'subtitle_sync_retry', 'subtitle_sync_seconds', 'subtitle_sync_stale', 'subtitle_sync_sync_point', 'subtitle_sync_synced', 'subtitle_sync_title', 'subtitle_sync_too_far']
+
+## node scripts/validate-translations.js validate de (summary lines)
+  - tag_kind_looks_title
+  - toast_settings_load_failed
+  - toast_skipped
+⚠ Found 2 warning(s):
+Extra 1 key(s) not in base translation:
+  - elsewhere_settings_seerr_region
+ℹ Completion: 97% (1493/1541 keys)
+✗ Some translations have errors!
+
+## je12 test --node (je12 v2.5.0, the repository's quick mode, node half)
+  node 3740 tests, 3740 passed, 0 failed

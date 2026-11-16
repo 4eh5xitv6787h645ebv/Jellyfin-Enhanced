@@ -1,0 +1,26 @@
+SCRIPT {"configOn":204,"rowsOnFirstOpen":7,"afterOpen":{"hash":"#/home?tab=3&jeTab=recommendations","activeTabIsRecommendations":true,"activeTabIndex":3,"markedRowsStillInPage":true,"categoryOpen":false,"appExits":0},"tabSwitch":{"hash":"#/home?tab=3&jeTab=recommendations","activeTabIsRecommendations":true,"activeTabIndex":3,"markedRowsStillInPage":true,"categoryOpen":false,"appExits":0,"rowsNow":7,"discoverRequestsOnReturn":0},"category":{"tab":"already open","opened":true,"historyEntriesAdded":1,"hash":"#/home?tab=3&jeTab=recommendations","activeTabIsRecommendations":false,"activeTabIndex":null,"markedRowsStillInPage":true,"categoryOpen":true,"appExits":0},"categoryAfterBack":{"hash":"#/home?tab=3&jeTab=recommendations","activeTabIsRecommendations":true,"activeTabIndex":3,"markedRowsStillInPage":true,"categoryOpen":false,"appExits":0,"rowsNow":7,"discoverRequestsAfterBack":0},"appBackOverCategory":{"tab":"already open","opened":true,"returned":"undefined","appExitedInstead":false,"hash":"#/home?tab=3&jeTab=recommendations","categoryOpen":false,"activeTabIsRecommendations":true},"appBackOnJeTab":{"tab":"already open","returned":"undefined","appExitedInstead":false,"hash":"#/home?tab=3&jeTab=recommendations","activeTabIndex":0},"appBackOnHome":{"returned":"exit","appExited":true,"activeTabIndex":0},"staleJeTab":{"hash":"#/home?jeTab=recommendations","activeTabIndex":0,"activeTabIsRecommendations":false},"fadeMaskRule":"(hover: hover)","configOff":204}
+CONSOLE [Home] failed to get tab controller Error: Cannot find module './'
+    at http://172.29.90.3:8096/web/11851.18f47c0732e376997388.chunk.js:1:26834
+CONSOLE Failed to load resource: the server responded with a status of 400 (Bad Request) /Items/none/Ancestors
+CONSOLE Failed to load resource: the server responded with a status of 400 (Bad Request) /Users/7ef882cd307344279240d0eca8333a9f/Items/none
+CONSOLE 🪼 Jellyfin Enhanced: Seerr Item Details: Error getting TMDB ID: Response
+CONSOLE failed to get item or current user:  Response
+CONSOLE 🪼 Jellyfin Enhanced: Letterboxd Links: Error adding Letterboxd link: Response
+CONSOLE 🪼 Jellyfin Enhanced: Arr Tag Links: Error adding tag links: Response
+CONSOLE 🪼 Jellyfin Enhanced: Reviews: Error processing page: Response
+CONSOLE 🪼 Jellyfin Enhanced: Awards: Error processing page: Response
+CONSOLE 🪼 Jellyfin Enhanced: MDBList Ratings: Error processing page: Response
+PAGEERROR Response
+PAGEERROR Response
+BLOCKED https://www.gstatic.com/cv/js/sender/v1/cast_sender.js
+BLOCKED https://image.tmdb.org/t/p/w300/hUzeosd33nzE5MCNsZxCGEKTXaQ.png
+BLOCKED https://image.tmdb.org/t/p/w300/1TjvGVDMYsj6JBxOAkUHpPEwLf7.png
+BLOCKED https://image.tmdb.org/t/p/w300/wdrCwmRnLFJhEoH8GSfymY85KHT.png
+BLOCKED https://image.tmdb.org/t/p/w300/zhD3hhtKB5qyv7ZeL4uLpNxgMVU.png
+BLOCKED https://image.tmdb.org/t/p/w300/wwemzKWzjKYJFfCeiB57q3r4Bcm.png
+BLOCKED https://image.tmdb.org/t/p/w300/tuomPhY2UtuPTqqFnKMVHvSb724.png
+BLOCKED https://image.tmdb.org/t/p/w300/1edZOYAfoyZyZ3rklNSiUpXX30Q.png
+BLOCKED https://image.tmdb.org/t/p/w300/bngHRFi794mnMq34gfVcm9nDxN1.png
+STORM 26x POST /JellyfinEnhanced/tag-data/7ef882cd307344279240d0eca8333a9f
+URL /web/index.html#/home?jeTab=recommendations
+kept as the 'before' half of the pair 'p51' (je12 evidence shows it)

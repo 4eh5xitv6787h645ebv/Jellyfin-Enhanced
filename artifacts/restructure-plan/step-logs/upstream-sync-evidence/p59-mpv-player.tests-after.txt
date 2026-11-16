@@ -1,0 +1,69 @@
+# The same frontend tests on the port (ae9a6458)
+je12 test --only tests/frontend/features/player/features-osd-playback.test.mjs: started as a job, expected about 3s on 10 CPUs (help-text times are for 10). If this call is cut off, `je12 wait` collects the result.
+ok   client build                   2s
+ok   inventory                      1s
+only: every node test in tests/frontend/features/player/features-osd-playback.test.mjs (node), on ae9a6458
+ok   tests/frontend/features/player/features-osd-playback.test.mjs :: OSD running times parse as jellyfin-web shows them
+ok   tests/frontend/features/player/features-osd-playback.test.mjs :: position and duration come from the showing OSD, with total or remaining time
+ok   tests/frontend/features/player/features-osd-playback.test.mjs :: seeking moves the OSD position slider and fires its change, clamped to the item
+ok   tests/frontend/features/player/features-osd-playback.test.mjs :: without a <video>, Jump to Last Position returns to where a seek left from, once
+ok   tests/frontend/features/player/features-osd-playback.test.mjs :: without a <video>, backward seeks count, small steps and pauses do not
+ok   tests/frontend/features/player/features-osd-playback.test.mjs :: without a <video>, another item starts a new history
+ok   tests/frontend/features/player/features-osd-playback.test.mjs :: without a <video>, readings of the old position while the jump lands are ignored
+ok   tests/frontend/features/player/features-osd-playback.test.mjs :: without a <video>, a timeline click of any length is a seek, paused or playing
+ok   tests/frontend/features/player/features-osd-playback.test.mjs :: without a <video>, a key seek during a pause counts; a long gap of playback does not
+ok   tests/frontend/features/player/features-osd-playback.test.mjs :: without a <video>, a saved position is dropped once another item shows, even in a new OSD view
+ok   tests/frontend/features/player/features-osd-playback.test.mjs :: without a <video>, a short skip with jellyfin-web's keys or buttons counts as a seek
+ok   tests/frontend/features/player/features-osd-playback.test.mjs :: without a <video>, a seek key that moved nothing saves nothing
+ok   tests/frontend/features/player/features-osd-playback.test.mjs :: without a <video>, the time leaving an item's last 30 s is not taken as a seek
+ok   tests/frontend/features/player/features-osd-playback.test.mjs :: without a <video>, a saved position is held back while the time leaves an item's end
+ok   tests/frontend/features/player/features-osd-playback.test.mjs :: without a <video>, a timeline click from an item's last 30 s is undone at once
+ok   tests/frontend/features/player/features-osd-playback.test.mjs :: without a <video>, a slider seek that shows up late still lands, and a key seek after it counts
+ok   tests/frontend/features/player/features-osd-playback.test.mjs :: without a <video>, a landing delayed by buffering or a pause still counts as the landing
+ok   tests/frontend/features/player/features-osd-playback.test.mjs :: without a <video>, a jump back that shows up only after slow buffering is still consumed
+ok   tests/frontend/features/player/features-osd-playback.test.mjs :: without a <video>, resuming while a jump back lands still counts as its landing
+ok   tests/frontend/features/player/features-osd-playback.test.mjs :: without a <video>, a key seek while a timeline seek is still landing starts from that landing
+     ... and 18 more passed
+  log: /home/jake/.local/share/je12/logs/5ce28416/only-node.log
+test --only: pass (0 failed, 38 passed) in 8s on ae9a6458; recorded for je12 evidence
+je12 test --only without a <video>: started as a job, expected about 4s on 10 CPUs (help-text times are for 10). If this call is cut off, `je12 wait` collects the result.
+ok   client build                   2s
+ok   inventory                      1s
+only: the node tests whose name matches /without a <video>/, in the 3 test file(s) whose text has a match (node), on ae9a6458
+ok   tests/frontend/features/bookmarks/features-bookmarks.test.mjs :: without a <video> a player bookmark is placed at, and jumped to through, the OSD position
+ok   tests/frontend/features/bookmarks/features-bookmarks.test.mjs :: without a <video> and no position on the OSD, no bookmark is offered at 0:00
+ok   tests/frontend/features/player/features-osd-playback.test.mjs :: without a <video>, Jump to Last Position returns to where a seek left from, once
+ok   tests/frontend/features/player/features-osd-playback.test.mjs :: without a <video>, backward seeks count, small steps and pauses do not
+ok   tests/frontend/features/player/features-osd-playback.test.mjs :: without a <video>, another item starts a new history
+ok   tests/frontend/features/player/features-osd-playback.test.mjs :: without a <video>, readings of the old position while the jump lands are ignored
+ok   tests/frontend/features/player/features-osd-playback.test.mjs :: without a <video>, a timeline click of any length is a seek, paused or playing
+ok   tests/frontend/features/player/features-osd-playback.test.mjs :: without a <video>, a key seek during a pause counts; a long gap of playback does not
+ok   tests/frontend/features/player/features-osd-playback.test.mjs :: without a <video>, a saved position is dropped once another item shows, even in a new OSD view
+ok   tests/frontend/features/player/features-osd-playback.test.mjs :: without a <video>, a short skip with jellyfin-web's keys or buttons counts as a seek
+ok   tests/frontend/features/player/features-osd-playback.test.mjs :: without a <video>, a seek key that moved nothing saves nothing
+ok   tests/frontend/features/player/features-osd-playback.test.mjs :: without a <video>, the time leaving an item's last 30 s is not taken as a seek
+ok   tests/frontend/features/player/features-osd-playback.test.mjs :: without a <video>, a saved position is held back while the time leaves an item's end
+ok   tests/frontend/features/player/features-osd-playback.test.mjs :: without a <video>, a timeline click from an item's last 30 s is undone at once
+ok   tests/frontend/features/player/features-osd-playback.test.mjs :: without a <video>, a slider seek that shows up late still lands, and a key seek after it counts
+ok   tests/frontend/features/player/features-osd-playback.test.mjs :: without a <video>, a landing delayed by buffering or a pause still counts as the landing
+ok   tests/frontend/features/player/features-osd-playback.test.mjs :: without a <video>, a jump back that shows up only after slow buffering is still consumed
+ok   tests/frontend/features/player/features-osd-playback.test.mjs :: without a <video>, resuming while a jump back lands still counts as its landing
+ok   tests/frontend/features/player/features-osd-playback.test.mjs :: without a <video>, a key seek while a timeline seek is still landing starts from that landing
+ok   tests/frontend/features/player/features-osd-playback.test.mjs :: without a <video>, an old-time reading after a key seek during a landing confirms nothing
+     ... and 16 more passed
+  log: /home/jake/.local/share/je12/logs/5ce28416/only-node.log
+test --only: pass (0 failed, 36 passed) in 8s on ae9a6458; recorded for je12 evidence
+je12 test --only playback controls without a video or an OSD say they are not available with this player: started as a job, expected about 4s on 10 CPUs (help-text times are for 10). If this call is cut off, `je12 wait` collects the result.
+ok   client build                   2s
+ok   inventory                      1s
+only: the node tests whose name matches /playback controls without a video or an OSD say they are not available with this player/, in the 1 test file(s) whose text has a match (node), on ae9a6458
+ok   tests/frontend/features/player/features-playback.test.mjs :: playback controls without a video or an OSD say they are not available with this player
+  log: /home/jake/.local/share/je12/logs/5ce28416/only-node.log
+test --only: pass (0 failed, 1 passed) in 3s on ae9a6458; recorded for je12 evidence
+je12 test --only a player without a <video> gets no button, and the shortcut says the dialog is not available: started as a job, expected about 3s on 10 CPUs (help-text times are for 10). If this call is cut off, `je12 wait` collects the result.
+ok   client build                   2s
+ok   inventory                      1s
+only: the node tests whose name matches /a player without a <video> gets no button, and the shortcut says the dialog is not available/, in the 1 test file(s) whose text has a match (node), on ae9a6458
+ok   tests/frontend/features/player/features-subtitle-sync.test.mjs :: a player without a <video> gets no button, and the shortcut says the dialog is not available
+  log: /home/jake/.local/share/je12/logs/5ce28416/only-node.log
+test --only: pass (0 failed, 1 passed) in 3s on ae9a6458; recorded for je12 evidence

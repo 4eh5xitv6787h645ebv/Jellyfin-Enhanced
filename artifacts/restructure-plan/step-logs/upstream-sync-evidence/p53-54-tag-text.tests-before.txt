@@ -1,0 +1,18 @@
+# Upstream's frontend test for 25a168ae on the tree before the port (a scratch worktree of b6bb8b54 with the test file copied in)
+je12 test --only tests/frontend/features/media-tags/features-tag-text.test.mjs: started as a job, expected about 7s on 10 CPUs (help-text times are for 10). If this call is cut off, `je12 wait` collects the result.
+ok   client build                   2s
+ok   inventory                      1s
+only: every node test in tests/frontend/features/media-tags/features-tag-text.test.mjs (node), on b6bb8b54+dirty@63a6dfce
+FAIL tests/frontend/features/media-tags/features-tag-text.test.mjs :: the text comes from the public configuration, exact labels, and a bad document overrides nothing
+       TypeError: Cannot read properties of undefined (reading 'of')
+FAIL tests/frontend/features/media-tags/features-tag-text.test.mjs :: a genre label renames the genre text of every chip it colours and leaves the others
+       AssertionError: Expected values to be strictly deep-equal:
+       [
+       'Fantasy',
+FAIL tests/frontend/features/media-tags/features-tag-text.test.mjs :: a quality label replaces the whole chip text and leaves the other chips
+       AssertionError: Expected values to be strictly equal:
+       '4K' !== 'UHD'
+  log: /home/jake/.local/share/je12/logs/00388b93/only-node.log
+test --only: FAIL (3 failed, 0 passed) in 3s on b6bb8b54+dirty@63a6dfce; recorded for je12 evidence
+je12: FAILED (in your change): 3 test(s) failed on b6bb8b54+dirty@63a6dfce (recorded)
+next: a test written before its fix should fail here, and je12 evidence now shows that; otherwise fix what the message says. After the fix, rerun the same je12 test --only

@@ -1,0 +1,12 @@
+# The new test for upstream ff75fbfa on the tree before the port (a scratch worktree of a8f33bf6 with the test file copied in)
+je12 test --only a detail page's section is ordered last: started as a job, expected about 3s on 10 CPUs (help-text times are for 10). If this call is cut off, `je12 wait` collects the result.
+ok   client build                   2s
+ok   inventory                      1s
+only: the node tests whose name matches /a detail page's section is ordered last/; no test file's text matches it, so in the 185 file(s) of the features the diff touches (node), on a8f33bf6+dirty@f6fe5d36
+FAIL tests/frontend/pages/pages-discovery.test.mjs :: a detail page's section is ordered last, so a theme that orders Jellyfin's own lists can't lift it above them
+       AssertionError: Expected values to be strictly equal:
+       '' !== '99'
+  log: /home/jake/.local/share/je12/logs/00388b93/only-node.log
+test --only: FAIL (1 failed, 0 passed) in 9s on a8f33bf6+dirty@f6fe5d36; recorded for je12 evidence
+je12: FAILED (in your change): 1 test(s) failed on a8f33bf6+dirty@f6fe5d36 (recorded)
+next: a test written before its fix should fail here, and je12 evidence now shows that; otherwise fix what the message says. After the fix, rerun the same je12 test --only

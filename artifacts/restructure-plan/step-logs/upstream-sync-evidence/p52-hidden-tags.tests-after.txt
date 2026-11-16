@@ -1,0 +1,61 @@
+# The same tests on the port, and upstream's backend tests (they need the new types, so they cannot be built on the old tree)
+je12 test --only tests/frontend/features/media-tags/features-tag-hidden.test.mjs: started as a job, expected about 3s on 10 CPUs (help-text times are for 10). If this call is cut off, `je12 wait` collects the result.
+ok   client build                   2s
+ok   inventory                      1s
+only: every node test in tests/frontend/features/media-tags/features-tag-hidden.test.mjs (node), on 45539fb5+dirty@bf608c61
+ok   tests/frontend/features/media-tags/features-tag-hidden.test.mjs :: chips take the label the shared fixture names (native posters read the same rows)
+ok   tests/frontend/features/media-tags/features-tag-hidden.test.mjs :: the lists come from the public configuration, either key case, and a replaced configuration is read again
+ok   tests/frontend/features/media-tags/features-tag-hidden.test.mjs :: a hidden genre label hides every spelling before the limit, so the next genres take their places
+ok   tests/frontend/features/media-tags/features-tag-hidden.test.mjs :: quality hides by colour label (audio without its channels) after the best resolution is chosen
+ok   tests/frontend/features/media-tags/features-tag-hidden.test.mjs :: a hidden language leaves the flags, the Dual badge still counts it; Subtitles and Dual hide by kind
+ok   tests/frontend/features/media-tags/features-tag-hidden.test.mjs :: age rating boards, awards, logos and Custom chips hide by their label
+ok   tests/frontend/features/media-tags/features-tag-hidden.test.mjs :: the logo renderer caches every logo, so showing a hidden kind again needs no refetch
+  log: /home/jake/.local/share/je12/logs/5ce28416/only-node.log
+test --only: pass (0 failed, 7 passed) in 3s on 45539fb5+dirty@bf608c61; recorded for je12 evidence
+je12 test --only tests/frontend/features/media-tags/admin/features-admin-tags-page-colours-status.test.mjs: started as a job, expected about 3s on 10 CPUs (help-text times are for 10). If this call is cut off, `je12 wait` collects the result.
+ok   client build                   2s
+ok   inventory                      1s
+only: every node test in tests/frontend/features/media-tags/admin/features-admin-tags-page-colours-status.test.mjs (node), on 45539fb5+dirty@bf608c61
+ok   tests/frontend/features/media-tags/admin/features-admin-tags-page-colours-status.test.mjs :: Colours: editor edits save the Tag Styles document; Reset all asks, saves and can be undone
+ok   tests/frontend/features/media-tags/admin/features-admin-tags-page-colours-status.test.mjs :: Colours: Hide this tag writes TagHiddenValues for the picked tile, marks it, and Undo puts it back
+ok   tests/frontend/features/media-tags/admin/features-admin-tags-page-colours-status.test.mjs :: Colours: the hidden-only view lists the hidden tags and ends with the last one shown again
+ok   tests/frontend/features/media-tags/admin/features-admin-tags-page-colours-status.test.mjs :: Status badges: family switches and windows (clamped to 1-365)
+ok   tests/frontend/features/media-tags/admin/features-admin-tags-page-colours-status.test.mjs :: Status badges › Collections: one switch between the families and the windows, on until the administrator turns it off for every
+ok   tests/frontend/features/media-tags/admin/features-admin-tags-page-colours-status.test.mjs :: Status badges › Leaving soon: shows the live state and the home row, links to the Maintainerr settings, and edits only the coll
+ok   tests/frontend/features/media-tags/admin/features-admin-tags-page-colours-status.test.mjs :: boxes for long values (URLs, keys, lists) are wide, short ones are not, and the stylesheet draws both the width and the mask
+ok   tests/frontend/features/media-tags/admin/features-admin-tags-page-colours-status.test.mjs :: Status badges › Leaving soon: says which plugin is missing for the home row
+ok   tests/frontend/features/media-tags/admin/features-admin-tags-page-colours-status.test.mjs :: Status badges › Leaving soon: a replacement view loads its own status; the old view's late answer changes nothing
+ok   tests/frontend/features/media-tags/admin/features-admin-tags-page-colours-status.test.mjs :: Status badges › Leaving soon: a replacement view loads its own status; the old view's late rejection changes nothing
+ok   tests/frontend/features/media-tags/admin/features-admin-tags-page-colours-status.test.mjs :: the preview draws the saved server Tag Styles, scoped to it, whatever this browser's own styles are
+ok   tests/frontend/features/media-tags/admin/features-admin-tags-page-colours-status.test.mjs :: a returning view, and Take theirs, draw the preview with Tag Styles saved elsewhere
+ok   tests/frontend/features/media-tags/admin/features-admin-tags-page-colours-status.test.mjs :: selected pills, tabs, status text and the preview's captions are legible in the dark and light themes
+ok   tests/frontend/features/media-tags/admin/features-admin-tags-page-colours-status.test.mjs :: Scenes-only admin preview follows saved server defaults without changing personal settings
+  log: /home/jake/.local/share/je12/logs/5ce28416/only-node.log
+test --only: pass (0 failed, 14 passed) in 12s on 45539fb5+dirty@bf608c61; recorded for je12 evidence
+je12 test --only JE.Tests.Features.MediaTags.CoreTagHiddenValuesTests: started as a job, expected about 3s on 10 CPUs (help-text times are for 10). If this call is cut off, `je12 wait` collects the result.
+ok   client build                   2s
+ok   inventory                      1s
+only: the dotnet test named 'JE.Tests.Features.MediaTags.CoreTagHiddenValuesTests' (and every test under it) (dotnet), on 45539fb5+dirty@bf608c61
+ok   JE.Tests.Features.MediaTags.CoreTagHiddenValuesTests.ChipsTakeTheLabelTheSharedFixtureNames(group: "genre", value: "Science Fiction", label: "science fiction")
+ok   JE.Tests.Features.MediaTags.CoreTagHiddenValuesTests.ChipsTakeTheLabelTheSharedFixtureNames(group: "quality", value: "4K", label: "4K")
+ok   JE.Tests.Features.MediaTags.CoreTagHiddenValuesTests.ChipsTakeTheLabelTheSharedFixtureNames(group: "genre", value: "Reality", label: "other")
+ok   JE.Tests.Features.MediaTags.CoreTagHiddenValuesTests.ChipsTakeTheLabelTheSharedFixtureNames(group: "genre", value: "Sci-Fi", label: "science fiction")
+ok   JE.Tests.Features.MediaTags.CoreTagHiddenValuesTests.ChipsTakeTheLabelTheSharedFixtureNames(group: "genre", value: "Drame", label: "drama")
+ok   JE.Tests.Features.MediaTags.CoreTagHiddenValuesTests.ChipsTakeTheLabelTheSharedFixtureNames(group: "quality", value: "HEVC", label: "HEVC")
+ok   JE.Tests.Features.MediaTags.CoreTagHiddenValuesTests.ChipsTakeTheLabelTheSharedFixtureNames(group: "genre", value: "Drama", label: "drama")
+ok   JE.Tests.Features.MediaTags.CoreTagHiddenValuesTests.ChipsTakeTheLabelTheSharedFixtureNames(group: "language", value: "eng", label: "en")
+ok   JE.Tests.Features.MediaTags.CoreTagHiddenValuesTests.ChipsTakeTheLabelTheSharedFixtureNames(group: "language", value: "jpn", label: "ja")
+ok   JE.Tests.Features.MediaTags.CoreTagHiddenValuesTests.ChipsTakeTheLabelTheSharedFixtureNames(group: "quality", value: "TRUEHD ATMOS 7.1", label: "TRUEHD ATMOS")
+ok   JE.Tests.Features.MediaTags.CoreTagHiddenValuesTests.TheListRoundTripsThroughTheServerConfigurationAndThePage
+ok   JE.Tests.Features.MediaTags.CoreTagHiddenValuesTests.AgeBoardsRatingsStatusAwardsLogosAndCustomHideByTheirLabel
+ok   JE.Tests.Features.MediaTags.CoreTagHiddenValuesTests.AHiddenGenreLabelHidesEverySpellingBeforeTheCap
+ok   JE.Tests.Features.MediaTags.CoreTagHiddenValuesTests.ChipsTakeTheLabelTheSharedFixtureNames(group: "language", value: "nob", label: "no")
+ok   JE.Tests.Features.MediaTags.CoreTagHiddenValuesTests.QualityHidesByItsColourLabelAfterTheBestResolutionIsChosen
+ok   JE.Tests.Features.MediaTags.CoreTagHiddenValuesTests.OnlyCatalogLabelsAreKept
+ok   JE.Tests.Features.MediaTags.CoreTagHiddenValuesTests.ChipsTakeTheLabelTheSharedFixtureNames(group: "language", value: "en-GB", label: "en")
+ok   JE.Tests.Features.MediaTags.CoreTagHiddenValuesTests.ChipsTakeTheLabelTheSharedFixtureNames(group: "language", value: "tgl", label: "fil")
+ok   JE.Tests.Features.MediaTags.CoreTagHiddenValuesTests.HiddenLanguagesLeaveTheFlagsButTheDualBadgeStillCountsThem
+ok   JE.Tests.Features.MediaTags.CoreTagHiddenValuesTests.ChipsTakeTheLabelTheSharedFixtureNames(group: "quality", value: "Dolby Digital+ 5.1", label: "Dolby Digital+")
+     ... and 3 more passed
+  log: /home/jake/.local/share/je12/logs/5ce28416/only-dotnet.log
+test --only: pass (0 failed, 23 passed) in 7s on 45539fb5+dirty@bf608c61; recorded for je12 evidence

@@ -1,0 +1,213 @@
+# Upstream's frontend tests for 3f8e4724 (as adapted for this tree) on the tree before the port (a scratch worktree of 22081014 with the four test files copied in)
+je12 test --only tests/frontend/features/player/features-osd-playback.test.mjs: started as a job, expected about 3s on 10 CPUs (help-text times are for 10). If this call is cut off, `je12 wait` collects the result.
+ok   client build                   2s
+ok   inventory                      1s
+only: every node test in tests/frontend/features/player/features-osd-playback.test.mjs (node), on 22081014+dirty@f9b92fb1
+FAIL tests/frontend/features/player/features-osd-playback.test.mjs :: OSD running times parse as jellyfin-web shows them
+       TypeError: Cannot destructure property 'parseRunningTime' of 'h.JE.internals.osdPlayback' as it is undefined.
+FAIL tests/frontend/features/player/features-osd-playback.test.mjs :: position and duration come from the showing OSD, with total or remaining time
+       TypeError: Cannot read properties of undefined (reading 'positionSeconds')
+FAIL tests/frontend/features/player/features-osd-playback.test.mjs :: seeking moves the OSD position slider and fires its change, clamped to the item
+       TypeError: Cannot read properties of undefined (reading 'seekTo')
+FAIL tests/frontend/features/player/features-osd-playback.test.mjs :: without a <video>, Jump to Last Position returns to where a seek left from, once
+       TypeError: h.JE.watchOsdPosition is not a function
+FAIL tests/frontend/features/player/features-osd-playback.test.mjs :: without a <video>, backward seeks count, small steps and pauses do not
+       TypeError: h.JE.watchOsdPosition is not a function
+FAIL tests/frontend/features/player/features-osd-playback.test.mjs :: without a <video>, another item starts a new history
+       TypeError: h.JE.watchOsdPosition is not a function
+FAIL tests/frontend/features/player/features-osd-playback.test.mjs :: without a <video>, readings of the old position while the jump lands are ignored
+       TypeError: h.JE.watchOsdPosition is not a function
+FAIL tests/frontend/features/player/features-osd-playback.test.mjs :: without a <video>, a timeline click of any length is a seek, paused or playing
+       TypeError: h.JE.watchOsdPosition is not a function
+FAIL tests/frontend/features/player/features-osd-playback.test.mjs :: without a <video>, a key seek during a pause counts; a long gap of playback does not
+       TypeError: h.JE.watchOsdPosition is not a function
+FAIL tests/frontend/features/player/features-osd-playback.test.mjs :: without a <video>, a saved position is dropped once another item shows, even in a new OSD view
+       TypeError: h.JE.watchOsdPosition is not a function
+FAIL tests/frontend/features/player/features-osd-playback.test.mjs :: without a <video>, a short skip with jellyfin-web's keys or buttons counts as a seek
+       TypeError: h.JE.watchOsdPosition is not a function
+FAIL tests/frontend/features/player/features-osd-playback.test.mjs :: without a <video>, a seek key that moved nothing saves nothing
+       TypeError: h.JE.watchOsdPosition is not a function
+FAIL tests/frontend/features/player/features-osd-playback.test.mjs :: without a <video>, the time leaving an item's last 30 s is not taken as a seek
+       TypeError: h.JE.watchOsdPosition is not a function
+FAIL tests/frontend/features/player/features-osd-playback.test.mjs :: without a <video>, a saved position is held back while the time leaves an item's end
+       TypeError: h.JE.watchOsdPosition is not a function
+FAIL tests/frontend/features/player/features-osd-playback.test.mjs :: without a <video>, a timeline click from an item's last 30 s is undone at once
+       TypeError: h.JE.watchOsdPosition is not a function
+FAIL tests/frontend/features/player/features-osd-playback.test.mjs :: without a <video>, a slider seek that shows up late still lands, and a key seek after it counts
+       TypeError: h.JE.watchOsdPosition is not a function
+FAIL tests/frontend/features/player/features-osd-playback.test.mjs :: without a <video>, a landing delayed by buffering or a pause still counts as the landing
+       TypeError: h.JE.watchOsdPosition is not a function
+FAIL tests/frontend/features/player/features-osd-playback.test.mjs :: without a <video>, a jump back that shows up only after slow buffering is still consumed
+       TypeError: h.JE.watchOsdPosition is not a function
+FAIL tests/frontend/features/player/features-osd-playback.test.mjs :: without a <video>, resuming while a jump back lands still counts as its landing
+       TypeError: h.JE.watchOsdPosition is not a function
+FAIL tests/frontend/features/player/features-osd-playback.test.mjs :: without a <video>, a key seek while a timeline seek is still landing starts from that landing
+       TypeError: h.JE.watchOsdPosition is not a function
+FAIL tests/frontend/features/player/features-osd-playback.test.mjs :: without a <video>, an old-time reading after a key seek during a landing confirms nothing
+       TypeError: h.JE.watchOsdPosition is not a function
+FAIL tests/frontend/features/player/features-osd-playback.test.mjs :: without a <video>, a jump back that shows up after more than 15 s records nothing
+       TypeError: h.JE.watchOsdPosition is not a function
+FAIL tests/frontend/features/player/features-osd-playback.test.mjs :: without a <video>, autoplay right after a timeline click near the end uses no saved position
+       TypeError: h.JE.watchOsdPosition is not a function
+FAIL tests/frontend/features/player/features-osd-playback.test.mjs :: without a <video>, a seek away from an item's end is kept once the item stays the same
+       TypeError: h.JE.watchOsdPosition is not a function
+FAIL tests/frontend/features/player/features-osd-playback.test.mjs :: without a <video>, seek keys are confirmed at the observed rate; modified keys are no intent
+       TypeError: h.JE.watchOsdPosition is not a function
+FAIL tests/frontend/features/player/features-osd-playback.test.mjs :: the <video> path keeps its own history and ignores the OSD
+       TypeError: h.JE.watchOsdPosition is not a function
+FAIL tests/frontend/features/player/features-osd-playback.test.mjs :: with no time on the OSD, the jump says it is not available
+       AssertionError: The input did not match the regular expression /Not available with this player/. Input:
+       'toast_no_video_found'
+FAIL tests/frontend/features/player/features-osd-playback.test.mjs :: without a <video>, jump to a percentage uses the OSD slider; frame step is not available
+       AssertionError: Expected values to be strictly equal:
+       undefined !== 30
+FAIL tests/frontend/features/player/features-osd-playback.test.mjs :: without a <video>, speed steps through jellyfin-web's own list in its settings menu
+       AssertionError: Expected values to be strictly deep-equal:
+       + []
+       - [
+FAIL tests/frontend/features/player/features-osd-playback.test.mjs :: without a <video>, aspect ratio cycles through jellyfin-web's list; speed stops at the ends
+       AssertionError: Expected values to be strictly deep-equal:
+       + []
+       - [
+FAIL tests/frontend/features/player/features-osd-playback.test.mjs :: without a <video>, aspect ratio leaves jellyfin-web's untitled repeat menu alone
+       AssertionError: Expected values to be strictly deep-equal:
+       + [
+       +   'toast_no_video_found'
+FAIL tests/frontend/features/player/features-osd-playback.test.mjs :: without a <video>, speed leaves a track menu that opens meanwhile alone
+       AssertionError: Expected values to be strictly deep-equal:
+       + []
+       - [
+FAIL tests/frontend/features/player/features-osd-playback.test.mjs :: without a <video> or a settings menu, speed and aspect say they are not available
+       AssertionError: The input did not match the regular expression /Not available with this player/. Input:
+       'toast_no_video_found'
+FAIL tests/frontend/features/player/features-osd-playback.test.mjs :: without a <video>, skip intro seeks past the segment the OSD position is in
+       AssertionError: The expression evaluated to a falsy value:
+       assert.ok(Math.abs(h.seeks.at(-1) - (95 / 1200) * 100) < 0.01)
+ok   tests/frontend/features/player/features-osd-playback.test.mjs :: without a <video>, skip intro needs the session item to be the one the OSD names
+FAIL tests/frontend/features/player/features-osd-playback.test.mjs :: without a <video>, a skip press whose item changed while it waited does nothing
+       TypeError: answer is not a function
+ok   tests/frontend/features/player/features-osd-playback.test.mjs :: without a <video>, skip intro checks the session item against the OSD duration
+FAIL tests/frontend/features/player/features-osd-playback.test.mjs :: player shortcuts run on the player page without a <video>, and only there
+       TypeError: h.JE.watchOsdPosition is not a function
+  log: /home/jake/.local/share/je12/logs/00388b93/only-node.log
+test --only: FAIL (36 failed, 2 passed) in 4s on 22081014+dirty@f9b92fb1; recorded for je12 evidence
+je12: FAILED (in your change): 36 test(s) failed on 22081014+dirty@f9b92fb1 (recorded)
+next: a test written before its fix should fail here, and je12 evidence now shows that; otherwise fix what the message says. After the fix, rerun the same je12 test --only
+je12 test --only without a <video>: started as a job, expected about 3s on 10 CPUs (help-text times are for 10). If this call is cut off, `je12 wait` collects the result.
+ok   client build                   2s
+ok   inventory                      1s
+only: the node tests whose name matches /without a <video>/, in the 3 test file(s) whose text has a match (node), on 22081014+dirty@f9b92fb1
+FAIL tests/frontend/features/bookmarks/features-bookmarks.test.mjs :: without a <video> a player bookmark is placed at, and jumped to through, the OSD position
+       AssertionError: Expected values to be strictly equal:
+       '0:00' !== '1:05'
+FAIL tests/frontend/features/bookmarks/features-bookmarks.test.mjs :: without a <video> and no position on the OSD, no bookmark is offered at 0:00
+       AssertionError: Expected values to be strictly equal:
+       + HTMLInputElement {}
+       - null
+FAIL tests/frontend/features/player/features-osd-playback.test.mjs :: without a <video>, Jump to Last Position returns to where a seek left from, once
+       TypeError: h.JE.watchOsdPosition is not a function
+FAIL tests/frontend/features/player/features-osd-playback.test.mjs :: without a <video>, backward seeks count, small steps and pauses do not
+       TypeError: h.JE.watchOsdPosition is not a function
+FAIL tests/frontend/features/player/features-osd-playback.test.mjs :: without a <video>, another item starts a new history
+       TypeError: h.JE.watchOsdPosition is not a function
+FAIL tests/frontend/features/player/features-osd-playback.test.mjs :: without a <video>, readings of the old position while the jump lands are ignored
+       TypeError: h.JE.watchOsdPosition is not a function
+FAIL tests/frontend/features/player/features-osd-playback.test.mjs :: without a <video>, a timeline click of any length is a seek, paused or playing
+       TypeError: h.JE.watchOsdPosition is not a function
+FAIL tests/frontend/features/player/features-osd-playback.test.mjs :: without a <video>, a key seek during a pause counts; a long gap of playback does not
+       TypeError: h.JE.watchOsdPosition is not a function
+FAIL tests/frontend/features/player/features-osd-playback.test.mjs :: without a <video>, a saved position is dropped once another item shows, even in a new OSD view
+       TypeError: h.JE.watchOsdPosition is not a function
+FAIL tests/frontend/features/player/features-osd-playback.test.mjs :: without a <video>, a short skip with jellyfin-web's keys or buttons counts as a seek
+       TypeError: h.JE.watchOsdPosition is not a function
+FAIL tests/frontend/features/player/features-osd-playback.test.mjs :: without a <video>, a seek key that moved nothing saves nothing
+       TypeError: h.JE.watchOsdPosition is not a function
+FAIL tests/frontend/features/player/features-osd-playback.test.mjs :: without a <video>, the time leaving an item's last 30 s is not taken as a seek
+       TypeError: h.JE.watchOsdPosition is not a function
+FAIL tests/frontend/features/player/features-osd-playback.test.mjs :: without a <video>, a saved position is held back while the time leaves an item's end
+       TypeError: h.JE.watchOsdPosition is not a function
+FAIL tests/frontend/features/player/features-osd-playback.test.mjs :: without a <video>, a timeline click from an item's last 30 s is undone at once
+       TypeError: h.JE.watchOsdPosition is not a function
+FAIL tests/frontend/features/player/features-osd-playback.test.mjs :: without a <video>, a slider seek that shows up late still lands, and a key seek after it counts
+       TypeError: h.JE.watchOsdPosition is not a function
+FAIL tests/frontend/features/player/features-osd-playback.test.mjs :: without a <video>, a landing delayed by buffering or a pause still counts as the landing
+       TypeError: h.JE.watchOsdPosition is not a function
+FAIL tests/frontend/features/player/features-osd-playback.test.mjs :: without a <video>, a jump back that shows up only after slow buffering is still consumed
+       TypeError: h.JE.watchOsdPosition is not a function
+FAIL tests/frontend/features/player/features-osd-playback.test.mjs :: without a <video>, resuming while a jump back lands still counts as its landing
+       TypeError: h.JE.watchOsdPosition is not a function
+FAIL tests/frontend/features/player/features-osd-playback.test.mjs :: without a <video>, a key seek while a timeline seek is still landing starts from that landing
+       TypeError: h.JE.watchOsdPosition is not a function
+FAIL tests/frontend/features/player/features-osd-playback.test.mjs :: without a <video>, an old-time reading after a key seek during a landing confirms nothing
+       TypeError: h.JE.watchOsdPosition is not a function
+FAIL tests/frontend/features/player/features-osd-playback.test.mjs :: without a <video>, a jump back that shows up after more than 15 s records nothing
+       TypeError: h.JE.watchOsdPosition is not a function
+FAIL tests/frontend/features/player/features-osd-playback.test.mjs :: without a <video>, autoplay right after a timeline click near the end uses no saved position
+       TypeError: h.JE.watchOsdPosition is not a function
+FAIL tests/frontend/features/player/features-osd-playback.test.mjs :: without a <video>, a seek away from an item's end is kept once the item stays the same
+       TypeError: h.JE.watchOsdPosition is not a function
+FAIL tests/frontend/features/player/features-osd-playback.test.mjs :: without a <video>, seek keys are confirmed at the observed rate; modified keys are no intent
+       TypeError: h.JE.watchOsdPosition is not a function
+FAIL tests/frontend/features/player/features-osd-playback.test.mjs :: without a <video>, jump to a percentage uses the OSD slider; frame step is not available
+       AssertionError: Expected values to be strictly equal:
+       undefined !== 30
+FAIL tests/frontend/features/player/features-osd-playback.test.mjs :: without a <video>, speed steps through jellyfin-web's own list in its settings menu
+       AssertionError: Expected values to be strictly deep-equal:
+       + []
+       - [
+FAIL tests/frontend/features/player/features-osd-playback.test.mjs :: without a <video>, aspect ratio cycles through jellyfin-web's list; speed stops at the ends
+       AssertionError: Expected values to be strictly deep-equal:
+       + []
+       - [
+FAIL tests/frontend/features/player/features-osd-playback.test.mjs :: without a <video>, aspect ratio leaves jellyfin-web's untitled repeat menu alone
+       AssertionError: Expected values to be strictly deep-equal:
+       + [
+       +   'toast_no_video_found'
+FAIL tests/frontend/features/player/features-osd-playback.test.mjs :: without a <video>, speed leaves a track menu that opens meanwhile alone
+       AssertionError: Expected values to be strictly deep-equal:
+       + []
+       - [
+FAIL tests/frontend/features/player/features-osd-playback.test.mjs :: without a <video> or a settings menu, speed and aspect say they are not available
+       AssertionError: The input did not match the regular expression /Not available with this player/. Input:
+       'toast_no_video_found'
+FAIL tests/frontend/features/player/features-osd-playback.test.mjs :: without a <video>, skip intro seeks past the segment the OSD position is in
+       AssertionError: The expression evaluated to a falsy value:
+       assert.ok(Math.abs(h.seeks.at(-1) - (95 / 1200) * 100) < 0.01)
+ok   tests/frontend/features/player/features-osd-playback.test.mjs :: without a <video>, skip intro needs the session item to be the one the OSD names
+FAIL tests/frontend/features/player/features-osd-playback.test.mjs :: without a <video>, a skip press whose item changed while it waited does nothing
+       TypeError: answer is not a function
+ok   tests/frontend/features/player/features-osd-playback.test.mjs :: without a <video>, skip intro checks the session item against the OSD duration
+FAIL tests/frontend/features/player/features-osd-playback.test.mjs :: player shortcuts run on the player page without a <video>, and only there
+       TypeError: h.JE.watchOsdPosition is not a function
+FAIL tests/frontend/features/player/features-subtitle-sync.test.mjs :: a player without a <video> gets no button, and the shortcut says the dialog is not available
+       AssertionError: Expected values to be strictly equal:
+       + HTMLButtonElement {}
+       - null
+  log: /home/jake/.local/share/je12/logs/00388b93/only-node.log
+test --only: FAIL (34 failed, 2 passed) in 4s on 22081014+dirty@f9b92fb1; recorded for je12 evidence
+je12: FAILED (in your change): 34 test(s) failed on 22081014+dirty@f9b92fb1 (recorded)
+next: a test written before its fix should fail here, and je12 evidence now shows that; otherwise fix what the message says. After the fix, rerun the same je12 test --only
+je12 test --only playback controls without a video or an OSD say they are not available with this player: started as a job, expected about 4s on 10 CPUs (help-text times are for 10). If this call is cut off, `je12 wait` collects the result.
+ok   client build                   2s
+ok   inventory                      1s
+only: the node tests whose name matches /playback controls without a video or an OSD say they are not available with this player/, in the 1 test file(s) whose text has a match (node), on 22081014+dirty@f9b92fb1
+FAIL tests/frontend/features/player/features-playback.test.mjs :: playback controls without a video or an OSD say they are not available with this player
+       AssertionError: Expected values to be strictly deep-equal:
+       [
+       +   'toast_no_video_found',
+  log: /home/jake/.local/share/je12/logs/00388b93/only-node.log
+test --only: FAIL (1 failed, 0 passed) in 3s on 22081014+dirty@f9b92fb1; recorded for je12 evidence
+je12: FAILED (in your change): 1 test(s) failed on 22081014+dirty@f9b92fb1 (recorded)
+next: a test written before its fix should fail here, and je12 evidence now shows that; otherwise fix what the message says. After the fix, rerun the same je12 test --only
+je12 test --only a player without a <video> gets no button, and the shortcut says the dialog is not available: started as a job, expected about 4s on 10 CPUs (help-text times are for 10). If this call is cut off, `je12 wait` collects the result.
+ok   client build                   2s
+ok   inventory                      1s
+only: the node tests whose name matches /a player without a <video> gets no button, and the shortcut says the dialog is not available/, in the 1 test file(s) whose text has a match (node), on 22081014+dirty@f9b92fb1
+FAIL tests/frontend/features/player/features-subtitle-sync.test.mjs :: a player without a <video> gets no button, and the shortcut says the dialog is not available
+       AssertionError: Expected values to be strictly equal:
+       + HTMLButtonElement {}
+       - null
+  log: /home/jake/.local/share/je12/logs/00388b93/only-node.log
+test --only: FAIL (1 failed, 0 passed) in 3s on 22081014+dirty@f9b92fb1; recorded for je12 evidence
+je12: FAILED (in your change): 1 test(s) failed on 22081014+dirty@f9b92fb1 (recorded)
+next: a test written before its fix should fail here, and je12 evidence now shows that; otherwise fix what the message says. After the fix, rerun the same je12 test --only

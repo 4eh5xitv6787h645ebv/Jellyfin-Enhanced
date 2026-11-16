@@ -1,0 +1,98 @@
+# The same frontend tests on the port (809c2d4b), and upstream's backend tests
+je12 test --only tests/frontend/requests/requests-remove-request.test.mjs: started as a job, expected about 3s on 10 CPUs (help-text times are for 10). If this call is cut off, `je12 wait` collects the result.
+ok   client build                   2s
+ok   inventory                      1s
+only: every node test in tests/frontend/requests/requests-remove-request.test.mjs (node), on 809c2d4b
+ok   tests/frontend/requests/requests-remove-request.test.mjs :: the remove button shows only on requests the server says the caller may remove
+ok   tests/frontend/requests/requests-remove-request.test.mjs :: one click on the remove button dispatches one removal after rerenders
+ok   tests/frontend/requests/requests-remove-request.test.mjs :: a confirmed removal sends one DELETE without retry and refreshes the list
+ok   tests/frontend/requests/requests-remove-request.test.mjs :: a cancelled removal sends nothing
+ok   tests/frontend/requests/requests-remove-request.test.mjs :: a refused removal re-enables the button and tells the user
+ok   tests/frontend/requests/requests-remove-request.test.mjs :: a title with replacement patterns is shown as written in the confirmation
+ok   tests/frontend/requests/requests-remove-request.test.mjs :: a button for a request the list does not say the caller may remove asks nothing and sends nothing
+ok   tests/frontend/requests/requests-remove-request.test.mjs :: a sign-in change while the confirmation is open removes nothing for the new account
+ok   tests/frontend/requests/requests-remove-request.test.mjs :: a second click while the removal is on its way does not send it again
+  log: /home/jake/.local/share/je12/logs/5ce28416/only-node.log
+test --only: pass (0 failed, 9 passed) in 3s on 809c2d4b; recorded for je12 evidence
+je12 test --only JE.Tests.Features.Seerr.RequestRemovalPlannerTests: started as a job, expected about 3s on 10 CPUs (help-text times are for 10). If this call is cut off, `je12 wait` collects the result.
+ok   client build                   2s
+ok   inventory                      1s
+only: the dotnet test named 'JE.Tests.Features.Seerr.RequestRemovalPlannerTests' (and every test under it) (dotnet), on 809c2d4b
+ok   JE.Tests.Features.Seerr.RequestRemovalPlannerTests.AnUnwatchedMovieIsKept
+ok   JE.Tests.Features.Seerr.RequestRemovalPlannerTests.AWatchedMovieIsRemovedRightAway
+ok   JE.Tests.Features.Seerr.RequestRemovalPlannerTests.AMovieThatIsNotAvailableIsKept
+ok   JE.Tests.Features.Seerr.RequestRemovalPlannerTests.OnlyApprovedOrCompletedRequestsAreRemoved(requestStatus: 5, removed: True)
+ok   JE.Tests.Features.Seerr.RequestRemovalPlannerTests.ASeriesWithOneUnwatchedEpisodeIsKept
+ok   JE.Tests.Features.Seerr.RequestRemovalPlannerTests.ParsingReadsTheRequestQualityAndRequester
+ok   JE.Tests.Features.Seerr.RequestRemovalPlannerTests.ASeriesIsRemovedOnceEveryRequestedSeasonIsWatched
+ok   JE.Tests.Features.Seerr.RequestRemovalPlannerTests.OnlyApprovedOrCompletedRequestsAreRemoved(requestStatus: 2, removed: True)
+ok   JE.Tests.Features.Seerr.RequestRemovalPlannerTests.ASeriesWithARequestedSeasonNotAvailableIsKept
+ok   JE.Tests.Features.Seerr.RequestRemovalPlannerTests.OnlyApprovedOrCompletedRequestsAreRemoved(requestStatus: 3, removed: False)
+ok   JE.Tests.Features.Seerr.RequestRemovalPlannerTests.ASeriesWithARequestedSeasonMissingFromTheLibraryIsKept
+ok   JE.Tests.Features.Seerr.RequestRemovalPlannerTests.AnyWatchedVersionOfAMovieCounts
+ok   JE.Tests.Features.Seerr.RequestRemovalPlannerTests.OnlyApprovedOrCompletedRequestsAreRemoved(requestStatus: 1, removed: False)
+ok   JE.Tests.Features.Seerr.RequestRemovalPlannerTests.SeasonsTheRequestDidNotAskForAreIgnored
+ok   JE.Tests.Features.Seerr.RequestRemovalPlannerTests.OnlyApprovedOrCompletedRequestsAreRemoved(requestStatus: 4, removed: False)
+  log: /home/jake/.local/share/je12/logs/5ce28416/only-dotnet.log
+test --only: pass (0 failed, 15 passed) in 15s on 809c2d4b; recorded for je12 evidence
+je12 test --only JE.Tests.Features.Seerr.AutoRequestRemovalTaskTests: started as a job, expected about 3s on 10 CPUs (help-text times are for 10). If this call is cut off, `je12 wait` collects the result.
+ok   client build                   2s
+ok   inventory                      1s
+only: the dotnet test named 'JE.Tests.Features.Seerr.AutoRequestRemovalTaskTests' (and every test under it) (dotnet), on 809c2d4b
+ok   JE.Tests.Features.Seerr.AutoRequestRemovalTaskTests.AnotherUserWatchingDoesNotRemoveTheRequest
+ok   JE.Tests.Features.Seerr.AutoRequestRemovalTaskTests.ARequestAlreadyGoneCountsAsRemoved
+ok   JE.Tests.Features.Seerr.AutoRequestRemovalTaskTests.TurnedOffSendsNothing
+ok   JE.Tests.Features.Seerr.AutoRequestRemovalTaskTests.ABlockedRequesterIsSkipped
+ok   JE.Tests.Features.Seerr.AutoRequestRemovalTaskTests.AFullyWatchedSeasonRemovesTheSeriesRequest
+ok   JE.Tests.Features.Seerr.AutoRequestRemovalTaskTests.PendingRequestsAreKept
+ok   JE.Tests.Features.Seerr.AutoRequestRemovalTaskTests.AMovieWatchedByItsRequesterIsRemovedWithTheApiKeyOnly
+ok   JE.Tests.Features.Seerr.AutoRequestRemovalTaskTests.EveryPageIsReadBeforeActing
+ok   JE.Tests.Features.Seerr.AutoRequestRemovalTaskTests.AFailedPageRemovesNothing
+ok   JE.Tests.Features.Seerr.AutoRequestRemovalTaskTests.AnUnreadableRequestIsKeptForTheNextRun
+ok   JE.Tests.Features.Seerr.AutoRequestRemovalTaskTests.AnUnwatchedSeriesRequestCostsNoExtraCall
+ok   JE.Tests.Features.Seerr.AutoRequestRemovalTaskTests.ASeasonSeerrStillCallsUnavailableKeepsTheSeriesRequest
+  log: /home/jake/.local/share/je12/logs/5ce28416/only-dotnet.log
+test --only: pass (0 failed, 12 passed) in 6s on 809c2d4b; recorded for je12 evidence
+je12 test --only JE.Tests.Features.Downloads.ApiDownloadsTests: started as a job, expected about 7s on 10 CPUs (help-text times are for 10). If this call is cut off, `je12 wait` collects the result.
+ok   client build                   2s
+ok   inventory                      1s
+only: the dotnet test named 'JE.Tests.Features.Downloads.ApiDownloadsTests' (and every test under it) (dotnet), on 809c2d4b
+ok   JE.Tests.Features.Downloads.ApiDownloadsTests.NonAdminQueueAndHistoryFailWhenTheSeerrRequestLookupFails
+ok   JE.Tests.Features.Downloads.ApiDownloadsTests.SomeoneElsesRequestNeedsManagePermission
+ok   JE.Tests.Features.Downloads.ApiDownloadsTests.NonAdminQueueAndHistoryShareOneSeerrRequestRead
+ok   JE.Tests.Features.Downloads.ApiDownloadsTests.RequestRowsSayWhichRequestsTheCallerMayRemove(permissions: NONE, admin: True, own: True, others: True)
+ok   JE.Tests.Features.Downloads.ApiDownloadsTests.ARequesterRemovesTheirOwnApprovedRequestWithoutManagePermission
+ok   JE.Tests.Features.Downloads.ApiDownloadsTests.RequestRowsHideGuardedDatesWhileComingSoonStillWorks
+ok   JE.Tests.Features.Downloads.ApiDownloadsTests.AnUnlinkedUserCannotRemoveRequests
+ok   JE.Tests.Features.Downloads.ApiDownloadsTests.RequestRowsSayWhichRequestsTheCallerMayRemove(permissions: MANAGE_REQUESTS | REQUEST, admin: False, own: True, others: True)
+ok   JE.Tests.Features.Downloads.ApiDownloadsTests.HistoryNamesTheInstanceThatFailed
+ok   JE.Tests.Features.Downloads.ApiDownloadsTests.ARequestDeletedBetweenTheReadAndTheDeleteCountsAsRemoved
+ok   JE.Tests.Features.Downloads.ApiDownloadsTests.DownloadsHideGuardedEpisodeTitlesPerUserOverTheSharedCache
+ok   JE.Tests.Features.Downloads.ApiDownloadsTests.AJellyfinAdminRemovesAnyRequest
+ok   JE.Tests.Features.Downloads.ApiDownloadsTests.AMissingRequestCountsAsRemovedForManagersOnly
+ok   JE.Tests.Features.Downloads.ApiDownloadsTests.HistoryHidesGuardedEpisodeTitlesAndLeavesOtherRowsWhole
+ok   JE.Tests.Features.Downloads.ApiDownloadsTests.AFailedDeleteIsReported
+ok   JE.Tests.Features.Downloads.ApiDownloadsTests.RequestRowsSayWhichRequestsTheCallerMayRemove(permissions: REQUEST, admin: False, own: True, others: False)
+  log: /home/jake/.local/share/je12/logs/5ce28416/only-dotnet.log
+test --only: pass (0 failed, 16 passed) in 7s on 809c2d4b; recorded for je12 evidence
+je12 test --only JE.Tests.TaskVisibilityTests: started as a job, expected about 7s on 10 CPUs (help-text times are for 10). If this call is cut off, `je12 wait` collects the result.
+ok   client build                   2s
+ok   inventory                      1s
+only: the dotnet test named 'JE.Tests.TaskVisibilityTests' (and every test under it) (dotnet), on 809c2d4b
+ok   JE.Tests.TaskVisibilityTests.FeatureTaskIsHiddenUntilItsFeatureIsOnAndFollowsTheSetting(taskType: typeof(Jellyfin.Plugin.JellyfinEnhanced.ScheduledTasks.RefreshLeavingSoonTagsTask))
+ok   JE.Tests.TaskVisibilityTests.FeatureTaskIsHiddenUntilItsFeatureIsOnAndFollowsTheSetting(taskType: typeof(Jellyfin.Plugin.JellyfinEnhanced.ScheduledTasks.MdblistRatingsFetchTask))
+ok   JE.Tests.TaskVisibilityTests.FeatureTaskIsHiddenUntilItsFeatureIsOnAndFollowsTheSetting(taskType: typeof(Jellyfin.Plugin.JellyfinEnhanced.ScheduledTasks.AutoRequestRemovalTask))
+ok   JE.Tests.TaskVisibilityTests.FeatureTaskIsHiddenUntilItsFeatureIsOnAndFollowsTheSetting(taskType: typeof(Jellyfin.Plugin.JellyfinEnhanced.ScheduledTasks.AudioLanguageTagsSyncTask))
+ok   JE.Tests.TaskVisibilityTests.FeatureTaskIsHiddenUntilItsFeatureIsOnAndFollowsTheSetting(taskType: typeof(Jellyfin.Plugin.JellyfinEnhanced.ScheduledTasks.SpoilerApplyExistingTitlesTask))
+ok   JE.Tests.TaskVisibilityTests.FeatureTaskIsHiddenUntilItsFeatureIsOnAndFollowsTheSetting(taskType: typeof(Jellyfin.Plugin.JellyfinEnhanced.ScheduledTasks.MdblistRatingsSyncTask))
+ok   JE.Tests.TaskVisibilityTests.FeatureTaskIsHiddenUntilItsFeatureIsOnAndFollowsTheSetting(taskType: typeof(Jellyfin.Plugin.JellyfinEnhanced.ScheduledTasks.BuildTagCacheTask))
+ok   JE.Tests.TaskVisibilityTests.FeatureTaskIsHiddenUntilItsFeatureIsOnAndFollowsTheSetting(taskType: typeof(Jellyfin.Plugin.JellyfinEnhanced.ScheduledTasks.JellyseerrUserImportTask))
+ok   JE.Tests.TaskVisibilityTests.FeatureTaskIsHiddenUntilItsFeatureIsOnAndFollowsTheSetting(taskType: typeof(Jellyfin.Plugin.JellyfinEnhanced.ScheduledTasks.WatchlistRemovalSyncTask))
+ok   JE.Tests.TaskVisibilityTests.FeatureTaskIsHiddenUntilItsFeatureIsOnAndFollowsTheSetting(taskType: typeof(Jellyfin.Plugin.JellyfinEnhanced.ScheduledTasks.AnalyticsReportTask))
+ok   JE.Tests.TaskVisibilityTests.FeatureTaskIsHiddenUntilItsFeatureIsOnAndFollowsTheSetting(taskType: typeof(Jellyfin.Plugin.JellyfinEnhanced.ScheduledTasks.JellyfinToSeerrWatchlistSyncTask))
+ok   JE.Tests.TaskVisibilityTests.FeatureTaskIsHiddenUntilItsFeatureIsOnAndFollowsTheSetting(taskType: typeof(Jellyfin.Plugin.JellyfinEnhanced.ScheduledTasks.JellyseerrWatchlistSyncTask))
+ok   JE.Tests.TaskVisibilityTests.FeatureTaskIsHiddenUntilItsFeatureIsOnAndFollowsTheSetting(taskType: typeof(Jellyfin.Plugin.JellyfinEnhanced.ScheduledTasks.ArrTagsSyncTask))
+ok   JE.Tests.TaskVisibilityTests.EveryTaskEitherFollowsAFeatureOrIsListedAsAlwaysVisible
+ok   JE.Tests.TaskVisibilityTests.FeatureTaskIsHiddenUntilItsFeatureIsOnAndFollowsTheSetting(taskType: typeof(Jellyfin.Plugin.JellyfinEnhanced.ScheduledTasks.RefreshAwardTagsTask))
+  log: /home/jake/.local/share/je12/logs/5ce28416/only-dotnet.log
+test --only: pass (0 failed, 15 passed) in 6s on 809c2d4b; recorded for je12 evidence

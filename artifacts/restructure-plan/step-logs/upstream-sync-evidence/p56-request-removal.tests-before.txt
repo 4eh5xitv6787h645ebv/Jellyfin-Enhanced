@@ -1,0 +1,29 @@
+# The port's frontend tests on the tree before the port (a scratch worktree of 6fbe205e with the test file copied in). The backend tests need the new types and the new route, so they cannot be built there.
+je12 test --only tests/frontend/requests/requests-remove-request.test.mjs: started as a job, expected about 4s on 10 CPUs (help-text times are for 10). If this call is cut off, `je12 wait` collects the result.
+ok   client build                   2s
+ok   inventory                      1s
+only: every node test in tests/frontend/requests/requests-remove-request.test.mjs (node), on 6fbe205e+dirty@c323b8cd
+FAIL tests/frontend/requests/requests-remove-request.test.mjs :: the remove button shows only on requests the server says the caller may remove
+       AssertionError: Expected values to be strictly deep-equal:
+       + []
+       - [
+FAIL tests/frontend/requests/requests-remove-request.test.mjs :: one click on the remove button dispatches one removal after rerenders
+       TypeError: Cannot read properties of null (reading 'click')
+FAIL tests/frontend/requests/requests-remove-request.test.mjs :: a confirmed removal sends one DELETE without retry and refreshes the list
+       TypeError: h.P.handleRemoveRequest is not a function
+FAIL tests/frontend/requests/requests-remove-request.test.mjs :: a cancelled removal sends nothing
+       TypeError: h.P.handleRemoveRequest is not a function
+FAIL tests/frontend/requests/requests-remove-request.test.mjs :: a refused removal re-enables the button and tells the user
+       TypeError: h.P.handleRemoveRequest is not a function
+FAIL tests/frontend/requests/requests-remove-request.test.mjs :: a title with replacement patterns is shown as written in the confirmation
+       TypeError: h.P.handleRemoveRequest is not a function
+FAIL tests/frontend/requests/requests-remove-request.test.mjs :: a button for a request the list does not say the caller may remove asks nothing and sends nothing
+       TypeError: h.P.handleRemoveRequest is not a function
+FAIL tests/frontend/requests/requests-remove-request.test.mjs :: a sign-in change while the confirmation is open removes nothing for the new account
+       TypeError: h.P.handleRemoveRequest is not a function
+FAIL tests/frontend/requests/requests-remove-request.test.mjs :: a second click while the removal is on its way does not send it again
+       TypeError: h.P.handleRemoveRequest is not a function
+  log: /home/jake/.local/share/je12/logs/00388b93/only-node.log
+test --only: FAIL (9 failed, 0 passed) in 3s on 6fbe205e+dirty@c323b8cd; recorded for je12 evidence
+je12: FAILED (in your change): 9 test(s) failed on 6fbe205e+dirty@c323b8cd (recorded)
+next: a test written before its fix should fail here, and je12 evidence now shows that; otherwise fix what the message says. After the fix, rerun the same je12 test --only

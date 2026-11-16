@@ -1,0 +1,308 @@
+je12 2.5.0 (code 9fbe3fd0d00f, git v2.5.0) at /home/jake/projects/je12-skill-v250/je12/scripts/je12; evidence for /home/jake/projects/je-upstream-auto
+== live check (8 before/after pair(s))
+pair 'p51': complete
+  before: je12 browse '#/home' --script /home/jake/projects/je-upstream-auto/artifacts/restructure-plan/step-logs/upstream-sync-evidence/p51-recommendations-back.mjs
+    deployed upstream-c165a07b4251 = c165a07b (dll 0b55845015ddb214) on lab je125ce284, 2026-11-16 07:15:49
+    | SCRIPT {"configOn":204,"rowsOnFirstOpen":7,"afterOpen":{"hash":"#/home?tab=3&jeTab=recommendations","activeTabIsRecommendations":true,"activeTabIndex":3,"markedRowsStillInPage":true,"categoryOpen":false,"appExits":0},"tabSwitch":{"hash":"#/home?tab=3&jeTab=recommendations","activeTabIsRecommendations":true,"activeTabIndex":3,"markedRowsStillInPage":true,"categoryOpen":false,"appExits":0,"rowsNow":7,"discoverRequestsOnReturn":0},"category":{"tab":"already open","opened":true,"historyEntriesAdded":1,"hash":"#/home?tab=3&jeTab=recommendations","activeTabIsRecommendations":false,"activeTabIndex":null,"markedRowsStillInPage":true,"categoryOpen":true,"appExits":0},"categoryAfterBack":{"hash":"#/home?tab=3&jeTab=recommendations","activeTabIsRecommendations":true,"activeTabIndex":3,"markedRowsStillInPage":true,"categoryOpen":false,"appExits":0,"rowsNow":7,"discoverRequestsAfterBack":0},"appBackOverCategory":{"tab":"already open","opened":true,"returned":"undefined","appExitedInstead":false,"hash":"#/home?tab=3&jeTab=recommendations","categoryOpen":false,"activeTabIsRecommendations":true},"appBackOnJeTab":{"tab":"already open","returned":"undefined","appExitedInstead":false,"hash":"#/home?tab=3&jeTab=recommendations","activeTabIndex":0},"appBackOnHome":{"returned":"exit","appExited":true,"activeTabIndex":0},"staleJeTab":{"hash":"#/home?jeTab=recommendations","activeTabIndex":0,"activeTabIsRecommendations":false},"fadeMaskRule":"(hover: hover)","configOff":204}
+    | CONSOLE [Home] failed to get tab controller Error: Cannot find module './'
+    |     at http://172.29.90.3:8096/web/11851.18f47c0732e376997388.chunk.js:1:26834
+    | CONSOLE Failed to load resource: the server responded with a status of 400 (Bad Request) /Items/none/Ancestors
+    | CONSOLE Failed to load resource: the server responded with a status of 400 (Bad Request) /Users/7ef882cd307344279240d0eca8333a9f/Items/none
+    | CONSOLE 🪼 Jellyfin Enhanced: Seerr Item Details: Error getting TMDB ID: Response
+    | CONSOLE failed to get item or current user:  Response
+    | CONSOLE 🪼 Jellyfin Enhanced: Letterboxd Links: Error adding Letterboxd link: Response
+    | CONSOLE 🪼 Jellyfin Enhanced: Arr Tag Links: Error adding tag links: Response
+    | CONSOLE 🪼 Jellyfin Enhanced: Reviews: Error processing page: Response
+    | CONSOLE 🪼 Jellyfin Enhanced: Awards: Error processing page: Response
+    | CONSOLE 🪼 Jellyfin Enhanced: MDBList Ratings: Error processing page: Response
+    | PAGEERROR Response
+    | PAGEERROR Response
+    | BLOCKED https://www.gstatic.com/cv/js/sender/v1/cast_sender.js
+    | BLOCKED https://image.tmdb.org/t/p/w300/hUzeosd33nzE5MCNsZxCGEKTXaQ.png
+    | BLOCKED https://image.tmdb.org/t/p/w300/1TjvGVDMYsj6JBxOAkUHpPEwLf7.png
+    | BLOCKED https://image.tmdb.org/t/p/w300/wdrCwmRnLFJhEoH8GSfymY85KHT.png
+    | BLOCKED https://image.tmdb.org/t/p/w300/zhD3hhtKB5qyv7ZeL4uLpNxgMVU.png
+    | BLOCKED https://image.tmdb.org/t/p/w300/wwemzKWzjKYJFfCeiB57q3r4Bcm.png
+    | BLOCKED https://image.tmdb.org/t/p/w300/tuomPhY2UtuPTqqFnKMVHvSb724.png
+    | BLOCKED https://image.tmdb.org/t/p/w300/1edZOYAfoyZyZ3rklNSiUpXX30Q.png
+    | BLOCKED https://image.tmdb.org/t/p/w300/bngHRFi794mnMq34gfVcm9nDxN1.png
+    | STORM 26x POST /JellyfinEnhanced/tag-data/7ef882cd307344279240d0eca8333a9f
+    | URL /web/index.html#/home?jeTab=recommendations
+  after: je12 browse '#/home' --script /home/jake/projects/je-upstream-auto/artifacts/restructure-plan/step-logs/upstream-sync-evidence/p51-recommendations-back.mjs
+    deployed 45539fb5 (dll 1a77a23938ae476d) on lab je125ce284, 2026-11-16 07:19:24
+    | SCRIPT {"configOn":204,"rowsOnFirstOpen":7,"afterOpen":{"hash":"#/home?tab=3&jeTab=recommendations","activeTabIsRecommendations":true,"activeTabIndex":3,"markedRowsStillInPage":true,"categoryOpen":false,"appExits":0},"tabSwitch":{"hash":"#/home?tab=3&jeTab=recommendations","activeTabIsRecommendations":true,"activeTabIndex":3,"markedRowsStillInPage":true,"categoryOpen":false,"appExits":0,"rowsNow":7,"discoverRequestsOnReturn":0},"category":{"tab":"already open","opened":true,"historyEntriesAdded":1,"hash":"#/home?tab=3&jeTab=recommendations","activeTabIsRecommendations":false,"activeTabIndex":null,"markedRowsStillInPage":true,"categoryOpen":true,"appExits":0},"categoryAfterBack":{"hash":"#/home?tab=3&jeTab=recommendations","activeTabIsRecommendations":true,"activeTabIndex":3,"markedRowsStillInPage":true,"categoryOpen":false,"appExits":0,"rowsNow":7,"discoverRequestsAfterBack":0},"appBackOverCategory":{"tab":"already open","opened":true,"returned":"undefined","appExitedInstead":false,"hash":"#/home?tab=3&jeTab=recommendations","categoryOpen":false,"activeTabIsRecommendations":true},"appBackOnJeTab":{"tab":"already open","returned":"undefined","appExitedInstead":false,"hash":"#/home?tab=3&jeTab=recommendations","activeTabIndex":0},"appBackOnHome":{"returned":"exit","appExited":true,"activeTabIndex":0},"staleJeTab":{"hash":"#/home?jeTab=recommendations","activeTabIndex":0,"activeTabIsRecommendations":false},"fadeMaskRule":"(hover: hover)","configOff":204}
+    | CONSOLE [Home] failed to get tab controller Error: Cannot find module './'
+    |     at http://172.29.90.3:8096/web/11851.18f47c0732e376997388.chunk.js:1:26834
+    | CONSOLE Failed to load resource: the server responded with a status of 400 (Bad Request) /Users/7ef882cd307344279240d0eca8333a9f/Items/none
+    | CONSOLE 🪼 Jellyfin Enhanced: Seerr Item Details: Error getting TMDB ID: Response
+    | CONSOLE Failed to load resource: the server responded with a status of 400 (Bad Request) /Items/none/Ancestors
+    | CONSOLE 🪼 Jellyfin Enhanced: Letterboxd Links: Error adding Letterboxd link: Response
+    | CONSOLE failed to get item or current user:  Response
+    | CONSOLE 🪼 Jellyfin Enhanced: Arr Tag Links: Error adding tag links: Response
+    | CONSOLE 🪼 Jellyfin Enhanced: Awards: Error processing page: Response
+    | CONSOLE 🪼 Jellyfin Enhanced: MDBList Ratings: Error processing page: Response
+    | CONSOLE 🪼 Jellyfin Enhanced: Reviews: Error processing page: Response
+    | PAGEERROR Response
+    | BLOCKED https://www.gstatic.com/cv/js/sender/v1/cast_sender.js
+    | BLOCKED https://image.tmdb.org/t/p/w300/hUzeosd33nzE5MCNsZxCGEKTXaQ.png
+    | BLOCKED https://image.tmdb.org/t/p/w300/1TjvGVDMYsj6JBxOAkUHpPEwLf7.png
+    | BLOCKED https://image.tmdb.org/t/p/w300/wdrCwmRnLFJhEoH8GSfymY85KHT.png
+    | BLOCKED https://image.tmdb.org/t/p/w300/zhD3hhtKB5qyv7ZeL4uLpNxgMVU.png
+    | BLOCKED https://image.tmdb.org/t/p/w300/wwemzKWzjKYJFfCeiB57q3r4Bcm.png
+    | BLOCKED https://image.tmdb.org/t/p/w300/tuomPhY2UtuPTqqFnKMVHvSb724.png
+    | BLOCKED https://image.tmdb.org/t/p/w300/1edZOYAfoyZyZ3rklNSiUpXX30Q.png
+    | BLOCKED https://image.tmdb.org/t/p/w300/bngHRFi794mnMq34gfVcm9nDxN1.png
+    | URL /web/index.html#/home?jeTab=recommendations
+  same command before and after: yes; builds: before upstream-c165a07b4251, after 45539fb5 (a clean build of 45539fb5, not the checkout's commit 1f251955: je12 deploy, then rerun with --keep after:p51)
+pair 'p52': complete
+  before: je12 browse '#/home' --script /home/jake/projects/je-upstream-auto/artifacts/restructure-plan/step-logs/upstream-sync-evidence/p52-hidden-tags.mjs
+    deployed upstream-e907396d513a = e907396d (dll 1a850f8bd6a02fd1) on lab je125ce284, 2026-11-16 07:40:44
+    | SCRIPT {"before":{"stored":null,"public":{"TagHiddenValues":null,"TagHiddenAgeRatings":[]}},"moviesBefore":{"cards":100,"genreChips":292,"byLabel":{"animation":82,"family":59,"adventure":43,"comedy":33,"drama":16,"fantasy":15}},"hiding":"genre \"animation\"","colours":{"hint":"Choose a tag to change its colours or hide it. 26 tags; scroll for more.","wholeGroupHasSwitch":0,"switchName":"Hide Animation","switchScope":"Hides Animation from posters, in every spelling and language. The next genres take its place.","confirmation":"Animation hiddenUndo","tileMarkedHidden":true,"tileLabel":"Animation, hidden","tabLabel":"Genre, 1 hidden","hiddenLine":"visibility_offHidden (1): Animation","editingNow":"Genre · Animation · visibility_offhidden"},"afterHide":{"stored":{"Genre":["animation"]},"public":{"TagHiddenValues":{"Genre":["animation"]},"TagHiddenAgeRatings":[]}},"groupsRow":{"summary":"Themed icons, names on hover · 1 tag hidden","link":"Hidden Genre tags (Colours)"},"moviesAfter":{"cards":100,"chipsOf_animation":0,"genreChips":268},"restored":{"status":204,"stored":null}}
+    | CONSOLE Translation key is missing from dictionary: url
+    | CONSOLE Translation key is missing from dictionary: maxFileSize / (1024 * 1024)
+    | CONSOLE Translation key is missing from dictionary: img.width
+    | CONSOLE Translation key is missing from dictionary: img.height
+    | CONSOLE Translation key is missing from dictionary: error || 'Upload failed'
+    | CONSOLE Translation key is missing from dictionary: error.message || 'Upload error'
+    | CONSOLE Translation key is missing from dictionary: error || 'Delete failed'
+    | CONSOLE Translation key is missing from dictionary: err.message || 'Delete error'
+    | CONSOLE Translation key is missing from dictionary: baseName
+    | CONSOLE Translation key is missing from dictionary: code.split('-')[1]
+    | CONSOLE Translation key is missing from dictionary: index + 1
+    | CONSOLE Translation key is missing from dictionary: trimmedLine
+    | CONSOLE Translation key is missing from dictionary: invalidLines.join('\n')
+    | CONSOLE Failed to load resource: the server responded with a status of 404 (Not Found) /JellyfinEnhanced/cdn/selfhst/svg/tmdb.svg
+    | CONSOLE Failed to load resource: the server responded with a status of 404 (Not Found) /JellyfinEnhanced/cdn/selfhst/svg/maintainerr.svg
+    | BLOCKED https://www.gstatic.com/cv/js/sender/v1/cast_sender.js
+    | BLOCKED https://api.github.com/repos/n00bcodr/Jellyfin-Enhanced/contents/Jellyfin.Plugin.JellyfinEnhanced/js/locales
+    | URL /web/index.html#/movies?topParentId=f137a2dd21bbc1b99aa5c0f6bf02a805&collectionType=movies
+  after: je12 browse '#/home' --script /home/jake/projects/je-upstream-auto/artifacts/restructure-plan/step-logs/upstream-sync-evidence/p52-hidden-tags.mjs
+    deployed b6bb8b54 (dll b8611ebf82622cae) on lab je125ce284, 2026-11-16 07:45:15
+    | SCRIPT {"before":{"stored":null,"public":{"TagHiddenValues":null,"TagHiddenAgeRatings":[]}},"moviesBefore":{"cards":100,"genreChips":292,"byLabel":{"animation":82,"family":59,"adventure":43,"comedy":33,"drama":16,"fantasy":15}},"hiding":"genre \"animation\"","colours":{"hint":"Choose a tag to change its colours or hide it. 26 tags; scroll for more.","wholeGroupHasSwitch":0,"switchName":"Hide Animation","switchScope":"Hides Animation from posters, in every spelling and language. The next genres take its place.","confirmation":"Animation hiddenUndo","tileMarkedHidden":true,"tileLabel":"Animation, hidden","tabLabel":"Genre, 1 hidden","hiddenLine":"visibility_offHidden (1): Animation","editingNow":"Genre · Animation · visibility_offhidden"},"afterHide":{"stored":{"Genre":["animation"]},"public":{"TagHiddenValues":{"Genre":["animation"]},"TagHiddenAgeRatings":[]}},"groupsRow":{"summary":"Themed icons, names on hover · 1 tag hidden","link":"Hidden Genre tags (Colours)"},"moviesAfter":{"cards":100,"chipsOf_animation":0,"genreChips":268},"restored":{"status":204,"stored":null}}
+    | CONSOLE Failed to load resource: the server responded with a status of 404 (Not Found) /JellyfinEnhanced/cdn/selfhst/svg/maintainerr.svg
+    | CONSOLE Failed to load resource: the server responded with a status of 404 (Not Found) /JellyfinEnhanced/cdn/selfhst/svg/tmdb.svg
+    | BLOCKED https://www.gstatic.com/cv/js/sender/v1/cast_sender.js
+    | URL /web/index.html#/movies?topParentId=f137a2dd21bbc1b99aa5c0f6bf02a805&collectionType=movies
+  same command before and after: yes; builds: before upstream-e907396d513a, after b6bb8b54 (a clean build of b6bb8b54, not the checkout's commit 1f251955: je12 deploy, then rerun with --keep after:p52)
+pair 'p53': complete
+  before: je12 browse '#/home' --script /home/jake/projects/je-upstream-auto/artifacts/restructure-plan/step-logs/upstream-sync-evidence/p53-54-tag-text.mjs
+    deployed upstream-186121ed49db = 186121ed (dll ffb522c4288d2a6b) on lab je125ce284, 2026-11-16 07:53:00
+    | SCRIPT {"before":{"stored":null,"public":"(absent)"},"moviesBefore":{"genre":{"animation":{"chips":82,"texts":{"Animation":82}},"family":{"chips":59,"texts":{"Family":59}},"adventure":{"chips":43,"texts":{"Adventure":43}}},"quality":{"1080p":{"chips":97,"texts":{"1080p":97}},"BluRay":{"chips":77,"texts":{"BluRay":77}},"HEVC":{"chips":76,"texts":{"HEVC":76}}}},"renaming":{"genre":"animation","quality":"1080p"},"tab":{"name":"paletteColours and text","section":"paletteTag colours and text"},"genreText":{"hint":"Choose a tag to change its colours or text, or hide it. 26 tags; scroll for more.","wholeGroup":"Hiding works per tag. To turn the whole group off for new users, see Groups › Genre.To change the words a tag shows, choose it in the list: its Text field is at the top of its settings.","placeholder":"Animation","fieldHint":"Replaces the whole chip text for everyone. Leave empty to keep \"Animation\".","maxLength":"32","confirmation":"Animation now reads \"Cartoons\"Undo","tileTooltip":"Animation shows as \"Cartoons\"","tileHasPencil":1},"qualityText":{"hint":"Choose a tag to change its colours or text, or hide it. 93 tags; scroll for more.","wholeGroup":"Hiding works per tag. To turn the whole group off for new users, see Groups › Quality.To change the words a tag shows, choose it in the list: its Text field is at the top of its settings.","placeholder":"1080p","fieldHint":"Replaces the whole chip text for everyone. Leave empty to keep \"1080p\".","maxLength":"32","confirmation":"1080p now reads \"Sharp\"Undo","tileTooltip":"1080p shows as \"Sharp\"","tileHasPencil":1},"ratingGroupHasNoTextField":true,"afterRename":{"stored":"{\"genre\":{\"animation\":\"Cartoons\"},\"quality\":{\"1080p\":\"Sharp\"}}","public":"{\"genre\":{\"animation\":\"Cartoons\"},\"quality\":{\"1080p\":\"Sharp\"}}"},"groupsRowLink":"Hide individual Genre tags (Colours and text)","moviesAfter":{"genre":{"animation":{"chips":82,"texts":{"Cartoons":82}},"family":{"chips":59,"texts":{"Family":59}},"adventure":{"chips":43,"texts":{"Adventure":43}}},"quality":{"1080p":{"chips":97,"texts":{"Sharp":97}},"BluRay":{"chips":77,"texts":{"BluRay":77}},"HEVC":{"chips":76,"texts":{"HEVC":76}}}},"restored":{"status":204,"stored":null}}
+    | CONSOLE Translation key is missing from dictionary: url
+    | CONSOLE Translation key is missing from dictionary: maxFileSize / (1024 * 1024)
+    | CONSOLE Translation key is missing from dictionary: img.width
+    | CONSOLE Translation key is missing from dictionary: img.height
+    | CONSOLE Translation key is missing from dictionary: error || 'Upload failed'
+    | CONSOLE Translation key is missing from dictionary: error.message || 'Upload error'
+    | CONSOLE Translation key is missing from dictionary: error || 'Delete failed'
+    | CONSOLE Translation key is missing from dictionary: err.message || 'Delete error'
+    | CONSOLE Translation key is missing from dictionary: baseName
+    | CONSOLE Translation key is missing from dictionary: code.split('-')[1]
+    | CONSOLE Translation key is missing from dictionary: index + 1
+    | CONSOLE Translation key is missing from dictionary: trimmedLine
+    | CONSOLE Translation key is missing from dictionary: invalidLines.join('\n')
+    | CONSOLE Failed to load resource: the server responded with a status of 404 (Not Found) /JellyfinEnhanced/cdn/selfhst/svg/tmdb.svg
+    | CONSOLE Failed to load resource: the server responded with a status of 404 (Not Found) /JellyfinEnhanced/cdn/selfhst/svg/maintainerr.svg
+    | BLOCKED https://www.gstatic.com/cv/js/sender/v1/cast_sender.js
+    | BLOCKED https://api.github.com/repos/n00bcodr/Jellyfin-Enhanced/contents/Jellyfin.Plugin.JellyfinEnhanced/js/locales
+    | URL /web/index.html#/movies?topParentId=f137a2dd21bbc1b99aa5c0f6bf02a805&collectionType=movies
+  after: je12 browse '#/home' --script /home/jake/projects/je-upstream-auto/artifacts/restructure-plan/step-logs/upstream-sync-evidence/p53-54-tag-text.mjs
+    deployed 77a4d597 (dll 3a7ed6ec42092a82) on lab je125ce284, 2026-11-16 07:55:34
+    | SCRIPT {"before":{"stored":null,"public":"(absent)"},"moviesBefore":{"genre":{"animation":{"chips":82,"texts":{"Animation":82}},"family":{"chips":59,"texts":{"Family":59}},"adventure":{"chips":43,"texts":{"Adventure":43}}},"quality":{"1080p":{"chips":97,"texts":{"1080p":97}},"BluRay":{"chips":77,"texts":{"BluRay":77}},"HEVC":{"chips":76,"texts":{"HEVC":76}}}},"renaming":{"genre":"animation","quality":"1080p"},"tab":{"name":"paletteColours and text","section":"paletteTag colours and text"},"genreText":{"hint":"Choose a tag to change its colours or text, or hide it. 26 tags; scroll for more.","wholeGroup":"Hiding works per tag. To turn the whole group off for new users, see Groups › Genre.To change the words a tag shows, choose it in the list: its Text field is at the top of its settings.","placeholder":"Animation","fieldHint":"Replaces the whole chip text for everyone. Leave empty to keep \"Animation\".","maxLength":"32","confirmation":"Animation now reads \"Cartoons\"Undo","tileTooltip":"Animation shows as \"Cartoons\"","tileHasPencil":1},"qualityText":{"hint":"Choose a tag to change its colours or text, or hide it. 93 tags; scroll for more.","wholeGroup":"Hiding works per tag. To turn the whole group off for new users, see Groups › Quality.To change the words a tag shows, choose it in the list: its Text field is at the top of its settings.","placeholder":"1080p","fieldHint":"Replaces the whole chip text for everyone. Leave empty to keep \"1080p\".","maxLength":"32","confirmation":"1080p now reads \"Sharp\"Undo","tileTooltip":"1080p shows as \"Sharp\"","tileHasPencil":1},"ratingGroupHasNoTextField":true,"afterRename":{"stored":"{\"genre\":{\"animation\":\"Cartoons\"},\"quality\":{\"1080p\":\"Sharp\"}}","public":"{\"genre\":{\"animation\":\"Cartoons\"},\"quality\":{\"1080p\":\"Sharp\"}}"},"groupsRowLink":"Hide individual Genre tags (Colours and text)","moviesAfter":{"genre":{"animation":{"chips":82,"texts":{"Cartoons":82}},"family":{"chips":59,"texts":{"Family":59}},"adventure":{"chips":43,"texts":{"Adventure":43}}},"quality":{"1080p":{"chips":97,"texts":{"Sharp":97}},"BluRay":{"chips":77,"texts":{"BluRay":77}},"HEVC":{"chips":76,"texts":{"HEVC":76}}}},"restored":{"status":204,"stored":null}}
+    | CONSOLE Failed to load resource: the server responded with a status of 404 (Not Found) /JellyfinEnhanced/cdn/selfhst/svg/tmdb.svg
+    | CONSOLE Failed to load resource: the server responded with a status of 404 (Not Found) /JellyfinEnhanced/cdn/selfhst/svg/maintainerr.svg
+    | BLOCKED https://www.gstatic.com/cv/js/sender/v1/cast_sender.js
+    | URL /web/index.html#/movies?topParentId=f137a2dd21bbc1b99aa5c0f6bf02a805&collectionType=movies
+  same command before and after: yes; builds: before upstream-186121ed49db, after 77a4d597 (a clean build of 77a4d597, not the checkout's commit 1f251955: je12 deploy, then rerun with --keep after:p53)
+pair 'p55': complete
+  before: je12 browse '#/home' --script /home/jake/projects/je-upstream-auto/artifacts/restructure-plan/step-logs/upstream-sync-evidence/p55-custom-rules-incomplete.mjs
+    deployed upstream-90c721efd25c = 90c721ef (dll c751d6b3d469655c) on lab je125ce284, 2026-11-16 08:00:33
+    | SCRIPT {"loaded":[{"name":"Kids","label":"Kids"}],"afterTypingOnlyAName":{"table":[{"name":"Kids","label":"Kids"},{"name":"Classic","label":""}],"stored":["tag:Kids=Kids"]},"afterRenamingTheFirstRule":{"table":[{"name":"Kids","label":"Kids films"},{"name":"Classic","label":""}],"stored":["tag:Kids=Kids films"]},"halfFilledRuleKept":true,"restored":[]}
+    | CONSOLE Translation key is missing from dictionary: url
+    | CONSOLE Translation key is missing from dictionary: maxFileSize / (1024 * 1024)
+    | CONSOLE Translation key is missing from dictionary: img.width
+    | CONSOLE Translation key is missing from dictionary: img.height
+    | CONSOLE Translation key is missing from dictionary: error || 'Upload failed'
+    | CONSOLE Translation key is missing from dictionary: error.message || 'Upload error'
+    | CONSOLE Translation key is missing from dictionary: error || 'Delete failed'
+    | CONSOLE Translation key is missing from dictionary: err.message || 'Delete error'
+    | CONSOLE Translation key is missing from dictionary: baseName
+    | CONSOLE Translation key is missing from dictionary: code.split('-')[1]
+    | CONSOLE Translation key is missing from dictionary: index + 1
+    | CONSOLE Translation key is missing from dictionary: trimmedLine
+    | CONSOLE Translation key is missing from dictionary: invalidLines.join('\n')
+    | CONSOLE Failed to load resource: the server responded with a status of 404 (Not Found) /JellyfinEnhanced/cdn/selfhst/svg/tmdb.svg
+    | CONSOLE Failed to load resource: the server responded with a status of 404 (Not Found) /JellyfinEnhanced/cdn/selfhst/svg/maintainerr.svg
+    | BLOCKED https://www.gstatic.com/cv/js/sender/v1/cast_sender.js
+    | BLOCKED https://api.github.com/repos/n00bcodr/Jellyfin-Enhanced/contents/Jellyfin.Plugin.JellyfinEnhanced/js/locales
+    | URL /web/index.html#/configurationpage?name=Jellyfin%20Enhanced
+  after: je12 browse '#/home' --script /home/jake/projects/je-upstream-auto/artifacts/restructure-plan/step-logs/upstream-sync-evidence/p55-custom-rules-incomplete.mjs
+    deployed 6fbe205e (dll a6a1c195e2510534) on lab je125ce284, 2026-11-16 08:05:01
+    | SCRIPT {"loaded":[{"name":"Kids","label":"Kids"}],"afterTypingOnlyAName":{"table":[{"name":"Kids","label":"Kids"},{"name":"Classic","label":""}],"stored":["tag:Kids=Kids"]},"afterRenamingTheFirstRule":{"table":[{"name":"Kids","label":"Kids films"},{"name":"Classic","label":""}],"stored":["tag:Kids=Kids films"]},"halfFilledRuleKept":true,"restored":[]}
+    | CONSOLE Failed to load resource: the server responded with a status of 404 (Not Found) /JellyfinEnhanced/cdn/selfhst/svg/maintainerr.svg
+    | CONSOLE Failed to load resource: the server responded with a status of 404 (Not Found) /JellyfinEnhanced/cdn/selfhst/svg/tmdb.svg
+    | BLOCKED https://www.gstatic.com/cv/js/sender/v1/cast_sender.js
+    | URL /web/index.html#/configurationpage?name=Jellyfin%20Enhanced
+  same command before and after: yes; builds: before upstream-90c721efd25c, after 6fbe205e (a clean build of 6fbe205e, not the checkout's commit 1f251955: je12 deploy, then rerun with --keep after:p55)
+pair 'p56': complete
+  before: je12 browse '#/home' --script /home/jake/projects/je-upstream-auto/artifacts/restructure-plan/step-logs/upstream-sync-evidence/p56-remove-button.mjs
+    deployed upstream-6916b31b23b2 = 6916b31b (dll 27a3c429de77b0eb) on lab je125ce284, 2026-11-16 08:19:10
+    | SCRIPT {"requested":200,"card":{"removeButtons":1,"requestId":"1","title":"Mock Odyssey","label":"Remove request","tooltip":"Remove request","icon":"delete","background":"rgba(255, 255, 255, 0.12)","colour":"rgb(255, 138, 128)"},"cancelled":{"dialog":{"title":"Remove request","text":"Remove the request for \"Mock Odyssey\"? The media itself is not deleted.","buttons":["Cancel","OK"]},"sent":[],"buttonDisabled":false},"confirmed":{"sent":["DELETE /JellyfinEnhanced/arr/requests/1"],"toasts":["Request removed"],"removeButtonsAfterRefresh":1},"adminSection":{"hasTitle":true,"hasToggleLabel":true,"checked":false,"notes":["jea-note-warn: Warning: this permanently deletes requests, and the same app","jea-note-info: Runs daily through the Remove watched requests from Seerr sc"],"after":"Auto Movie Requests"}}
+    | CONSOLE Translation key is missing from dictionary: url
+    | CONSOLE Translation key is missing from dictionary: maxFileSize / (1024 * 1024)
+    | CONSOLE Translation key is missing from dictionary: img.width
+    | CONSOLE Translation key is missing from dictionary: img.height
+    | CONSOLE Translation key is missing from dictionary: error || 'Upload failed'
+    | CONSOLE Translation key is missing from dictionary: error.message || 'Upload error'
+    | CONSOLE Translation key is missing from dictionary: error || 'Delete failed'
+    | CONSOLE Translation key is missing from dictionary: err.message || 'Delete error'
+    | CONSOLE Translation key is missing from dictionary: baseName
+    | CONSOLE Translation key is missing from dictionary: code.split('-')[1]
+    | CONSOLE Translation key is missing from dictionary: index + 1
+    | CONSOLE Translation key is missing from dictionary: trimmedLine
+    | CONSOLE Translation key is missing from dictionary: invalidLines.join('\n')
+    | CONSOLE Failed to load resource: the server responded with a status of 404 (Not Found) /JellyfinEnhanced/cdn/selfhst/svg/maintainerr.svg
+    | CONSOLE Failed to load resource: the server responded with a status of 404 (Not Found) /JellyfinEnhanced/cdn/selfhst/svg/tmdb.svg
+    | BLOCKED https://www.gstatic.com/cv/js/sender/v1/cast_sender.js
+    | BLOCKED https://api.github.com/repos/n00bcodr/Jellyfin-Enhanced/contents/Jellyfin.Plugin.JellyfinEnhanced/js/locales
+    | URL /web/index.html#/configurationpage?name=Jellyfin%20Enhanced
+  after: je12 browse '#/home' --script /home/jake/projects/je-upstream-auto/artifacts/restructure-plan/step-logs/upstream-sync-evidence/p56-remove-button.mjs
+    deployed 809c2d4b (dll 27672f9baf0656f5) on lab je125ce284, 2026-11-16 08:22:28
+    | SCRIPT {"requested":200,"card":{"removeButtons":1,"requestId":"1","title":"Mock Odyssey","label":"Remove request","tooltip":"Remove request","icon":"delete","background":"rgba(255, 255, 255, 0.12)","colour":"rgb(255, 138, 128)"},"cancelled":{"dialog":{"title":"Remove request","text":"Remove the request for \"Mock Odyssey\"? The media itself is not deleted.","buttons":["Cancel","OK"]},"sent":[],"buttonDisabled":false},"confirmed":{"sent":["DELETE /JellyfinEnhanced/arr/requests/1"],"toasts":["Request removed"],"removeButtonsAfterRefresh":1},"adminSection":{"hasTitle":true,"hasToggleLabel":true,"checked":false,"notes":["jea-note-warn: Warning: this permanently deletes requests, and the same app","jea-note-info: Runs daily through the Remove watched requests from Seerr sc"],"after":"Auto Movie Requests"}}
+    | CONSOLE Failed to load resource: the server responded with a status of 404 (Not Found) /JellyfinEnhanced/cdn/selfhst/svg/tmdb.svg
+    | CONSOLE Failed to load resource: the server responded with a status of 404 (Not Found) /JellyfinEnhanced/cdn/selfhst/svg/maintainerr.svg
+    | BLOCKED https://www.gstatic.com/cv/js/sender/v1/cast_sender.js
+    | URL /web/index.html#/configurationpage?name=Jellyfin%20Enhanced
+  same command before and after: yes; builds: before upstream-6916b31b23b2, after 809c2d4b (a clean build of 809c2d4b, not the checkout's commit 1f251955: je12 deploy, then rerun with --keep after:p56)
+pair 'p57': complete
+  before: je12 browse '#/home' --script artifacts/restructure-plan/step-logs/upstream-sync-evidence/p57-subtitle-sync.mjs
+    deployed upstream-9d1d5e8fe310 = 9d1d5e8f (dll 9ad5debce5525505) on lab je125ce284, 2026-11-16 08:55:28
+    | SCRIPT {"shortcut":"Shift+S","settingAtStart":false,"buttonWithSettingOff":null,"panelTurnsItOn":{"before":{"checked":false,"text":"Subtitle Sync ButtonAdds a button next to Subtitles in the player to sync the subtitles: choose the line you just heard and the subtitles shift to match. You can also search the lines and jump to one","shortcutRow":[["Shift+S","Shift+S 🚫"]]},"after":{"checked":true,"setting":true,"toasts":["📝 Subtitle Sync Button Enabled"]},"button":{"afterSubtitles":true,"title":"Sync subtitles","label":"Sync subtitles","icon":"subtitles_gear","iconClass":"xlargePaperIconButton je-msym-rounded","className":"autoSize paper-icon-button-light","count":1}},"subtitlesOff":{"options":["Secondary Subtitles","Off","English - SUBRIP - External"],"picked":true,"playingBefore":true,"pausedWhileOpen":true,"dialog":{"title":"Sync subtitles","track":"","anchor":"Heard at 0:05","offset":"","resetHidden":true,"resetLabel":"Reset offset","placeholder":"Search the subtitles","hint":"","status":["Turn on a subtitle track first.","Choose subtitles"],"statusKind":"info","rows":[],"empty":"","foot":"","jumpLabel":null,"closeLabel":"Close","focus":"je-subsync-input","ownKeys":true,"role":"true"},"resumedAfterEscape":true},"chooseSubtitlesFromTheDialog":{"status":["Turn on a subtitle track first.","Choose subtitles"],"dialogClosed":true,"options":["Off","English - SUBRIP - External"],"picked":true,"cues":{"textTrackCues":[7],"customSubtitles":false,"assCanvas":false}},"lines":{"dialog":{"title":"Sync subtitles","track":"English - SUBRIP - External","anchor":"Heard at 0:05","offset":"Offset 0.0 s","resetHidden":true,"resetLabel":"Reset offset","placeholder":"Search the subtitles","hint":"Choose the line you just heard to sync the subtitles to it. The arrow button jumps to a line.","status":[],"statusKind":"info","rows":["0:01 | The outcome was never\nin our favor, Gary.","0:03 | [Gary] Cut it to me straight, HUE. | current","0:06 | You are really buttering me up\nwith fantastic news.","0:09 | [HUE] I'm afraid, Gary,","0:12 | These tickets suck...\nright in the nosebleeds.","0:16 | Café crème, please.","0:20 | Aah!"],"empty":"","foot":"7 of 7 lines","jumpLabel":"Go to this line","closeLabel":"Close","focus":"je-subsync-input","ownKeys":true,"role":"true"},"slider":"0"},"search":{"accents":{"rows":["0:16 | Café crème, please."],"foot":"1 of 7 lines"},"twoWords":{"rows":["0:03 | [Gary] Cut it to me straight, HUE. | current","0:09 | [HUE] I'm afraid, Gary,"],"foot":"2 of 7 lines"},"none":{"rows":[],"empty":"No lines match your search.","foot":"0 of 7 lines"},"arrowDown":"je-subsync-line: [Gary] Cut it to me straight, HUE.","arrowDownAgain":"je-subsync-line: You are really buttering me up\nwith fantastic news.","keysStayInTheDialog":{"open":true,"slider":"0","toasts":[]}},"chooseLine":{"toasts":["📝 Subtitles synced (+7.0 s)"],"slider":"7","video":{"paused":true,"time":5}},"reopened":{"offset":"Offset +7.0 s","resetHidden":false,"rows":["0:00 | The outcome was never\nin our favor, Gary.","0:00 | [Gary] Cut it to me straight, HUE.","0:00 | You are really buttering me up\nwith fantastic news.","0:02 | [HUE] I'm afraid, Gary,","0:05 | These tickets suck...\nright in the nosebleeds. | current","0:09 | Café crème, please.","0:13 | Aah!"],"status":[],"afterReset":{"offset":"Offset 0.0 s","resetHidden":true,"rows":["0:01 | The outcome was never\nin our favor, Gary.","0:03 | [Gary] Cut it to me straight, HUE. | current","0:06 | You are really buttering me up\nwith fantastic news.","0:09 | [HUE] I'm afraid, Gary,","0:12 | These tickets suck...\nright in the nosebleeds.","0:16 | Café crème, please.","0:20 | Aah!"]},"slider":"0"},"jump":{"video":{"paused":true,"time":16},"slider":"0"},"panelTurnsItOff":{"after":{"checked":false,"setting":false,"toasts":["📝 Subtitle Sync Button Disabled"]},"button":null,"styleStillHidesWithSubtitles":true}}
+    | BLOCKED https://www.gstatic.com/cv/js/sender/v1/cast_sender.js
+    | BLOCKED https://cdn.jsdelivr.net/gh/Druidblack/jellyfin-icon-metadata@main/icons/imdb/imdb.png
+    | BLOCKED https://cdn.jsdelivr.net/gh/Druidblack/jellyfin-icon-metadata@main/icons/themoviedb/themoviedb.png
+    | BLOCKED https://api.github.com/repos/n00bcodr/Jellyfin-Enhanced/contents/Jellyfin.Plugin.JellyfinEnhanced/js/locales
+    | STORM 77x GET /Sessions
+    | URL /web/index.html#/video
+  after: je12 browse '#/home' --script artifacts/restructure-plan/step-logs/upstream-sync-evidence/p57-subtitle-sync.mjs
+    deployed aab2b636 (dll 2bac690421d54f10) on lab je125ce284, 2026-11-16 09:00:43
+    | SCRIPT {"shortcut":"Shift+S","settingAtStart":false,"buttonWithSettingOff":null,"panelTurnsItOn":{"before":{"checked":false,"text":"Subtitle Sync ButtonAdds a button next to Subtitles in the player to sync the subtitles: choose the line you just heard and the subtitles shift to match. You can also search the lines and jump to one","shortcutRow":[["Shift+S","Shift+S 🚫"]]},"after":{"checked":true,"setting":true,"toasts":["📝 Subtitle Sync Button Enabled"]},"button":{"afterSubtitles":true,"title":"Sync subtitles","label":"Sync subtitles","icon":"subtitles_gear","iconClass":"xlargePaperIconButton je-msym-rounded","className":"autoSize paper-icon-button-light","count":1}},"subtitlesOff":{"options":["Secondary Subtitles","Off","English - SUBRIP - External"],"picked":true,"playingBefore":true,"pausedWhileOpen":true,"dialog":{"title":"Sync subtitles","track":"","anchor":"Heard at 0:05","offset":"","resetHidden":true,"resetLabel":"Reset offset","placeholder":"Search the subtitles","hint":"","status":["Turn on a subtitle track first.","Choose subtitles"],"statusKind":"info","rows":[],"empty":"","foot":"","jumpLabel":null,"closeLabel":"Close","focus":"je-subsync-input","ownKeys":true,"role":"true"},"resumedAfterEscape":true},"chooseSubtitlesFromTheDialog":{"status":["Turn on a subtitle track first.","Choose subtitles"],"dialogClosed":true,"options":["Off","English - SUBRIP - External"],"picked":true,"cues":{"textTrackCues":[7],"customSubtitles":false,"assCanvas":false}},"lines":{"dialog":{"title":"Sync subtitles","track":"English - SUBRIP - External","anchor":"Heard at 0:05","offset":"Offset 0.0 s","resetHidden":true,"resetLabel":"Reset offset","placeholder":"Search the subtitles","hint":"Choose the line you just heard to sync the subtitles to it. The arrow button jumps to a line.","status":[],"statusKind":"info","rows":["0:01 | The outcome was never\nin our favor, Gary.","0:03 | [Gary] Cut it to me straight, HUE. | current","0:06 | You are really buttering me up\nwith fantastic news.","0:09 | [HUE] I'm afraid, Gary,","0:12 | These tickets suck...\nright in the nosebleeds.","0:16 | Café crème, please.","0:20 | Aah!"],"empty":"","foot":"7 of 7 lines","jumpLabel":"Go to this line","closeLabel":"Close","focus":"je-subsync-input","ownKeys":true,"role":"true"},"slider":"0"},"search":{"accents":{"rows":["0:16 | Café crème, please."],"foot":"1 of 7 lines"},"twoWords":{"rows":["0:03 | [Gary] Cut it to me straight, HUE. | current","0:09 | [HUE] I'm afraid, Gary,"],"foot":"2 of 7 lines"},"none":{"rows":[],"empty":"No lines match your search.","foot":"0 of 7 lines"},"arrowDown":"je-subsync-line: [Gary] Cut it to me straight, HUE.","arrowDownAgain":"je-subsync-line: You are really buttering me up\nwith fantastic news.","keysStayInTheDialog":{"open":true,"slider":"0","toasts":[]}},"chooseLine":{"toasts":["📝 Subtitles synced (+7.0 s)"],"slider":"7","video":{"paused":true,"time":5}},"reopened":{"offset":"Offset +7.0 s","resetHidden":false,"rows":["0:00 | The outcome was never\nin our favor, Gary.","0:00 | [Gary] Cut it to me straight, HUE.","0:00 | You are really buttering me up\nwith fantastic news.","0:02 | [HUE] I'm afraid, Gary,","0:05 | These tickets suck...\nright in the nosebleeds. | current","0:09 | Café crème, please.","0:13 | Aah!"],"status":[],"afterReset":{"offset":"Offset 0.0 s","resetHidden":true,"rows":["0:01 | The outcome was never\nin our favor, Gary.","0:03 | [Gary] Cut it to me straight, HUE. | current","0:06 | You are really buttering me up\nwith fantastic news.","0:09 | [HUE] I'm afraid, Gary,","0:12 | These tickets suck...\nright in the nosebleeds.","0:16 | Café crème, please.","0:20 | Aah!"]},"slider":"0"},"jump":{"video":{"paused":true,"time":16},"slider":"0"},"panelTurnsItOff":{"after":{"checked":false,"setting":false,"toasts":["📝 Subtitle Sync Button Disabled"]},"button":null,"styleStillHidesWithSubtitles":true}}
+    | BLOCKED https://www.gstatic.com/cv/js/sender/v1/cast_sender.js
+    | BLOCKED https://cdn.jsdelivr.net/gh/Druidblack/jellyfin-icon-metadata@main/icons/imdb/imdb.png
+    | BLOCKED https://cdn.jsdelivr.net/gh/Druidblack/jellyfin-icon-metadata@main/icons/themoviedb/themoviedb.png
+    | STORM 38x GET /Sessions
+    | URL /web/index.html#/video
+  same command before and after: yes; builds: before upstream-9d1d5e8fe310, after aab2b636 (a clean build of aab2b636, not the checkout's commit 1f251955: je12 deploy, then rerun with --keep after:p57)
+pair 'p59': complete
+  before: je12 browse '#/home' --script artifacts/restructure-plan/step-logs/upstream-sync-evidence/p59-mpv-player.mjs
+    deployed upstream-3f8e472435ad = 3f8e4724 (dll fcb113b86c06734c) on lab je125ce284, 2026-11-16 09:22:20
+    | SCRIPT {"surface":{"videoThePageFinds":0,"videoJellyfinWebPlays":true,"osd":{"position":"the start","duration":"-n:nn","slider":true,"ratingButtonHasId":true,"pauseIcon":"xlargePaperIconButton  play_arrow","settingsButton":true},"player":{"paused":true,"rate":1,"fit":"none","withinTwoSecondsOfTheStart":true}},"jumpBackBeforeAnySeek":{"toasts":["⏮️ No previous position saved"],"stillAtTheStart":true},"timelineSeekThenJumpBack":{"afterSeek":{"time":20,"osdTime":"0:20"},"toasts":["⏮️ Jumped back to the start"],"backAtTheStart":true,"pressedAgain":["⏮️ No previous position saved"]},"keySeekThenJumpBack":{"movedForward":true,"toasts":["⏮️ Jumped back to the start"],"backAtTheStart":true},"jumpToPercent":{"toasts":["↪️ Jumped to 50%"],"time":20,"osdTime":"0:20"},"speed":{"increase":[["⚡ Speed: 1.25x"],1.25],"increaseAgain":[["⚡ Speed: 1.5x"],1.5],"decrease":[["⚡ Speed: 1.25x"],1.25],"reset":[["⚡ Speed: Normal"],1],"sheetsLeft":0,"hidingStylesLeft":0},"aspect":{"first":[["📐 Aspect Ratio: Zoom"],"cover"],"second":[["📐 Aspect Ratio: Stretch"],"fill"],"third":[["📐 Aspect Ratio: Auto"],"none"],"sheetsLeft":0},"frameStep":{"toasts":["ⓘ Not available with this player"],"player":{"time":20,"paused":true,"rate":1,"fit":"none","osdTime":"0:20"}},"skipIntro":{"toasts":["ⓘ No skip button available"]},"subtitleSync":{"toasts":["ⓘ Not available with this player"],"dialog":false,"button":0},"bookmark":{"osdButton":1,"opened":[],"time":"0:20","added":["✅ Bookmark updated"],"markers":["50%"],"moved":["↪️ Jumped to 10%"],"away":4,"jumped":["📍 Jumped to bookmark: 0:20"],"back":20,"deleted":["🗑️ Bookmark deleted"],"markersLeft":1}}
+    | BLOCKED https://www.gstatic.com/cv/js/sender/v1/cast_sender.js
+    | BLOCKED https://cdn.jsdelivr.net/gh/Druidblack/jellyfin-icon-metadata@main/icons/imdb/imdb.png
+    | BLOCKED https://cdn.jsdelivr.net/gh/Druidblack/jellyfin-icon-metadata@main/icons/themoviedb/themoviedb.png
+    | URL /web/index.html#/video
+  after: je12 browse '#/home' --script artifacts/restructure-plan/step-logs/upstream-sync-evidence/p59-mpv-player.mjs
+    deployed ae9a6458 (dll c1adfddd98da0c10) on lab je125ce284, 2026-11-16 09:29:32
+    | SCRIPT {"surface":{"videoThePageFinds":0,"videoJellyfinWebPlays":true,"osd":{"position":"the start","duration":"-n:nn","slider":true,"ratingButtonHasId":true,"pauseIcon":"xlargePaperIconButton  play_arrow","settingsButton":true},"player":{"paused":true,"rate":1,"fit":"none","withinTwoSecondsOfTheStart":true}},"jumpBackBeforeAnySeek":{"toasts":["⏮️ No previous position saved"],"stillAtTheStart":true},"timelineSeekThenJumpBack":{"afterSeek":{"time":20,"osdTime":"0:20"},"toasts":["⏮️ Jumped back to the start"],"backAtTheStart":true,"pressedAgain":["⏮️ No previous position saved"]},"keySeekThenJumpBack":{"movedForward":true,"toasts":["⏮️ Jumped back to the start"],"backAtTheStart":true},"jumpToPercent":{"toasts":["↪️ Jumped to 50%"],"time":20,"osdTime":"0:20"},"speed":{"increase":[["⚡ Speed: 1.25x"],1.25],"increaseAgain":[["⚡ Speed: 1.5x"],1.5],"decrease":[["⚡ Speed: 1.25x"],1.25],"reset":[["⚡ Speed: Normal"],1],"sheetsLeft":0,"hidingStylesLeft":0},"aspect":{"first":[["📐 Aspect Ratio: Zoom"],"cover"],"second":[["📐 Aspect Ratio: Stretch"],"fill"],"third":[["📐 Aspect Ratio: Auto"],"none"],"sheetsLeft":0},"frameStep":{"toasts":["ⓘ Not available with this player"],"player":{"time":20,"paused":true,"rate":1,"fit":"none","osdTime":"0:20"}},"skipIntro":{"toasts":["ⓘ No skip button available"]},"subtitleSync":{"toasts":["ⓘ Not available with this player"],"dialog":false,"button":0},"bookmark":{"osdButton":1,"opened":[],"time":"0:20","added":["✅ Bookmark updated"],"markers":["50%"],"moved":["↪️ Jumped to 10%"],"away":4,"jumped":["📍 Jumped to bookmark: 0:20"],"back":20,"deleted":["🗑️ Bookmark deleted"],"markersLeft":0}}
+    | BLOCKED https://www.gstatic.com/cv/js/sender/v1/cast_sender.js
+    | BLOCKED https://cdn.jsdelivr.net/gh/Druidblack/jellyfin-icon-metadata@main/icons/imdb/imdb.png
+    | BLOCKED https://cdn.jsdelivr.net/gh/Druidblack/jellyfin-icon-metadata@main/icons/themoviedb/themoviedb.png
+    | URL /web/index.html#/video
+  same command before and after: yes; builds: before upstream-3f8e472435ad, after ae9a6458 (a clean build of ae9a6458, not the checkout's commit 1f251955: je12 deploy, then rerun with --keep after:p59)
+pair 'p63': complete
+  before: je12 browse '#/home' --script artifacts/restructure-plan/step-logs/upstream-sync-evidence/p63-detail-section-order.mjs
+    deployed upstream-ff75fbfaefe8 = ff75fbfa (dll 2fb1bdd0e01d0512) on lab je125ce284, 2026-11-16 09:37:40
+    | SCRIPT {"stock":{"title":"More with A.C. Peterson","cards":3,"inPrimaryColumn":true,"columnDisplay":"block","sectionOrder":"99","nativeListsShown":2,"nativeOrders":["0"],"afterEveryNativeList":true,"lastInTheColumnsMarkup":true},"themeOrdersTheNativeLists":{"title":"More with A.C. Peterson","cards":3,"inPrimaryColumn":true,"columnDisplay":"flex","sectionOrder":"99","nativeListsShown":2,"nativeOrders":["3"],"afterEveryNativeList":true,"lastInTheColumnsMarkup":true}}
+    | BLOCKED https://www.gstatic.com/cv/js/sender/v1/cast_sender.js
+    | BLOCKED https://cdn.jsdelivr.net/gh/Druidblack/jellyfin-icon-metadata@main/icons/themoviedb/themoviedb.png
+    | URL /web/index.html#/details?id=b31e70f9618b4345b21e33626a3aa4d6
+  after: je12 browse '#/home' --script artifacts/restructure-plan/step-logs/upstream-sync-evidence/p63-detail-section-order.mjs
+    deployed 63452c52 (dll e676e5ac95dcfda3) on lab je125ce284, 2026-11-16 09:39:58
+    | SCRIPT {"stock":{"title":"More with A.C. Peterson","cards":3,"inPrimaryColumn":true,"columnDisplay":"block","sectionOrder":"99","nativeListsShown":2,"nativeOrders":["0"],"afterEveryNativeList":true,"lastInTheColumnsMarkup":true},"themeOrdersTheNativeLists":{"title":"More with A.C. Peterson","cards":3,"inPrimaryColumn":true,"columnDisplay":"flex","sectionOrder":"99","nativeListsShown":2,"nativeOrders":["3"],"afterEveryNativeList":true,"lastInTheColumnsMarkup":true}}
+    | BLOCKED https://www.gstatic.com/cv/js/sender/v1/cast_sender.js
+    | BLOCKED https://cdn.jsdelivr.net/gh/Druidblack/jellyfin-icon-metadata@main/icons/themoviedb/themoviedb.png
+    | URL /web/index.html#/details?id=b31e70f9618b4345b21e33626a3aa4d6
+  same command before and after: yes; builds: before upstream-ff75fbfaefe8, after 63452c52 (a clean build of 63452c52, not the checkout's commit 1f251955: je12 deploy, then rerun with --keep after:p63)
+== tests run alone (je12 test --only)
+tests/frontend/pages/pages-discovery.test.mjs :: a section of one type has a lone sort, which shares the summary's row; the summary is said only when it is true
+  passed on a8f33bf6+dirty@5fe1f68c at 2026-11-16 09:37:09
+  => passes on a8f33bf6+dirty@5fe1f68c (2026-11-16 09:37:09); no failing run of it is recorded; the files changed since (now 1f251955): rerun it before you report it
+tests/frontend/pages/pages-discovery.test.mjs :: the sort is a quiet button that names the current order, not a form field
+  passed on a8f33bf6+dirty@5fe1f68c at 2026-11-16 09:37:09
+  => passes on a8f33bf6+dirty@5fe1f68c (2026-11-16 09:37:09); no failing run of it is recorded; the files changed since (now 1f251955): rerun it before you report it
+tests/frontend/pages/pages-discovery.test.mjs :: the sort button opens Jellyfin's action sheet with the current order ticked, and a choice re-sorts and is named on the button
+  passed on a8f33bf6+dirty@5fe1f68c at 2026-11-16 09:37:09
+  => passes on a8f33bf6+dirty@5fe1f68c (2026-11-16 09:37:09); no failing run of it is recorded; the files changed since (now 1f251955): rerun it before you report it
+tests/frontend/pages/pages-discovery.test.mjs :: the sort menu closes without a change on Escape, on a press outside it, on a remote's Back, on leaving, and when the current order is chosen
+  passed on a8f33bf6+dirty@5fe1f68c at 2026-11-16 09:37:09
+  => passes on a8f33bf6+dirty@5fe1f68c (2026-11-16 09:37:09); no failing run of it is recorded; the files changed since (now 1f251955): rerun it before you report it
+tests/frontend/pages/pages-discovery.test.mjs :: on a TV the sort menu is Jellyfin's action sheet with its title row
+  passed on a8f33bf6+dirty@5fe1f68c at 2026-11-16 09:37:09
+  => passes on a8f33bf6+dirty@5fe1f68c (2026-11-16 09:37:09); no failing run of it is recorded; the files changed since (now 1f251955): rerun it before you report it
+tests/frontend/pages/pages-discovery.test.mjs :: "Most votes" sorts a person's titles by their votes, a protected title by its hidden count
+  passed on a8f33bf6+dirty@5fe1f68c at 2026-11-16 09:37:09
+  => passes on a8f33bf6+dirty@5fe1f68c (2026-11-16 09:37:09); no failing run of it is recorded; the files changed since (now 1f251955): rerun it before you report it
+tests/frontend/pages/pages-discovery.test.mjs :: the section's place is held with empty cards of the page's own shape until the first page lands
+  passed on a8f33bf6+dirty@5fe1f68c at 2026-11-16 09:37:09
+  => passes on a8f33bf6+dirty@5fe1f68c (2026-11-16 09:37:09); no failing run of it is recorded; the files changed since (now 1f251955): rerun it before you report it
+tests/frontend/pages/pages-discovery.test.mjs :: the header keeps to the top of the screen just under Jellyfin's own header
+  passed on a8f33bf6+dirty@5fe1f68c at 2026-11-16 09:37:09
+  => passes on a8f33bf6+dirty@5fe1f68c (2026-11-16 09:37:09); no failing run of it is recorded; the files changed since (now 1f251955): rerun it before you report it
+tests/frontend/pages/pages-discovery.test.mjs :: a collection's missing titles are a section of the page's primary column, with a translated title
+  passed on a8f33bf6+dirty@5fe1f68c at 2026-11-16 09:37:09
+  => passes on a8f33bf6+dirty@5fe1f68c (2026-11-16 09:37:09); no failing run of it is recorded; the files changed since (now 1f251955): rerun it before you report it
+tests/frontend/pages/pages-discovery.test.mjs :: a person's lookup that fails says Seerr did not answer, with Jellyfin's button to try again
+  passed on a8f33bf6+dirty@5fe1f68c at 2026-11-16 09:37:09
+  => passes on a8f33bf6+dirty@5fe1f68c (2026-11-16 09:37:09); no failing run of it is recorded; the files changed since (now 1f251955): rerun it before you report it
+tests/frontend/pages/pages-discovery.test.mjs :: filter and sort primitives keep their published contract
+  passed on a8f33bf6+dirty@5fe1f68c at 2026-11-16 09:37:09
+  => passes on a8f33bf6+dirty@5fe1f68c (2026-11-16 09:37:09); no failing run of it is recorded; the files changed since (now 1f251955): rerun it before you report it
+tests/frontend/pages/pages-discovery.test.mjs :: a grouped menu says what is set in each group, opens one group at a time and clears them all
+  passed on a8f33bf6+dirty@5fe1f68c at 2026-11-16 09:37:09
+  => passes on a8f33bf6+dirty@5fe1f68c (2026-11-16 09:37:09); no failing run of it is recorded; the files changed since (now 1f251955): rerun it before you report it
+tests/frontend/pages/pages-discovery.test.mjs :: the scroll engine's retry row says Seerr did not answer, with Jellyfin's button to try again
+  passed on a8f33bf6+dirty@5fe1f68c at 2026-11-16 09:37:09
+  => passes on a8f33bf6+dirty@5fe1f68c (2026-11-16 09:37:09); no failing run of it is recorded; the files changed since (now 1f251955): rerun it before you report it
+JE.Tests.PackedResourcesTests.WhatThePluginAssemblyEmbedsIsWithinTheCheckedInSizeBudget
+  FAILED on 809c2d4b+dirty@81fe9083 at 2026-11-16 08:58:28: Jellyfin.Plugin.JellyfinEnhanced.dll embeds 11,669,843 bytes, over the 11,593,913 budget in client/assembly-budget.json. Embed less (or pack it), or raise the budget in a new history entry with a reas
+  FAILED on 63452c52 at 2026-11-16 09:41:14: Jellyfin.Plugin.JellyfinEnhanced.dll embeds 11,725,053 bytes, over the 11,593,913 budget in client/assembly-budget.json. Embed less (or pack it), or raise the budget in a new history entry with a reas
+  passed on 63452c52+dirty@726c7911 at 2026-11-16 09:48:31
+  => failed on 809c2d4b+dirty@81fe9083 (2026-11-16 08:58:28, the first of 2 failing runs), passes on 63452c52+dirty@726c7911 (2026-11-16 09:48:31); the files changed since (now 1f251955): rerun it before you report it
+JE.Tests.PackedResourcesTests.ThePackedLocalesAreWhatTheServerSideCaptionsAreReadFrom
+  passed on 63452c52+dirty@726c7911 at 2026-11-16 09:48:31
+  => passes on 63452c52+dirty@726c7911 (2026-11-16 09:48:31); no failing run of it is recorded; the files changed since (now 1f251955): rerun it before you report it
+JE.Tests.PackedResourcesTests.OnlyPackedResourcesAsksTheAssemblyForAResource
+  passed on 63452c52+dirty@726c7911 at 2026-11-16 09:48:31
+  => passes on 63452c52+dirty@726c7911 (2026-11-16 09:48:31); no failing run of it is recorded; the files changed since (now 1f251955): rerun it before you report it
+JE.Tests.PackedResourcesTests.EveryClientFileReadsBackByteForByteUnderItsOwnResourceName
+  passed on 63452c52+dirty@726c7911 at 2026-11-16 09:48:31
+  => passes on 63452c52+dirty@726c7911 (2026-11-16 09:48:31); no failing run of it is recorded; the files changed since (now 1f251955): rerun it before you report it
+JE.Tests.PackedResourcesTests.ScriptsMapsTwinsAndLocalesArePackedAndTheEnumeratedFilesAreNot
+  passed on 63452c52+dirty@726c7911 at 2026-11-16 09:48:31
+  => passes on 63452c52+dirty@726c7911 (2026-11-16 09:48:31); no failing run of it is recorded; the files changed since (now 1f251955): rerun it before you report it
+JE.Tests.BundleBudgetTests.ServedBundleIsWithinTheCheckedInBudget
+  passed on 809c2d4b+dirty@81fe9083 at 2026-11-16 08:58:21
+  passed on 63452c52 at 2026-11-16 09:41:07
+  passed on 63452c52+dirty@726c7911 at 2026-11-16 09:48:37
+  => passes on 63452c52+dirty@726c7911 (2026-11-16 09:48:37); no failing run of it is recorded; the files changed since (now 1f251955): rerun it before you report it
+JE.Tests.BundleBudgetTests.BudgetOnlyRisesWithADocumentedReason
+  passed on 63452c52+dirty@726c7911 at 2026-11-16 09:48:37
+  => passes on 63452c52+dirty@726c7911 (2026-11-16 09:48:37); no failing run of it is recorded; the files changed since (now 1f251955): rerun it before you report it
+(370 more test(s) run alone earlier; /home/jake/.local/share/je12/state/5ce28416-tests.jsonl has every run)
+--only 'tests/frontend/features/media-tags/features-tag-hidden.test.mjs' (node) ran no test on 45539fb5+dirty@d6e8fbd5 at 2026-11-16 07:31:01: test file(s) that could not load: tests/frontend/features/media-tags/features-tag-hidden.test.mjs (the log has the error)
+--only 'tests/frontend/features/media-tags/features-tag-hidden.test.mjs' (node) ran no test on 45539fb5+dirty@d6e8fbd5 at 2026-11-16 07:31:14: test file(s) that could not load: tests/frontend/features/media-tags/features-tag-hidden.test.mjs (the log has the error)
+--only 'BundleBudgetTests' (node) ran no test on 809c2d4b+dirty@81fe9083 at 2026-11-16 08:58:00: no test name matched
+--only 'PackedResourcesTests' (node) ran no test on 809c2d4b+dirty@81fe9083 at 2026-11-16 08:58:09: no test name matched
+== checks
+test: test: FAIL in 131s (the repo's quick mode); log /home/jake/.local/share/je12/logs/5ce28416/quick-repo.log [features: platform, downloads, media-tags, seerr, settings, admin, bookmarks, chrome, player, settings-panel, shared] (2026-11-16 09:27:16, tree 22081014+dirty)
+smoke: smoke: pass (0 failing, 0 flaky, 3 changed, 0 known, 0 fixed) in 40s vs baseline ab0cb83329ed; scheduled tasks changed; openapi changed; server log changed (2026-11-16 09:40:39, tree 63452c52)
+gate: not run on 1f251955 on this machine (je12 has no gate record for this commit here; a gate run on another machine leaves none: report that one from its own output)
+  earlier here, on another tree: browser failed on ab0cb833 at 2026-11-14 19:30 in 2.3 min (exit 1) (je12 gate final)
+  earlier here, on another tree: all passed on ab0cb833 at 2026-11-14 19:36 in 2.3 min (je12 gate final)
+  earlier here, on another tree: browser passed on ab0cb833 at 2026-11-14 19:38 in 2.1 min (je12 gate final)
+== lab
+lab je125ce284 still exists (running): run je12 down
+found bugs filed: NEW-20261111-003541-upstream-docs-enhanced-tags-md-still-says-the-ma, NEW-20261111-030922-upstream-23281542-dismiss-on-what-s-new-leaves-t, NEW-20261111-030922-upstream-23281542-every-settings-search-query-mo, NEW-20261111-030922-a-collection-s-just-added-does-not-follow-a-date, NEW-20261111-041606-upstream-bcd6574a-download-of-a-guarded-mp4-epis, NEW-20261111-045054-upstream-910d1da4-the-native-resolver-s-version-, NEW-20261111-061608-upstream-53ebf043-a-failed-page-of-maintainerr-c, NEW-20261111-061608-upstream-53ebf043-the-paged-members-replace-the-, NEW-20261111-061609-upstream-53ebf043-a-maintainerr-collection-whose, NEW-20261111-061609-upstream-53ebf043-its-own-leavingsoontests-fail-, NEW-20261111-153725-a-page-load-by-a-non-admin-logs-one-wrn-line-per, NEW-20261111-174741-scripts-generate-technical-ratios-py-fails-when-, NEW-20261111-181006-upstream-8fe1e705-a-later-page-of-maintainerr-me, NEW-20261112-213650-upstream-c55c758e-the-playback-info-shortcut-lea, NEW-20261113-014101-upstream-ec470d75-a-discovery-string-s-english-f, NEW-20261113-135220-upstream-7649dda9-unhiding-one-of-two-hidden-con, NEW-20261114-042807-upstream-481a10ee-the-maintainerr-card-in-the-ar, NEW-20261114-042807-upstream-481a10ee-the-leaving-soon-home-row-stat, NEW-20261114-042807-upstream-481a10ee-docs-the-leaving-soon-collecti, NEW-20261114-045215-features-hidden-save-a-continue-watching-hide-th, NEW-20261114-193858-three-firefox-admin-config-rewrite-browser-tests, NEW-20261116-071714-upstream-c165a07b-closing-more-info-over-a-recom, NEW-20261116-092505-upstream-3f8e4724-deleting-the-last-player-bookm
+tree now: 1f251955
+missing:
+  gate: no finished je12 gate all (or final) on 1f251955 here: je12 gate final when client code changed, else je12 gate all

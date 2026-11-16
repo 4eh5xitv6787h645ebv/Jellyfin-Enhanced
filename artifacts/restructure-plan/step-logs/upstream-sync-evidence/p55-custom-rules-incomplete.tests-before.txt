@@ -1,0 +1,13 @@
+# The port's test on the tree before the port (a scratch worktree of 77a4d597 with the test file copied in)
+je12 test --only Custom rules: a half-filled rule stays in the table: started as a job, expected about 4s on 10 CPUs (help-text times are for 10). If this call is cut off, `je12 wait` collects the result.
+ok   client build                   2s
+ok   inventory                      1s
+only: the node tests whose name matches /Custom rules: a half-filled rule stays in the table/, in the 1 test file(s) whose text has a match (node), on 77a4d597+dirty@3650ab0a
+FAIL tests/frontend/features/media-tags/admin/features-admin-tags-page-server.test.mjs :: Custom rules: a half-filled rule stays in the table while the editor auto-saves, and rules changed elsewhere still reload it
+       AssertionError: the half-filled rule is still in the table
+       [
+       [
+  log: /home/jake/.local/share/je12/logs/00388b93/only-node.log
+test --only: FAIL (1 failed, 0 passed) in 4s on 77a4d597+dirty@3650ab0a; recorded for je12 evidence
+je12: FAILED (in your change): 1 test(s) failed on 77a4d597+dirty@3650ab0a (recorded)
+next: a test written before its fix should fail here, and je12 evidence now shows that; otherwise fix what the message says. After the fix, rerun the same je12 test --only

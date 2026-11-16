@@ -1,0 +1,6 @@
+SCRIPT {"requested":200,"card":{"removeButtons":1,"requestId":"1","title":"Mock Odyssey","label":"Remove request","tooltip":"Remove request","icon":"delete","background":"rgba(255, 255, 255, 0.12)","colour":"rgb(255, 138, 128)"},"cancelled":{"dialog":{"title":"Remove request","text":"Remove the request for \"Mock Odyssey\"? The media itself is not deleted.","buttons":["Cancel","OK"]},"sent":[],"buttonDisabled":false},"confirmed":{"sent":["DELETE /JellyfinEnhanced/arr/requests/1"],"toasts":["Request removed"],"removeButtonsAfterRefresh":1},"adminSection":{"hasTitle":true,"hasToggleLabel":true,"checked":false,"notes":["jea-note-warn: Warning: this permanently deletes requests, and the same app","jea-note-info: Runs daily through the Remove watched requests from Seerr sc"],"after":"Auto Movie Requests"}}
+CONSOLE Failed to load resource: the server responded with a status of 404 (Not Found) /JellyfinEnhanced/cdn/selfhst/svg/tmdb.svg
+CONSOLE Failed to load resource: the server responded with a status of 404 (Not Found) /JellyfinEnhanced/cdn/selfhst/svg/maintainerr.svg
+BLOCKED https://www.gstatic.com/cv/js/sender/v1/cast_sender.js
+URL /web/index.html#/configurationpage?name=Jellyfin%20Enhanced
+kept as the 'after' half of the pair 'p56' (je12 evidence shows it)

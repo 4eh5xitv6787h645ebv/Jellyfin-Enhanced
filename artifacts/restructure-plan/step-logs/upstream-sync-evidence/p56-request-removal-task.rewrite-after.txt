@@ -1,0 +1,33 @@
+== 1. the Remove request route ==
+HTTP 200
+administrator's row:
+[{'id': 1, 'title': 'Mock Odyssey', 'requestedBy': 'real-admin', 'canRemove': True}] canApproveRequests True
+viewer's rows:
+[{'id': 1, 'title': 'Mock Odyssey', 'requestedBy': 'real-admin', 'canRemove': False}] canApproveRequests False
+viewer removes the administrator's request:
+HTTP 403
+{"error": true, "message": "You can only remove your own requests."}
+Seerr saw (no DELETE):
+GET    200 default   /api/v1/request/1
+administrator removes it:
+HTTP 200
+{"success": true}
+Seerr saw:
+GET    200 default   /api/v1/request/1
+GET    200 default   /api/v1/request/1
+DELETE 200 default   /api/v1/request/1
+== 2. the scheduled task ==
+{"Name": "Remove watched requests from Seerr", "Category": "Jellyfin Enhanced", "IsHidden": true, "Description": "Deletes a Seerr request once the user who made it has watched it (Seerr > Auto Request Removal).\n\nOnly the request is deleted. The media stays available in Seerr and in the library."}
+listed among the visible tasks while the setting is off: False
+HTTP 204
+listed among the visible tasks with the setting on: True
+HTTP 200
+HTTP 204
+run result: Completed
+Seerr saw during the run:
+GET    200 rule      /api/v1/request?take=100&skip=0&sort=added&filter=all
+DELETE 404 default   /api/v1/request/4242
+== put back ==
+HTTP 200
+HTTP 204
+listed among the visible tasks after turning the setting off: False

@@ -1,0 +1,140 @@
+# Upstream's frontend tests for 9d1d5e8f (as adapted for this tree) on the tree before the port (a scratch worktree of 809c2d4b with the three test files copied in)
+je12 test --only tests/frontend/features/player/features-subtitle-sync.test.mjs: started as a job, expected about 7s on 10 CPUs (help-text times are for 10). If this call is cut off, `je12 wait` collects the result.
+ok   client build                   2s
+ok   inventory                      1s
+only: every node test in tests/frontend/features/player/features-subtitle-sync.test.mjs (node), on 809c2d4b+dirty@951b94f3
+FAIL tests/frontend/features/player/features-subtitle-sync.test.mjs :: subtitle lines lose ASS overrides and HTML tags, keep line breaks
+       TypeError: Cannot read properties of undefined (reading 'timeouts')
+FAIL tests/frontend/features/player/features-subtitle-sync.test.mjs :: track events become sorted lines in seconds, empty and broken events skipped
+       TypeError: Cannot read properties of undefined (reading 'timeouts')
+FAIL tests/frontend/features/player/features-subtitle-sync.test.mjs :: search matches every word, ignoring case, accents and punctuation
+       TypeError: Cannot read properties of undefined (reading 'timeouts')
+FAIL tests/frontend/features/player/features-subtitle-sync.test.mjs :: sync offset is line start minus the moment heard, on the 0.1 s step and within ±30 s
+       TypeError: Cannot read properties of undefined (reading 'timeouts')
+FAIL tests/frontend/features/player/features-subtitle-sync.test.mjs :: the line on screen is the last one started with the offset applied
+       TypeError: Cannot read properties of undefined (reading 'timeouts')
+FAIL tests/frontend/features/player/features-subtitle-sync.test.mjs :: cue comparison measures the applied offset and tells another track apart
+       TypeError: Cannot read properties of undefined (reading 'timeouts')
+FAIL tests/frontend/features/player/features-subtitle-sync.test.mjs :: repeated lines can't pair a cue with the wrong occurrence
+       TypeError: Cannot read properties of undefined (reading 'timeouts')
+FAIL tests/frontend/features/player/features-subtitle-sync.test.mjs :: the button sits after Subtitles only while the setting is on
+       TypeError: Cannot read properties of undefined (reading 'timeouts')
+FAIL tests/frontend/features/player/features-subtitle-sync.test.mjs :: choosing a line syncs it to the moment the dialog opened and resumes playback
+       TypeError: Cannot read properties of undefined (reading 'timeouts')
+FAIL tests/frontend/features/player/features-subtitle-sync.test.mjs :: a line more than 30 s away is refused and nothing changes
+       TypeError: Cannot read properties of undefined (reading 'timeouts')
+FAIL tests/frontend/features/player/features-subtitle-sync.test.mjs :: the jump button seeks to where the line shows with the current offset
+       TypeError: Cannot read properties of undefined (reading 'timeouts')
+FAIL tests/frontend/features/player/features-subtitle-sync.test.mjs :: a progressive transcode jumps on the element clock within what the server has produced
+       TypeError: Cannot read properties of undefined (reading 'timeouts')
+FAIL tests/frontend/features/player/features-subtitle-sync.test.mjs :: a progressive transcode refuses a jump before the stream started
+       TypeError: Cannot read properties of undefined (reading 'timeouts')
+FAIL tests/frontend/features/player/features-subtitle-sync.test.mjs :: a progressive transcode refuses a jump beyond what is produced
+       TypeError: Cannot read properties of undefined (reading 'timeouts')
+FAIL tests/frontend/features/player/features-subtitle-sync.test.mjs :: only progressive transcodes count as limited to what the server has produced
+       TypeError: Cannot read properties of undefined (reading 'timeouts')
+FAIL tests/frontend/features/player/features-subtitle-sync.test.mjs :: burned-in subtitles list lines but choosing one jumps, as the hint says
+       TypeError: Cannot read properties of undefined (reading 'timeouts')
+FAIL tests/frontend/features/player/features-subtitle-sync.test.mjs :: burned-in subtitles ignore a slider value: times, highlight and jumps are the file's
+       TypeError: Cannot read properties of undefined (reading 'timeouts')
+FAIL tests/frontend/features/player/features-subtitle-sync.test.mjs :: ASS subtitles drawn by libass can be synced
+       TypeError: Cannot read properties of undefined (reading 'timeouts')
+FAIL tests/frontend/features/player/features-subtitle-sync.test.mjs :: image subtitles, no subtitles and an unknown session explain themselves without a lines request
+       TypeError: Cannot read properties of undefined (reading 'timeouts')
+FAIL tests/frontend/features/player/features-subtitle-sync.test.mjs :: a failed lines request offers a retry that loads them
+       TypeError: Cannot read properties of undefined (reading 'timeouts')
+FAIL tests/frontend/features/player/features-subtitle-sync.test.mjs :: opened on playing video, the track is read from the report its pause makes
+       TypeError: Cannot read properties of undefined (reading 'timeouts')
+FAIL tests/frontend/features/player/features-subtitle-sync.test.mjs :: opened on paused video right after a subtitle change, it waits for the next report
+       TypeError: Cannot read properties of undefined (reading 'timeouts')
+FAIL tests/frontend/features/player/features-subtitle-sync.test.mjs :: without a newer report the dialog says it can't tell, and Try again asks again
+       TypeError: Cannot read properties of undefined (reading 'timeouts')
+FAIL tests/frontend/features/player/features-subtitle-sync.test.mjs :: opened on paused video with no recent subtitle change, the last report is used at once
+       TypeError: Cannot read properties of undefined (reading 'timeouts')
+FAIL tests/frontend/features/player/features-subtitle-sync.test.mjs :: an item lookup that never answers doesn't hold up the lines
+       TypeError: Cannot read properties of undefined (reading 'timeouts')
+FAIL tests/frontend/features/player/features-subtitle-sync.test.mjs :: lines that do not match the cues on screen are not offered
+       TypeError: Cannot read properties of undefined (reading 'timeouts')
+FAIL tests/frontend/features/player/features-subtitle-sync.test.mjs :: the offset shown is the one on the cues, not a slider left over from another track
+       TypeError: Cannot read properties of undefined (reading 'timeouts')
+FAIL tests/frontend/features/player/features-subtitle-sync.test.mjs :: searching hides other rows and counts matches
+       TypeError: Cannot read properties of undefined (reading 'timeouts')
+FAIL tests/frontend/features/player/features-subtitle-sync.test.mjs :: the [ and ] offset nudges still step from jellyfin-web's slider
+       TypeError: Cannot read properties of undefined (reading 'timeouts')
+FAIL tests/frontend/features/player/features-subtitle-sync.test.mjs :: a track switched while the dialog is open makes its lines unusable until reloaded
+       TypeError: Cannot read properties of undefined (reading 'timeouts')
+FAIL tests/frontend/features/player/features-subtitle-sync.test.mjs :: a new libass surface (another ASS track) makes the listed lines unusable
+       TypeError: Cannot read properties of undefined (reading 'timeouts')
+FAIL tests/frontend/features/player/features-subtitle-sync.test.mjs :: after an ASS track switch the slider's old value is not taken as the offset
+       TypeError: Cannot read properties of undefined (reading 'timeouts')
+FAIL tests/frontend/features/player/features-subtitle-sync.test.mjs :: TV remote and gamepad keys work in the dialog
+       TypeError: Cannot read properties of undefined (reading 'timeouts')
+FAIL tests/frontend/features/player/features-subtitle-sync.test.mjs :: an offset change that flips the cue track's mode (Firefox) is not a track change
+       TypeError: Cannot read properties of undefined (reading 'timeouts')
+FAIL tests/frontend/features/player/features-subtitle-sync.test.mjs :: a seek or a track switch made elsewhere while open leaves playback paused on close
+       TypeError: Cannot read properties of undefined (reading 'timeouts')
+FAIL tests/frontend/features/player/features-subtitle-sync.test.mjs :: closing while the cues are hidden waits: Firefox's offset flip resumes, subtitles turned off do not
+       TypeError: Cannot read properties of undefined (reading 'timeouts')
+FAIL tests/frontend/features/player/features-subtitle-sync.test.mjs :: switching from cues to ASS, or turning subtitles off, while open makes the lines unusable
+       TypeError: Cannot read properties of undefined (reading 'timeouts')
+FAIL tests/frontend/features/player/features-subtitle-sync.test.mjs :: an ASS switch while the lines load looks them up again for the new track
+       TypeError: Cannot read properties of undefined (reading 'timeouts')
+FAIL tests/frontend/features/player/features-subtitle-sync.test.mjs :: jellyfin-web's own offset keys count as setting the offset
+       TypeError: Cannot read properties of undefined (reading 'timeouts')
+FAIL tests/frontend/features/player/features-subtitle-sync.test.mjs :: opening over JE's pause screen puts it away first
+       TypeError: Cannot read properties of undefined (reading 'timeouts')
+FAIL tests/frontend/features/player/features-subtitle-sync.test.mjs :: subtitles turned off while the lines load are looked up again, not listed as burned in
+       TypeError: Cannot read properties of undefined (reading 'timeouts')
+FAIL tests/frontend/features/player/features-subtitle-sync.test.mjs :: a switch to a retimed file with the same text is a track change, not an offset
+       TypeError: Cannot read properties of undefined (reading 'timeouts')
+FAIL tests/frontend/features/player/features-subtitle-sync.test.mjs :: a retimed same-text switch while the dialog is open makes the lines unusable
+       TypeError: Cannot read properties of undefined (reading 'timeouts')
+FAIL tests/frontend/features/player/features-subtitle-sync.test.mjs :: subtitles turned off during the load wait for a report sent after that, not the pause report
+       TypeError: Cannot read properties of undefined (reading 'timeouts')
+FAIL tests/frontend/features/player/features-subtitle-sync.test.mjs :: a retimed same-text switch during the load waits for the report naming the new track
+       TypeError: Cannot read properties of undefined (reading 'timeouts')
+FAIL tests/frontend/features/player/features-subtitle-sync.test.mjs :: with too few cues to measure, a new cue track counts as offset 0 until the offset is set
+       TypeError: Cannot read properties of undefined (reading 'timeouts')
+FAIL tests/frontend/features/player/features-subtitle-sync.test.mjs :: an earlier pause still on the server (at 30 s) is not taken for the dialog's own pause report
+       TypeError: Cannot read properties of undefined (reading 'timeouts')
+FAIL tests/frontend/features/player/features-subtitle-sync.test.mjs :: an earlier pause still on the server (at 64.88 s) is not taken for the dialog's own pause report
+       TypeError: Cannot read properties of undefined (reading 'timeouts')
+FAIL tests/frontend/features/player/features-subtitle-sync.test.mjs :: an offset set before the page noticed a new renderer still counts as set
+       TypeError: Cannot read properties of undefined (reading 'timeouts')
+FAIL tests/frontend/features/player/features-subtitle-sync.test.mjs :: keys typed in the dialog never reach the player; Escape closes and resumes
+       TypeError: Cannot read properties of undefined (reading 'timeouts')
+FAIL tests/frontend/features/player/features-subtitle-sync.test.mjs :: the shortcut closes the dialog from a line
+       TypeError: Cannot read properties of undefined (reading 'timeouts')
+FAIL tests/frontend/features/player/features-subtitle-sync.test.mjs :: a dialog opened on paused playback leaves it paused
+       TypeError: Cannot read properties of undefined (reading 'timeouts')
+FAIL tests/frontend/features/player/features-subtitle-sync.test.mjs :: an answer that arrives after the dialog closed or the video changed is dropped
+       TypeError: Cannot read properties of undefined (reading 'timeouts')
+FAIL tests/frontend/features/player/features-subtitle-sync.test.mjs :: leaving the player closes the dialog without resuming
+       TypeError: Cannot read properties of undefined (reading 'timeouts')
+  log: /home/jake/.local/share/je12/logs/00388b93/only-node.log
+test --only: FAIL (54 failed, 0 passed) in 3s on 809c2d4b+dirty@951b94f3; recorded for je12 evidence
+je12: FAILED (in your change): 54 test(s) failed on 809c2d4b+dirty@951b94f3 (recorded)
+next: a test written before its fix should fail here, and je12 evidence now shows that; otherwise fix what the message says. After the fix, rerun the same je12 test --only
+je12 test --only a JE dialog that handles its own keys keeps the pause screen away: started as a job, expected about 6s on 10 CPUs (help-text times are for 10). If this call is cut off, `je12 wait` collects the result.
+ok   client build                   2s
+ok   inventory                      1s
+only: the node tests whose name matches /a JE dialog that handles its own keys keeps the pause screen away/, in the 1 test file(s) whose text has a match (node), on 809c2d4b+dirty@951b94f3
+FAIL tests/frontend/features/player/features-pause.test.mjs :: a JE dialog that handles its own keys keeps the pause screen away and its keys to itself
+       AssertionError: Expected values to be strictly equal:
+       true !== false
+  log: /home/jake/.local/share/je12/logs/00388b93/only-node.log
+test --only: FAIL (1 failed, 0 passed) in 3s on 809c2d4b+dirty@951b94f3; recorded for je12 evidence
+je12: FAILED (in your change): 1 test(s) failed on 809c2d4b+dirty@951b94f3 (recorded)
+next: a test written before its fix should fail here, and je12 evidence now shows that; otherwise fix what the message says. After the fix, rerun the same je12 test --only
+je12 test --only subtitle sync button setting starts from the admin default: started as a job, expected about 3s on 10 CPUs (help-text times are for 10). If this call is cut off, `je12 wait` collects the result.
+ok   client build                   2s
+ok   inventory                      1s
+only: the node tests whose name matches /subtitle sync button setting starts from the admin default/, in the 1 test file(s) whose text has a match (node), on 809c2d4b+dirty@951b94f3
+FAIL tests/frontend/bootstrap/bootstrap-settings-panel.test.mjs :: subtitle sync button setting starts from the admin default, keeps a personal choice, saves and updates the player
+       AssertionError: Expected values to be strictly equal:
+       + undefined
+       - true
+  log: /home/jake/.local/share/je12/logs/00388b93/only-node.log
+test --only: FAIL (1 failed, 0 passed) in 3s on 809c2d4b+dirty@951b94f3; recorded for je12 evidence
+je12: FAILED (in your change): 1 test(s) failed on 809c2d4b+dirty@951b94f3 (recorded)
+next: a test written before its fix should fail here, and je12 evidence now shows that; otherwise fix what the message says. After the fix, rerun the same je12 test --only

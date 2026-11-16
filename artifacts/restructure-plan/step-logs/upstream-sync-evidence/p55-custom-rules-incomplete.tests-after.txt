@@ -1,0 +1,8 @@
+# The same test on the port
+je12 test --only Custom rules: a half-filled rule stays in the table: started as a job, expected about 4s on 10 CPUs (help-text times are for 10). If this call is cut off, `je12 wait` collects the result.
+ok   client build                   2s
+ok   inventory                      1s
+only: the node tests whose name matches /Custom rules: a half-filled rule stays in the table/, in the 1 test file(s) whose text has a match (node), on 77a4d597+dirty@98367be1
+ok   tests/frontend/features/media-tags/admin/features-admin-tags-page-server.test.mjs :: Custom rules: a half-filled rule stays in the table while the editor auto-saves, and rules changed elsewhere still reload it
+  log: /home/jake/.local/share/je12/logs/5ce28416/only-node.log
+test --only: pass (0 failed, 1 passed) in 5s on 77a4d597+dirty@98367be1; recorded for je12 evidence

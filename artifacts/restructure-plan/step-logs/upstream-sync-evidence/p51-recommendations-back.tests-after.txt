@@ -1,0 +1,50 @@
+# The same tests on the port (the tree committed for upstream c165a07b)
+je12 test --only tests/frontend/bootstrap/bootstrap-native-tabs.test.mjs: started as a job, expected about 4s on 10 CPUs (help-text times are for 10). If this call is cut off, `je12 wait` collects the result.
+ok   client build                   2s
+ok   inventory                      1s
+only: every node test in tests/frontend/bootstrap/bootstrap-native-tabs.test.mjs (node), on ab0cb833+dirty@379b770e
+ok   tests/frontend/bootstrap/bootstrap-native-tabs.test.mjs :: native tabs mount once, escape labels, and remain stable across duplicate registration and mutations
+ok   tests/frontend/bootstrap/bootstrap-native-tabs.test.mjs :: Custom Tabs count reserves positional slots before JE tabs
+ok   tests/frontend/bootstrap/bootstrap-native-tabs.test.mjs :: late Custom Tabs DOM collision moves existing JE panels without remounting or losing content
+ok   tests/frontend/bootstrap/bootstrap-native-tabs.test.mjs :: header-only external tab claims get placeholders to preserve positional selection
+ok   tests/frontend/bootstrap/bootstrap-native-tabs.test.mjs :: stable JE deep link rewrites stale index and clears partially selected host panels
+ok   tests/frontend/bootstrap/bootstrap-native-tabs.test.mjs :: user selection consumes deep link so later mutations do not steal the chosen tab
+ok   tests/frontend/bootstrap/bootstrap-native-tabs.test.mjs :: unregister removes button, panel and allows a clean future mount
+ok   tests/frontend/bootstrap/bootstrap-native-tabs.test.mjs :: unknown Custom Tabs state never blocks the JE tab and recovers from provider failure
+ok   tests/frontend/bootstrap/bootstrap-native-tabs.test.mjs :: a Custom Tabs count that arrives late relabels the mounted JE tab without remounting it
+ok   tests/frontend/bootstrap/bootstrap-native-tabs.test.mjs :: a jeTab left in #/home?jeTab=requests without our tab index is not a deep link
+ok   tests/frontend/bootstrap/bootstrap-native-tabs.test.mjs :: a jeTab left in #/home?tab=1&jeTab=requests without our tab index is not a deep link
+ok   tests/frontend/bootstrap/bootstrap-native-tabs.test.mjs :: a jeTab left in #/home?tab=0&jeTab=requests without our tab index is not a deep link
+ok   tests/frontend/bootstrap/bootstrap-native-tabs.test.mjs :: the Android app's Back on a JE tab selects the Home tab instead of exiting the app
+ok   tests/frontend/bootstrap/bootstrap-native-tabs.test.mjs :: the Android app's Back closes an open category page or More Info modal through history, and is left alone when the router can go back
+ok   tests/frontend/bootstrap/bootstrap-native-tabs.test.mjs :: the Android app's Back goes through the router when it can go back, even on a JE tab
+ok   tests/frontend/bootstrap/bootstrap-native-tabs.test.mjs :: the app Back wrapper finds a NavigationHelper that the app defines after the page scripts
+  log: /home/jake/.local/share/je12/logs/5ce28416/only-node.log
+test --only: pass (0 failed, 16 passed) in 4s on ab0cb833+dirty@379b770e; recorded for je12 evidence
+je12 test --only tests/frontend/pages/pages-recommendations-boundaries.test.mjs: started as a job, expected about 4s on 10 CPUs (help-text times are for 10). If this call is cut off, `je12 wait` collects the result.
+ok   client build                   2s
+ok   inventory                      1s
+only: every node test in tests/frontend/pages/pages-recommendations-boundaries.test.mjs (node), on ab0cb833+dirty@379b770e
+ok   tests/frontend/pages/pages-recommendations-boundaries.test.mjs :: the standalone page renders every row, genre row and tile row in order, and skips empty rows
+ok   tests/frontend/pages/pages-recommendations-boundaries.test.mjs :: DISCOVERY-RECOMMENDATIONS-001: an identity change empties every surface and forgets the account
+ok   tests/frontend/pages/pages-recommendations-boundaries.test.mjs :: rows landing after the identity changed render nothing, even when the account returns
+ok   tests/frontend/pages/pages-recommendations-boundaries.test.mjs :: an identity change closes the category page, ends its requests and resets its filter and sort
+ok   tests/frontend/pages/pages-recommendations-boundaries.test.mjs :: DISCOVERY-RECOMMENDATIONS-002: opening the page does not cancel the tab rendering beside it
+ok   tests/frontend/pages/pages-recommendations-boundaries.test.mjs :: DISCOVERY-RECOMMENDATIONS-003: hiding the page ends its render, observers and sticky tracking
+ok   tests/frontend/pages/pages-recommendations-boundaries.test.mjs :: a render bound to a removed container ends instead of filling it, and the next render clears it
+ok   tests/frontend/pages/pages-recommendations-boundaries.test.mjs :: DISCOVERY-RECOMMENDATIONS-017: navigation ends a render whose host dropped its container, and two hosts keep their own results
+ok   tests/frontend/pages/pages-recommendations-boundaries.test.mjs :: custom tab mounts into the active container and keeps the sidebar link out of the way
+ok   tests/frontend/pages/pages-recommendations-boundaries.test.mjs :: a tab hidden behind another Home tab keeps its rows and does not load them again
+ok   tests/frontend/pages/pages-recommendations-boundaries.test.mjs :: DISCOVERY-RECOMMENDATIONS-003: a tab whose page was dropped holds no work, and a new page mounts again
+ok   tests/frontend/pages/pages-recommendations-boundaries.test.mjs :: DISCOVERY-RECOMMENDATIONS-003: leaving home ends a tab render still in flight
+ok   tests/frontend/pages/pages-recommendations-boundaries.test.mjs :: a category opened from a tab keeps the tab rows behind it, and Back shows them without loading again
+ok   tests/frontend/pages/pages-recommendations-boundaries.test.mjs :: a tab mounted for one account remounts for the next
+ok   tests/frontend/pages/pages-recommendations-boundaries.test.mjs :: a native tab registers its own panel with the page title and icon
+ok   tests/frontend/pages/pages-recommendations-boundaries.test.mjs :: the custom tab entry stays inert unless the page and one host are enabled
+ok   tests/frontend/pages/pages-recommendations-boundaries.test.mjs :: Plugin Pages keep the page link hidden from the sidebar and render through the public facade
+ok   tests/frontend/pages/pages-recommendations-boundaries.test.mjs :: the sidebar link hides the Plugin Pages link and opens the standalone page
+ok   tests/frontend/pages/pages-recommendations-boundaries.test.mjs :: DISCOVERY-RECOMMENDATIONS-019: closing the page announces one viewhide and one viewshow
+ok   tests/frontend/pages/pages-recommendations-boundaries.test.mjs :: DISCOVERY-RECOMMENDATIONS-013: when every row failed the page offers a retry, not an empty catalogue
+     ... and 23 more passed
+  log: /home/jake/.local/share/je12/logs/5ce28416/only-node.log
+test --only: pass (0 failed, 43 passed) in 4s on ab0cb833+dirty@379b770e; recorded for je12 evidence

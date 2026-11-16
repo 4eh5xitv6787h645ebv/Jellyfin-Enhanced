@@ -1,0 +1,29 @@
+# The same test on the port, and upstream's backend tests (they need the new types, so they cannot be built on the old tree)
+je12 test --only tests/frontend/features/media-tags/features-tag-text.test.mjs: started as a job, expected about 7s on 10 CPUs (help-text times are for 10). If this call is cut off, `je12 wait` collects the result.
+ok   client build                   2s
+ok   inventory                      1s
+only: every node test in tests/frontend/features/media-tags/features-tag-text.test.mjs (node), on b6bb8b54+dirty@eb8ce388
+ok   tests/frontend/features/media-tags/features-tag-text.test.mjs :: the text comes from the public configuration, exact labels, and a bad document overrides nothing
+ok   tests/frontend/features/media-tags/features-tag-text.test.mjs :: a genre label renames the genre text of every chip it colours and leaves the others
+ok   tests/frontend/features/media-tags/features-tag-text.test.mjs :: a quality label replaces the whole chip text and leaves the other chips
+  log: /home/jake/.local/share/je12/logs/5ce28416/only-node.log
+test --only: pass (0 failed, 3 passed) in 3s on b6bb8b54+dirty@eb8ce388; recorded for je12 evidence
+je12 test --only JE.Tests.Features.MediaTags.CoreTagTextOverridesTests: started as a job, expected about 3s on 10 CPUs (help-text times are for 10). If this call is cut off, `je12 wait` collects the result.
+ok   client build                   2s
+ok   inventory                      1s
+only: the dotnet test named 'JE.Tests.Features.MediaTags.CoreTagTextOverridesTests' (and every test under it) (dotnet), on b6bb8b54+dirty@eb8ce388
+ok   JE.Tests.Features.MediaTags.CoreTagTextOverridesTests.DigestChangesOnlyWhenAShownGroupHasOverrides
+ok   JE.Tests.Features.MediaTags.CoreTagTextOverridesTests.ValidatesTheDocumentThePageSends(json: "not json", accepted: False)
+ok   JE.Tests.Features.MediaTags.CoreTagTextOverridesTests.ValidatesTheDocumentThePageSends(json: "[]", accepted: False)
+ok   JE.Tests.Features.MediaTags.CoreTagTextOverridesTests.NormalizesToACanonicalDocumentOrNull
+ok   JE.Tests.Features.MediaTags.CoreTagTextOverridesTests.PageFieldAcceptsAndRefusesLikeTheRules
+ok   JE.Tests.Features.MediaTags.CoreTagTextOverridesTests.ValidatesTheDocumentThePageSends(json: "", accepted: True)
+ok   JE.Tests.Features.MediaTags.CoreTagTextOverridesTests.WebAndNativeLookUpTheSameCatalogKeys
+ok   JE.Tests.Features.MediaTags.CoreTagTextOverridesTests.ValidatesTheDocumentThePageSends(json: "{\"rating\":{\"imdb\":\"x\"}}", accepted: False)
+ok   JE.Tests.Features.MediaTags.CoreTagTextOverridesTests.AcceptsAKnownLabelAndRefusesAnOverlongText
+ok   JE.Tests.Features.MediaTags.CoreTagTextOverridesTests.QualityChipTakesTheTextWholeAndOthersKeepTheirOwn
+ok   JE.Tests.Features.MediaTags.CoreTagTextOverridesTests.ValidatesTheDocumentThePageSends(json: null, accepted: True)
+ok   JE.Tests.Features.MediaTags.CoreTagTextOverridesTests.KeepsCatalogLabelsOfTextGroupsOnly
+ok   JE.Tests.Features.MediaTags.CoreTagTextOverridesTests.ValidatesTheDocumentThePageSends(json: "{\"status\":{\"nope\":\"x\"}}", accepted: False)
+  log: /home/jake/.local/share/je12/logs/5ce28416/only-dotnet.log
+test --only: pass (0 failed, 13 passed) in 7s on b6bb8b54+dirty@eb8ce388; recorded for je12 evidence
