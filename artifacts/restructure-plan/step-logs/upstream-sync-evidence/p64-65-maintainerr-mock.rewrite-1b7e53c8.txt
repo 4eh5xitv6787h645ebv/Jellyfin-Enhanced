@@ -1,0 +1,7 @@
+# Sonarr mock (Maintainerr, Radarr 1, Sonarr 1)
+GET    200 rule      /api/settings/radarr
+GET    200 rule      /api/v3/movie?tmdbId=431580
+POST   201 rule      /api/collections/media/add
+# Radarr mock (Radarr 4K, Sonarr 4K)
+GET    200 rule      /api/v3/movie?tmdbId=431580
+GET    200 rule      /api/v3/movie?tmdbId=431580

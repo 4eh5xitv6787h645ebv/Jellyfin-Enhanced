@@ -1,0 +1,30 @@
+tests/frontend/features/media-tags/features-maintainerr-menu.test.mjs :: Mark from the detail page sends the version picked there (and so does Keep's Undo); a card's menu sends none
+  FAILED on 08a4b063+dirty@d3126975 at 2026-11-16 21:31:54: AssertionError: Expected values to be strictly deep-equal: { / body: {
+  passed on 08a4b063+dirty@bf92af5b at 2026-11-16 21:33:38
+  passed on 08a4b063+dirty@1e7c4ab8 at 2026-11-16 21:40:13
+  passed on bc24ba8d at 2026-11-16 21:48:13
+  => failed on 08a4b063+dirty@d3126975 (2026-11-16 21:31:54), passes on bc24ba8d (2026-11-16 21:48:13); the commit bc24ba8d has exactly the files of that run
+tests/frontend/features/media-tags/features-maintainerr-menu.test.mjs :: a season gets the rows too, from its card and from its own page; an episode still gets none
+  FAILED on 1b7e53c8+dirty@b9888a2a at 2026-11-16 21:42:26: AssertionError: Expected values to be strictly deep-equal: + [] / - [
+  passed on 1b7e53c8+dirty@fd9ec748 at 2026-11-16 21:43:32
+  passed on bc24ba8d at 2026-11-16 21:48:16
+  => failed on 1b7e53c8+dirty@b9888a2a (2026-11-16 21:42:26), passes on bc24ba8d (2026-11-16 21:48:16); the commit bc24ba8d has exactly the files of that run
+JE.Tests.Features.MediaTags.IntegrationMaintainerrActionsTests.Mark_picks_the_collection_whose_Radarr_holds_the_version_selected_on_the_item_page
+  FAILED on 08a4b063+dirty@d3126975 at 2026-11-16 21:32:13: System.Text.Json.JsonException : The JSON value could not be converted to System.Nullable`1[System.Guid]. Path: $.itemId | LineNumber: 0 | BytePositionInLine: 44. / ---- System.FormatException : The J
+  FAILED on 08a4b063+dirty@0eb56760 at 2026-11-16 21:32:33: Assert.IsType() Failure: Value is not the exact type / Expected: typeof(Microsoft.AspNetCore.Mvc.OkObjectResult) / Actual:   typeof(Microsoft.AspNetCore.Mvc.BadRequestObjectResult)
+  passed on 08a4b063+dirty@bf92af5b at 2026-11-16 21:33:57
+  passed on 08a4b063+dirty@1e7c4ab8 at 2026-11-16 21:40:20
+  passed on bc24ba8d at 2026-11-16 21:48:29
+  => failed on 08a4b063+dirty@d3126975 (2026-11-16 21:32:13, the first of 2 failing runs), passes on bc24ba8d (2026-11-16 21:48:29); the commit bc24ba8d has exactly the files of that run
+JE.Tests.Features.MediaTags.IntegrationMaintainerrActionsTests.A_season_goes_to_the_season_collection_on_its_library
+  FAILED on 1b7e53c8+dirty@b9888a2a at 2026-11-16 21:42:41: Assert.Equal() Failure: Strings differ / Expected: "season" / Actual:   null
+  passed on 1b7e53c8+dirty@fd9ec748 at 2026-11-16 21:43:45
+  passed on bc24ba8d at 2026-11-16 21:48:35
+  => failed on 1b7e53c8+dirty@b9888a2a (2026-11-16 21:42:41), passes on bc24ba8d (2026-11-16 21:48:35); the commit bc24ba8d has exactly the files of that run
+JE.Tests.Features.MediaTags.IntegrationMaintainerrActionsTests.Marking_a_season_asks_the_Sonarr_servers_by_its_series_and_adds_the_season
+  FAILED on 1b7e53c8+dirty@b9888a2a at 2026-11-16 21:42:48: Assert.True() Failure / Expected: True / Actual:   False
+  passed on 1b7e53c8+dirty@fd9ec748 at 2026-11-16 21:43:51
+  passed on bc24ba8d at 2026-11-16 21:48:43
+  => failed on 1b7e53c8+dirty@b9888a2a (2026-11-16 21:42:48), passes on bc24ba8d (2026-11-16 21:48:43); the commit bc24ba8d has exactly the files of that run
+(415 more test(s) run alone earlier; <je12 home>/state/5ce28416-tests.jsonl has every run)
+--only 'tests/frontend/features/media-tags/features-tag-hidden.test.mjs' (node) ran no test on 45539fb5+dirty@d6e8fbd5 at 2026-11-16 07:31:14: test file(s) that could not load: tests/frontend/features/media-tags/features-tag-hidden.test.mjs (the log has the error)

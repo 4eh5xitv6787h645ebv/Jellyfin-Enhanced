@@ -1,0 +1,21 @@
+# The final tests/frontend/features/media-tags/features-maintainerr-menu.test.mjs on 08a4b063 (the tree before both ports), in a scratch worktree
+ok   client build                   2s
+ok   inventory                      1s
+only: every node test in tests/frontend/features/media-tags/features-maintainerr-menu.test.mjs (node), on 08a4b063+dirty@0fbf941c
+ok   tests/frontend/features/media-tags/features-maintainerr-menu.test.mjs :: an administrator gets Mark for removal on an unlisted movie, before Share; Mark posts and offers Undo, which posts the opposite
+ok   tests/frontend/features/media-tags/features-maintainerr-menu.test.mjs :: a listed item gets Keep and Postpone; Postpone opens a chooser whose day buttons, custom count and reset post accordingly
+FAIL tests/frontend/features/media-tags/features-maintainerr-menu.test.mjs :: Mark from the detail page sends the version picked there (and so does Keep's Undo); a card's menu sends none
+       AssertionError: Expected values to be strictly deep-equal:
+       {
+       body: {
+FAIL tests/frontend/features/media-tags/features-maintainerr-menu.test.mjs :: a season gets the rows too, from its card and from its own page; an episode still gets none
+       AssertionError: Expected values to be strictly deep-equal:
+       + []
+       - [
+ok   tests/frontend/features/media-tags/features-maintainerr-menu.test.mjs :: no rows for non-administrators, with the actions off, on unsupported items, on other menus, or when the server does not know the item
+ok   tests/frontend/features/media-tags/features-maintainerr-menu.test.mjs :: a refused action shows the server's reason and offers no Undo
+ok   tests/frontend/features/media-tags/features-maintainerr-menu.test.mjs :: a user switch while an action is on its way shows the next user nothing, and asks again whether they are an administrator
+  log: <je12 home>/logs/277e42f0/only-node.log
+test --only: FAIL (2 failed, 5 passed) in 3s on 08a4b063+dirty@0fbf941c; recorded for je12 evidence
+je12: FAILED (in your change): 2 test(s) failed on 08a4b063+dirty@0fbf941c (recorded)
+next: a test written before its fix should fail here, and je12 evidence now shows that; otherwise fix what the message says. After the fix, rerun the same je12 test --only

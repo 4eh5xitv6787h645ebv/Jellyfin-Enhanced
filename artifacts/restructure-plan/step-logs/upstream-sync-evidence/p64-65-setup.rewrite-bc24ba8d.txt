@@ -1,0 +1,1 @@
+{"movie": {"id": "06de48d758074756c732c7de70aa79f8", "name": "Abominable", "tmdb": "431580", "versions": 1}, "season": {"id": "058a5285363ed578e80bd1cd0eef8426", "name": "Season 1", "series": "The Adventures of Paddington", "tvdb": "372577"}, "status": {"Configured": true, "Maintainerr": true, "Actions": true, "Items": 0, "LastError": null}}
