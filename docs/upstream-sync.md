@@ -4,7 +4,7 @@
 
 What the rewrite has taken from [upstream](https://github.com/n00bcodr/Jellyfin-Enhanced) (`main`) since it branched at `2e0f9251bf`. The source of truth is [`upstream-sync.json`](upstream-sync.json); the procedure is [upstream-sync-procedure.md](upstream-sync-procedure.md).
 
-62 upstream commits: 7 pending, 53 ported, 1 already-present, 1 deferred.
+62 upstream commits: 6 pending, 54 ported, 1 already-present, 1 deferred.
 
 | # | Upstream | Date | Class | Features | Subject | Status | Rewrite commit | Note |
 |---|---|---|---|---|---|---|---|---|
@@ -63,7 +63,7 @@ What the rewrite has taken from [upstream](https://github.com/n00bcodr/Jellyfin-
 | 53 | [`25a168ae`](https://github.com/n00bcodr/Jellyfin-Enhanced/commit/25a168aeecae9e36cc5c79ee8dd4cff02497d0c6) | 2026-11-14 (12.16.0.0) | feature | media-tags, platform, admin | feat(tags): set the text of quality, genre, status and awards tags from the Colours and text tab (#1063) | ported |  | artifacts/restructure-plan/step-logs/upstream-sync-evidence/p53-54-* |
 | 54 | [`186121ed`](https://github.com/n00bcodr/Jellyfin-Enhanced/commit/186121ed49db5fb60c547fee68ad0c4df5840d93) | 2026-11-14 (12.16.0.0) | test |  | chore(tags): regenerate the inventory and config flag groups for tag text | ported |  | With `25a168ae`. artifacts/restructure-plan/step-logs/upstream-sync-evidence/p53-54-* |
 | 55 | [`90c721ef`](https://github.com/n00bcodr/Jellyfin-Enhanced/commit/90c721efd25cd9086a9b38987e743a432a47a7f5) | 2026-11-14 (12.16.0.0) | fix | media-tags | fix(tags): keep incomplete custom rules when the editor auto-saves | ported |  | artifacts/restructure-plan/step-logs/upstream-sync-evidence/p55-* |
-| 56 | [`6916b31b`](https://github.com/n00bcodr/Jellyfin-Enhanced/commit/6916b31b23b2ed4bbc35c4b81fa02552e3fe23e8) | 2026-11-14 (12.16.0.0) | feature | admin, downloads, platform, seerr, settings | feat(seerr): remove watched requests automatically and add a Remove request button (#1050) | pending |  |  |
+| 56 | [`6916b31b`](https://github.com/n00bcodr/Jellyfin-Enhanced/commit/6916b31b23b2ed4bbc35c4b81fa02552e3fe23e8) | 2026-11-14 (12.16.0.0) | feature | seerr, downloads, admin | feat(seerr): remove watched requests automatically and add a Remove request button (#1050) | ported |  | artifacts/restructure-plan/step-logs/upstream-sync-evidence/p56-* |
 | 57 | [`9d1d5e8f`](https://github.com/n00bcodr/Jellyfin-Enhanced/commit/9d1d5e8fe3105d85b985df4803968afd887da34a) | 2026-11-14 (12.16.0.0) | feature | admin, chrome, media-tags, platform, player, settings, settings-panel | feat(player): sync subtitles to the line you just heard (#1068) | pending |  |  |
 | 58 | [`65cc4ba9`](https://github.com/n00bcodr/Jellyfin-Enhanced/commit/65cc4ba9654191f32df27c8e39439ba740fc0dd9) | 2026-11-15 (12.16.0.0) | translation | platform | Translations update from Hosted Weblate (#1067) | pending |  |  |
 | 59 | [`3f8e4724`](https://github.com/n00bcodr/Jellyfin-Enhanced/commit/3f8e472435ad61f0a665d2eb5162a4ae97caae11) | 2026-11-15 (12.16.0.0) | fix | bookmarks, chrome, platform, player | fix(player): run player shortcuts in Jellyfin Desktop's mpv player (#1069) | pending |  |  |

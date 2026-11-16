@@ -694,6 +694,10 @@
       "category": "Features"
     },
     {
+      "path": "Jellyfin.Plugin.JellyfinEnhanced/Features/Seerr/Services/RequestRemovalPlanner.cs",
+      "category": "Features"
+    },
+    {
       "path": "Jellyfin.Plugin.JellyfinEnhanced/Features/Seerr/Services/SeerrCsrfHandler.cs",
       "category": "Features"
     },
@@ -715,6 +719,10 @@
     },
     {
       "path": "Jellyfin.Plugin.JellyfinEnhanced/Features/Seerr/Services/WatchlistSyncPlanner.cs",
+      "category": "Features"
+    },
+    {
+      "path": "Jellyfin.Plugin.JellyfinEnhanced/Features/Seerr/Tasks/AutoRequestRemovalTask.cs",
       "category": "Features"
     },
     {
@@ -2807,6 +2815,15 @@
       "verb": "POST",
       "path": "/JellyfinEnhanced/arr/requests/{requestId}/decline",
       "method": "ActOnRequest",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/Downloads/JeDownloadsController.Requests.cs",
+      "following_attributes": [
+        "Authorize"
+      ]
+    },
+    {
+      "verb": "DELETE",
+      "path": "/JellyfinEnhanced/arr/requests/{requestId}",
+      "method": "RemoveRequest",
       "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/Downloads/JeDownloadsController.Requests.cs",
       "following_attributes": [
         "Authorize"
@@ -6737,6 +6754,14 @@
       "type": "bool",
       "initializer": null,
       "constructor_assignment": "true",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Configuration/PluginConfiguration.cs"
+    },
+    {
+      "class": "PluginConfiguration",
+      "name": "AutoRequestRemovalEnabled",
+      "type": "bool",
+      "initializer": null,
+      "constructor_assignment": "false",
       "file": "Jellyfin.Plugin.JellyfinEnhanced/Configuration/PluginConfiguration.cs"
     },
     {
@@ -10827,6 +10852,11 @@
       "key": "JellyfinEnhancedRefreshCdnAssets"
     },
     {
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/Seerr/Tasks/AutoRequestRemovalTask.cs",
+      "class": "AutoRequestRemovalTask",
+      "key": "JellyfinEnhancedAutoRequestRemoval"
+    },
+    {
       "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/Seerr/Tasks/JellyfinToSeerrWatchlistSyncTask.cs",
       "class": "JellyfinToSeerrWatchlistSyncTask",
       "key": "JellyfinEnhancedJellyfinToSeerrWatchlistSync"
@@ -10955,11 +10985,11 @@
   ],
   "counts": {
     "build_targets": 1,
-    "files": 557,
-    "routes": 210,
-    "configuration_properties": 773,
+    "files": 559,
+    "routes": 211,
+    "configuration_properties": 774,
     "storage_references": 97,
-    "scheduled_tasks": 16,
+    "scheduled_tasks": 17,
     "locales": 33
   }
 }

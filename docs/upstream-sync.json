@@ -1787,11 +1787,9 @@
       "subject": "feat(seerr): remove watched requests automatically and add a Remove request button (#1050)",
       "class": "feature",
       "features": [
-        "admin",
-        "downloads",
-        "platform",
         "seerr",
-        "settings"
+        "downloads",
+        "admin"
       ],
       "issues": [
         "#1050"
@@ -1827,13 +1825,15 @@
         "tests/docs/production-inventory.json",
         "tests/frontend/requests/requests-remove-request.test.mjs"
       ],
-      "status": "pending",
+      "status": "ported",
       "rewriteCommits": [],
       "unmappedPaths": [
         "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs",
         "Jellyfin.Plugin.JellyfinEnhanced/ScheduledTasks/AutoRequestRemovalTask.cs",
         "Jellyfin.Plugin.JellyfinEnhanced/Services/RequestRemovalPlanner.cs"
-      ]
+      ],
+      "notes": "Server: AutoRequestRemovalTask is upstream's file in Features/Seerr/Tasks (the ScheduledTasks namespace and the key JellyfinEnhancedAutoRequestRemoval as upstream, so its schedule is the same task), RequestRemovalPlanner in Features/Seerr/Services, registered in Features/Seerr/SeerrServiceRegistration.cs beside the other Seerr tasks; PluginConfiguration.AutoRequestRemovalEnabled (off). The route DELETE arr/requests/{requestId} (RemoveRequest) and the rows' canRemove flag are in Features/Downloads/JeDownloadsController.Requests.cs, where GET arr/requests lives in this tree: upstream's code with this tree's helpers (the Seerr user lookup and display-name services, Shared/Seerr). canApproveRequests is computed earlier in GetRequests, as upstream moved it; the action's auth-helper calls are unchanged. Admin: the Auto Request Removal section in client/src/admin/config/sections/seerr.ts with its place in client/html/admin-config/configPage.html, its What's New index line (sections-entry.ts) and tests/fixtures/admin-config-baseline.json (the control, its section, main toggle and default), as docs/rewrite/admin-config.md prescribes; docs/advanced/config-flag-groups.json regenerated (the same four lines as upstream's). Client re-implemented in client/src/features/downloads (data.ts, render-cards.ts, render.ts, downloads.css, validation.ts, types.ts, host.ts) with upstream's four en.json strings. Differences from upstream on the page: the handler follows this tree's rules for a request action, as Approve and Decline do: it asks and sends only for a request this account's loaded list says it may remove (upstream trusts the clicked button), checks again after the confirmation (a sign-in change, or a refresh that no longer lists the request, while Jellyfin's dialog is open, sends nothing), records the mutation so a second click while the DELETE is on its way does not send it again, and a poll does not redraw the list under a pointer or focus resting on Remove. Docs as upstream (docs/seerr/seerr-features.md, seerr-settings.md, docs/arr/troubleshooting-support.md, api.md with this tree's count, 211 method/path entries, and tests/docs/coverage-matrix.md with this tree's paths). Tests: upstream's AutoRequestRemovalTests (tests/backend/Features/Seerr, 27 cases) and the TaskVisibilityTests line as they are with namespaces changed; upstream's eight route tests are in tests/backend/Features/Downloads/ApiDownloadsTests.cs, on the Downloads controller; upstream's frontend file tests/frontend/requests/requests-remove-request.test.mjs keeps its two card tests and has its four handler tests on a loaded list, plus three for the differences above; all nine fail on the tree before the port. Contract: one route, one action and one registration are added (DELETE JellyfinEnhanced/arr/requests/{requestId}, RemoveRequest, AutoRequestRemovalTask transient); their snapshot lines are the branch's last commit, contract: upstream sync additions; no existing line changes. Lab parity (je12 lab, Jellyfin 12.4, mock Seerr): one je12 browse script (the card's button, Jellyfin's confirmation, Cancel sending nothing, OK sending one DELETE and the toast, the admin section) and one shell script (a viewer refused with 403 and nothing sent to Seerr, the administrator's delete, the task hidden until the setting is on, a run that deletes the request of the user who watched the movie and keeps the other user's) print the same on upstream's build of 6916b31b and on this port. Outbound: the server now sends DELETE /api/v1/request/{id} to the administrator's Seerr, from the button and, when the setting is on, from the daily task; nothing new reaches the browser.",
+      "evidence": "artifacts/restructure-plan/step-logs/upstream-sync-evidence/p56-*"
     },
     {
       "sha": "9d1d5e8fe3105d85b985df4803968afd887da34a",

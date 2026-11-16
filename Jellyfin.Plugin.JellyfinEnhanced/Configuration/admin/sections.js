@@ -1859,6 +1859,22 @@
           { type: "note", html: 'Only works for movies that are part of a TMDB collection (e.g., <a class="je-bold-link" href="https://www.themoviedb.org/collection/86311" target="_blank">The Avengers Collection</a>, <a class="je-bold-link" href="https://www.themoviedb.org/collection/10" target="_blank">Star Wars Collection</a>).<br/>Automatically requests the next movie in the collection based on release order.<br/>Movies already available or requested are skipped.' }
         ]
       },
+      "seerr-auto-request-removal": {
+        title: "Auto Request Removal",
+        icon: "playlist_remove",
+        items: [
+          {
+            id: "autoRequestRemovalEnabled",
+            prop: "AutoRequestRemovalEnabled",
+            type: "toggle",
+            main: true,
+            label: "Remove Watched Requests",
+            desc: '<ul class="je-desc-list"><li>Delete a Seerr request once the user who made it has watched it. Only the request is deleted; the media stays available in Seerr and in the library</li><li><strong>Destructive:</strong> a deleted request cannot be restored, and its history is gone from Seerr. Use with caution</li><li><strong>Quotas:</strong> if request quotas are enabled in Seerr, removing a request gives that quota back to the user, because Seerr counts quota from the requests that still exist</li></ul>'
+          },
+          { type: "note", tone: "warn", html: "<strong>Warning:</strong> this permanently deletes requests, and the same applies to the <strong>Remove request</strong> button on the Requests page. If you use Seerr request quotas, each removed request frees up quota again, so users can request more than the limit allows over time. Try it on a small setup first and keep a Seerr backup." },
+          { type: "note", html: "Runs daily through the <strong>Remove watched requests from Seerr</strong> scheduled task (Dashboard &gt; Scheduled Tasks); a request is removed on the first run after its requester has watched it.<br/>Only the requester's own viewing counts. Movies count once any version is watched; series requests are removed once every episode of every requested season is watched and available.<br/>Pending, declined and failed requests are never removed." }
+        ]
+      },
       "seerr-sync": {
         title: "Recently Added Sync to Seerr",
         icon: "sync",
@@ -2658,6 +2674,7 @@
    *  { id: 'autoMovieRequestCheckReleaseDate', type: 'toggle' }
    *  { id: 'autoMovieRequestQualityMode', type: 'select' }
    *  { id: 'autoMovieRequestFallbackOn4k', type: 'toggle' }
+   *  { id: 'autoRequestRemovalEnabled', type: 'toggle' }
    *  { id: 'triggerSeerrScanOnItemAdded', type: 'toggle' }
    *  { id: 'seerrScanDebounceSeconds', type: 'number' }
    *  { id: 'addRequestedMediaToWatchlist', type: 'toggle' }

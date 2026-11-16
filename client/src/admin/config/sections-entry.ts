@@ -196,6 +196,7 @@ import { defineAllSections } from './sections';
  *  { id: 'autoMovieRequestCheckReleaseDate', type: 'toggle' }
  *  { id: 'autoMovieRequestQualityMode', type: 'select' }
  *  { id: 'autoMovieRequestFallbackOn4k', type: 'toggle' }
+ *  { id: 'autoRequestRemovalEnabled', type: 'toggle' }
  *  { id: 'triggerSeerrScanOnItemAdded', type: 'toggle' }
  *  { id: 'seerrScanDebounceSeconds', type: 'number' }
  *  { id: 'addRequestedMediaToWatchlist', type: 'toggle' }
