@@ -4,7 +4,7 @@
 
 What the rewrite has taken from [upstream](https://github.com/n00bcodr/Jellyfin-Enhanced) (`main`) since it branched at `2e0f9251bf`. The source of truth is [`upstream-sync.json`](upstream-sync.json); the procedure is [upstream-sync-procedure.md](upstream-sync-procedure.md).
 
-62 upstream commits: 2 pending, 58 ported, 1 already-present, 1 deferred.
+62 upstream commits: 60 ported, 1 already-present, 1 deferred.
 
 | # | Upstream | Date | Class | Features | Subject | Status | Rewrite commit | Note |
 |---|---|---|---|---|---|---|---|---|
@@ -68,5 +68,5 @@ What the rewrite has taken from [upstream](https://github.com/n00bcodr/Jellyfin-
 | 58 | [`65cc4ba9`](https://github.com/n00bcodr/Jellyfin-Enhanced/commit/65cc4ba9654191f32df27c8e39439ba740fc0dd9) | 2026-11-15 (12.16.0.0) | translation | platform | Translations update from Hosted Weblate (#1067) | ported |  | artifacts/restructure-plan/step-logs/upstream-sync-evidence/p58-* |
 | 59 | [`3f8e4724`](https://github.com/n00bcodr/Jellyfin-Enhanced/commit/3f8e472435ad61f0a665d2eb5162a4ae97caae11) | 2026-11-15 (12.16.0.0) | fix | player, bookmarks, chrome, shared, platform | fix(player): run player shortcuts in Jellyfin Desktop's mpv player (#1069) | ported |  | artifacts/restructure-plan/step-logs/upstream-sync-evidence/p59-* |
 | 60 | [`005c5b45`](https://github.com/n00bcodr/Jellyfin-Enhanced/commit/005c5b459eee16c20bebaf6be32f282341878308) | 2026-11-15 (12.16.0.0) | translation | platform | Translations update from Hosted Weblate (#1070) | ported |  | artifacts/restructure-plan/step-logs/upstream-sync-evidence/p60-* |
-| 61 | [`321701ae`](https://github.com/n00bcodr/Jellyfin-Enhanced/commit/321701aeb2f27eee5d9514a8ec8ce87b90074247) | 2026-11-15 (12.16.0.0) | release |  | v12.16.0.0 | pending |  |  |
-| 62 | [`4c10732a`](https://github.com/n00bcodr/Jellyfin-Enhanced/commit/4c10732a6250fc731a7189bf0066f6b2b833daac) | 2026-11-15 | release |  | v12.16.0.0 - Jellyfin Enhanced (synced from jellyfin-plugins) | pending |  |  |
+| 61 | [`321701ae`](https://github.com/n00bcodr/Jellyfin-Enhanced/commit/321701aeb2f27eee5d9514a8ec8ce87b90074247) | 2026-11-15 (12.16.0.0) | release |  | v12.16.0.0 | ported |  | AssemblyVersion and FileVersion 12.16.0.0, as upstream main. docs/advanced/api.md names the same version. |
+| 62 | [`4c10732a`](https://github.com/n00bcodr/Jellyfin-Enhanced/commit/4c10732a6250fc731a7189bf0066f6b2b833daac) | 2026-11-15 | release |  | v12.16.0.0 - Jellyfin Enhanced (synced from jellyfin-plugins) | ported |  | manifest.json is byte-identical to upstream's at 4c10732a: the two catalog entries the release workflow added for 12.16.0.0 (the Jellyfin 12 and the Jellyfin 10.11 build). They are release data about artifacts upstream published, not code; the rewrite builds for Jellyfin 12 only, and nothing is built or published by this commit. |

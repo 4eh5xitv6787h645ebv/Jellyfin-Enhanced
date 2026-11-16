@@ -2020,8 +2020,9 @@
       "paths": [
         "Jellyfin.Plugin.JellyfinEnhanced/JellyfinEnhanced.csproj"
       ],
-      "status": "pending",
-      "rewriteCommits": []
+      "status": "ported",
+      "rewriteCommits": [],
+      "notes": "AssemblyVersion and FileVersion 12.16.0.0, as upstream main. docs/advanced/api.md names the same version."
     },
     {
       "sha": "4c10732a6250fc731a7189bf0066f6b2b833daac",
@@ -2039,8 +2040,9 @@
       "paths": [
         "manifest.json"
       ],
-      "status": "pending",
-      "rewriteCommits": []
+      "status": "ported",
+      "rewriteCommits": [],
+      "notes": "manifest.json is byte-identical to upstream's at 4c10732a: the two catalog entries the release workflow added for 12.16.0.0 (the Jellyfin 12 and the Jellyfin 10.11 build). They are release data about artifacts upstream published, not code; the rewrite builds for Jellyfin 12 only, and nothing is built or published by this commit."
     }
   ]
 }
