@@ -1,8 +1,8 @@
 {
   "description": "Budget for the served component bundle, GET /JellyfinEnhanced/bundle.js (Features/Platform/Services/ClientScriptBundle.cs), as an identity (uncompressed) body. rawBytes: its length. gzipBytes: its length after gzip at level 9 (zlib level 9; `gzip -9 -n`, .NET CompressionLevel.SmallestSize). Checked by tests/backend/Api/BundleBudgetTests.cs (gate T) and `scripts/restructure-gates.sh size`. It is a ratchet: lowering a limit needs no reason; a history entry that raises either limit must give one. `limits` is always the last history entry's.",
   "limits": {
-    "rawBytes": 2615677,
-    "gzipBytes": 706474
+    "rawBytes": 2616163,
+    "gzipBytes": 706597
   },
   "history": [
     {
@@ -56,6 +56,19 @@
         "gzipBytes": 706474
       },
       "reason": "Raised by exactly what the port adds, so the headroom left before it stays as it was: the Leaving Soon page and its Home tab / Custom Tabs panel (features/media-tags/leaving-soon, with upstream's stylesheet as written) and the item menu's Reclaimerr rows, day chooser and its new stylesheet, shipped in tag-item-menu.js because the bundle's load order and output keys are pinned. Measured with `scripts/restructure-gates.sh size`: 2,566,965 raw / 697,568 gzip-9 bytes on 5043e2db before the port, 2,591,898 / 704,565 after it (+24,933 / +6,997)."
+    },
+    {
+      "date": "2026-11-17",
+      "change": "upstream sync: port of upstream c451730b (#1074), branch sync/auto-20261117-1650",
+      "measured": {
+        "rawBytes": 2592384,
+        "gzipBytes": 704688
+      },
+      "limits": {
+        "rawBytes": 2616163,
+        "gzipBytes": 706597
+      },
+      "reason": "Raised by exactly what the port adds, so the headroom left before it stays as it was: the series lookup for the Similar and Recommended rows on season and episode pages (item-details.js and its minified twin). Measured with `scripts/restructure-gates.sh size`: 2,591,898 raw / 704,565 gzip-9 bytes on 459e643a, 2,592,384 / 704,688 on d423fb20 (+486 / +123). Gate T's own measure (BundleBudgetTests, .NET SmallestSize) is a little larger on this machine: 706,376 and 706,482 gzip-9 bytes (+106), within the new limit."
     }
   ]
 }
