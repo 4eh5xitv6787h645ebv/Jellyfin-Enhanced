@@ -2603,8 +2603,10 @@
         "tests/docs/coverage-matrix.md",
         "tests/frontend/features/features-seerr-search.test.mjs"
       ],
-      "status": "pending",
-      "rewriteCommits": []
+      "status": "ported",
+      "rewriteCommits": [],
+      "evidence": "artifacts/restructure-plan/step-logs/upstream-sync-evidence/p79-*",
+      "notes": "Re-implemented in client/src/features/seerr/core/api.ts (search): the whole navigator.language tag is sent, region included, as upstream. Difference from upstream: this tree already sent English when the browser language is not a language tag (Firefox with no configured locale reports the string \"undefined\"); that guard stays and now accepts a full BCP 47 shape (a 2–3 letter language, then subtags of 2–8 letters or digits, e.g. pt-BR, zh-Hant-TW, es-419), so upstream’s raw navigator.language can no longer put \"undefined\" or other text into the query. Test: upstream’s new test file is folded into the existing search-language test in tests/frontend/requests/seerr-core-boundaries.test.mjs (pt-BR and zh-Hant-TW kept, de unchanged, undefined and a tag with query text fall back to en); it failed before the change on pt-BR. tests/docs/coverage-matrix.md: upstream’s sentence, naming this tree’s test file, in the rewrite’s row. The server already forwards language as given (escaped). No route, setting or registration changes."
     }
   ]
 }

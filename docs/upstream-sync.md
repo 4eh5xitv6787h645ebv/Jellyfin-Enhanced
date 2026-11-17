@@ -4,7 +4,7 @@
 
 What the rewrite has taken from [upstream](https://github.com/n00bcodr/Jellyfin-Enhanced) (`main`) since it branched at `2e0f9251bf`. The source of truth is [`upstream-sync.json`](upstream-sync.json); the procedure is [upstream-sync-procedure.md](upstream-sync-procedure.md).
 
-79 upstream commits: 1 pending, 76 ported, 2 already-present.
+79 upstream commits: 77 ported, 2 already-present.
 
 | # | Upstream | Date | Class | Features | Subject | Status | Rewrite commit | Note |
 |---|---|---|---|---|---|---|---|---|
@@ -86,4 +86,4 @@ What the rewrite has taken from [upstream](https://github.com/n00bcodr/Jellyfin-
 | 76 | [`6c922d10`](https://github.com/n00bcodr/Jellyfin-Enhanced/commit/6c922d1094ae6beb75cf52539a20d786e3a5dec3) | 2026-11-17 | feature | media-tags, admin | feat(leaving-soon): serve the leaving titles as an item list for KefinTweaks | ported |  | artifacts/restructure-plan/step-logs/upstream-sync-evidence/p76-* |
 | 77 | [`c6437f16`](https://github.com/n00bcodr/Jellyfin-Enhanced/commit/c6437f164b6a59dfa493d8d07faf76c0fcc09c17) | 2026-11-17 | feature | media-tags, admin | feat(leaving-soon): hide watched titles in the home row | ported |  | artifacts/restructure-plan/step-logs/upstream-sync-evidence/p77-* |
 | 78 | [`1b497915`](https://github.com/n00bcodr/Jellyfin-Enhanced/commit/1b4979154012ec7720443e58a6b3f29ba1135239) | 2026-11-17 | test |  | chore(tests): regenerate production inventory | ported |  | With `c6437f16`. Upstream’s bot regenerating its production inventory for 6c922d10 and c6437f16. This tree’s tests/docs/production-inventory.json is generated (je12 regen) in the commits of those two entries, with the same changes: the route GET /JellyfinEnhanced/leaving-soon/items (routes 222 → 223, in 6c922d10’s commit) and the configuration property LeavingSoonHideWatched (configuration_properties 792 → 793, in c6437f16’s). |
-| 79 | [`d33904bc`](https://github.com/n00bcodr/Jellyfin-Enhanced/commit/d33904bc14d407588cc7b01c82d9711c2459078d) | 2026-11-17 | fix | seerr | fix(seerr): keep the region in the search language so TMDB returns the right regional titles (#1082) | pending |  |  |
+| 79 | [`d33904bc`](https://github.com/n00bcodr/Jellyfin-Enhanced/commit/d33904bc14d407588cc7b01c82d9711c2459078d) | 2026-11-17 | fix | seerr | fix(seerr): keep the region in the search language so TMDB returns the right regional titles (#1082) | ported |  | artifacts/restructure-plan/step-logs/upstream-sync-evidence/p79-* |
