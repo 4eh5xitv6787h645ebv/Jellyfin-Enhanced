@@ -2260,7 +2260,9 @@
         "tests/inventory/generate.py"
       ],
       "status": "ported",
-      "rewriteCommits": [],
+      "rewriteCommits": [
+        "459e643af698500bd16018b9be05be30a4089af2"
+      ],
       "unmappedPaths": [
         "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs",
         "Jellyfin.Plugin.JellyfinEnhanced/Controllers/LeavingSoonController.cs",
