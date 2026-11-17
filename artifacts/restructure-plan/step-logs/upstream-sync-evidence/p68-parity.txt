@@ -1,0 +1,221 @@
+== live check (10 before/after pair(s))
+pair 'reclaimerr-off': complete
+  before: je12 api viewer GET /JellyfinEnhanced/reclaimerr/item/0ff8461bed0a2658ec63487586efdbd3
+    deployed upstream-da0ea7732080 = da0ea773 (dll a7471ce08f0c852c) on lab je125ce284, 2026-11-17 17:31:23
+    | HTTP 404
+    | {"type": "https://tools.ietf.org/html/rfc9110#section-15.5.5", "title": "Not Found", "status": 404, "traceId": "00-ae92b0b71a13c232b8949ad92bc029c9-8e89d0a42cba93ac-00"}
+  after: je12 api viewer GET /JellyfinEnhanced/reclaimerr/item/0ff8461bed0a2658ec63487586efdbd3
+    deployed 0d439ea3 (dll 93b21abaa64d2a5b) on lab je125ce284, 2026-11-17 17:34:05
+    | HTTP 404
+    | {"type": "https://tools.ietf.org/html/rfc9110#section-15.5.5", "title": "Not Found", "status": 404, "traceId": "00-0ea551c270a7fac3596c67fb98f8c5d7-988852befcad10e3-00"}
+  same command before and after: yes; builds: before upstream-da0ea7732080, after 0d439ea3 (a clean build of the checkout's commit)
+pair 'admin': complete
+  before: je12 browse '#/configurationpage?name=Jellyfin%20Enhanced' --script p68-admin.mjs
+    deployed upstream-da0ea7732080 = da0ea773 (dll a7471ce08f0c852c) on lab je125ce284, 2026-11-17 17:31:32
+    | SCRIPT cards: Maintainerrauto_awesomeNew in v12.16.0.0, Reclaimerr, Leaving soon
+    | LeavingSoonMaintainerrEnabled: shown on
+    | LeavingSoonMaintainerrUrl: shown
+    | ReclaimerrEnabled: shown off
+    | ReclaimerrUrl: hidden
+    | ReclaimerrApiKey: hidden
+    | reclaimerrCreateAccountBtn: hidden
+    | LeavingSoonMaintainerrActions: shown on
+    | LeavingSoonHomeRow: shown on
+    | leavingSoonPageEnabled: shown on
+    | leavingSoonPageUseNativeTab: shown on
+    | CONSOLE Translation key is missing from dictionary: url
+    | CONSOLE Translation key is missing from dictionary: maxFileSize / (1024 * 1024)
+    | CONSOLE Translation key is missing from dictionary: img.width
+    | CONSOLE Translation key is missing from dictionary: img.height
+    | CONSOLE Translation key is missing from dictionary: error || 'Upload failed'
+    | CONSOLE Translation key is missing from dictionary: error.message || 'Upload error'
+    | CONSOLE Translation key is missing from dictionary: error || 'Delete failed'
+    | CONSOLE Translation key is missing from dictionary: err.message || 'Delete error'
+    | CONSOLE Translation key is missing from dictionary: baseName
+    | CONSOLE Translation key is missing from dictionary: code.split('-')[1]
+    | CONSOLE Translation key is missing from dictionary: index + 1
+    | CONSOLE Translation key is missing from dictionary: trimmedLine
+    | CONSOLE Translation key is missing from dictionary: invalidLines.join('\n')
+    | CONSOLE Failed to load resource: the server responded with a status of 404 (Not Found) /JellyfinEnhanced/cdn/selfhst/svg/maintainerr.svg
+    | CONSOLE Failed to load resource: the server responded with a status of 404 (Not Found) /JellyfinEnhanced/cdn/selfhst/svg/tmdb.svg
+    | CONSOLE Failed to load resource: the server responded with a status of 404 (Not Found) /JellyfinEnhanced/cdn/selfhst/svg/reclaimerr.svg
+    | BLOCKED https://www.gstatic.com/cv/js/sender/v1/cast_sender.js
+    | BLOCKED https://api.github.com/repos/n00bcodr/Jellyfin-Enhanced/contents/Jellyfin.Plugin.JellyfinEnhanced/js/locales
+    | URL /web/index.html#/configurationpage?name=Jellyfin%20Enhanced
+  after: je12 browse '#/configurationpage?name=Jellyfin%20Enhanced' --script p68-admin.mjs
+    deployed 0d439ea3 (dll 93b21abaa64d2a5b) on lab je125ce284, 2026-11-17 17:34:25
+    | SCRIPT cards: Maintainerrauto_awesomeNew in v12.16.0.0, Reclaimerr, Leaving soon
+    | LeavingSoonMaintainerrEnabled: shown on
+    | LeavingSoonMaintainerrUrl: shown
+    | ReclaimerrEnabled: shown off
+    | ReclaimerrUrl: hidden
+    | ReclaimerrApiKey: hidden
+    | reclaimerrCreateAccountBtn: hidden
+    | LeavingSoonMaintainerrActions: shown on
+    | LeavingSoonHomeRow: shown on
+    | leavingSoonPageEnabled: shown on
+    | leavingSoonPageUseNativeTab: shown on
+    | CONSOLE Failed to load resource: the server responded with a status of 404 (Not Found) /JellyfinEnhanced/cdn/selfhst/svg/maintainerr.svg
+    | CONSOLE Failed to load resource: the server responded with a status of 404 (Not Found) /JellyfinEnhanced/cdn/selfhst/svg/reclaimerr.svg
+    | CONSOLE Failed to load resource: the server responded with a status of 404 (Not Found) /JellyfinEnhanced/cdn/selfhst/svg/tmdb.svg
+    | BLOCKED https://www.gstatic.com/cv/js/sender/v1/cast_sender.js
+    | URL /web/index.html#/configurationpage?name=Jellyfin%20Enhanced
+  same command before and after: yes; builds: before upstream-da0ea7732080, after 0d439ea3 (a clean build of the checkout's commit)
+pair 'list': complete
+  before: je12 api viewer GET /JellyfinEnhanced/leaving-soon/list
+    deployed upstream-da0ea7732080 = da0ea773 (dll a7471ce08f0c852c) on lab je125ce284, 2026-11-17 17:31:42
+    | HTTP 200
+    | {"provider": "maintainerr", "admin": false, "canRequest": false, "actions": false, "items": [{"id": "0ff8461bed0a2658ec63487586efdbd3", "name": "101 Dalmatians II: Patch's London Adventure", "type": "Movie", "year": 2003, "deleteAt": 1795348800000, "versionOnly": false}, {"id": "06de48d758074756c732c7de70aa79f8", "name": "Abominable", "type": "Movie", "year": 2019, "deleteAt": 1797076800000, "versionOnly": false}], "requests": [], "mine": []}
+  after: je12 api viewer GET /JellyfinEnhanced/leaving-soon/list
+    deployed 0d439ea3 (dll 93b21abaa64d2a5b) on lab je125ce284, 2026-11-17 17:34:05
+    | HTTP 200
+    | {"provider": "maintainerr", "admin": false, "canRequest": false, "actions": false, "items": [{"id": "0ff8461bed0a2658ec63487586efdbd3", "name": "101 Dalmatians II: Patch's London Adventure", "type": "Movie", "year": 2003, "deleteAt": 1795348800000, "versionOnly": false}, {"id": "06de48d758074756c732c7de70aa79f8", "name": "Abominable", "type": "Movie", "year": 2019, "deleteAt": 1797076800000, "versionOnly": false}], "requests": [], "mine": []}
+  same command before and after: yes; builds: before upstream-da0ea7732080, after 0d439ea3 (a clean build of the checkout's commit)
+pair 'admin-list': complete
+  before: je12 api admin GET /JellyfinEnhanced/leaving-soon/list
+    deployed upstream-da0ea7732080 = da0ea773 (dll a7471ce08f0c852c) on lab je125ce284, 2026-11-17 17:31:43
+    | HTTP 200
+    | {"provider": "maintainerr", "admin": true, "canRequest": false, "actions": true, "items": [{"id": "0ff8461bed0a2658ec63487586efdbd3", "name": "101 Dalmatians II: Patch's London Adventure", "type": "Movie", "year": 2003, "deleteAt": 1795348800000, "versionOnly": false}, {"id": "06de48d758074756c732c7de70aa79f8", "name": "Abominable", "type": "Movie", "year": 2019, "deleteAt": 1797076800000, "versionOnly": false}], "requests": [], "mine": []}
+  after: je12 api admin GET /JellyfinEnhanced/leaving-soon/list
+    deployed 0d439ea3 (dll 93b21abaa64d2a5b) on lab je125ce284, 2026-11-17 17:34:05
+    | HTTP 200
+    | {"provider": "maintainerr", "admin": true, "canRequest": false, "actions": true, "items": [{"id": "0ff8461bed0a2658ec63487586efdbd3", "name": "101 Dalmatians II: Patch's London Adventure", "type": "Movie", "year": 2003, "deleteAt": 1795348800000, "versionOnly": false}, {"id": "06de48d758074756c732c7de70aa79f8", "name": "Abominable", "type": "Movie", "year": 2019, "deleteAt": 1797076800000, "versionOnly": false}], "requests": [], "mine": []}
+  same command before and after: yes; builds: before upstream-da0ea7732080, after 0d439ea3 (a clean build of the checkout's commit)
+pair 'page': complete
+  before: je12 browse '#/home' --user viewer --script p68-page.mjs
+    deployed upstream-da0ea7732080 = da0ea773 (dll a7471ce08f0c852c) on lab je125ce284, 2026-11-17 17:31:47
+    | SCRIPT title: Leaving Soon (2 items)
+    | filters: All, Movies, Shows
+    | 101 Dalmatians II: Patch's London Adventure | Leaves in 5d | no actions
+    | Abominable | Leaves in 25d | no actions
+    | config: provider=maintainerr actions=true requests=false page=true nativeTab=true
+    | menu: removalMenu=function same=true
+    | BLOCKED https://www.gstatic.com/cv/js/sender/v1/cast_sender.js
+    | URL /web/index.html#/home
+  after: je12 browse '#/home' --user viewer --script p68-page.mjs
+    deployed 0d439ea3 (dll 93b21abaa64d2a5b) on lab je125ce284, 2026-11-17 17:34:10
+    | SCRIPT title: Leaving Soon (2 items)
+    | filters: All, Movies, Shows
+    | 101 Dalmatians II: Patch's London Adventure | Leaves in 5d | no actions
+    | Abominable | Leaves in 25d | no actions
+    | config: provider=maintainerr actions=true requests=false page=true nativeTab=true
+    | menu: removalMenu=function same=true
+    | BLOCKED https://www.gstatic.com/cv/js/sender/v1/cast_sender.js
+    | URL /web/index.html#/home
+  same command before and after: yes; builds: before upstream-da0ea7732080, after 0d439ea3 (a clean build of the checkout's commit)
+pair 'page-admin': complete
+  before: je12 browse '#/home' --script p68-page.mjs
+    deployed upstream-da0ea7732080 = da0ea773 (dll a7471ce08f0c852c) on lab je125ce284, 2026-11-17 17:32:05
+    | SCRIPT title: Leaving Soon (2 items)
+    | filters: All, Movies, Shows
+    | 101 Dalmatians II: Patch's London Adventure | Leaves in 5d | Keep (cancel removal)+Postpone removal
+    | Abominable | Leaves in 25d | Keep (cancel removal)+Postpone removal
+    | config: provider=maintainerr actions=true requests=false page=true nativeTab=true
+    | menu: removalMenu=function same=true
+    | BLOCKED https://www.gstatic.com/cv/js/sender/v1/cast_sender.js
+    | URL /web/index.html#/home
+  after: je12 browse '#/home' --script p68-page.mjs
+    deployed 0d439ea3 (dll 93b21abaa64d2a5b) on lab je125ce284, 2026-11-17 17:34:14
+    | SCRIPT title: Leaving Soon (2 items)
+    | filters: All, Movies, Shows
+    | 101 Dalmatians II: Patch's London Adventure | Leaves in 5d | Keep (cancel removal)+Postpone removal
+    | Abominable | Leaves in 25d | Keep (cancel removal)+Postpone removal
+    | config: provider=maintainerr actions=true requests=false page=true nativeTab=true
+    | menu: removalMenu=function same=true
+    | BLOCKED https://www.gstatic.com/cv/js/sender/v1/cast_sender.js
+    | URL /web/index.html#/home
+  same command before and after: yes; builds: before upstream-da0ea7732080, after 0d439ea3 (a clean build of the checkout's commit)
+pair 'menu': complete
+  before: je12 browse '#/home' --script p68-menu.mjs
+    deployed upstream-da0ea7732080 = da0ea773 (dll a7471ce08f0c852c) on lab je125ce284, 2026-11-17 17:32:11
+    | SCRIPT je-maintainerr-keep: Keep (cancel removal)
+    | je-maintainerr-postpone: Postpone removal
+    | title: Postpone removal
+    | hint: Leaves in 5d.
+    | days: +7 days, +14 days, +30 days, +90 days
+    | exact date: no
+    | reset: Reset timer (count from today)
+    | CONSOLE Failed to load resource: the server responded with a status of 404 (Not Found) /JellyfinEnhanced/cdn/flag-icons/flags/4x3/fi.svg
+    | CONSOLE Failed to load resource: the server responded with a status of 404 (Not Found) /JellyfinEnhanced/cdn/flag-icons/flags/4x3/is.svg
+    | CONSOLE Failed to load resource: the server responded with a status of 404 (Not Found) /JellyfinEnhanced/cdn/flag-icons/flags/4x3/kr.svg
+    | CONSOLE Failed to load resource: the server responded with a status of 404 (Not Found) /JellyfinEnhanced/cdn/flag-icons/flags/4x3/se.svg
+    | CONSOLE Failed to load resource: the server responded with a status of 404 (Not Found) /JellyfinEnhanced/cdn/flag-icons/flags/4x3/no.svg
+    | BLOCKED https://www.gstatic.com/cv/js/sender/v1/cast_sender.js
+    | BLOCKED https://cdn.jsdelivr.net/gh/Druidblack/jellyfin-icon-metadata@main/icons/imdb/imdb.png
+    | BLOCKED https://cdn.jsdelivr.net/gh/Druidblack/jellyfin-icon-metadata@main/icons/themoviedb/themoviedb.png
+    | URL /web/index.html#/details?id=0ff8461bed0a2658ec63487586efdbd3
+  after: je12 browse '#/home' --script p68-menu.mjs
+    deployed 0d439ea3 (dll 93b21abaa64d2a5b) on lab je125ce284, 2026-11-17 17:34:20
+    | SCRIPT je-maintainerr-keep: Keep (cancel removal)
+    | je-maintainerr-postpone: Postpone removal
+    | title: Postpone removal
+    | hint: Leaves in 5d.
+    | days: +7 days, +14 days, +30 days, +90 days
+    | exact date: no
+    | reset: Reset timer (count from today)
+    | CONSOLE Failed to load resource: the server responded with a status of 404 (Not Found) /JellyfinEnhanced/cdn/flag-icons/flags/4x3/is.svg
+    | CONSOLE Failed to load resource: the server responded with a status of 404 (Not Found) /JellyfinEnhanced/cdn/flag-icons/flags/4x3/fi.svg
+    | CONSOLE Failed to load resource: the server responded with a status of 404 (Not Found) /JellyfinEnhanced/cdn/flag-icons/flags/4x3/kr.svg
+    | CONSOLE Failed to load resource: the server responded with a status of 404 (Not Found) /JellyfinEnhanced/cdn/flag-icons/flags/4x3/no.svg
+    | CONSOLE Failed to load resource: the server responded with a status of 404 (Not Found) /JellyfinEnhanced/cdn/flag-icons/flags/4x3/se.svg
+    | BLOCKED https://www.gstatic.com/cv/js/sender/v1/cast_sender.js
+    | BLOCKED https://cdn.jsdelivr.net/gh/Druidblack/jellyfin-icon-metadata@main/icons/imdb/imdb.png
+    | BLOCKED https://cdn.jsdelivr.net/gh/Druidblack/jellyfin-icon-metadata@main/icons/themoviedb/themoviedb.png
+    | URL /web/index.html#/details?id=0ff8461bed0a2658ec63487586efdbd3
+  same command before and after: yes; builds: before upstream-da0ea7732080, after 0d439ea3 (a clean build of the checkout's commit)
+pair 'reclaimerr-item': complete
+  before: je12 api admin GET /JellyfinEnhanced/reclaimerr/item/0ff8461bed0a2658ec63487586efdbd3
+    deployed upstream-da0ea7732080 = da0ea773 (dll a7471ce08f0c852c) on lab je125ce284, 2026-11-17 17:32:29
+    | HTTP 200
+    | {"ItemId": "0ff8461bed0a2658ec63487586efdbd3", "Marked": false, "Supported": true, "provider": "reclaimerr", "admin": true, "canRequest": false}
+  after: je12 api admin GET /JellyfinEnhanced/reclaimerr/item/0ff8461bed0a2658ec63487586efdbd3
+    deployed 0d439ea3 (dll 93b21abaa64d2a5b) on lab je125ce284, 2026-11-17 17:33:49
+    | HTTP 200
+    | {"ItemId": "0ff8461bed0a2658ec63487586efdbd3", "Marked": false, "Supported": true, "provider": "reclaimerr", "admin": true, "canRequest": false}
+  same command before and after: yes; builds: before upstream-da0ea7732080, after 0d439ea3 (a clean build of the checkout's commit)
+pair 'maintainerr-off': complete
+  before: je12 api admin GET /JellyfinEnhanced/maintainerr/item/0ff8461bed0a2658ec63487586efdbd3
+    deployed upstream-da0ea7732080 = da0ea773 (dll a7471ce08f0c852c) on lab je125ce284, 2026-11-17 17:32:29
+    | HTTP 404
+    | {"type": "https://tools.ietf.org/html/rfc9110#section-15.5.5", "title": "Not Found", "status": 404, "traceId": "00-46c60ea0bb22e3df7d4cb0535d71e673-9b97974cab9fece4-00"}
+  after: je12 api admin GET /JellyfinEnhanced/maintainerr/item/0ff8461bed0a2658ec63487586efdbd3
+    deployed 0d439ea3 (dll 93b21abaa64d2a5b) on lab je125ce284, 2026-11-17 17:33:49
+    | HTTP 404
+    | {"type": "https://tools.ietf.org/html/rfc9110#section-15.5.5", "title": "Not Found", "status": 404, "traceId": "00-8894e620393d9999ab70b284180a0688-8afc7ec9e554bbd8-00"}
+  same command before and after: yes; builds: before upstream-da0ea7732080, after 0d439ea3 (a clean build of the checkout's commit)
+pair 'reclaimerr-menu': complete
+  before: je12 browse '#/home' --script p68-menu-mark.mjs
+    deployed upstream-da0ea7732080 = da0ea773 (dll a7471ce08f0c852c) on lab je125ce284, 2026-11-17 17:32:35
+    | SCRIPT je-maintainerr-mark: Mark for removal
+    | title: Schedule removal
+    | hint: undefined
+    | days: +7 days, +14 days, +30 days, +90 days
+    | exact date: yes
+    | reset: undefined
+    | CONSOLE Failed to load resource: the server responded with a status of 404 (Not Found) /JellyfinEnhanced/cdn/flag-icons/flags/4x3/is.svg
+    | CONSOLE Failed to load resource: the server responded with a status of 404 (Not Found) /JellyfinEnhanced/cdn/flag-icons/flags/4x3/fi.svg
+    | CONSOLE Failed to load resource: the server responded with a status of 404 (Not Found) /JellyfinEnhanced/cdn/flag-icons/flags/4x3/kr.svg
+    | CONSOLE Failed to load resource: the server responded with a status of 404 (Not Found) /JellyfinEnhanced/cdn/flag-icons/flags/4x3/se.svg
+    | CONSOLE Failed to load resource: the server responded with a status of 404 (Not Found) /JellyfinEnhanced/cdn/flag-icons/flags/4x3/no.svg
+    | BLOCKED https://www.gstatic.com/cv/js/sender/v1/cast_sender.js
+    | BLOCKED https://cdn.jsdelivr.net/gh/Druidblack/jellyfin-icon-metadata@main/icons/imdb/imdb.png
+    | BLOCKED https://cdn.jsdelivr.net/gh/Druidblack/jellyfin-icon-metadata@main/icons/themoviedb/themoviedb.png
+    | URL /web/index.html#/details?id=0ff8461bed0a2658ec63487586efdbd3
+  after: je12 browse '#/home' --script p68-menu-mark.mjs
+    deployed 0d439ea3 (dll 93b21abaa64d2a5b) on lab je125ce284, 2026-11-17 17:33:55
+    | SCRIPT je-maintainerr-mark: Mark for removal
+    | title: Schedule removal
+    | hint: undefined
+    | days: +7 days, +14 days, +30 days, +90 days
+    | exact date: yes
+    | reset: undefined
+    | CONSOLE Failed to load resource: the server responded with a status of 404 (Not Found) /JellyfinEnhanced/cdn/flag-icons/flags/4x3/is.svg
+    | CONSOLE Failed to load resource: the server responded with a status of 404 (Not Found) /JellyfinEnhanced/cdn/flag-icons/flags/4x3/fi.svg
+    | CONSOLE Failed to load resource: the server responded with a status of 404 (Not Found) /JellyfinEnhanced/cdn/flag-icons/flags/4x3/kr.svg
+    | CONSOLE Failed to load resource: the server responded with a status of 404 (Not Found) /JellyfinEnhanced/cdn/flag-icons/flags/4x3/se.svg
+    | CONSOLE Failed to load resource: the server responded with a status of 404 (Not Found) /JellyfinEnhanced/cdn/flag-icons/flags/4x3/no.svg
+    | BLOCKED https://www.gstatic.com/cv/js/sender/v1/cast_sender.js
+    | BLOCKED https://cdn.jsdelivr.net/gh/Druidblack/jellyfin-icon-metadata@main/icons/imdb/imdb.png
+    | BLOCKED https://cdn.jsdelivr.net/gh/Druidblack/jellyfin-icon-metadata@main/icons/themoviedb/themoviedb.png
+    | URL /web/index.html#/details?id=0ff8461bed0a2658ec63487586efdbd3
+  same command before and after: yes; builds: before upstream-da0ea7732080, after 0d439ea3 (a clean build of the checkout's commit)

@@ -1,0 +1,20 @@
+New tests of the port of upstream da0ea773, as je12 recorded them (je12 test --only). The tree before the port is
+5043e2db with only the new test files copied in; 0d439ea3 is this branch's head before the bundle budget was added to
+the port commit (the same source, tests and generated files as 0ad477db).
+
+tests/frontend/features/media-tags/features-leavingsoon-page.test.mjs (8 tests)
+  FAILED on 5043e2db+dirty@e07152c5 at 2026-11-17 17:35: 8 failed, 0 passed (the page does not exist: JE.leavingSoonPage is undefined)
+  passed on 0d439ea3 at 2026-11-17 17:35: 8 passed
+
+tests/frontend/features/media-tags/features-maintainerr-menu.test.mjs, the new tests ('Reclaimerr|removal request|removalMenu|done action tells')
+  FAILED on 5043e2db+dirty@e07152c5 at 2026-11-17 17:35: 7 failed, 0 passed (no Request removal row, no reclaimerr routes, no exact-day chooser, no JE.removalMenu)
+  passed on 0d439ea3 at 2026-11-17 17:35: 10 passed (the regex also matches three older tests)
+
+JE.Tests.Features.MediaTags.IntegrationReclaimerrActionsTests (4 tests; a loopback Reclaimerr)
+  passed on 0d439ea3 at 2026-11-17 17:35: 4 passed (on the tree before the port they do not build, which je12 reports as not run)
+
+JE.Tests.Features.MediaTags.LeavingSoonTests (upstream's 11 new tests and 5 of the rewrite's, with the existing ones)
+  passed on 0d439ea3 at 2026-11-17 17:35: 81 passed
+
+JE.Tests.Architecture (with the contract additions)
+  passed on af4b2353+dirty@1889b86c at 2026-11-17 17:28 (the tree of the contract commit): 24 passed

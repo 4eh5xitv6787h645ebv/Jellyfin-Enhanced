@@ -1,0 +1,4 @@
+scripts/restructure-gates.sh size (je12 gate size), on 5043e2db before the port and on the port:
+5043e2db: SIZE: raw 2566965 (budget 2590744), gzip -9 697568 (budget 699477), brotli -q 11 n/a (no brotli CLI)
+0d439ea3 (the port, before its budget entry): SIZE: raw 2591898 (budget 2590744), gzip -9 704565 (budget 699477): over both
+0ad477db (with the budget entry): SIZE: raw 2591898 (budget 2615677), gzip -9 704565 (budget 706474), brotli -q 11 n/a (no brotli CLI)
