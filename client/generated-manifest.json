@@ -1319,8 +1319,8 @@
   "outputs": {
     "Jellyfin.Plugin.JellyfinEnhanced/Configuration/admin/per-user.js.map": "9c80733dd8064720e7213a7f5406d938f0340769475ecdbf96222fe0db53d193",
     "Jellyfin.Plugin.JellyfinEnhanced/Configuration/admin/per-user.js": "5de7166699323ad0571b2768be5101eaef562035161e2b2cd9f36e13979fd7b6",
-    "Jellyfin.Plugin.JellyfinEnhanced/Configuration/admin/sections.js.map": "fa6b7985759b57614c904f2c5ced6b54fe5b919b7fb95188ec0449c0c4eab1bb",
-    "Jellyfin.Plugin.JellyfinEnhanced/Configuration/admin/sections.js": "c43a1030290a780f1c429761899a8ef6f1a0560ffde972a270cde1c713753e56",
+    "Jellyfin.Plugin.JellyfinEnhanced/Configuration/admin/sections.js.map": "668c93a7968fb6d5b4578fb21ce0d705af4d89bf2242e3ce1230f750339d55b1",
+    "Jellyfin.Plugin.JellyfinEnhanced/Configuration/admin/sections.js": "30584cf4ee750741544ce1790f5a1a7028892b27d9672fc6f4088c845ac4b7d6",
     "Jellyfin.Plugin.JellyfinEnhanced/Configuration/jeAdmin.js.map": "a208b8fbe8c467c32fd7295472ac0993e5b471a31db1e6da90023fff2c66a4c4",
     "Jellyfin.Plugin.JellyfinEnhanced/Configuration/jeAdmin.js": "a3f254f7667e7a6338461d1a2d770e5d27cc12b666cfa8ec0f7efac5b53496a6",
     "Jellyfin.Plugin.JellyfinEnhanced/js/arr/arr-links.js.map": "c81989482b3651c3512c57efde18ad9fb8a86f2e7af664b954a2ab2027ba9b2c",

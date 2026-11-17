@@ -316,6 +316,8 @@
   "jellyseerrUserIdCacheTtlMinutes",
   "jellyseerr_TMDB_API_KEY",
   "keyboard",
+  "leavingSoonCopyKefinBtn",
+  "leavingSoonCopyKefinBtn--mirror",
   "leavingSoonPageAutoCreateCustomTab",
   "leavingSoonPageEnabled",
   "leavingSoonPageUseCustomTabs",

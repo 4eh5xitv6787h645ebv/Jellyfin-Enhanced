@@ -2510,6 +2510,7 @@
       "subject": "feat(leaving-soon): serve the leaving titles as an item list for KefinTweaks",
       "class": "feature",
       "features": [
+        "media-tags",
         "admin"
       ],
       "issues": [
@@ -2527,11 +2528,10 @@
         "docs/advanced/api.md",
         "docs/enhanced/enhanced-features.md"
       ],
-      "status": "pending",
+      "status": "ported",
       "rewriteCommits": [],
-      "unmappedPaths": [
-        "Jellyfin.Plugin.JellyfinEnhanced/Controllers/LeavingSoonController.cs"
-      ]
+      "evidence": "artifacts/restructure-plan/step-logs/upstream-sync-evidence/p76-*",
+      "notes": "Server: upstream adds the action to its LeavingSoonController; here it is GET leaving-soon/items in the feature’s one controller (Features/MediaTags/JeMediaTagsController.LeavingSoon.cs, action GetLeavingSoonItems), with upstream’s logic: 404 unless a removal tool has an address (Shared/MediaTags/LeavingSoonSources.ApiConfigured, upstream’s LeavingSoonService.ApiConfigured), refused without a signed-in Jellyfin user, the home row’s LeavingSoonSectionResults.Order with IsVisibleStandalone, an optional limit, and Jellyfin’s item DTOs as {Items, TotalRecordCount}. LeavingSoonService and IDtoService come in as [FromServices] parameters, as the page’s list route takes its services, instead of a new constructor dependency; the user is read through the controller’s CallerUser (UserHelper.GetCurrentUserId, as upstream). Client: the “Copy KefinTweaks section” button and its hint go into the Leaving soon card in client/src/admin/config/sections/arr.ts (a custom item with an init, as upstream); the section JSON and the clipboard-then-text-area copy are upstream’s; the engine forwards a click on the Services tab copy to it, as upstream’s does. Docs: docs/enhanced/enhanced-features.md as is; docs/advanced/api.md gains upstream’s row and its route count goes 222 → 223. Records: the two button ids in tests/fixtures/admin-config-baseline.json’s renderedIds; the production inventory regenerated. Upstream has no test for it; IntegrationMaintainerrActionsTests.The_item_list_route_answers_like_Items_soonest_first_as_the_user_may_see_them (order, visibility, limit, no switch needed, 403 and 404) and tests/frontend/admin/config/admin-config-leaving-soon-kefin.test.mjs (2 tests) are new; the backend test uses series because a movie’s visibility check needs Jellyfin’s Live TV manager. Contract: a new route, so the route/auth, auth-helper and auth-read lines of GET leaving-soon/items, ExpectedRoutes 222 → 223 and its line in baselines/inventory-routes.txt are added, additions only, in the branch’s contract commit."
     },
     {
       "sha": "c6437f164b6a59dfa493d8d07faf76c0fcc09c17",
