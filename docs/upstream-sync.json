@@ -2329,8 +2329,9 @@
         "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/bookmarks/bookmarks.js",
         "tests/frontend/features/features-bookmarks.test.mjs"
       ],
-      "status": "pending",
-      "rewriteCommits": []
+      "status": "already-present",
+      "rewriteCommits": [],
+      "evidence": "The rewrite's createBookmarkMarkers (client/src/features/bookmarks/bookmarks.ts) never had upstream's early return on an empty list: it removes the slider's existing markers first and then draws one per bookmark, so deleting the last bookmark already leaves no marker. Upstream's test ('deleting the only bookmark of the playing item removes its seek-bar marker', added to tests/frontend/features/bookmarks/features-bookmarks.test.mjs unchanged) passes on the rewrite as it was (d423fb20 with only the test added) and fails when upstream's old early return is put back into createBookmarkMarkers ('condition never became true'): artifacts/restructure-plan/step-logs/upstream-sync-evidence/p70.tests.txt. The test stays as a regression guard."
     },
     {
       "sha": "5b92e29fc46f22f9550e85d43479b2d63e43c8a8",
