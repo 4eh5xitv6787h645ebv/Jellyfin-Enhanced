@@ -2393,9 +2393,10 @@
       "subject": "fix(elsewhere): explain, check and allow uploading the custom branding icon (#1080)",
       "class": "fix",
       "features": [
-        "admin",
+        "details-providers",
         "chrome",
-        "details-providers"
+        "admin",
+        "platform"
       ],
       "issues": [
         "#1080"
@@ -2418,11 +2419,13 @@
         "tests/backend/Api/ApiBrandingTests.cs",
         "tests/docs/production-inventory.json"
       ],
-      "status": "pending",
+      "status": "ported",
       "rewriteCommits": [],
       "unmappedPaths": [
         "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs"
-      ]
+      ],
+      "evidence": "artifacts/restructure-plan/step-logs/upstream-sync-evidence/p73-*",
+      "notes": "Server: upstream's branding code is in Features/Chrome/JeChromeController.cs (the sixth slot elsewhere-icon.png, the upload's type and content checks, the content-typed admin preview with the sandbox headers, the anonymous GET ElsewhereBrandingIcon route) and in a new stateless Shared/Branding/ElsewhereBrandingIcon.cs (slot name, accepted types, the 64 KB sniff, the upload version), because Platform's public config needs the version and a controller may not reach another feature; ElsewhereCustomBrandingIconVersion is a field of Transport/BootstrapConfig.cs, so /public-config, /bootstrap's PublicConfig and the generated contracts carry it. Client: a new features/details-providers/elsewhere-branding.ts resolves the icon as upstream (an upload wins, with ?v=<version>; /web/ and /JellyfinEnhanced/ paths through ApiClient.getUrl) and builds it with upstream's console warnings, and elsewhere.ts centres it after the title's cssText reset (the new module keeps elsewhere.ts under its size ratchet, lowered from 970 to 961 lines); the admin page's slot and URL warning are in admin/config/sections/elsewhere.ts, the upload rules, JSON-unwrapped server reasons, preview refresh after a refusal and the debounced URL check in admin/config/page/branding.ts, and gated-help.ts re-checks on every dependency update as upstream's updateAllDependencies does. Not ported because already present: upstream's change from template literals to concatenation in the config page (the dashboard reads ${...} as translation keys); the rewrite's HTML build already rewrites ${ (scripts/client/html-entries.mjs) and the generated configPage.html holds none. Tests: upstream's backend tests, adapted to JeChromeController with the public-config version read from JePlatformController, plus one that the other slots keep their type rules and get no sandbox headers; upstream has no client tests, so 4 Elsewhere panel tests and 7 admin page tests are new. Records: config-flag-groups.json regenerated (ElsewhereIconInput, as upstream), the production inventory regenerated, api.md's route count 221 to 222 (upstream 217 to 218), the eight new control ids in tests/fixtures/admin-config-baseline.json, Shared/Branding in project-structure.md. The route's snapshot lines (route/auth, auth-helper, auth-read, ExpectedRoutes 221 to 222, ExpectedAnonymous 12 to 13, the INV route list) are additions in this branch's 'contract: upstream sync additions' commit."
     },
     {
       "sha": "782a836462231e7f68c4a673cebd9c06f823097b",
