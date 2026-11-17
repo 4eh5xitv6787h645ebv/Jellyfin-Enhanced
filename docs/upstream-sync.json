@@ -2385,7 +2385,7 @@
       ],
       "status": "ported",
       "rewriteCommits": [
-        "2f5ff36329f1e838482479204adb070181ce9c47"
+        "21ac33dc7d13c5a8b9d49b92bed614570f19b224"
       ],
       "notes": "Applied as is (git show cdc38b53 | git apply --3way, clean): the 30 locale files under Jellyfin.Plugin.JellyfinEnhanced/js/locales now equal upstream's blobs (Weblate translations of the strings that were still English, among them the Seerr discovery filters). No other file changes."
     },
@@ -2423,7 +2423,7 @@
       ],
       "status": "ported",
       "rewriteCommits": [
-        "ac5a057a90e265f2db17692b9c088947112f6acc"
+        "f45142322df56476f40078f2c1b2f37abaa69250"
       ],
       "unmappedPaths": [
         "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs"
@@ -2452,7 +2452,7 @@
       ],
       "status": "ported",
       "rewriteCommits": [
-        "11d504c4491ca5802ff246e5cbaaebf2f548470d"
+        "1b027a343d00e249e3c8ac56c64d7c2c08b7a98c"
       ],
       "evidence": "artifacts/restructure-plan/step-logs/upstream-sync-evidence/p74-*",
       "notes": "Re-implemented in client/src/admin/config/page/display-cards.ts with upstream's logic: renderMdblistSourcesAdmin builds both the card's list and the Services tab's linked copy (mdblistRatingsSourcesAdmin--mirror; the engine's markup copy dropped the ticks, its arrows did nothing and its edits never reached Save), and syncMdblistSources copies order and ticks from the list just edited to the other, on a tick (a delegated change listener) and on an arrow (the click handler now covers both lists); Save still reads the card's list. In admin/config/sections/display.ts \"Configure ratings shown\" is a group with a note, like its neighbours, in place of the hand-made <details>, as upstream. That is an intentional schema change, so the <details> wrapper's two ids (mdblistSourcesAdminDetails and its --mirror copy; no code read them) leave renderedIds in tests/fixtures/admin-config-baseline.json; no control, setting or section id changes. Upstream has no test for it; tests/frontend/admin/config/admin-config-mdblist-sources.test.mjs (5 tests, through the generated page) is new. No other difference from upstream."
