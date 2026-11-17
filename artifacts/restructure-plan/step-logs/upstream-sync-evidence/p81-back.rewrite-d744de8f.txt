@@ -1,0 +1,2 @@
+SCRIPT {"rewritten":"#/configurationpage?name=Jellyfin+Enhanced&tab=seerr","away":"#/home","back":"#/configurationpage?name=Jellyfin+Enhanced&tab=seerr","tab":"seerr"}
+URL /web/index.html#/configurationpage?name=Jellyfin+Enhanced&tab=seerr

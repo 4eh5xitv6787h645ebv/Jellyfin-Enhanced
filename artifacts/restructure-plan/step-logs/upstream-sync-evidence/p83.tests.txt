@@ -1,0 +1,12 @@
+# Runs of upstream 6b8c9218's port test recorded by je12 (`je12 test --only tests/browser/discovery-recommendations-rewrite.spec.cjs:150`,
+# every browser project, under the gate's conditions). feda51db+dirty@bee6696b: the test only; @f378a32b: with the rule.
+
+2026-11-18 07:21:45  feda51db+dirty@bee6696b  --only tests/browser/discovery-recommendations-rewrite.spec.cjs:150  => fail
+  FAIL [chromium] › tests/browser/discovery-recommendations-rewrite.spec.cjs:150:1 › a discovery section spans the whole details section when a theme lays that out as a grid : Error: expect(received).toBe(expected) // Object.is equality Expected: 800 Received: 200 168 | }); 169 | expect(widths.detail).toBe(800); > 170 | expect(widths.
+  FAIL [mobile-chromium] › tests/browser/discovery-recommendations-rewrite.spec.cjs:150:1 › a discovery section spans the whole details section when a theme lays that out as a grid : Error: expect(received).toBe(expected) // Object.is equality Expected: 800 Received: 200 168 | }); 169 | expect(widths.detail).toBe(800); > 170 | expect(widths.
+  FAIL [firefox] › tests/browser/discovery-recommendations-rewrite.spec.cjs:150:1 › a discovery section spans the whole details section when a theme lays that out as a grid : Error: expect(received).toBe(expected) // Object.is equality Expected: 800 Received: 200 168 | }); 169 | expect(widths.detail).toBe(800); > 170 | expect(widths.
+
+2026-11-18 07:21:58  feda51db+dirty@f378a32b  --only tests/browser/discovery-recommendations-rewrite.spec.cjs:150  => pass
+  PASS [chromium] › tests/browser/discovery-recommendations-rewrite.spec.cjs:150:1 › a discovery section spans the whole details section when a theme lays that out as a grid
+  PASS [mobile-chromium] › tests/browser/discovery-recommendations-rewrite.spec.cjs:150:1 › a discovery section spans the whole details section when a theme lays that out as a grid
+  PASS [firefox] › tests/browser/discovery-recommendations-rewrite.spec.cjs:150:1 › a discovery section spans the whole details section when a theme lays that out as a grid

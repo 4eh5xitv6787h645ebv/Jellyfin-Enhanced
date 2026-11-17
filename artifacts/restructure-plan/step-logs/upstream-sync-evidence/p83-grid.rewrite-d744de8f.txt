@@ -1,0 +1,3 @@
+SCRIPT {"section":"jellyseerr-person-discovery-section","inDetailSection":true,"cards":8,"detailWidth":900,"sectionWidth":900,"gridColumn":"1 / -1"}
+URL /web/index.html#/details?id=b31e70f9618b4345b21e33626a3aa4d6
+kept as the 'after' half of the pair 'p83-grid' (je12 evidence shows it)

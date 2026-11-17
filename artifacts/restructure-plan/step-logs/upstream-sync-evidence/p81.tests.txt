@@ -1,0 +1,62 @@
+# Runs of this port's tests recorded by je12 (`je12 test --only`), oldest first, on the trees named.
+# bedd0f03+dirty@8025c776: tests only, no port. @ceffe64a: upstream's server code applied verbatim.
+# @956b0419: the client port in upstream's order (session restore, then the rewritten address). @5c524efa and later: the port.
+
+2026-11-18 07:02:08  bedd0f03+dirty@8025c776  --only tests/frontend/admin/config/admin-config-address.test.mjs  => fail
+  FAIL tests/frontend/admin/config/admin-config-address.test.mjs :: settings the usage report carries get an icon that opens the Usage Statistics card, without changing the setting : AssertionError: the list is read once 0 !== 1
+  PASS tests/frontend/admin/config/admin-config-address.test.mjs :: no icon, and no error, when the list cannot be read or is not a list
+  FAIL tests/frontend/admin/config/admin-config-address.test.mjs :: the address names the tab and the card shown, and loses the card when a whole tab is shown : AssertionError: Expected values to be strictly equal: null !== 'seerr'
+  FAIL tests/frontend/admin/config/admin-config-address.test.mjs :: an address with a tab and a card opens that card, also when the session kept another tab : AssertionError: {} + actual - expected + [] - [ - 'Usage Statistics' - ]
+  FAIL tests/frontend/admin/config/admin-config-address.test.mjs :: a link to a setting opens its tab, not the tab the session kept : AssertionError: the address now names the tab shown + actual - expected + null - 'elsewhere'
+
+2026-11-18 07:02:21  bedd0f03+dirty@8025c776  --only tests/frontend/features/media-tags/admin/features-admin-config-media-tags-tab.test.mjs :: the address follows the Media Tags tab and its section, and the next tab replaces both  => fail
+  FAIL tests/frontend/features/media-tags/admin/features-admin-config-media-tags-tab.test.mjs :: the address follows the Media Tags tab and its section, and the next tab replaces both : AssertionError: Expected values to be strictly equal: + actual - expected + null - 'media-tags'
+
+2026-11-18 07:02:25  bedd0f03+dirty@8025c776  --only tests/frontend/features/media-tags/admin/features-admin-config-media-tags-tab.test.mjs :: an address naming a Media Tags section opens it, not the tab the session kept  => pass
+  PASS tests/frontend/features/media-tags/admin/features-admin-config-media-tags-tab.test.mjs :: an address naming a Media Tags section opens it, not the tab the session kept
+
+2026-11-18 07:03:11  bedd0f03+dirty@ceffe64a  --only JE.Tests.Features.Platform.IntegrationAnalyticsTests.ReportedSettingNamesAreExactlyTheSettingsAFullReportCarries  => fail
+  FAIL JE.Tests.Features.Platform.IntegrationAnalyticsTests.ReportedSettingNamesAreExactlyTheSettingsAFullReportCarries : Assert.Equal() Failure: Collections differ ↓ (pos 153) Expected: [···, "LanguageTagsMergeRegions", "LanguageTagsPosition", "LanguageTagsPriority", "LanguageTagsPriorityStrict", "LanguageTagsShowAudio", ···] Actual: [···,
+
+2026-11-18 07:03:36  bedd0f03+dirty@16e7aaba  --only JE.Tests.Features.Platform.IntegrationAnalyticsTests  => pass
+  PASS JE.Tests.Features.Platform.IntegrationAnalyticsTests.UsageFieldsRouteAnswersAdministratorsAndRefusesOthers
+  PASS JE.Tests.Features.Platform.IntegrationAnalyticsTests.ReportedSettingNamesAreExactlyTheSettingsAFullReportCarries
+
+2026-11-18 07:04:30  bedd0f03+dirty@956b0419  --only tests/frontend/features/media-tags/admin/features-admin-config-media-tags-tab.test.mjs :: an address naming a Media Tags section opens it, not the tab the session kept  => fail
+  FAIL tests/frontend/features/media-tags/admin/features-admin-config-media-tags-tab.test.mjs :: an address naming a Media Tags section opens it, not the tab the session kept : AssertionError: Media Tags › Groups › Rating opened
+
+2026-11-18 07:04:37  bedd0f03+dirty@956b0419  --only tests/frontend/admin/config/admin-config-address.test.mjs  => fail
+  PASS tests/frontend/admin/config/admin-config-address.test.mjs :: settings the usage report carries get an icon that opens the Usage Statistics card, without changing the setting
+  PASS tests/frontend/admin/config/admin-config-address.test.mjs :: no icon, and no error, when the list cannot be read or is not a list
+  PASS tests/frontend/admin/config/admin-config-address.test.mjs :: the address names the tab and the card shown, and loses the card when a whole tab is shown
+  FAIL tests/frontend/admin/config/admin-config-address.test.mjs :: an address with a tab and a card opens that card, also when the session kept another tab : AssertionError: {"jellyfinEnhancedActiveTab":"display"} 'display' !== 'admin'
+  FAIL tests/frontend/admin/config/admin-config-address.test.mjs :: a link to a setting opens its tab, not the tab the session kept : AssertionError: Expected values to be strictly equal: + actual - expected + 'display' - 'elsewhere'
+
+2026-11-18 07:04:51  bedd0f03+dirty@5c524efa  --only tests/frontend/features/media-tags/admin/features-admin-config-media-tags-tab.test.mjs :: an address naming a Media Tags section opens it, not the tab the session kept  => pass
+  PASS tests/frontend/features/media-tags/admin/features-admin-config-media-tags-tab.test.mjs :: an address naming a Media Tags section opens it, not the tab the session kept
+
+2026-11-18 07:04:58  bedd0f03+dirty@5c524efa  --only tests/frontend/admin/config/admin-config-address.test.mjs  => pass
+  PASS tests/frontend/admin/config/admin-config-address.test.mjs :: settings the usage report carries get an icon that opens the Usage Statistics card, without changing the setting
+  PASS tests/frontend/admin/config/admin-config-address.test.mjs :: no icon, and no error, when the list cannot be read or is not a list
+  PASS tests/frontend/admin/config/admin-config-address.test.mjs :: the address names the tab and the card shown, and loses the card when a whole tab is shown
+  PASS tests/frontend/admin/config/admin-config-address.test.mjs :: an address with a tab and a card opens that card, also when the session kept another tab
+  PASS tests/frontend/admin/config/admin-config-address.test.mjs :: a link to a setting opens its tab, not the tab the session kept
+
+2026-11-18 07:05:02  bedd0f03+dirty@5c524efa  --only tests/frontend/features/media-tags/admin/features-admin-config-media-tags-tab.test.mjs :: the address follows the Media Tags tab and its section, and the next tab replaces both  => pass
+  PASS tests/frontend/features/media-tags/admin/features-admin-config-media-tags-tab.test.mjs :: the address follows the Media Tags tab and its section, and the next tab replaces both
+
+2026-11-18 07:08:44  bedd0f03+dirty@c491eea5  --only tests/frontend/features/media-tags/admin/features-admin-config-media-tags-tab.test.mjs  => pass
+  PASS tests/frontend/features/media-tags/admin/features-admin-config-media-tags-tab.test.mjs :: the address follows the Media Tags tab and its section, and the next tab replaces both
+  PASS tests/frontend/features/media-tags/admin/features-admin-config-media-tags-tab.test.mjs :: an address naming a Media Tags section opens it, not the tab the session kept
+  PASS tests/frontend/features/media-tags/admin/features-admin-config-media-tags-tab.test.mjs :: links to the page itself (the Display card, the tab's own links) open in place, without navigating
+
+2026-11-18 07:09:09  bedd0f03+dirty@f8b36870  --only tests/frontend/features/media-tags/admin/features-admin-tags-page-overview-layout.test.mjs :: What's New on the main page lists new Media Tags settings with a link to their tab  => pass
+  PASS tests/frontend/features/media-tags/admin/features-admin-tags-page-overview-layout.test.mjs :: What's New on the main page lists new Media Tags settings with a link to their tab
+
+2026-11-18 07:02:45  bedd0f03+dirty@8025c776  --only JE.Tests.Features.Platform.IntegrationAnalyticsTests.ReportedSettingNamesAreExactlyTheSettingsAFullReportCarries  => could not run: dotnet stopped in the build before any test ran: tests/backend/Features/Platform/IntegrationAnalyticsTests.cs(198,97): error CS0117: 'AnalyticsReportingService' does not contain a definition for 'GetReportedSettingNames' [/
+
+# The whole loop on the branch's code (feda51db, committed): `je12 test --dotnet` (features platform, admin, media-tags:
+# typecheck, client build, inventory, 151 node test files, architecture and guards, the features' dotnet tests)
+test: pass in 175s; QUICK: node 3362 passed, 0 failed; dotnet tests for platform admin media-tags passed
+# Architecture tests with the contract additions (885764c4 + the contract lines, before they were committed as feda51db)
+JE.Tests.Architecture: pass (0 failed, 24 passed); je12 gate inv: PASS
