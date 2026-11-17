@@ -1,0 +1,37 @@
+# Entry 80, upstream f1533835 (api.md route total and config flag groups for Leaving soon), on bae882bb
+
+## The four LeavingSoonHideWatched lines in docs/advanced/config-flag-groups.json (added by ddae985d, entry 77)
+215:    "LeavingSoonHideWatched": "Leaving soon",
+642:    "LeavingSoonHideWatched": "Hide watched titles in the home row",
+1071:    "LeavingSoonHideWatched": "*arr",
+1579:    "LeavingSoonHideWatched": false,
+
+## The same keys compared with upstream main (every LeavingSoon* key in every section)
+identical
+
+## python3 scripts/generate_config_flag_groups.py --check
+Config flag mappings are current
+
+## The api.md totals (added by 48e490ae, entry 76; the rewrite's inventory has 223 routes, ExpectedRoutes 223)
+7:This reference covers the 223 method/path entries in plugin version **12.16.0.0**. Use the endpoint tables to check access requirements, inputs, responses, and limits.
+2011:The endpoint tables above enumerate all 223 controller method/path entries, including the three catch-all templates. Each group documents effective access, inputs, response shape, and limits; shared proxy rows intentionally retain the configured upstream service's JSON contract.
+1177:| GET | `leaving-soon/items` | Signed-in user | Optional `limit` → a standard item list `{Items, TotalRecordCount}` of the movies and series that are leaving, soonest first, as the user may see them. For home screen plugins such as KefinTweaks. 404 when no removal tool has an address. |
+
+## je12 test --only, on this tree
+$ je12 test --only tests/frontend/features/features-api-routes-docs.test.mjs
+ok   client build                   2s
+ok   inventory                      1s
+only: every node test in tests/frontend/features/features-api-routes-docs.test.mjs (node), on bae882bb+dirty@2bce30b2
+ok   tests/frontend/features/features-api-routes-docs.test.mjs :: api.md states the inventory's route total in both places
+ok   tests/frontend/features/features-api-routes-docs.test.mjs :: api.md has an endpoint table row for every route and none for a route that does not exist
+test --only: pass (0 failed, 2 passed) in 2s on bae882bb+dirty@2bce30b2; recorded for je12 evidence
+
+$ je12 test --only tests/frontend/admin/config/features-config-flag-check.test.mjs
+ok   client build                   2s
+ok   inventory                      1s
+only: every node test in tests/frontend/admin/config/features-config-flag-check.test.mjs (node), on bae882bb+dirty@2bce30b2
+ok   tests/frontend/admin/config/features-config-flag-check.test.mjs :: config flag --check compares bytes and fails on drift without writing
+ok   tests/frontend/admin/config/features-config-flag-check.test.mjs :: config flag --check passes whatever the default text encoding is
+test --only: pass (0 failed, 2 passed) in 4s on bae882bb+dirty@2bce30b2; recorded for je12 evidence
+
+(+dirty: the only uncommitted change was the ledger, docs/upstream-sync.json and docs/upstream-sync.md, which adds entry 80 as pending.)
