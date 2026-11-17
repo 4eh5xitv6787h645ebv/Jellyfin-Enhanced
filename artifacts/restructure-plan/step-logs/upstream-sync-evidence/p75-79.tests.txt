@@ -1,0 +1,53 @@
+# Ports 75-79: the new and changed tests, recorded by `je12 test --only` with the tree they ran on
+# (<commit>+dirty@<hash of every file> = an uncommitted tree; a run "before" is the tree without that port's source change).
+
+## 75. upstream 3d72710d (MDBList: AniList source dropped, 429 Retry-After and X-RateLimit-* headers)
+JE.Tests.Features.DetailsProviders.MdblistRateLimitTests (new, 2 tests)
+  FAIL on 09879f38+dirty@a92a2796 (tests only): RateLimitHeadersReplaceTheCountedQuota (Expected 3, Actual 899),
+       A429PausesLookupsForItsRetryAfter (a second title still reached MDBList)
+  pass on 09879f38+dirty@11e1af20 (the port)
+JE.Tests.Features.MediaTags.RatingSourceTests (2 new tests, 2 adapted as upstream's)
+  FAIL on 09879f38+dirty@a92a2796: RetiredAniListStyleOverrideIsIgnoredNotRejected ("rating:aniList" kept in the
+       serialized set), AniListIsNoLongerARatingSource (aniList in SourceIds); 53 passed
+  pass on 09879f38+dirty@11e1af20 (55 passed)
+tests/frontend/features/media-tags/features-rating-sources.test.mjs
+  FAIL on 09879f38+dirty@43f6c025 (the port without its client change): "the four further MDBList sources draw on
+       their own scales ..." ('aniList' still offered); 8 passed
+  pass on 09879f38+dirty@11e1af20 (9 passed)
+tests/frontend/features/media-tags/features-tag-styles-editor.test.mjs
+  pass on 09879f38+dirty@43f6c025 and after: its label catalog is a fixture of the server's catalog, which the port
+  shrinks from 12 to 11 source labels (the server's own catalog is checked by RatingSourceTests and the lab)
+Also changed for the removal: admin-config-mdblist-sources, bootstrap-tag-group-editor and
+features-admin-tags-page-groups (AniList no longer offered; a stored aniList choice is dropped like an unknown id),
+tests/inventory/test_poster_assets.py (python3 -m unittest: 2 passed), tests/poster/parity/profiles.mjs.
+je12 test (quick: platform, details-providers, media-tags, admin): pass, node 3,479 passed, 0 failed; dotnet passed.
+
+## 76. upstream 6c922d10 (GET leaving-soon/items for KefinTweaks, the copy button)
+JE.Tests.Features.MediaTags.IntegrationMaintainerrActionsTests.The_item_list_route_answers_like_Items_soonest_first_as_the_user_may_see_them (new)
+  not buildable before the port (the action is new); pass on b3a95186+dirty@ed9a936f
+  The lab pair `items` shows the route before (404) and after.
+tests/frontend/admin/config/admin-config-leaving-soon-kefin.test.mjs (new, 2 tests)
+  FAIL on b3a95186+dirty@85a2836f (the port without its client change): both (no button)
+  pass on b3a95186+dirty@0752de24
+tests/frontend/admin/config/admin-config-rewrite.test.mjs :: preservation: the page keeps every control ...
+  pass on b3a95186+dirty@5fc5dd90 once the two button ids are in tests/fixtures/admin-config-baseline.json
+
+## 77-78. upstream c6437f16 (hide watched titles in the home row) and 1b497915 (its inventory)
+JE.Tests.Features.MediaTags.IntegrationMaintainerrActionsTests.The_home_row_leaves_out_watched_titles_only_while_its_switch_is_on (new)
+  FAIL on 48e490ae+dirty@1c316f0b (the setting without the row's filter): Expected ["Fresh"], Actual ["Seen","Fresh"]
+  pass on 48e490ae+dirty@96d8d54a
+tests/frontend/admin/config/admin-config-rewrite.test.mjs (64 tests)
+  pass on 48e490ae+dirty@7d63710a with the setting in the lexical index and the baseline record
+
+## 79. upstream d33904bc (Seerr search keeps the region)
+tests/frontend/requests/seerr-core-boundaries.test.mjs :: search asks Seerr for titles in the browser language, region included, and English when it is not a language tag
+  FAIL on ddae985d+dirty@af25eedd (before the change): "the region is kept" (pt-BR sent as pt)
+  pass on ddae985d+dirty@e989e088
+je12 test seerr: node 845 passed, 0 failed.
+
+## The branch
+je12 test after 76, 77 and 79: node passed (3,480 / 3,481 / 845) apart from the records named above until they were
+added; dotnet: only the five Architecture snapshot tests a new route trips, until the contract commit.
+JE.Tests.Architecture (24 tests): pass on 8e0693a9+dirty@840b9767, the tree of 9b805518 (the contract commit).
+je12 gate inv: pass on that tree. JE.Tests.BundleBudgetTests (2) and JE.Tests.PackedResourcesTests (5): pass on 9b805518.
+je12 gate size: pass on 9b805518 (raw 2,595,057 of 2,619,425; gzip-9 705,718 of 707,959).

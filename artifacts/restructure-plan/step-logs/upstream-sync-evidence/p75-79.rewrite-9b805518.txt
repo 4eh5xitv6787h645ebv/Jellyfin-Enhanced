@@ -1,0 +1,47 @@
+## ratings
+$ je12 browse #/configurationpage?name=Jellyfin%20Enhanced --script p75-ratings.mjs --wait 2000 --keep after:ratings
+SCRIPT MDBList list (11 rows): tmdb tomatoes popcorn imdb trakt metacritic metacriticuser letterboxd rogerebert myanimelist master
+anilist row: absent
+Tag Styles rating labels (HTTP 200, 14): community critic userReview imdb tmdb rtCritic rtAudience metacritic letterboxd trakt myAnimeList metacriticUser rogerEbert mdblist
+aniList label: absent
+CONSOLE Failed to load resource: the server responded with a status of 404 (Not Found) /JellyfinEnhanced/cdn/selfhst/svg/maintainerr.svg
+CONSOLE Failed to load resource: the server responded with a status of 404 (Not Found) /JellyfinEnhanced/cdn/selfhst/svg/tmdb.svg
+CONSOLE Failed to load resource: the server responded with a status of 404 (Not Found) /JellyfinEnhanced/cdn/selfhst/svg/reclaimerr.svg
+BLOCKED https://www.gstatic.com/cv/js/sender/v1/cast_sender.js
+kept as the 'after' half of the pair 'ratings' (je12 evidence shows it)
+
+## leaving-admin
+$ je12 browse #/configurationpage?name=Jellyfin%20Enhanced --script p76-77-admin.mjs --wait 2000 --keep after:leaving-admin
+SCRIPT copy button: "content_copyCopy KefinTweaks section"; Services tab copy: present
+hide watched switch: off, "Hide watched titles in the home rowauto_awesomeNew in v12.16"
+clipboard API: absent
+after a click: "content_copyCopied"
+copied: id leaving-soon, type home, name "Leaving Soon", query /JellyfinEnhanced/leaving-soon/items {"Limit":20}
+CONSOLE Failed to load resource: the server responded with a status of 404 (Not Found) /JellyfinEnhanced/cdn/selfhst/svg/maintainerr.svg
+CONSOLE Failed to load resource: the server responded with a status of 404 (Not Found) /JellyfinEnhanced/cdn/selfhst/svg/tmdb.svg
+CONSOLE Failed to load resource: the server responded with a status of 404 (Not Found) /JellyfinEnhanced/cdn/selfhst/svg/reclaimerr.svg
+BLOCKED https://www.gstatic.com/cv/js/sender/v1/cast_sender.js
+kept as the 'after' half of the pair 'leaving-admin' (je12 evidence shows it)
+
+## items setup
+{"movie": {"id": "06de48d758074756c732c7de70aa79f8", "name": "Abominable"}, "series": {"id": "02c76e27006b72e399980489a468609d", "name": "The Adventures of Paddington"}, "status": {"Configured": true, "Maintainerr": true, "Items": 2, "LastError": null}}
+
+## items
+$ je12 browse #/home --user viewer --script p76-items.mjs --wait 1500 --keep after:items
+SCRIPT (no limit): HTTP 200, TotalRecordCount 2, Items The Adventures of Paddington (Series), Abominable (Movie)
+?limit=1: HTTP 200, TotalRecordCount 1, Items The Adventures of Paddington (Series)
+BLOCKED https://www.gstatic.com/cv/js/sender/v1/cast_sender.js
+kept as the 'after' half of the pair 'items' (je12 evidence shows it)
+
+## items teardown
+source cleared
+
+## search
+$ je12 browse #/home --script p79-search.mjs --wait 1500 --keep after:search
+SCRIPT navigator.language pt-BR -> language=pt-BR
+navigator.language zh-TW -> language=zh-TW
+navigator.language de -> language=de
+navigator.language undefined -> language=en
+BLOCKED https://www.gstatic.com/cv/js/sender/v1/cast_sender.js
+kept as the 'after' half of the pair 'search' (je12 evidence shows it)
+
