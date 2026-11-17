@@ -1,0 +1,7 @@
+Upstream 60170a0b's test, added unchanged to tests/frontend/features/bookmarks/features-bookmarks.test.mjs:
+"deleting the only bookmark of the playing item removes its seek-bar marker" (je12 test --only)
+  passed on d423fb20+dirty@6f506271: the rewrite as it was, with only the test added (createBookmarkMarkers removes the
+    slider's markers before it draws the list, so an empty list leaves none)
+  FAILED on d423fb20+dirty@8d4fc689: with upstream's old `if (!bookmarksList.length) return;` put at the top of
+    createBookmarkMarkers (client/src/features/bookmarks/bookmarks.ts), "condition never became true" (the marker stays)
+  passed on d423fb20+dirty@6f506271 again after the mutation was removed (the source is unchanged; the test is commit d83716f3)

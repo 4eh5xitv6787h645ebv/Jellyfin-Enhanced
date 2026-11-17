@@ -1,0 +1,56 @@
+pair 'rows': complete
+  before: je12 browse '#/home' --user viewer --script p69-rows.mjs
+    deployed upstream-c451730b8696 = c451730b (dll f787216a2ff6a397) on lab je125ce284, 2026-11-17 17:49:52
+    | SCRIPT series: Recommended: 2 cards; Similar: 2 cards | asked: tv 66788 recommendations, tv 66788 similar
+    | season: Recommended: 2 cards; Similar: 2 cards | asked: nothing
+    | episode: Recommended: 2 cards; Similar: 2 cards | asked: nothing
+    | CONSOLE Failed to load resource: the server responded with a status of 403 (Forbidden) /JellyfinEnhanced/jellyseerr/issue
+    | CONSOLE 🪼 Jellyfin Enhanced: Seerr API: Failed to fetch issues for tv 66788: Error: HTTP 403
+    |     at fetchWithRetry (http://172.29.91.3:8096/JellyfinEnhanced/bundle.js?v=12.16.0.0-639305057707935711:2963:49)
+    |     at async fetchFn (http://172.29.91.3:8096/JellyfinEnhanced/bundle.js?v=12.16.0.0-639305057707935711:3627:34)
+    |     at async withConcurrencyLimit (http://172.29.91.3:8096/JellyfinEnhanced/bundle.js?v
+    | BLOCKED https://www.gstatic.com/cv/js/sender/v1/cast_sender.js
+    | BLOCKED https://cdn.jsdelivr.net/gh/Druidblack/jellyfin-icon-metadata@main/icons/imdb/imdb.png
+    | BLOCKED https://cdn.jsdelivr.net/gh/Druidblack/jellyfin-icon-metadata@main/icons/themoviedb/themoviedb.png
+    | STORM 18x POST /JellyfinEnhanced/tag-data/c799f011678d4423bd7c07d24c672de8
+    | STORM 18x GET /web/config.json
+    | URL /web/index.html#/details?id=9563efa92bbb65c2e81d1015e43b0469
+  after: je12 browse '#/home' --user viewer --script p69-rows.mjs
+    deployed HEAD = bb3b22f2 (dll 0109efbc1a8b60dc) on lab je125ce284, 2026-11-17 17:47:16
+    | SCRIPT series: Recommended: 2 cards; Similar: 2 cards | asked: tv 66788 recommendations, tv 66788 similar
+    | season: Recommended: 2 cards; Similar: 2 cards | asked: nothing
+    | episode: Recommended: 2 cards; Similar: 2 cards | asked: nothing
+    | CONSOLE Failed to load resource: the server responded with a status of 403 (Forbidden) /JellyfinEnhanced/jellyseerr/issue
+    | BLOCKED https://www.gstatic.com/cv/js/sender/v1/cast_sender.js
+    | BLOCKED https://cdn.jsdelivr.net/gh/Druidblack/jellyfin-icon-metadata@main/icons/imdb/imdb.png
+    | BLOCKED https://cdn.jsdelivr.net/gh/Druidblack/jellyfin-icon-metadata@main/icons/themoviedb/themoviedb.png
+    | STORM 18x POST /JellyfinEnhanced/tag-data/c799f011678d4423bd7c07d24c672de8
+    | STORM 18x GET /web/config.json
+    | URL /web/index.html#/details?id=9563efa92bbb65c2e81d1015e43b0469
+  same command before and after: yes; builds: before upstream-c451730b8696, after HEAD (a clean build of the checkout's commit)
+pair 'rows-fix': complete
+  before: je12 browse '#/home' --user viewer --script p69-rows.mjs
+    deployed ae69edc5f3e2 (dll ddf4e9cd7830da81) on lab je125ce284, 2026-11-17 17:48:09
+    | SCRIPT series: Recommended: 2 cards; Similar: 2 cards | asked: tv 66788 recommendations, tv 66788 similar
+    | season: no rows | asked: nothing
+    | episode: no rows | asked: nothing
+    | CONSOLE Failed to load resource: the server responded with a status of 403 (Forbidden) /JellyfinEnhanced/jellyseerr/issue
+    | BLOCKED https://www.gstatic.com/cv/js/sender/v1/cast_sender.js
+    | BLOCKED https://cdn.jsdelivr.net/gh/Druidblack/jellyfin-icon-metadata@main/icons/imdb/imdb.png
+    | BLOCKED https://cdn.jsdelivr.net/gh/Druidblack/jellyfin-icon-metadata@main/icons/themoviedb/themoviedb.png
+    | STORM 18x POST /JellyfinEnhanced/tag-data/c799f011678d4423bd7c07d24c672de8
+    | STORM 18x GET /web/config.json
+    | URL /web/index.html#/details?id=9563efa92bbb65c2e81d1015e43b0469
+  after: je12 browse '#/home' --user viewer --script p69-rows.mjs
+    deployed HEAD = bb3b22f2 (dll 0109efbc1a8b60dc) on lab je125ce284, 2026-11-17 17:47:32
+    | SCRIPT series: Recommended: 2 cards; Similar: 2 cards | asked: tv 66788 recommendations, tv 66788 similar
+    | season: Recommended: 2 cards; Similar: 2 cards | asked: nothing
+    | episode: Recommended: 2 cards; Similar: 2 cards | asked: nothing
+    | CONSOLE Failed to load resource: the server responded with a status of 403 (Forbidden) /JellyfinEnhanced/jellyseerr/issue
+    | BLOCKED https://www.gstatic.com/cv/js/sender/v1/cast_sender.js
+    | BLOCKED https://cdn.jsdelivr.net/gh/Druidblack/jellyfin-icon-metadata@main/icons/imdb/imdb.png
+    | BLOCKED https://cdn.jsdelivr.net/gh/Druidblack/jellyfin-icon-metadata@main/icons/themoviedb/themoviedb.png
+    | STORM 18x POST /JellyfinEnhanced/tag-data/c799f011678d4423bd7c07d24c672de8
+    | STORM 18x GET /web/config.json
+    | URL /web/index.html#/details?id=9563efa92bbb65c2e81d1015e43b0469
+  same command before and after: yes; builds: before ae69edc5f3e2, after HEAD (a clean build of the checkout's commit)

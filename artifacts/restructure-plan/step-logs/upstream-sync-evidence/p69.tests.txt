@@ -1,0 +1,5 @@
+Upstream c451730b's tests in tests/frontend/pages/pages-seerr-details-rows.test.mjs (identical here before the port,
+applied as is), as je12 recorded them (je12 test --only on the file):
+  FAILED on ae69edc5+dirty@3ac4090f (the tests added, the code not yet): 3 failed, 36 passed
+    (an Episode or Season page shows its series' rows; episode to episode to series; a user switch while the series loads)
+  passed on ae69edc5+dirty@6de37ed2 (the port's working tree, committed as d423fb20): 39 passed
