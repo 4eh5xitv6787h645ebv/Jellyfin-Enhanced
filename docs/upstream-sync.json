@@ -2698,6 +2698,29 @@
       ],
       "with": "b0a8a96326c27069b7267b8ac99a0eb0507ca598",
       "notes": "Upstream’s bot regenerating its production inventory for b0a8a963 (routes 219 → 220). This tree’s tests/docs/production-inventory.json is generated (je12 regen) in that entry’s commit, with the same change: the route GET /JellyfinEnhanced/usage/fields (routes 223 → 224)."
+    },
+    {
+      "sha": "6b8c9218aaedb75a5208e54fbdd48b55b6e89b62",
+      "date": "2026-11-17T23:02:03+00:00",
+      "subject": "fix(seerr): let the discovery section span the full width on themes that grid .detailSection",
+      "class": "fix",
+      "features": [
+        "seerr"
+      ],
+      "issues": [],
+      "release": null,
+      "size": {
+        "files": 1,
+        "insertions": 2,
+        "deletions": 0
+      },
+      "paths": [
+        "Jellyfin.Plugin.JellyfinEnhanced/js/jellyseerr/discovery/discovery-styles.js"
+      ],
+      "status": "ported",
+      "rewriteCommits": [],
+      "evidence": "artifacts/restructure-plan/step-logs/upstream-sync-evidence/p83-*",
+      "notes": "Upstream’s rule goes as is into the discovery sections’ stylesheet, client/src/features/seerr/discovery/discovery.css (after the cards’ scroll margin, as upstream places it in discovery-styles.js): .detailSection > .jellyseerr-discovery-section spans every column (grid-column: 1 / -1) and may shrink below its cards’ width (min-width: 0). Here the person and collection discovery sections are appended to .detailPagePrimaryContent .detailSection (section-chassis.ts, section.ts), so the rule reaches them; no other difference. Test: tests/browser/discovery-recommendations-rewrite.spec.cjs, “a discovery section spans the whole details section when a theme lays that out as a grid” (a four-column .detailSection 800 px wide, a 2000 px row of cards: the section was 200 px in chromium, mobile-chromium and firefox, and is 800). Lab, a person page with a theme rule like ElegantFin’s: the section was 225 of 900 px on this tree before the port, 900 on upstream’s build and 900 after."
     }
   ]
 }
