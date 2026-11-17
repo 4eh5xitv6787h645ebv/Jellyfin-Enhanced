@@ -2304,7 +2304,9 @@
         "tests/frontend/pages/pages-seerr-details-rows.test.mjs"
       ],
       "status": "ported",
-      "rewriteCommits": [],
+      "rewriteCommits": [
+        "d423fb20e14f72d1acc14a82f614e4623170d40a"
+      ],
       "evidence": "artifacts/restructure-plan/step-logs/upstream-sync-evidence/p69-*",
       "notes": "Re-implemented in client/src/features/seerr/details/details-page/item-details-entry.ts with upstream's logic: getParentSeries loads a Season's or Episode's series as the current user (SeriesId; a Season may fall back to ParentId) and getTmdbIdFromItem takes { viaSeries }, which only the Similar and Recommended rows pass, so Request More stays on series pages. No series, no series TMDB ID, no access or an id that is not a series give no rows and no Seerr request. Upstream's tests (tests/frontend/pages/pages-seerr-details-rows.test.mjs, identical here before the port) and docs apply as is; the coverage-matrix row is merged into this tree's. No difference from upstream."
     },
@@ -2354,7 +2356,9 @@
         "Jellyfin.Plugin.JellyfinEnhanced/js/locales/ (32 files)"
       ],
       "status": "ported",
-      "rewriteCommits": [],
+      "rewriteCommits": [
+        "09aadd255b05bef6e2a1de7fe023a3e7dd76d4e5"
+      ],
       "notes": "Applied as is (git show 5b92e29f | git apply --3way, clean): the 32 locale files under Jellyfin.Plugin.JellyfinEnhanced/js/locales, including the Weblate prefill of the Leaving Soon and Reclaimerr strings that upstream da0ea773 added to en.json (ported in this run). No other file changes."
     }
   ]
