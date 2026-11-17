@@ -1,0 +1,17 @@
+Size budgets, measured with gate T's own tests (BundleBudgetTests: .NET gzip SmallestSize; PackedResourcesTests: the
+summed manifest resources of the built plugin) on each commit of the run, in scratch worktrees whose limits were set
+low so the tests print the size:
+
+5043e2db (before the run): bundle 699,427 bytes gzip-9; assembly embeds 11,725,711 bytes
+459e643a (Reclaimerr, Leaving Soon page): bundle 706,376 bytes gzip-9; assembly embeds 11,841,884 bytes
+d423fb20 (Seerr rows on season/episode pages): bundle 706,482 bytes gzip-9; assembly embeds 11,843,040 bytes
+09aadd25 (translations): bundle 706,482 bytes gzip-9; assembly embeds 11,858,280 bytes
+
+The gate script's size step (scripts/restructure-gates.sh size; gzip -9 -n), raw bytes and gzip-9:
+5043e2db: raw 2,566,965, gzip-9 697,568
+459e643a / 0d439ea3: raw 2,591,898, gzip-9 704,565
+1111a593 (= d423fb20 for the bundle): raw 2,592,384, gzip-9 704,688
+
+Budgets after the run: client/bundle-budget.json raw 2,615,677 -> 2,616,163 (Reclaimerr +24,933 in 459e643a, Seerr rows
++486 in b361a2ef), gzip-9 699,477 -> 706,474 -> 706,597 (+6,997, +123 by the gate script's measure); client/assembly-budget.json
+11,761,386 -> 11,893,955 (+132,569 in b361a2ef).
