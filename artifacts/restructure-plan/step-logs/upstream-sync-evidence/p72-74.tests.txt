@@ -1,0 +1,47 @@
+# je12 test --only runs of this sync (je12 2.5.0), from je12's test records: the new tests failing on the tree before
+# each port (the tests added, the source not yet changed) and passing on the port. The SHAs are the branch before its
+# rebase onto 2315155c: 2f5ff363 = 21ac33dc (translations), b4339607 = the branding icon commit before its size split
+# (amended into ac5a057a = f4514232), c1ce2423 = f0f02692 (contract). After the rebase, `je12 test --dotnet` (the quick
+# mode for platform, chrome, admin and details-providers) passed on 45ac49fe: node 1,561 passed, 0 failed; dotnet passed,
+# the Architecture snapshot tests included.
+
+2026-11-18 02:21:13  je12 test --only 'tests/frontend/admin/config/admin-config-elsewhere-icon.test.mjs'  on 2f5ff363+dirty@66aaedd6: fail (7 failed, 0 passed)
+    FAIL tests/frontend/admin/config/admin-config-elsewhere-icon.test.mjs :: Elsewhere icon: the Custom Branding group has its own upload slot, read with the other slots' status: AssertionError: the upload slot exists
+    FAIL tests/frontend/admin/config/admin-config-elsewhere-icon.test.mjs :: Elsewhere icon: a picked icon is uploaded to the elsewhere-icon.png slot: TypeError: Object.defineProperty called on non-object
+    FAIL tests/frontend/admin/config/admin-config-elsewhere-icon.test.mjs :: Elsewhere icon: a dropped file of a type the slot does not take is refused before any request; other slots are unchanged: TypeError: Cannot read properties of null (reading 'dispatchEvent')
+    FAIL tests/frontend/admin/config/admin-config-elsewhere-icon.test.mjs :: Branding uploads: a refused upload shows the server's reason without its JSON quoting, then what is stored: AssertionError: Expected values to be strictly equal:
+    FAIL tests/frontend/admin/config/admin-config-elsewhere-icon.test.mjs :: Elsewhere icon URL: one a browser cannot load is flagged under the field, and a server path is named as such: TypeError: Cannot read properties of null (reading 'style')
+    FAIL tests/frontend/admin/config/admin-config-elsewhere-icon.test.mjs :: Elsewhere icon URL: a path to Jellyfin's own routes is tested through ApiClient, and a working one shows no warning: AssertionError: Expected values to be strictly deep-equal:
+    FAIL tests/frontend/admin/config/admin-config-elsewhere-icon.test.mjs :: Elsewhere icon URL: no check while an icon is uploaded, Elsewhere is off, or there is no message: TypeError: Cannot read properties of null (reading 'style')
+2026-11-18 02:21:19  je12 test --only 'Elsewhere branding'  on 2f5ff363+dirty@66aaedd6: fail (4 failed, 0 passed)
+    FAIL tests/frontend/features/details-providers/features-details-providers-rewrite.test.mjs :: Elsewhere branding: an uploaded icon is used in place of the URL, from the plugin route with its version: AssertionError: Expected values to be strictly equal:
+    FAIL tests/frontend/features/details-providers/features-details-providers-rewrite.test.mjs :: Elsewhere branding: a path to Jellyfin's own routes resolves under the base path; other URLs are left alone: AssertionError: /web/favicons/touchicon.png
+    FAIL tests/frontend/features/details-providers/features-details-providers-rewrite.test.mjs :: Elsewhere branding: the icon is centred against the message: AssertionError: Expected values to be strictly equal:
+    FAIL tests/frontend/features/details-providers/features-details-providers-rewrite.test.mjs :: Elsewhere branding: an icon that cannot load is hidden and says why in the console: AssertionError: Expected values to be strictly equal:
+2026-11-18 02:22:21  je12 test --only 'JE.Tests.Features.Chrome.ApiBrandingTests'  on 2f5ff363+dirty@66aaedd6: fail (8 failed, 20 passed)
+    FAIL JE.Tests.Features.Chrome.ApiBrandingTests.UploadReadStatusAndDeleteUseCanonicalFixedSlot(requestedName: "ICON-TRANSPARENT.PNG"): Assert.Equal() Failure: Values differ
+    FAIL JE.Tests.Features.Chrome.ApiBrandingTests.ElsewhereIconPngIsServedPubliclyAsPng: Assert.IsType() Failure: Value is not the exact type
+    FAIL JE.Tests.Features.Chrome.ApiBrandingTests.UploadReadStatusAndDeleteUseCanonicalFixedSlot(requestedName: "../icon-transparent.png"): Assert.Equal() Failure: Values differ
+    FAIL JE.Tests.Features.Chrome.ApiBrandingTests.ElsewhereIconIsAbsentUntilUploaded: Assert.NotNull() Failure: Value is null
+    FAIL JE.Tests.Features.Chrome.ApiBrandingTests.PublicConfigIconVersionTracksUploadReuploadAndDelete: System.Collections.Generic.KeyNotFoundException : The given key was not present in the dictionary.
+    FAIL JE.Tests.Features.Chrome.ApiBrandingTests.ElsewhereIconRouteNeedsNoLoginBecauseImgTagsSendNoAuthHeader: Assert.NotNull() Failure: Value is null
+    FAIL JE.Tests.Features.Chrome.ApiBrandingTests.ElsewhereIconSvgIsServedAsSvgInASandbox: Assert.IsType() Failure: Value is not the exact type
+    FAIL JE.Tests.Features.Chrome.ApiBrandingTests.UploadReadStatusAndDeleteUseCanonicalFixedSlot(requestedName: "icon-transparent.png"): Assert.Equal() Failure: Values differ
+2026-11-18 02:24:47  je12 test --only 'tests/frontend/admin/config/admin-config-elsewhere-icon.test.mjs'  on 2f5ff363+dirty@4cba545d: pass (0 failed, 7 passed)
+2026-11-18 02:24:50  je12 test --only 'Elsewhere branding'  on 2f5ff363+dirty@4cba545d: pass (0 failed, 4 passed)
+2026-11-18 02:27:27  je12 test --only 'JE.Tests.Features.Chrome.ApiBrandingTests'  on 2f5ff363+dirty@d8f1198d: pass (0 failed, 28 passed)
+2026-11-18 02:28:59  je12 test --only 'tests/frontend/admin/config/admin-config-rewrite.test.mjs'  on 2f5ff363+dirty@d8f1198d: pass (0 failed, 61 passed)
+2026-11-18 02:31:38  je12 test --only 'tests/frontend/admin/config/admin-config-mdblist-sources.test.mjs'  on b4339607+dirty@9172915c: fail (5 failed, 0 passed)
+    FAIL tests/frontend/admin/config/admin-config-mdblist-sources.test.mjs :: MDBList ratings list: the Services tab copy shows the saved ticks and order, like the card: AssertionError: Expected values to be strictly deep-equal:
+    FAIL tests/frontend/admin/config/admin-config-mdblist-sources.test.mjs :: MDBList ratings list: a tick changed on the Services tab reaches the card and Save: AssertionError: Expected values to be strictly deep-equal:
+    FAIL tests/frontend/admin/config/admin-config-mdblist-sources.test.mjs :: MDBList ratings list: an arrow on the Services tab reorders both lists, and Save keeps that order: AssertionError: Expected values to be strictly deep-equal:
+    FAIL tests/frontend/admin/config/admin-config-mdblist-sources.test.mjs :: MDBList ratings list: an edit on the card reaches the Services tab copy: AssertionError: Expected values to be strictly deep-equal:
+    FAIL tests/frontend/admin/config/admin-config-mdblist-sources.test.mjs :: MDBList ratings list: "Configure ratings shown" is a group like its neighbours, on the card and its copy: AssertionError: mdblistRatingsSourcesAdmin
+2026-11-18 02:32:05  je12 test --only 'tests/frontend/admin/config/admin-config-mdblist-sources.test.mjs'  on b4339607+dirty@98dd68c3: pass (0 failed, 5 passed)
+2026-11-18 02:34:59  je12 test --only 'tests/frontend/architecture/file-size.test.mjs'  on b4339607+dirty@db58e0bd: pass (0 failed, 1 passed)
+2026-11-18 02:35:13  je12 test --only 'Elsewhere branding'  on b4339607+dirty@e16e0e79: pass (0 failed, 4 passed)
+2026-11-18 02:40:39  je12 test --only 'JE.Tests.Architecture'  on 2da6a8a0+dirty@299f4512: pass (0 failed, 24 passed)
+2026-11-18 02:41:14  je12 test --only 'JE.Tests.BundleBudgetTests'  on c1ce2423: fail (1 failed, 1 passed)
+    FAIL JE.Tests.BundleBudgetTests.ServedBundleIsWithinTheCheckedInBudget: bundle.js is 706,746 bytes gzip-9, over the 706,597 budget in client/bundle-budget.json. Make it smaller, or raise the budget in a new history entry with a reas
+2026-11-18 02:41:23  je12 test --only 'JE.Tests.PackedResourcesTests'  on c1ce2423: pass (0 failed, 5 passed)
+2026-11-18 02:42:43  je12 test --only 'JE.Tests.BundleBudgetTests'  on c1ce2423+dirty@4beaee31: pass (0 failed, 2 passed)

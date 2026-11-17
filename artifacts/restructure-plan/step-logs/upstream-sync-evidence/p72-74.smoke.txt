@@ -1,0 +1,23 @@
+# je12 smoke straight after `je12 deploy` of 45ac49fe (this branch after its rebase onto 2315155c; the commits after it change
+# only the step log and evidence), with the lab's settings restored to what `je12 up` started with. The lab started on 45ac49fe,
+# so the baseline is its own `je12 up` smoke, which also passed. Before the rebase the same check passed on 8227861e.
+smoke: comparing the deployed 45ac49fe with the baseline of 45ac49feb1ca (docs(sync): rewrite commits of this sync's ports after the rebase onto...), from the start of this lab (je12 up)
+page admin           ok      14 tabs; Media Tags section 7 tabs (2.0s)
+page settings        ok      panel open, 24 tabs (2.2s)
+page media-tags-hub  ok      #jeMediaTagsHub visible (2.0s)
+page poster          ok      100/100 cards tagged (1.8s)
+page details         ok      101 Dalmatians II: Patch's London Adventure: 86 JE elements (1.8s)
+page hidden-content  ok      page rendered (1.2s)
+page bookmarks       ok      page rendered (1.2s)
+page calendar        ok      5 events (3.2s)
+page downloads       ok      4 items (4.7s)
+page activity        ok      Activity tab rendered (1.7s)
+page catchup         ok      Catch Up tab rendered (1.7s)
+page seerr           ok      5 Seerr cards (1.7s)
+page player          ok      playing 1.2s; OSD rating present (4.1s)
+plugin               ok      12.16.0.0 Active
+scheduled tasks      ok      17 JE tasks (keys and ids)
+openapi              ok      HTTP 200, 493 paths, 199 under /JellyfinEnhanced
+bundle wire          ok      br 200 583163B 304:yes, gzip 200 707859B 304:yes, identity 200 2595646B 304:yes; decoded bodies identical
+server log           ok      170 ERR/WRN lines, 0 new kind(s)
+smoke: pass (0 failing, 0 flaky, 0 changed, 0 known, 0 fixed) in 36s

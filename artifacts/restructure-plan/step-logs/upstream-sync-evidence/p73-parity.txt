@@ -1,0 +1,79 @@
+# Lab parity for upstream c8625921 (the Elsewhere custom branding icon), Jellyfin 12.4, one je12 lab at a time.
+# Lab plugin settings for these runs (set with POST /Plugins/<JE id>/Configuration, restored afterwards):
+# ElsewhereEnabled true, ElsewhereCustomBrandingText "Only on this server", ElsewhereCustomBrandingImageUrl
+# "/web/favicons/touchicon.png", TMDB_API_KEY a placeholder (the lab has no internet; the scripts answer the page's
+# watch-providers request themselves), MdblistRatingsSources "imdb,tmdb". Lab addresses are shown as <lab>/<server>;
+# console, blocked-request and 5xx lines are left out (the full outputs are in je12's records).
+# The same scripts gave the same output on this branch before its rebase (8227861e, on top of cb1633b2).
+
+## panel
+$ je12 browse '#/home' --user viewer --script artifacts/restructure-plan/step-logs/upstream-sync-evidence/p73-panel.mjs --wait 2000
+
+### upstream 782a8364 (scripts/upstream_lab_deploy.py 782a836462231e7f68c4a673cebd9c06f823097b)
+SCRIPT {"text":"Only on this server","icon":"<server>/web/favicons/touchicon.png","loaded":true,"hidden":false,"alignItems":"center","gap":"8px"}
+console warnings: none
+URL /web/index.html#/details?id=0ff8461bed0a2658ec63487586efdbd3
+
+### the rewrite before the ports, cb1633b2 (je12 deploy --base cb1633b2; kept as before:<pair>)
+SCRIPT {"text":"Only on this server","icon":"/web/favicons/touchicon.png","loaded":true,"hidden":false,"alignItems":"flex-end","gap":""}
+console warnings: none
+URL /web/index.html#/details?id=0ff8461bed0a2658ec63487586efdbd3
+
+### this branch, 45ac49fe, rebased onto 2315155c (the lab je12 up started on it; kept as after:<pair>)
+SCRIPT {"text":"Only on this server","icon":"<server>/web/favicons/touchicon.png","loaded":true,"hidden":false,"alignItems":"center","gap":"8px"}
+console warnings: none
+URL /web/index.html#/details?id=0ff8461bed0a2658ec63487586efdbd3
+
+## admin
+$ je12 browse '#/configurationpage?name=Jellyfin%20Enhanced' --script artifacts/restructure-plan/step-logs/upstream-sync-evidence/p73-admin.mjs --wait 2000
+
+### upstream 782a8364 (scripts/upstream_lab_deploy.py 782a836462231e7f68c4a673cebd9c06f823097b)
+SCRIPT slot: true, accept image/png,image/jpeg,image/gif,image/webp,image/svg+xml, preview none, placeholder block
+URL /web/favicons/touchicon.png (saved): warning hidden
+URL /config/logo.png: warning This icon can't be loaded. It looks like a file path on the server. Viewers' browsers load the icon over the web, so it has to be an address a browser can open, such as https://example.com/logo.png, or a path Jellyfin serves, such as /web/favicons/touchicon.png. Files elsewhere on the server can't be used; upload the image below instead.
+URL /web/favicons/touchicon.png again: warning hidden
+upload logo.bmp (image/bmp): ✗ Use a PNG, JPG, GIF, WebP or SVG image
+upload logo.png (image/png, not an image): ✗ The Elsewhere icon file isn't a readable PNG, JPEG, GIF, WebP or SVG image (an SVG must be UTF-8 and have its <svg> tag in the first 64 KB)
+upload logo.svg (image/svg+xml): ✓ Uploaded, preview block
+anonymous GET ElsewhereBrandingIcon: HTTP 200 image/svg+xml | csp: default-src 'none'; style-src 'unsafe-inline'; img-src data:; sandbox | nosniff: nosniff | cache: public, max-age=86400
+public-config ElsewhereCustomBrandingIconVersion: <ticks>-<size>
+panel icon with an upload: <server>/JellyfinEnhanced/ElsewhereBrandingIcon?v=<ticks>-<size>, loaded true
+after reload: preview block, warning hidden
+delete: ✓ Deleted, preview none, placeholder block
+anonymous GET ElsewhereBrandingIcon: HTTP 404 application/problem+json; charset=utf-8 | csp: none | nosniff: none | cache: none
+public-config ElsewhereCustomBrandingIconVersion: empty
+URL /web/index.html#/configurationpage?name=Jellyfin%20Enhanced
+
+### the rewrite before the ports, cb1633b2 (je12 deploy --base cb1633b2; kept as before:<pair>)
+SCRIPT slot: false, accept null, preview null, placeholder null
+URL /web/favicons/touchicon.png (saved): warning no warning element
+URL /config/logo.png: warning no warning element
+URL /web/favicons/touchicon.png again: warning no warning element
+upload logo.bmp (image/bmp): no upload slot
+upload logo.png (image/png, not an image): no upload slot
+upload logo.svg (image/svg+xml): no upload slot, preview null
+anonymous GET ElsewhereBrandingIcon: HTTP 401  | csp: none | nosniff: none | cache: none
+public-config ElsewhereCustomBrandingIconVersion: no such field
+panel icon with an upload: /web/favicons/touchicon.png, loaded true
+after reload: preview null, warning no warning element
+delete: null, preview null, placeholder null
+anonymous GET ElsewhereBrandingIcon: HTTP 401  | csp: none | nosniff: none | cache: none
+public-config ElsewhereCustomBrandingIconVersion: no such field
+URL /web/index.html#/configurationpage?name=Jellyfin%20Enhanced
+
+### this branch, 45ac49fe, rebased onto 2315155c (the lab je12 up started on it; kept as after:<pair>)
+SCRIPT slot: true, accept image/png,image/jpeg,image/gif,image/webp,image/svg+xml, preview none, placeholder block
+URL /web/favicons/touchicon.png (saved): warning hidden
+URL /config/logo.png: warning This icon can't be loaded. It looks like a file path on the server. Viewers' browsers load the icon over the web, so it has to be an address a browser can open, such as https://example.com/logo.png, or a path Jellyfin serves, such as /web/favicons/touchicon.png. Files elsewhere on the server can't be used; upload the image below instead.
+URL /web/favicons/touchicon.png again: warning hidden
+upload logo.bmp (image/bmp): ✗ Use a PNG, JPG, GIF, WebP or SVG image
+upload logo.png (image/png, not an image): ✗ The Elsewhere icon file isn't a readable PNG, JPEG, GIF, WebP or SVG image (an SVG must be UTF-8 and have its <svg> tag in the first 64 KB)
+upload logo.svg (image/svg+xml): ✓ Uploaded, preview block
+anonymous GET ElsewhereBrandingIcon: HTTP 200 image/svg+xml | csp: default-src 'none'; style-src 'unsafe-inline'; img-src data:; sandbox | nosniff: nosniff | cache: public, max-age=86400
+public-config ElsewhereCustomBrandingIconVersion: <ticks>-<size>
+panel icon with an upload: <server>/JellyfinEnhanced/ElsewhereBrandingIcon?v=<ticks>-<size>, loaded true
+after reload: preview block, warning hidden
+delete: ✓ Deleted, preview none, placeholder block
+anonymous GET ElsewhereBrandingIcon: HTTP 404 application/problem+json; charset=utf-8 | csp: none | nosniff: none | cache: none
+public-config ElsewhereCustomBrandingIconVersion: empty
+URL /web/index.html#/configurationpage?name=Jellyfin%20Enhanced

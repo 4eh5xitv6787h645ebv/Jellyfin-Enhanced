@@ -1,0 +1,15 @@
+# The served bundle (GET /JellyfinEnhanced/bundle.js), by `je12 gate size` (scripts/restructure-gates.sh size, gzip -9 CLI)
+# and by gate T's BundleBudgetTests (.NET CompressionLevel.SmallestSize).
+Before the rebase (on cb1633b2):
+  cb1633b2 (scratch worktree):         SIZE: raw 2592384, gzip -9 704688
+  c1ce2423 (the ports, contract):      SIZE: raw 2593142, gzip -9 704928   => +758 / +240; BundleBudgetTests 706,746 (> 706,597)
+After the rebase onto 2315155c (upstream 79a90422 landed there and raised the limits to 2,618,666 / 707,700):
+  2315155c (scratch worktree):         SIZE: raw 2594887 (budget 2618666), gzip -9 705663 (budget 707700)
+  f0f02692 (the ports, contract):      SIZE: raw 2595646 (budget 2618666), gzip -9 705922 (budget 707700)   => +759 / +259
+  BundleBudgetTests on f0f02692: 707,838 gzip-9 bytes (over 707,700)
+  d056c520 raises the limits by +759 / +259 to 2,619,425 / 707,959: BundleBudgetTests pass
+PackedResourcesTests (assembly budget): passed before the rebase; after it, over (the 79a90422 landing used 15,209 bytes
+of the headroom without raising the limit). Measured per commit on top of 2315155c with the limits set to 1:
+  2315155c 11,873,489; 21ac33dc 11,874,672 (+1,183); f4514232 11,895,660 (+20,988); 1b027a34 11,902,184 (+6,524)
+  038c4de2 raises the limit 11,893,955 -> 11,922,650 (+28,695): pass
+All of the bundle growth is upstream c8625921's: elsewhere.js and its minified twin, and the bootstrap contract reader.

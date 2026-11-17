@@ -1,0 +1,31 @@
+# Lab parity for upstream 782a8364 (the MDBList ratings list on the Services tab), same labs and settings as p73.
+
+## mdblist
+$ je12 browse '#/configurationpage?name=Jellyfin%20Enhanced' --script artifacts/restructure-plan/step-logs/upstream-sync-evidence/p74-mdblist.mjs --wait 2000
+
+### upstream 782a8364 (scripts/upstream_lab_deploy.py 782a836462231e7f68c4a673cebd9c06f823097b)
+SCRIPT as loaded:
+mdblistRatingsSourcesAdmin: [jea-group "Configure ratings shown"] imdb* tmdb* tomatoes popcorn trakt … (12 rows)
+mdblistRatingsSourcesAdmin--mirror: [jea-group "Configure ratings shown"] imdb* tmdb* tomatoes popcorn trakt … (12 rows)
+after unticking IMDb and moving TMDB up in the Services tab copy:
+mdblistRatingsSourcesAdmin: [jea-group "Configure ratings shown"] tmdb* imdb tomatoes popcorn trakt … (12 rows)
+mdblistRatingsSourcesAdmin--mirror: [jea-group "Configure ratings shown"] tmdb* imdb tomatoes popcorn trakt … (12 rows)
+URL /web/index.html#/configurationpage?name=Jellyfin%20Enhanced
+
+### the rewrite before the ports, cb1633b2 (je12 deploy --base cb1633b2; kept as before:<pair>)
+SCRIPT as loaded:
+mdblistRatingsSourcesAdmin: [je-details-section "Configure ratings shown"] imdb* tmdb* tomatoes popcorn trakt … (12 rows)
+mdblistRatingsSourcesAdmin--mirror: [je-details-section "Configure ratings shown"] imdb tmdb tomatoes popcorn trakt … (12 rows)
+after unticking IMDb and moving TMDB up in the Services tab copy:
+mdblistRatingsSourcesAdmin: [je-details-section "Configure ratings shown"] imdb* tmdb* tomatoes popcorn trakt … (12 rows)
+mdblistRatingsSourcesAdmin--mirror: [je-details-section "Configure ratings shown"] imdb* tmdb tomatoes popcorn trakt … (12 rows)
+URL /web/index.html#/configurationpage?name=Jellyfin%20Enhanced
+
+### this branch, 45ac49fe, rebased onto 2315155c (the lab je12 up started on it; kept as after:<pair>)
+SCRIPT as loaded:
+mdblistRatingsSourcesAdmin: [jea-group "Configure ratings shown"] imdb* tmdb* tomatoes popcorn trakt … (12 rows)
+mdblistRatingsSourcesAdmin--mirror: [jea-group "Configure ratings shown"] imdb* tmdb* tomatoes popcorn trakt … (12 rows)
+after unticking IMDb and moving TMDB up in the Services tab copy:
+mdblistRatingsSourcesAdmin: [jea-group "Configure ratings shown"] tmdb* imdb tomatoes popcorn trakt … (12 rows)
+mdblistRatingsSourcesAdmin--mirror: [jea-group "Configure ratings shown"] tmdb* imdb tomatoes popcorn trakt … (12 rows)
+URL /web/index.html#/configurationpage?name=Jellyfin%20Enhanced
