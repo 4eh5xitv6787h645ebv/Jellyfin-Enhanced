@@ -1,0 +1,48 @@
+# p42 landing, 2026-11-18: the port of upstream 79a90422 rebased onto restructure/integration (cb1633b2), branch
+# sync/land-79a90422, Lenovo, je12 2.5.0 (code 9fbe3fd0d00f, git v2.5.0). Lines copied from what je12 printed.
+
+== je12 test --dotnet (the repository's quick mode: platform, media-tags, seerr, admin, details-providers), tree d89c57eb
+  QUICK: node 3658 passed, 0 failed
+  Passed!  - Failed:     0, Passed:  2633, Skipped:     0, Total:  2633, Duration: 42 s - JE.Tests.dll (net10.0)
+test: pass in 160s (the repo's quick mode)
+
+== je12 test --only, on d89c57eb (the port, its ledger entry and the contract lines)
+JE.Tests.IntegrationWatchProvidersTests.ExtractSeerrFlatrateReadsTheRequestedRegionOnly   pass (0 failed, 1 passed)
+tests/frontend/admin/config/admin-config-rewrite.test.mjs                                 pass (0 failed, 64 passed)
+tests/frontend/features/details-providers/features-details-providers-rewrite.test.mjs     pass (0 failed, 57 passed)
+tests/frontend/pages/pages-discovery-filters.test.mjs                                     pass (0 failed, 15 passed)
+tests/frontend/pages/pages-seerr-details-moreinfo.test.mjs                                pass (0 failed, 42 passed)
+tests/frontend/requests/seerr-core-boundaries.test.mjs                                    pass (0 failed, 29 passed)
+JE.Tests.Architecture (the hand-written contract lines included)                          pass (0 failed, 24 passed)
+JE.Tests.PackedResourcesTests (assembly budget)                                           pass (0 failed, 5 passed)
+JE.Tests.BundleBudgetTests                                                                FAIL (1 failed, 1 passed)
+  FAILED on d89c57eb: bundle.js is 707,585 bytes gzip-9, over the 706,597 budget in client/bundle-budget.json.
+
+== served bundle, je12 gate size (scripts/restructure-gates.sh size, gzip -9)
+cb1633b2 (main line, before the port): SIZE: raw 2592384 (budget 2616163), gzip -9 704688 (budget 706597)
+d89c57eb (the port):                    SIZE: raw 2594887 (budget 2616163), gzip -9 705663 (budget 706597)
+=> the port adds +2,503 raw, +975 gzip -9.
+
+== served bundle, gate T's own measure (BundleBudgetTests, .NET SmallestSize)
+cb1633b2, read with the limit set to 1 in an uncommitted edit (restored afterwards):
+  bundle.js is 706,482 bytes gzip-9, over the 1 budget in client/bundle-budget.json.
+d89c57eb: bundle.js is 707,585 bytes gzip-9 (above) => +1,103.
+With the budget entry of 3c13bafc (limits 2,618,666 raw / 707,700 gzip):
+JE.Tests.BundleBudgetTests                                                                pass (0 failed, 2 passed)
+
+== lab je1215b781 (docker backend, Jellyfin 12.4, mocks), plugin 3c13bafc
+je12 up: smoke: pass (0 failing, 0 flaky, 0 changed, 0 known, 0 fixed) in 39s
+  plugin ok 12.16.0.0 Active; scheduled tasks ok 17 JE tasks; openapi ok HTTP 200, 492 paths, 198 under /JellyfinEnhanced
+  bundle wire ok: identity 200 2594887B
+p42-seerr-providers.setup.sh, then je12 browse '#/home' --script p42-seerr-providers.mjs:
+- option off (default), after je12 deploy: p42-seerr-providers.land.option-off.txt, identical to
+  p42-seerr-providers.rewrite-after.option-off.txt (the port on 2026-11-13); upstream's build differs only in the order
+  of the posters' batch items.
+- option on (ElsewhereUseSeerrRegion set through POST /Plugins/{id}/Configuration, then je12 deploy):
+  p42-seerr-providers.land.option-on.txt, identical to p42-seerr-providers.upstream.option-on.txt (upstream's build);
+  the port on 2026-11-13 differs only in the order of the posters' batch items.
+- A first option-off run straight after je12 up, with no restart after the setup script, gave the three library
+  movies' poster lookups [] instead of Netflix: the smoke had already read those titles' Seerr details through the
+  proxy before the mock carried watchProviders, and the proxy's response cache answered with those. After je12 deploy
+  (a restart) the same command printed the expected result, above.
+je12 down: firewall counters at removal: 192.168.0.84 0 packets, !172.29.90.0/24 0 packets
