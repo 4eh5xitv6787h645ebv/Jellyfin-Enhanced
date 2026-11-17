@@ -2278,6 +2278,82 @@
       ],
       "evidence": "artifacts/restructure-plan/step-logs/upstream-sync-evidence/p68-*",
       "notes": "Re-implemented. Server: Features/MediaTags/Services/ReclaimerrActions.cs and ReclaimerrSession.cs (upstream's files in this tree's namespace), LeavingSoonService (Reclaimerr candidates and scheduled deletions, one-version and primary-version facts, ApiVersions in the snapshot, Status.Provider, the signature), MaintainerrHttp (bearer token, session cookie and trusted-proxy user header; FastAPI 'detail' reasons), MaintainerrActions (Enabled follows the tool in use; the facts are read again after an action and the tag cache is stamped in the background, TagCacheLeaving.QueueLeavingPublish), PluginConfiguration (the eight Reclaimerr fields, LeavingSoonMaintainerrEnabled and the six LeavingSoonPage* fields), JellyfinEnhanced.cs (the Plugin Pages entry and page as upstream), MediaTagsPortable secrets, CdnAssetService (selfhst reclaimerr.svg), BootstrapConfig (RemovalRequestsAvailable, LeavingSoonProvider, the four page placement flags; contracts regenerated). Client: the item menu (editor/maintainerr-item-menu.ts + .css: per-tool routes, exact days, the schedule chooser with logo, current day and preview, Request removal for anyone signed in, already-waiting answers, no Undo after a Reclaimerr Keep, je-leaving-soon-changed, JE.removalMenu with JE.maintainerrMenu the same object), the Leaving Soon page and its Home tab / Custom Tabs panel (features/media-tags/leaving-soon/), its Plugin Pages page, the admin page's Leaving Soon page section, Maintainerr / Reclaimerr / Leaving soon cards with Services copies, Create service account and the one-tool switch, the Media Tags Leaving soon texts, the 37 en.json strings, docs as upstream. Differences from upstream: (1) One controller per feature: the routes are partials of JeMediaTagsController (JeMediaTagsController.Reclaimerr.cs: GetReclaimerrItemState, MarkForReclaimerrRemoval, KeepFromReclaimerrRemoval, PostponeReclaimerrRemoval, RequestReclaimerrRemoval, ApproveReclaimerrRequest, DenyReclaimerrRequest, CreateReclaimerrServiceAccount; JeMediaTagsController.LeavingSoon.cs: GetLeavingSoonList), with the same paths, verbs and checks; there is no RemovalControllerBase (the existing IsAdminUser and item lookup are used), the service account route gets IHttpClientFactory as a [FromServices] parameter, the bodies are in Features/MediaTags/Models/ReclaimerrRequests.cs (upstream's ReclaimerrActionRequest is ReclaimerrServiceAccountRequest) and ParseReason is JeMediaTagsController.ParseLeavingSoonReason. The Maintainerr routes are unchanged. (2) The source rules (UsesReclaimerr, ApiConfigured, ReclaimerrActionsEnabled, HasReclaimerrAccount, RemovalRequestsEnabled and the Reclaimerr part of NormalizeSource) live in Shared/MediaTags/LeavingSoonSources.cs, where this tree keeps them; ReclaimerrActions.Enabled/RequestsEnabled and ReclaimerrSession.HasAccount forward to them. (3) No new shipped script: js/component-scripts.json and the output keys are pinned, so the page and its tab ship inside js/tags/tag-item-menu.js after the item menu (upstream loads extras/leavingsoon-page.js and leavingsoon-custom-tab.js after it too), and PluginPages/LeavingSoonPage.html is generated from client/html/bootstrap-pages/LeavingSoonPage.html and client/src/pages/leaving-soon-page.ts (page-mount; leaving the page stops the poller). The leavingsoon_ strings therefore count as Media Tags strings in scripts/tag-translation-coverage.mjs. (4) Guards: the tab follows the shared navigation hook instead of its own hashchange listener (leak guard L2); the page's five-minute timer is a data poll that queries no element (R5: the heading is built from elements), and a host that left the document stops it at the next navigation. (5) The page ignores an answer that arrives after another user signed in, keeps the last list when a reload fails (a failed first load says it could not load), and empties the Plugin Pages host when a Custom Tabs panel takes the poller over. (6) Mark from the item menu sends the version picked on the detail page whose own menu opened it (this tree's existing rule from upstream 06837783), not any visible version picker. (7) LeavingSoonPageEnabled is loaded and saved by the admin engine through its field; the four placement toggles are wired by hand like the other pages'. The new settings are in the What's New index and tests/fixtures/admin-config-baseline.json; config-flag-groups.json was regenerated (its diff equals upstream's). (8) api.md keeps this tree's rows and lists the nine new routes (220 entries); the service-account row says it answers {username, password}, as the code does. The bundle budget (client/bundle-budget.json) is raised by exactly what the port adds, +24,933 raw / +6,997 gzip-9 bytes, as the ec470d75 port did. No cached-output version changes: with Maintainerr on, the signature is the digest earlier versions kept and the tag-cache facts are unchanged. Kept as upstream (noted, not changed here): the shared Maintainerr client keeps cookies (UseCookies), so after a local-login fallback the service account's access_token cookie also rides on later requests to Reclaimerr; a client without cookies would change an existing service-factory contract line. Contract: nine routes and the ReclaimerrActions registration, added in the separate commit 'contract: upstream sync additions'."
+    },
+    {
+      "sha": "c451730b86969ad1333ccb74637f88ba7fc5d337",
+      "date": "2026-11-17T09:00:19+00:00",
+      "subject": "feat(seerr): show the series' Similar and Recommended rows on season and episode pages (#1074)",
+      "class": "feature",
+      "features": [
+        "seerr"
+      ],
+      "issues": [
+        "#1074"
+      ],
+      "release": null,
+      "size": {
+        "files": 5,
+        "insertions": 124,
+        "deletions": 14
+      },
+      "paths": [
+        "Jellyfin.Plugin.JellyfinEnhanced/js/jellyseerr/item-details.js",
+        "docs/seerr/seerr-features.md",
+        "docs/seerr/seerr-settings.md",
+        "tests/docs/coverage-matrix.md",
+        "tests/frontend/pages/pages-seerr-details-rows.test.mjs"
+      ],
+      "status": "ported",
+      "rewriteCommits": [],
+      "evidence": "artifacts/restructure-plan/step-logs/upstream-sync-evidence/p69-*",
+      "notes": "Re-implemented in client/src/features/seerr/details/details-page/item-details-entry.ts with upstream's logic: getParentSeries loads a Season's or Episode's series as the current user (SeriesId; a Season may fall back to ParentId) and getTmdbIdFromItem takes { viaSeries }, which only the Similar and Recommended rows pass, so Request More stays on series pages. No series, no series TMDB ID, no access or an id that is not a series give no rows and no Seerr request. Upstream's tests (tests/frontend/pages/pages-seerr-details-rows.test.mjs, identical here before the port) and docs apply as is; the coverage-matrix row is merged into this tree's. No difference from upstream."
+    },
+    {
+      "sha": "60170a0b30bf38166163e7b701ef71ae8d052a51",
+      "date": "2026-11-17T09:02:05+00:00",
+      "subject": "fix(bookmarks): clear the seek-bar marker when the last bookmark is deleted (#1072)",
+      "class": "fix",
+      "features": [
+        "bookmarks"
+      ],
+      "issues": [
+        "#1072"
+      ],
+      "release": null,
+      "size": {
+        "files": 2,
+        "insertions": 18,
+        "deletions": 0
+      },
+      "paths": [
+        "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/bookmarks/bookmarks.js",
+        "tests/frontend/features/features-bookmarks.test.mjs"
+      ],
+      "status": "pending",
+      "rewriteCommits": []
+    },
+    {
+      "sha": "5b92e29fc46f22f9550e85d43479b2d63e43c8a8",
+      "date": "2026-11-17T09:03:26+00:00",
+      "subject": "Translations update from Hosted Weblate (#1077)",
+      "class": "translation",
+      "features": [
+        "platform"
+      ],
+      "issues": [
+        "#1077"
+      ],
+      "release": null,
+      "size": {
+        "files": 32,
+        "insertions": 1379,
+        "deletions": 163
+      },
+      "paths": [
+        "Jellyfin.Plugin.JellyfinEnhanced/js/locales/ (32 files)"
+      ],
+      "status": "pending",
+      "rewriteCommits": []
     }
   ]
 }
