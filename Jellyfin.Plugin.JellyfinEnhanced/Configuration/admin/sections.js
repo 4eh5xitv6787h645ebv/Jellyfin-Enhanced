@@ -2373,6 +2373,14 @@
             init: wireKefinCopy
           },
           {
+            id: "LeavingSoonHideWatched",
+            prop: "LeavingSoonHideWatched",
+            type: "toggle",
+            default: false,
+            label: "Hide watched titles in the home row",
+            desc: "Leaves out of the <strong>Leaving soon</strong> row what the user has already watched (a series counts once every episode is watched). Use this instead of the Hide Watched checkbox in Home Screen Sections, which that plugin keeps disabled for sections added by other plugins."
+          },
+          {
             id: "LeavingSoonRefreshHours",
             prop: "LeavingSoonRefreshHours",
             type: "number",
@@ -2918,6 +2926,7 @@
    *  { id: 'ReclaimerrPassword', type: 'text' }
    *  { id: 'LeavingSoonMaintainerrActions', type: 'toggle' }
    *  { id: 'LeavingSoonHomeRow', type: 'toggle' }
+   *  { id: 'LeavingSoonHideWatched', type: 'toggle' }
    *  { id: 'LeavingSoonRefreshHours', type: 'number' }
    *  { id: 'arrLinksEnabled', type: 'toggle' }
    *  { id: 'showArrLinksAsText', type: 'toggle' }

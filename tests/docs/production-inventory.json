@@ -6082,6 +6082,14 @@
     },
     {
       "class": "PluginConfiguration",
+      "name": "LeavingSoonHideWatched",
+      "type": "bool",
+      "initializer": null,
+      "constructor_assignment": null,
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Configuration/PluginConfiguration.cs"
+    },
+    {
+      "class": "PluginConfiguration",
       "name": "LeavingSoonPageEnabled",
       "type": "bool",
       "initializer": null,
@@ -11279,7 +11287,7 @@
     "build_targets": 1,
     "files": 566,
     "routes": 223,
-    "configuration_properties": 792,
+    "configuration_properties": 793,
     "storage_references": 97,
     "scheduled_tasks": 17,
     "locales": 33
