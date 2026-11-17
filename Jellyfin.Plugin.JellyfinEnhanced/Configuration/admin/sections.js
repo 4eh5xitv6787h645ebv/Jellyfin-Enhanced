@@ -228,7 +228,6 @@
       ["metacriticuser", "Metacritic User"],
       ["letterboxd", "Letterboxd"],
       ["myanimelist", "MAL"],
-      ["anilist", "AniList"],
       ["master", "Master"]
     ];
     const RSN = [["", "None"], ...RS];
