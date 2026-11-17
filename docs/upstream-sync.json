@@ -2362,6 +2362,89 @@
         "09aadd255b05bef6e2a1de7fe023a3e7dd76d4e5"
       ],
       "notes": "Applied as is (git show 5b92e29f | git apply --3way, clean): the 32 locale files under Jellyfin.Plugin.JellyfinEnhanced/js/locales, including the Weblate prefill of the Leaving Soon and Reclaimerr strings that upstream da0ea773 added to en.json (ported in this run). No other file changes."
+    },
+    {
+      "sha": "cdc38b53332b22e130745f32a69e3e30613ae8b3",
+      "date": "2026-11-17T13:34:25+00:00",
+      "subject": "Translations update from Hosted Weblate (#1078)",
+      "class": "translation",
+      "features": [
+        "platform"
+      ],
+      "issues": [
+        "#1078"
+      ],
+      "release": null,
+      "size": {
+        "files": 30,
+        "insertions": 4893,
+        "deletions": 4893
+      },
+      "paths": [
+        "Jellyfin.Plugin.JellyfinEnhanced/js/locales/ (30 files)"
+      ],
+      "status": "ported",
+      "rewriteCommits": [],
+      "notes": "Applied as is (git show cdc38b53 | git apply --3way, clean): the 30 locale files under Jellyfin.Plugin.JellyfinEnhanced/js/locales now equal upstream's blobs (Weblate translations of the strings that were still English, among them the Seerr discovery filters). No other file changes."
+    },
+    {
+      "sha": "c8625921245bad999570747afcf465a45db6728c",
+      "date": "2026-11-18T00:08:09+08:00",
+      "subject": "fix(elsewhere): explain, check and allow uploading the custom branding icon (#1080)",
+      "class": "fix",
+      "features": [
+        "admin",
+        "chrome",
+        "details-providers"
+      ],
+      "issues": [
+        "#1080"
+      ],
+      "release": null,
+      "size": {
+        "files": 10,
+        "insertions": 509,
+        "deletions": 36
+      },
+      "paths": [
+        "Jellyfin.Plugin.JellyfinEnhanced/Configuration/admin/sections.js",
+        "Jellyfin.Plugin.JellyfinEnhanced/Configuration/configPage.html",
+        "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs",
+        "Jellyfin.Plugin.JellyfinEnhanced/js/elsewhere/elsewhere.js",
+        "docs/advanced/api.md",
+        "docs/advanced/config-flag-groups.json",
+        "docs/elsewhere/elsewhere-features.md",
+        "docs/elsewhere/elsewhere-settings.md",
+        "tests/backend/Api/ApiBrandingTests.cs",
+        "tests/docs/production-inventory.json"
+      ],
+      "status": "pending",
+      "rewriteCommits": [],
+      "unmappedPaths": [
+        "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs"
+      ]
+    },
+    {
+      "sha": "782a836462231e7f68c4a673cebd9c06f823097b",
+      "date": "2026-11-17T16:16:42+00:00",
+      "subject": "fix(config): keep the MDBList ratings list in step on the Services tab and style it like the other groups",
+      "class": "fix",
+      "features": [
+        "admin"
+      ],
+      "issues": [],
+      "release": null,
+      "size": {
+        "files": 2,
+        "insertions": 44,
+        "deletions": 5
+      },
+      "paths": [
+        "Jellyfin.Plugin.JellyfinEnhanced/Configuration/admin/sections.js",
+        "Jellyfin.Plugin.JellyfinEnhanced/Configuration/configPage.html"
+      ],
+      "status": "pending",
+      "rewriteCommits": []
     }
   ]
 }
