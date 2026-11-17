@@ -358,7 +358,11 @@
           { type: "custom", html: '<div class="inputContainer jea-row"><label class="inputLabel" for="mdblistApiKey">MDBList API Key</label><div class="je-api-row"><input id="mdblistApiKey" type="text" autocomplete="off" class="je-api-input jea-input"/><span id="mdblistStatusIndicator" class="material-icons"></span><button type="button" id="checkMdblistStatusBtn" class="jea-btn">Check</button></div><div id="mdblistStatusLine" class="jea-hint">&nbsp;</div></div><div class="je-setting-description" data-desc-for="mdblistApiKey"><div class="fieldDescription">Your API key from <a class="sectionTitle" href="https://mdblist.com/preferences/#api" target="_blank">mdblist.com</a>.</div></div>' },
           tog("mdblistRatingsShowOnItemDetails", "Show Ratings Row on Item Details", "Displays the MDBList ratings row on item-details pages."),
           tog("mdblistRatingsShowPercentSymbol", "Show % Symbol", `Appends "%" after each rating badge's number.`),
-          { type: "custom", html: `<details id="mdblistSourcesAdminDetails" class="je-details-section"><summary>Configure ratings shown</summary><div class="je-details-body"><div class="fieldDescription je-field-desc-sm">Pick which ratings appear on the item-details row, and the order they're shown in. Use the ` + arrow("up") + " / " + arrow("down") + ' buttons to reorder. All checked by default.</div><div id="mdblistRatingsSourcesAdmin"></div></div></details>' },
+          { type: "group", title: "Configure ratings shown", items: [
+            { type: "note", html: "Pick which ratings appear on the item-details row, and the order they're shown in. Use the " + arrow("up") + " / " + arrow("down") + " buttons to reorder. All checked by default." },
+            // Filled by renderMdblistSourcesAdmin (page/display-cards.ts); the Services tab copy gets its own list, kept in step there.
+            { type: "custom", html: '<div id="mdblistRatingsSourcesAdmin"></div>' }
+          ] },
           { type: "group", title: "Fetch ratings (scheduled task)", items: [
             tog("mdblistRatingsFetchEnabled", "Fetch Ratings from MDBList", "Enables the <strong>Fetch Ratings from MDBList</strong> scheduled task (Dashboard, Scheduled Tasks):" + UL(
               "Looks up MDBList data for any movie/series whose cached ratings are missing or stale, and saves it. Doesn't touch Jellyfin's own rating fields",

@@ -4,7 +4,7 @@
 
 What the rewrite has taken from [upstream](https://github.com/n00bcodr/Jellyfin-Enhanced) (`main`) since it branched at `2e0f9251bf`. The source of truth is [`upstream-sync.json`](upstream-sync.json); the procedure is [upstream-sync-procedure.md](upstream-sync-procedure.md).
 
-74 upstream commits: 1 pending, 71 ported, 2 already-present.
+74 upstream commits: 72 ported, 2 already-present.
 
 | # | Upstream | Date | Class | Features | Subject | Status | Rewrite commit | Note |
 |---|---|---|---|---|---|---|---|---|
@@ -81,4 +81,4 @@ What the rewrite has taken from [upstream](https://github.com/n00bcodr/Jellyfin-
 | 71 | [`5b92e29f`](https://github.com/n00bcodr/Jellyfin-Enhanced/commit/5b92e29fc46f22f9550e85d43479b2d63e43c8a8) | 2026-11-17 | translation | platform | Translations update from Hosted Weblate (#1077) | ported | `09aadd25` | Applied as is (git show 5b92e29f \| git apply --3way, clean): the 32 locale files under Jellyfin.Plugin.JellyfinEnhanced/js/locales, including the Weblate prefill of the Leaving Soon and Reclaimerr strings that upstream da0ea773 added to en.json (ported in this run). No other file changes. |
 | 72 | [`cdc38b53`](https://github.com/n00bcodr/Jellyfin-Enhanced/commit/cdc38b53332b22e130745f32a69e3e30613ae8b3) | 2026-11-17 | translation | platform | Translations update from Hosted Weblate (#1078) | ported |  | Applied as is (git show cdc38b53 \| git apply --3way, clean): the 30 locale files under Jellyfin.Plugin.JellyfinEnhanced/js/locales now equal upstream's blobs (Weblate translations of the strings that were still English, among them the Seerr discovery filters). No other file changes. |
 | 73 | [`c8625921`](https://github.com/n00bcodr/Jellyfin-Enhanced/commit/c8625921245bad999570747afcf465a45db6728c) | 2026-11-18 | fix | details-providers, chrome, admin, platform | fix(elsewhere): explain, check and allow uploading the custom branding icon (#1080) | ported |  | artifacts/restructure-plan/step-logs/upstream-sync-evidence/p73-* |
-| 74 | [`782a8364`](https://github.com/n00bcodr/Jellyfin-Enhanced/commit/782a836462231e7f68c4a673cebd9c06f823097b) | 2026-11-17 | fix | admin | fix(config): keep the MDBList ratings list in step on the Services tab and style it like the other groups | pending |  |  |
+| 74 | [`782a8364`](https://github.com/n00bcodr/Jellyfin-Enhanced/commit/782a836462231e7f68c4a673cebd9c06f823097b) | 2026-11-17 | fix | admin | fix(config): keep the MDBList ratings list in step on the Services tab and style it like the other groups | ported |  | artifacts/restructure-plan/step-logs/upstream-sync-evidence/p74-* |

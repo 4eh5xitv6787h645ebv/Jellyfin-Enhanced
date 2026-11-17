@@ -2446,8 +2446,10 @@
         "Jellyfin.Plugin.JellyfinEnhanced/Configuration/admin/sections.js",
         "Jellyfin.Plugin.JellyfinEnhanced/Configuration/configPage.html"
       ],
-      "status": "pending",
-      "rewriteCommits": []
+      "status": "ported",
+      "rewriteCommits": [],
+      "evidence": "artifacts/restructure-plan/step-logs/upstream-sync-evidence/p74-*",
+      "notes": "Re-implemented in client/src/admin/config/page/display-cards.ts with upstream's logic: renderMdblistSourcesAdmin builds both the card's list and the Services tab's linked copy (mdblistRatingsSourcesAdmin--mirror; the engine's markup copy dropped the ticks, its arrows did nothing and its edits never reached Save), and syncMdblistSources copies order and ticks from the list just edited to the other, on a tick (a delegated change listener) and on an arrow (the click handler now covers both lists); Save still reads the card's list. In admin/config/sections/display.ts \"Configure ratings shown\" is a group with a note, like its neighbours, in place of the hand-made <details>, as upstream. That is an intentional schema change, so the <details> wrapper's two ids (mdblistSourcesAdminDetails and its --mirror copy; no code read them) leave renderedIds in tests/fixtures/admin-config-baseline.json; no control, setting or section id changes. Upstream has no test for it; tests/frontend/admin/config/admin-config-mdblist-sources.test.mjs (5 tests, through the generated page) is new. No other difference from upstream."
     }
   ]
 }
