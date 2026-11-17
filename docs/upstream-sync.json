@@ -2353,8 +2353,9 @@
       "paths": [
         "Jellyfin.Plugin.JellyfinEnhanced/js/locales/ (32 files)"
       ],
-      "status": "pending",
-      "rewriteCommits": []
+      "status": "ported",
+      "rewriteCommits": [],
+      "notes": "Applied as is (git show 5b92e29f | git apply --3way, clean): the 32 locale files under Jellyfin.Plugin.JellyfinEnhanced/js/locales, including the Weblate prefill of the Leaving Soon and Reclaimerr strings that upstream da0ea773 added to en.json (ported in this run). No other file changes."
     }
   ]
 }
