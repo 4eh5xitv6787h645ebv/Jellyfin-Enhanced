@@ -4,7 +4,7 @@
 
 What the rewrite has taken from [upstream](https://github.com/n00bcodr/Jellyfin-Enhanced) (`main`) since it branched at `2e0f9251bf`. The source of truth is [`upstream-sync.json`](upstream-sync.json); the procedure is [upstream-sync-procedure.md](upstream-sync-procedure.md).
 
-67 upstream commits: 65 ported, 1 already-present, 1 deferred.
+68 upstream commits: 66 ported, 1 already-present, 1 deferred.
 
 | # | Upstream | Date | Class | Features | Subject | Status | Rewrite commit | Note |
 |---|---|---|---|---|---|---|---|---|
@@ -75,3 +75,4 @@ What the rewrite has taken from [upstream](https://github.com/n00bcodr/Jellyfin-
 | 65 | [`8f902bf7`](https://github.com/n00bcodr/Jellyfin-Enhanced/commit/8f902bf73f29a12a06d145c0fd930f6951adb3aa) | 2026-11-16 | feature | media-tags | feat(maintainerr): mark, keep and postpone seasons from the item menu | ported | `bc24ba8d` | artifacts/restructure-plan/step-logs/upstream-sync-evidence/p64-65-* |
 | 66 | [`bf6f14c5`](https://github.com/n00bcodr/Jellyfin-Enhanced/commit/bf6f14c56f998a1bff4c927ad0f2cbfbff087056) | 2026-11-16 | deps |  | chore(ci)(deps): bump trufflesecurity/trufflehog from 3.99.8 to 3.99.9 in the github-actions group (#1073) | ported | `2b5b4e60` | Applied as is: the same trufflesecurity/trufflehog pin (3.99.9, commit 3bd2b588) in .github/workflows/security-scan.yml. No workflow that only the rewrite has pins TruffleHog; dependency-review.yml names it in a licence allow-list without a version, so nothing else changes. |
 | 67 | [`bfe4ba23`](https://github.com/n00bcodr/Jellyfin-Enhanced/commit/bfe4ba232f0f3e76f42cb3303c542257d30562c4) | 2026-11-16 | fix | media-tags | fix(tags): keep the version picker on the remembered pick when the item page refreshes it | ported | `273529d9` | artifacts/restructure-plan/step-logs/upstream-sync-evidence/p67-* |
+| 68 | [`da0ea773`](https://github.com/n00bcodr/Jellyfin-Enhanced/commit/da0ea7732080ef1cb6ba4ddb765278ac5e60b089) | 2026-11-17 | feature | media-tags, admin, platform | feat(reclaimerr): Reclaimerr as a removal tool beside Maintainerr, with a Leaving Soon page (#1075) | ported |  | artifacts/restructure-plan/step-logs/upstream-sync-evidence/p68-* |
