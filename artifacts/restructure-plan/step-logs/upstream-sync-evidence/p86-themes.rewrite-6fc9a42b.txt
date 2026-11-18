@@ -1,0 +1,11 @@
+SCRIPT {"tabs":"mixed:block movies:block tv:none","pill":{"on":true,"chosen":false,"name":"Filters: 1"},"pillAfter":{"background":"rgb(229, 9, 20)","image":"none","transform":"matrix(0, 0, 0, 1, 0, 0)"},"pillColours":{"background":"rgb(255, 255, 255)","color":"rgb(16, 16, 16)"}}
+BLOCKED https://www.gstatic.com/cv/js/sender/v1/cast_sender.js
+BLOCKED https://image.tmdb.org/t/p/w300/hUzeosd33nzE5MCNsZxCGEKTXaQ.png
+BLOCKED https://image.tmdb.org/t/p/w300/1TjvGVDMYsj6JBxOAkUHpPEwLf7.png
+BLOCKED https://image.tmdb.org/t/p/w300/wdrCwmRnLFJhEoH8GSfymY85KHT.png
+BLOCKED https://image.tmdb.org/t/p/w300/zhD3hhtKB5qyv7ZeL4uLpNxgMVU.png
+BLOCKED https://image.tmdb.org/t/p/w300/wwemzKWzjKYJFfCeiB57q3r4Bcm.png
+BLOCKED https://image.tmdb.org/t/p/w300/tuomPhY2UtuPTqqFnKMVHvSb724.png
+BLOCKED https://image.tmdb.org/t/p/w300/1edZOYAfoyZyZ3rklNSiUpXX30Q.png
+BLOCKED https://image.tmdb.org/t/p/w300/bngHRFi794mnMq34gfVcm9nDxN1.png
+URL /web/index.html#/recommendations#jeScore=7..

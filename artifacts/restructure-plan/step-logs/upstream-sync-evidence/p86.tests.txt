@@ -1,0 +1,64 @@
+# Upstream b84c45dd: the new and changed tests, run with je12 test --only.
+
+## before the port: 6fc9a42b with the tests added (tree 6fc9a42b+dirty@523b73f0), as je12 printed it
+FAIL tests/frontend/pages/pages-recommendations-filters.test.mjs :: a link's filters narrow every row: its kind's rows only, Trending by what its titles say, upcoming as discover from today
+FAIL tests/frontend/pages/pages-recommendations-filters.test.mjs :: a category opens with the filters, asks Seerr with them, and says when they leave nothing
+test --only: FAIL (2 failed, 18 passed) in 4s on 6fc9a42b+dirty@523b73f0; recorded for je12 evidence
+FAIL [chromium] › tests/browser/discovery-theme-tabs.spec.cjs:14:1 › All, Movies and Series all show under a theme that hides every third tab button (Zesty)
+FAIL [chromium] › tests/browser/discovery-theme-tabs.spec.cjs:35:1 › the Recommendations Filters pill, filled while a filter is set, takes no chosen-tab bar through its words (JellyFlix)
+FAIL [mobile-chromium] › tests/browser/discovery-theme-tabs.spec.cjs:14:1 › All, Movies and Series all show under a theme that hides every third tab button (Zesty)
+FAIL [mobile-chromium] › tests/browser/discovery-theme-tabs.spec.cjs:35:1 › the Recommendations Filters pill, filled while a filter is set, takes no chosen-tab bar through its words (JellyFlix)
+FAIL [firefox] › tests/browser/discovery-theme-tabs.spec.cjs:14:1 › All, Movies and Series all show under a theme that hides every third tab button (Zesty)
+FAIL [firefox] › tests/browser/discovery-theme-tabs.spec.cjs:35:1 › the Recommendations Filters pill, filled while a filter is set, takes no chosen-tab bar through its words (JellyFlix)
+test --only: FAIL (6 failed, 0 passed) in 28s on 6fc9a42b+dirty@523b73f0; recorded for je12 evidence
+
+## on the port's commits
+ok   tests/frontend/pages/pages-recommendations-filters.test.mjs :: a link's filters narrow every row: its kind's rows only, Trending by what its titles say, upcoming as discover from today
+ok   tests/frontend/pages/pages-recommendations-filters.test.mjs :: a choice on the tab replaces its address (no history entry, no navigation) and fills the rows again
+ok   tests/frontend/pages/pages-recommendations-filters.test.mjs :: a filter that leaves the tab nothing says so, and Clear filters brings everything back
+ok   tests/frontend/pages/pages-recommendations-filters.test.mjs :: on Home a category names itself in the address: Back and Forward move between the tab and its categories
+ok   tests/frontend/pages/pages-recommendations-filters.test.mjs :: a category link opens filtered and in its order; its arrow keeps the filters for the tab, not the order
+ok   tests/frontend/pages/pages-recommendations-filters.test.mjs :: filters changed on a category are the tab's too; its entry says them, and Back shows the tab entry's own
+ok   tests/frontend/pages/pages-recommendations-filters.test.mjs :: a category opens with the filters, asks Seerr with them, and says when they leave nothing
+ok   tests/frontend/pages/pages-recommendations-filters.test.mjs :: Trending (a feed that takes no filters) keeps its titles by what they say, and has nothing where a filter cannot be checked
+ok   tests/frontend/pages/pages-recommendations-filters.test.mjs :: off Home a category keeps the same-URL entry, and the page of its own keeps its filters in its address
+ok   tests/frontend/pages/pages-recommendations-filters.test.mjs :: an address's filters that are not of their shape are left out
+ok   tests/frontend/pages/pages-recommendations-filters.test.mjs :: a category still resolving its genre is not opened once the viewer has gone elsewhere, nor twice
+ok   tests/frontend/pages/pages-recommendations-filters.test.mjs :: a category address with keywords matched by any asks Seerr for either, and the address keeps saying it
+ok   tests/frontend/pages/pages-recommendations-filters.test.mjs :: a category its address asked for, still resolving its genre, is not opened once Back has left its address
+ok   tests/frontend/pages/pages-recommendations-filters.test.mjs :: a genre's category keeps its genre and takes the other genres ticked as any of them (Animation, and Family or Kids)
+ok   tests/frontend/pages/pages-recommendations-filters.test.mjs :: a saved profile chosen on the tab sets its filters, its address and its rows at once
+ok   tests/frontend/pages/pages-recommendations-filters.test.mjs :: a saved set chosen on Trending takes only what Trending offers: its titles are kept by what they say
+ok   tests/frontend/pages/pages-recommendations-filters.test.mjs :: Forward onto a dialog's entry left behind keeps the tab as it is (the entry gets its address back), and Back from a category opened there closes it
+ok   tests/frontend/pages/pages-recommendations-filters.test.mjs :: a dialog over a category: closing it, Forward onto its entry and a jump onto it from the tab all show the category
+ok   tests/frontend/pages/pages-recommendations-filters.test.mjs :: a jump of two entries back while a dialog is open over a category (the browser's history list) leaves the category
+ok   tests/frontend/pages/pages-recommendations-filters.test.mjs :: a dialog pushed at a tab number the router has not seen corrected (native tabs fix it in place) still gets the page's address
+test --only: pass (0 failed, 20 passed) in 4s on 7dfac0da; recorded for je12 evidence
+ok   [chromium] › tests/browser/discovery-theme-tabs.spec.cjs:14:1 › All, Movies and Series all show under a theme that hides every third tab button (Zesty) (0.2s of its 15s limit)
+ok   [chromium] › tests/browser/discovery-theme-tabs.spec.cjs:35:1 › the Recommendations Filters pill, filled while a filter is set, takes no chosen-tab bar through its words (JellyFlix) (0.2s of its 15s limit)
+ok   [mobile-chromium] › tests/browser/discovery-theme-tabs.spec.cjs:14:1 › All, Movies and Series all show under a theme that hides every third tab button (Zesty) (0.2s of its 15s limit)
+ok   [mobile-chromium] › tests/browser/discovery-theme-tabs.spec.cjs:35:1 › the Recommendations Filters pill, filled while a filter is set, takes no chosen-tab bar through its words (JellyFlix) (0.2s of its 15s limit)
+ok   [firefox] › tests/browser/discovery-theme-tabs.spec.cjs:14:1 › All, Movies and Series all show under a theme that hides every third tab button (Zesty) (4.8s of its 15s limit)
+ok   [firefox] › tests/browser/discovery-theme-tabs.spec.cjs:35:1 › the Recommendations Filters pill, filled while a filter is set, takes no chosen-tab bar through its words (JellyFlix) (4.4s of its 15s limit)
+test --only: pass (0 failed, 6 passed) in 11s on 7dfac0da; recorded for je12 evidence
+ok   tests/frontend/pages/pages-discovery-filters.test.mjs :: dayOf reads a year, a month or a day as its first or last day, month ends and leap years included
+ok   tests/frontend/pages/pages-discovery-filters.test.mjs :: numberOf and isBound keep each filter to its own limits
+ok   tests/frontend/pages/pages-discovery-filters.test.mjs :: isReversed is true only for two usable bounds the wrong way round
+ok   tests/frontend/pages/pages-discovery-filters.test.mjs :: feedFilterQuery asks each kind by its own names, in a fixed order, and asks for nothing where a kind cannot match
+ok   tests/frontend/pages/pages-discovery-filters.test.mjs :: keepByFilters keeps a person's titles by role, period, score, votes, every genre and any language
+ok   tests/frontend/pages/pages-discovery-filters.test.mjs :: offeredFilters leaves out what the admin turned off; a missing switch is on
+ok   tests/frontend/pages/pages-discovery-filters.test.mjs :: rolesOf offers acting first, then departments by how many credits, the catch-all last
+ok   tests/frontend/pages/pages-discovery-filters.test.mjs :: the lists are asked once per visit, named and ordered for the eye; a failed list is asked again
+ok   tests/frontend/pages/pages-discovery-filters.test.mjs :: what is set is said piece by piece: a range once, in the viewer's numbers, a list per thing ticked
+ok   tests/frontend/pages/pages-discovery-filters.test.mjs :: with the admin option the services and the feed ask for the user's Seerr streaming region
+ok   tests/frontend/pages/pages-discovery-filters.test.mjs :: each open group keeps the rule that closes it; only the menu's last group goes without one
+ok   tests/frontend/pages/pages-discovery-filters.test.mjs :: the English locales say what en.json says for every filter string they share (an English edit takes a new key)
+ok   tests/frontend/pages/pages-discovery-filters.test.mjs :: Undo says what the last change did: the piece it set, as said alone; a rule it switched; a piece it took away
+ok   tests/frontend/pages/pages-discovery-filters.test.mjs :: the services and the feed ask for the admin's region; an unusable region is the US
+ok   tests/frontend/pages/pages-discovery-filters.test.mjs :: a list page's further filters are typed or ticked, and asked of Seerr: ranges by each feed's own names, lists whole
+ok   tests/frontend/pages/pages-discovery-filters.test.mjs :: nothing matches: the section says so and offers the way out; the admin's switches take a filter away for good
+ok   tests/frontend/pages/pages-discovery-filters.test.mjs :: Undo is not offered once what is set was replaced some other way (a saved set applied, the address followed)
+ok   tests/frontend/pages/pages-discovery-filters.test.mjs :: a list showing one kind says nothing matches when only the other kind's cards (hidden) are left
+ok   tests/frontend/pages/pages-discovery-filters.test.mjs :: a person's titles are filtered here: by role, by years, by score and votes, by genre and language
+ok   tests/frontend/pages/pages-discovery-filters.test.mjs :: the tabs' choice repaints the button: a type other than All is said beside the icon where the tabs are out of sight
+test --only: pass (0 failed, 27 passed) in 4s on 7dfac0da; recorded for je12 evidence
