@@ -2871,7 +2871,9 @@
         "Jellyfin.Plugin.JellyfinEnhanced/js/tags/qualitytags.js"
       ],
       "status": "ported",
-      "rewriteCommits": [],
+      "rewriteCommits": [
+        "d364401e57c8d5b45815796c57716018d15c411f"
+      ],
       "evidence": "artifacts/restructure-plan/step-logs/upstream-sync-evidence/p87-*",
       "notes": "Re-implemented in client/src/features/media-tags/types/quality/quality-data.ts (qualityCss, which qualitytags.ts's buildCss calls; upstream's change is in js/tags/qualitytags.js's buildCss): the chip box from JE.core.tagRenderer.chipBaseCss is written once before the colour rules instead of once per quality colour. No other difference from upstream. The box declares no background or colour and every colour rule is more specific, so the chips look the same: on a lab every quality chip's computed look on the home page is identical on this tree before the port, after it and on upstream 8bff0750, and the stylesheet is 373,840 characters before and 25,583 after (upstream: 25,583). Upstream adds no test; tests/frontend/features/media-tags/features-quality-display.test.mjs gains 'the quality stylesheet writes the chip box once and one colour rule per quality', which injects the stylesheet as the tag pipeline does on registration and failed before the port (92 chip boxes). The other place that writes quality colours, tag-styles.ts (Tag Styles), writes no chip box per rule. Nothing stored or cached changes."
     }
