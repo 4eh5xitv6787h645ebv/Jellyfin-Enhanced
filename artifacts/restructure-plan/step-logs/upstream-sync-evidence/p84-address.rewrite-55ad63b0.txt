@@ -1,0 +1,10 @@
+SCRIPT {"A_opened":{"hash":"#/configurationpage?name=Jellyfin%20Enhanced","tab":"overview","mtSection":null,"menu":"selected"},"A_tabClick":{"hash":"#/configurationpage?name=Jellyfin+Enhanced&tab=seerr","tab":"seerr","mtSection":null,"menu":"selected"},"B_reload":{"hash":"#/configurationpage?name=Jellyfin+Enhanced&tab=seerr","tab":"seerr","mtSection":null,"menu":"selected"},"C_colours":{"hash":"#/configurationpage?name=Jellyfin+Enhanced&jeSection=media-tags&tab=colours","tab":"media-tags","mtSection":"colours","menu":"selected"},"C_mtButtonAgain":{"hash":"#/configurationpage?name=Jellyfin+Enhanced&jeSection=media-tags","tab":"media-tags","mtSection":"colours","menu":"selected"},"D_copiedLink":{"hash":"#/configurationpage?name=Jellyfin+Enhanced&jeSection=media-tags&tab=overview","tab":"media-tags","mtSection":"overview","menu":"selected"},"E_afterSearch":{"hash":"#/configurationpage?name=Jellyfin+Enhanced&jeSection=media-tags","tab":"media-tags","mtSection":"colours","menu":"selected"},"E_copiedLink":{"hash":"#/configurationpage?name=Jellyfin+Enhanced&jeSection=media-tags&tab=overview","tab":"media-tags","mtSection":"overview","menu":"selected"},"F_link_savedMediaTags":{"hash":"#/configurationpage?name=Jellyfin+Enhanced&jeSection=media-tags&tab=colours","tab":"media-tags","mtSection":"colours","menu":"selected"}}
+CONSOLE Failed to load resource: the server responded with a status of 404 (Not Found) /JellyfinEnhanced/cdn/selfhst/svg/maintainerr.svg
+CONSOLE Failed to load resource: the server responded with a status of 404 (Not Found) /JellyfinEnhanced/cdn/selfhst/svg/reclaimerr.svg
+CONSOLE Failed to load resource: the server responded with a status of 404 (Not Found) /JellyfinEnhanced/cdn/selfhst/svg/tmdb.svg
+BLOCKED https://www.gstatic.com/cv/js/sender/v1/cast_sender.js
+STORM 15x GET /JellyfinEnhanced/tag-cache/<lab-admin-id>
+STORM 15x GET /JellyfinEnhanced/active-streams/sessions
+STORM 20x GET /Plugins/f69e946a-4b3c-4e9a-8f0a-8d7c1b2c4d9b/Configuration
+STORM 16x GET /Library/VirtualFolders
+URL /web/index.html#/configurationpage?name=Jellyfin+Enhanced&jeSection=media-tags&tab=colours

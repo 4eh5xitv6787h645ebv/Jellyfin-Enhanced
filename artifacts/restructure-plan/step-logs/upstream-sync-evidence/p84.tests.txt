@@ -1,0 +1,42 @@
+# Upstream 5201d47b: the two new tests as je12 recorded them (je12 evidence), failing on this tree before the port (55ad63b0 with the tests added) and passing after; then on the port's commit.
+
+tests/frontend/admin/config/admin-config-address.test.mjs :: the address the page writes keeps the page name as Jellyfin writes it
+  FAILED on 55ad63b0+dirty@25f42534 at 2026-11-18 16:35:26: AssertionError: Expected values to be strictly equal: + '#/configurationpage?name=Jellyfin+Enhanced&tab=seerr' / - '#/configurationpage?name=Jellyfin%20Enhanced&tab=seerr'
+  passed on 55ad63b0+dirty@d39de68f at 2026-11-18 16:40:12
+  => failed on 55ad63b0+dirty@25f42534 (2026-11-18 16:35:26), passes on 55ad63b0+dirty@d39de68f (2026-11-18 16:40:12); the files changed since (now ce694a1d): rerun it before you report it
+tests/frontend/features/media-tags/admin/features-admin-config-media-tags-tab.test.mjs :: showing the Media Tags tab again keeps its section in the address
+  FAILED on 55ad63b0+dirty@25f42534 at 2026-11-18 16:35:31: AssertionError: its button: the address still names the section shown / null !== 'colours'
+  passed on 55ad63b0+dirty@d39de68f at 2026-11-18 16:40:17
+  => failed on 55ad63b0+dirty@25f42534 (2026-11-18 16:35:31), passes on 55ad63b0+dirty@d39de68f (2026-11-18 16:40:17); the files changed since (now ce694a1d): rerun it before you report it
+
+# admin-config-address.test.mjs on the committed head
+ok   tests/frontend/admin/config/admin-config-address.test.mjs :: settings the usage report carries get an icon that opens the Usage Statistics card, without changing the setting
+ok   tests/frontend/admin/config/admin-config-address.test.mjs :: no icon, and no error, when the list cannot be read or is not a list
+ok   tests/frontend/admin/config/admin-config-address.test.mjs :: the address names the tab and the card shown, and loses the card when a whole tab is shown
+ok   tests/frontend/admin/config/admin-config-address.test.mjs :: an address with a tab and a card opens that card, also when the session kept another tab
+ok   tests/frontend/admin/config/admin-config-address.test.mjs :: a link to a setting opens its tab, not the tab the session kept
+ok   tests/frontend/admin/config/admin-config-address.test.mjs :: the address the page writes keeps the page name as Jellyfin writes it
+test --only: pass (0 failed, 6 passed) in 7s on 3fdc5016; recorded for je12 evidence
+
+# features-admin-config-media-tags-tab.test.mjs on the committed head
+ok   tests/frontend/features/media-tags/admin/features-admin-config-media-tags-tab.test.mjs :: the tab: after the form, between Display and Elsewhere in the sidebar with its sections, drawn the first time it opens
+ok   tests/frontend/features/media-tags/admin/features-admin-config-media-tags-tab.test.mjs :: addresses open the tab at their section: the tab's own, older jeSection ids, and tab= for any tab
+ok   tests/frontend/features/media-tags/admin/features-admin-config-media-tags-tab.test.mjs :: the address follows the Media Tags tab and its section, and the next tab replaces both
+ok   tests/frontend/features/media-tags/admin/features-admin-config-media-tags-tab.test.mjs :: showing the Media Tags tab again keeps its section in the address
+ok   tests/frontend/features/media-tags/admin/features-admin-config-media-tags-tab.test.mjs :: an address naming a Media Tags section opens it, not the tab the session kept
+ok   tests/frontend/features/media-tags/admin/features-admin-config-media-tags-tab.test.mjs :: links to the page itself (the Display card, the tab's own links) open in place, without navigating
+ok   tests/frontend/features/media-tags/admin/features-admin-config-media-tags-tab.test.mjs :: Save never puts an older Media Tags value back: a pending field save goes first, and one made during the write waits for it
+ok   tests/frontend/features/media-tags/admin/features-admin-config-media-tags-tab.test.mjs :: the page's Save persists after the Media Tags tab has loaded, over Jellyfin's strict getUrl
+ok   tests/frontend/features/media-tags/admin/features-admin-config-media-tags-tab.test.mjs :: an account that cannot be read (its server): the tab reads nothing and says so, and Save says it did not save
+ok   tests/frontend/features/media-tags/admin/features-admin-config-media-tags-tab.test.mjs :: an account that cannot be read (its server, from a client read anew each time): the tab reads nothing and says so, and Save says i
+ok   tests/frontend/features/media-tags/admin/features-admin-config-media-tags-tab.test.mjs :: Apply all plugin settings and Apply the above save a pending Media Tags change first and never write one
+ok   tests/frontend/features/media-tags/admin/features-admin-config-media-tags-tab.test.mjs :: the sidebar marks a Media Tags change that is not saved, and a saved change updates the Display card
+ok   tests/frontend/features/media-tags/admin/features-admin-config-media-tags-tab.test.mjs :: searching and clearing the search leaves the Media Tags tab as it was
+ok   tests/frontend/features/media-tags/admin/features-admin-config-media-tags-tab.test.mjs :: the settings search lists matching Media Tags settings under the form, and a hit opens the setting on its tab
+ok   tests/frontend/features/media-tags/admin/features-admin-config-media-tags-tab.test.mjs :: the stylesheet keeps the hidden Media Tags result list hidden and draws its rows
+ok   tests/frontend/features/media-tags/admin/features-admin-config-media-tags-tab.test.mjs :: a search answered after a newer one, or after the view is gone, draws nothing
+ok   tests/frontend/features/media-tags/admin/features-admin-config-media-tags-tab.test.mjs :: a new setting on the Media Tags tab gets its New badge on its row, keeps it when the tab redraws, and loses it on Dismiss
+ok   tests/frontend/features/media-tags/admin/features-admin-config-media-tags-tab.test.mjs :: the Media Tags badge watcher ends with the view
+ok   tests/frontend/features/media-tags/admin/features-admin-config-media-tags-tab.test.mjs :: an address naming a Media Tags section, with Media Tags the tab restored from the session, opens it while the tab loads, without a
+ok   tests/frontend/features/media-tags/admin/features-admin-config-media-tags-tab.test.mjs :: the Media Tags tab keeps no transform once shown: its Undo bar stays fixed to the window
+test --only: pass (0 failed, 24 passed) in 31s on 3fdc5016; recorded for je12 evidence

@@ -1,0 +1,188 @@
+# Upstream d617312f: the new and changed tests. First on ce694a1d (this branch before the port) with the tests copied in, then on the port's commit 3fdc5016 (je12 test --only).
+
+## before the port: pages-discovery-address.test.mjs
+FAIL tests/frontend/pages/pages-discovery-address.test.mjs :: a list page's link with the section's filters: page 1 is asked with them, and the controls say them
+FAIL tests/frontend/pages/pages-discovery-address.test.mjs :: a choice on a section replaces its page's address in its fragment: the router's part as it was, no history entry, no navigation, the same section
+FAIL tests/frontend/pages/pages-discovery-address.test.mjs :: a jellyfin-web dialog after a change (its entry at the router's address, without the fragment) and Back off it are no navigation: the section keeps its filters
+FAIL tests/frontend/pages/pages-discovery-address.test.mjs :: a filter changed after a dialog closed, then Forward onto the dialog's entry: the page as it is now, no navigation
+FAIL tests/frontend/pages/pages-discovery-address.test.mjs :: a bound typed on a page and left before it is taken is not taken on the next page
+FAIL tests/frontend/pages/pages-discovery-address.test.mjs :: a link leaving out genres and a language: Seerr is asked as without them, and what has them is kept off the page
+FAIL tests/frontend/pages/pages-discovery-address.test.mjs :: a page opened straight from its link keeps its section when a dialog's own history entry is popped (More Info's Back)
+FAIL tests/frontend/pages/pages-discovery-address.test.mjs :: a person's link: the type and further filters from the address, and taking one away writes it back
+FAIL tests/frontend/pages/pages-discovery-address.test.mjs :: a section whose address's filters leave nothing stays, says so, and Clear filters brings everything back
+FAIL tests/frontend/pages/pages-discovery-address.test.mjs :: a section goes on the page the router shows, not the one still showing while it builds the new page
+FAIL tests/frontend/pages/pages-discovery-address.test.mjs :: a type its address asks for holds when its page 1 came back empty: the tabs say it, the other kind is hidden, its feed reads on
+FAIL tests/frontend/pages/pages-discovery-address.test.mjs :: a filter the admin turned off is not taken from an address
+FAIL tests/frontend/pages/pages-discovery-address.test.mjs :: a genre's page keeps its genre and takes the others ticked as any of them: asked for its genre, kept by theirs
+FAIL tests/frontend/pages/pages-discovery-address.test.mjs :: a saved profile chosen in a section sets its type, order and filters, its address, and asks Seerr again
+test --only: FAIL (14 failed, 0 passed) in 31s on ce694a1d+dirty@59d2dd91; recorded for je12 evidence
+
+## before the port: pages-recommendations-filters.test.mjs
+FAIL tests/frontend/pages/pages-recommendations-filters.test.mjs :: a link's filters narrow every row: its kind's rows only, Trending by what its titles say, upcoming as discover from today
+FAIL tests/frontend/pages/pages-recommendations-filters.test.mjs :: a choice on the tab replaces its address (no history entry, no navigation) and fills the rows again
+FAIL tests/frontend/pages/pages-recommendations-filters.test.mjs :: a filter that leaves the tab nothing says so, and Clear filters brings everything back
+FAIL tests/frontend/pages/pages-recommendations-filters.test.mjs :: on Home a category names itself in the address: Back and Forward move between the tab and its categories
+FAIL tests/frontend/pages/pages-recommendations-filters.test.mjs :: a category link opens filtered and in its order; its arrow keeps the filters for the tab, not the order
+FAIL tests/frontend/pages/pages-recommendations-filters.test.mjs :: filters changed on a category are the tab's too; its entry says them, and Back shows the tab entry's own
+FAIL tests/frontend/pages/pages-recommendations-filters.test.mjs :: a category opens with the filters, asks Seerr with them, and says when they leave nothing
+FAIL tests/frontend/pages/pages-recommendations-filters.test.mjs :: Trending (a feed that takes no filters) keeps its titles by what they say, and has nothing where a filter cannot be checked
+FAIL tests/frontend/pages/pages-recommendations-filters.test.mjs :: off Home a category keeps the same-URL entry, and the page of its own keeps its filters in its address
+FAIL tests/frontend/pages/pages-recommendations-filters.test.mjs :: an address's filters that are not of their shape are left out
+FAIL tests/frontend/pages/pages-recommendations-filters.test.mjs :: a category still resolving its genre is not opened once the viewer has gone elsewhere, nor twice
+FAIL tests/frontend/pages/pages-recommendations-filters.test.mjs :: a category address with keywords matched by any asks Seerr for either, and the address keeps saying it
+ok   tests/frontend/pages/pages-recommendations-filters.test.mjs :: a category its address asked for, still resolving its genre, is not opened once Back has left its address
+FAIL tests/frontend/pages/pages-recommendations-filters.test.mjs :: a genre's category keeps its genre and takes the other genres ticked as any of them (Animation, and Family or Kids)
+FAIL tests/frontend/pages/pages-recommendations-filters.test.mjs :: a saved profile chosen on the tab sets its filters, its address and its rows at once
+FAIL tests/frontend/pages/pages-recommendations-filters.test.mjs :: a saved set chosen on Trending takes only what Trending offers: its titles are kept by what they say
+FAIL tests/frontend/pages/pages-recommendations-filters.test.mjs :: Forward onto a dialog's entry left behind keeps the tab as it is (the entry gets its address back), and Back from a category opened there closes it
+FAIL tests/frontend/pages/pages-recommendations-filters.test.mjs :: a dialog over a category: closing it, Forward onto its entry and a jump onto it from the tab all show the category
+FAIL tests/frontend/pages/pages-recommendations-filters.test.mjs :: a jump of two entries back while a dialog is open over a category (the browser's history list) leaves the category
+FAIL tests/frontend/pages/pages-recommendations-filters.test.mjs :: a dialog pushed at a tab number the router has not seen corrected (native tabs fix it in place) still gets the page's address
+test --only: FAIL (19 failed, 1 passed) in 21s on ce694a1d+dirty@59d2dd91; recorded for je12 evidence
+
+## before the port: pages-discovery-filters.test.mjs
+ok   tests/frontend/pages/pages-discovery-filters.test.mjs :: dayOf reads a year, a month or a day as its first or last day, month ends and leap years included
+ok   tests/frontend/pages/pages-discovery-filters.test.mjs :: numberOf and isBound keep each filter to its own limits
+ok   tests/frontend/pages/pages-discovery-filters.test.mjs :: isReversed is true only for two usable bounds the wrong way round
+ok   tests/frontend/pages/pages-discovery-filters.test.mjs :: feedFilterQuery asks each kind by its own names, in a fixed order, and asks for nothing where a kind cannot match
+FAIL tests/frontend/pages/pages-discovery-filters.test.mjs :: keepByFilters keeps a person's titles by role, period, score, votes, every genre and any language
+FAIL tests/frontend/pages/pages-discovery-filters.test.mjs :: offeredFilters leaves out what the admin turned off; a missing switch is on
+ok   tests/frontend/pages/pages-discovery-filters.test.mjs :: rolesOf offers acting first, then departments by how many credits, the catch-all last
+ok   tests/frontend/pages/pages-discovery-filters.test.mjs :: the lists are asked once per visit, named and ordered for the eye; a failed list is asked again
+FAIL tests/frontend/pages/pages-discovery-filters.test.mjs :: what is set is said piece by piece: a range once, in the viewer's numbers, a list per thing ticked
+ok   tests/frontend/pages/pages-discovery-filters.test.mjs :: with the admin option the services and the feed ask for the user's Seerr streaming region
+FAIL tests/frontend/pages/pages-discovery-filters.test.mjs :: each open group keeps the rule that closes it; only the menu's last group goes without one
+ok   tests/frontend/pages/pages-discovery-filters.test.mjs :: the English locales say what en.json says for every filter string they share (an English edit takes a new key)
+FAIL tests/frontend/pages/pages-discovery-filters.test.mjs :: Undo says what the last change did: the piece it set, as said alone; a rule it switched; a piece it took away
+ok   tests/frontend/pages/pages-discovery-filters.test.mjs :: the services and the feed ask for the admin's region; an unusable region is the US
+FAIL tests/frontend/pages/pages-discovery-filters.test.mjs :: a list page's further filters are typed or ticked, and asked of Seerr: ranges by each feed's own names, lists whole
+FAIL tests/frontend/pages/pages-discovery-filters.test.mjs :: nothing matches: the section says so and offers the way out; the admin's switches take a filter away for good
+FAIL tests/frontend/pages/pages-discovery-filters.test.mjs :: Undo is not offered once what is set was replaced some other way (a saved set applied, the address followed)
+FAIL tests/frontend/pages/pages-discovery-filters.test.mjs :: a list showing one kind says nothing matches when only the other kind's cards (hidden) are left
+FAIL tests/frontend/pages/pages-discovery-filters.test.mjs :: a person's titles are filtered here: by role, by years, by score and votes, by genre and language
+ok   tests/frontend/pages/pages-discovery-filters.test.mjs :: the tabs' choice repaints the button: a type other than All is said beside the icon where the tabs are out of sight
+FAIL tests/frontend/pages/pages-discovery-filters.test.mjs :: a list matched by any of what is ticked is asked with a bar, by all of it with a comma; a route naming the list keeps all
+FAIL tests/frontend/pages/pages-discovery-filters.test.mjs :: the Filters menu offers all or any for keywords, genres and services; "or" says it where it is any; a tag page keeps its keywords all
+FAIL tests/frontend/pages/pages-discovery-filters.test.mjs :: a Without list: none of what is ticked, said once at its start; a thing wanted and left out at once leaves the other list
+FAIL tests/frontend/pages/pages-discovery-filters.test.mjs :: all / any chosen before anything is ticked is kept; the keys and a remote reach it and switch it
+FAIL tests/frontend/pages/pages-discovery-filters.test.mjs :: a list its page matches by all of them (a tag's keywords) takes no 'any' from a link or a saved set
+FAIL tests/frontend/pages/pages-discovery-filters.test.mjs :: a save the server refuses as full says to delete one first (ApiClient.ajax refuses with the fetch Response)
+FAIL tests/frontend/pages/pages-discovery-filters.test.mjs :: saved filters: the user's profiles first in the menu, saved under a name, applied by the page, deleted
+test --only: FAIL (17 failed, 10 passed) in 9s on ce694a1d+dirty@59d2dd91; recorded for je12 evidence
+
+## before the port: bootstrap-native-tabs.test.mjs
+ok   tests/frontend/bootstrap/bootstrap-native-tabs.test.mjs :: native tabs mount once, escape labels, and remain stable across duplicate registration and mutations
+ok   tests/frontend/bootstrap/bootstrap-native-tabs.test.mjs :: Custom Tabs count reserves positional slots before JE tabs
+ok   tests/frontend/bootstrap/bootstrap-native-tabs.test.mjs :: late Custom Tabs DOM collision moves existing JE panels without remounting or losing content
+ok   tests/frontend/bootstrap/bootstrap-native-tabs.test.mjs :: header-only external tab claims get placeholders to preserve positional selection
+ok   tests/frontend/bootstrap/bootstrap-native-tabs.test.mjs :: stable JE deep link rewrites stale index and clears partially selected host panels
+FAIL tests/frontend/bootstrap/bootstrap-native-tabs.test.mjs :: a stale index is corrected without the address's other pairs (a Recommendations category, its filters) being lost
+FAIL tests/frontend/bootstrap/bootstrap-native-tabs.test.mjs :: Home with only the Recommendations filters' fragment after it (a tab reached by clicking, then reloaded) is Home: the tabs are added
+FAIL tests/frontend/bootstrap/bootstrap-native-tabs.test.mjs :: a stale index is corrected with the Recommendations filters' fragment kept after the query
+ok   tests/frontend/bootstrap/bootstrap-native-tabs.test.mjs :: user selection consumes deep link so later mutations do not steal the chosen tab
+ok   tests/frontend/bootstrap/bootstrap-native-tabs.test.mjs :: unregister removes button, panel and allows a clean future mount
+ok   tests/frontend/bootstrap/bootstrap-native-tabs.test.mjs :: unknown Custom Tabs state never blocks the JE tab and recovers from provider failure
+ok   tests/frontend/bootstrap/bootstrap-native-tabs.test.mjs :: a Custom Tabs count that arrives late relabels the mounted JE tab without remounting it
+ok   tests/frontend/bootstrap/bootstrap-native-tabs.test.mjs :: a jeTab left in #/home?jeTab=requests without our tab index is not a deep link
+ok   tests/frontend/bootstrap/bootstrap-native-tabs.test.mjs :: a jeTab left in #/home?tab=1&jeTab=requests without our tab index is not a deep link
+ok   tests/frontend/bootstrap/bootstrap-native-tabs.test.mjs :: a jeTab left in #/home?tab=0&jeTab=requests without our tab index is not a deep link
+ok   tests/frontend/bootstrap/bootstrap-native-tabs.test.mjs :: the Android app's Back on a JE tab selects the Home tab instead of exiting the app
+ok   tests/frontend/bootstrap/bootstrap-native-tabs.test.mjs :: the Android app's Back closes an open category page or More Info modal through history, and is left alone when the router can go back
+ok   tests/frontend/bootstrap/bootstrap-native-tabs.test.mjs :: the Android app's Back goes through the router when it can go back, even on a JE tab
+ok   tests/frontend/bootstrap/bootstrap-native-tabs.test.mjs :: the app Back wrapper finds a NavigationHelper that the app defines after the page scripts
+FAIL tests/frontend/bootstrap/bootstrap-native-tabs.test.mjs :: a tab the user picked stays picked when a jellyfin-web dialog opens over it (the deep link)
+FAIL tests/frontend/bootstrap/bootstrap-native-tabs.test.mjs :: a tab the user picked stays picked when a jellyfin-web dialog opens over it (the deep link with the filters' fragment)
+test --only: FAIL (5 failed, 16 passed) in 11s on ce694a1d+dirty@59d2dd91; recorded for je12 evidence
+
+## on the port: pages-discovery-address.test.mjs
+ok   tests/frontend/pages/pages-discovery-address.test.mjs :: a list page's link with the section's filters: page 1 is asked with them, and the controls say them
+ok   tests/frontend/pages/pages-discovery-address.test.mjs :: a choice on a section replaces its page's address in its fragment: the router's part as it was, no history entry, no navigation, the same section
+ok   tests/frontend/pages/pages-discovery-address.test.mjs :: a jellyfin-web dialog after a change (its entry at the router's address, without the fragment) and Back off it are no navigation: the section keeps its filters
+ok   tests/frontend/pages/pages-discovery-address.test.mjs :: a filter changed after a dialog closed, then Forward onto the dialog's entry: the page as it is now, no navigation
+ok   tests/frontend/pages/pages-discovery-address.test.mjs :: a bound typed on a page and left before it is taken is not taken on the next page
+ok   tests/frontend/pages/pages-discovery-address.test.mjs :: a link leaving out genres and a language: Seerr is asked as without them, and what has them is kept off the page
+ok   tests/frontend/pages/pages-discovery-address.test.mjs :: a page opened straight from its link keeps its section when a dialog's own history entry is popped (More Info's Back)
+ok   tests/frontend/pages/pages-discovery-address.test.mjs :: a person's link: the type and further filters from the address, and taking one away writes it back
+ok   tests/frontend/pages/pages-discovery-address.test.mjs :: a section whose address's filters leave nothing stays, says so, and Clear filters brings everything back
+ok   tests/frontend/pages/pages-discovery-address.test.mjs :: a section goes on the page the router shows, not the one still showing while it builds the new page
+ok   tests/frontend/pages/pages-discovery-address.test.mjs :: a type its address asks for holds when its page 1 came back empty: the tabs say it, the other kind is hidden, its feed reads on
+ok   tests/frontend/pages/pages-discovery-address.test.mjs :: a filter the admin turned off is not taken from an address
+ok   tests/frontend/pages/pages-discovery-address.test.mjs :: a genre's page keeps its genre and takes the others ticked as any of them: asked for its genre, kept by theirs
+ok   tests/frontend/pages/pages-discovery-address.test.mjs :: a saved profile chosen in a section sets its type, order and filters, its address, and asks Seerr again
+test --only: pass (0 failed, 14 passed) in 5s on 3fdc5016; recorded for je12 evidence
+
+## on the port: pages-recommendations-filters.test.mjs
+ok   tests/frontend/pages/pages-recommendations-filters.test.mjs :: a link's filters narrow every row: its kind's rows only, Trending by what its titles say, upcoming as discover from today
+ok   tests/frontend/pages/pages-recommendations-filters.test.mjs :: a choice on the tab replaces its address (no history entry, no navigation) and fills the rows again
+ok   tests/frontend/pages/pages-recommendations-filters.test.mjs :: a filter that leaves the tab nothing says so, and Clear filters brings everything back
+ok   tests/frontend/pages/pages-recommendations-filters.test.mjs :: on Home a category names itself in the address: Back and Forward move between the tab and its categories
+ok   tests/frontend/pages/pages-recommendations-filters.test.mjs :: a category link opens filtered and in its order; its arrow keeps the filters for the tab, not the order
+ok   tests/frontend/pages/pages-recommendations-filters.test.mjs :: filters changed on a category are the tab's too; its entry says them, and Back shows the tab entry's own
+ok   tests/frontend/pages/pages-recommendations-filters.test.mjs :: a category opens with the filters, asks Seerr with them, and says when they leave nothing
+ok   tests/frontend/pages/pages-recommendations-filters.test.mjs :: Trending (a feed that takes no filters) keeps its titles by what they say, and has nothing where a filter cannot be checked
+ok   tests/frontend/pages/pages-recommendations-filters.test.mjs :: off Home a category keeps the same-URL entry, and the page of its own keeps its filters in its address
+ok   tests/frontend/pages/pages-recommendations-filters.test.mjs :: an address's filters that are not of their shape are left out
+ok   tests/frontend/pages/pages-recommendations-filters.test.mjs :: a category still resolving its genre is not opened once the viewer has gone elsewhere, nor twice
+ok   tests/frontend/pages/pages-recommendations-filters.test.mjs :: a category address with keywords matched by any asks Seerr for either, and the address keeps saying it
+ok   tests/frontend/pages/pages-recommendations-filters.test.mjs :: a category its address asked for, still resolving its genre, is not opened once Back has left its address
+ok   tests/frontend/pages/pages-recommendations-filters.test.mjs :: a genre's category keeps its genre and takes the other genres ticked as any of them (Animation, and Family or Kids)
+ok   tests/frontend/pages/pages-recommendations-filters.test.mjs :: a saved profile chosen on the tab sets its filters, its address and its rows at once
+ok   tests/frontend/pages/pages-recommendations-filters.test.mjs :: a saved set chosen on Trending takes only what Trending offers: its titles are kept by what they say
+ok   tests/frontend/pages/pages-recommendations-filters.test.mjs :: Forward onto a dialog's entry left behind keeps the tab as it is (the entry gets its address back), and Back from a category opened there closes it
+ok   tests/frontend/pages/pages-recommendations-filters.test.mjs :: a dialog over a category: closing it, Forward onto its entry and a jump onto it from the tab all show the category
+ok   tests/frontend/pages/pages-recommendations-filters.test.mjs :: a jump of two entries back while a dialog is open over a category (the browser's history list) leaves the category
+ok   tests/frontend/pages/pages-recommendations-filters.test.mjs :: a dialog pushed at a tab number the router has not seen corrected (native tabs fix it in place) still gets the page's address
+test --only: pass (0 failed, 20 passed) in 4s on 3fdc5016; recorded for je12 evidence
+
+## on the port: pages-discovery-filters.test.mjs
+ok   tests/frontend/pages/pages-discovery-filters.test.mjs :: dayOf reads a year, a month or a day as its first or last day, month ends and leap years included
+ok   tests/frontend/pages/pages-discovery-filters.test.mjs :: numberOf and isBound keep each filter to its own limits
+ok   tests/frontend/pages/pages-discovery-filters.test.mjs :: isReversed is true only for two usable bounds the wrong way round
+ok   tests/frontend/pages/pages-discovery-filters.test.mjs :: feedFilterQuery asks each kind by its own names, in a fixed order, and asks for nothing where a kind cannot match
+ok   tests/frontend/pages/pages-discovery-filters.test.mjs :: keepByFilters keeps a person's titles by role, period, score, votes, every genre and any language
+ok   tests/frontend/pages/pages-discovery-filters.test.mjs :: offeredFilters leaves out what the admin turned off; a missing switch is on
+ok   tests/frontend/pages/pages-discovery-filters.test.mjs :: rolesOf offers acting first, then departments by how many credits, the catch-all last
+ok   tests/frontend/pages/pages-discovery-filters.test.mjs :: the lists are asked once per visit, named and ordered for the eye; a failed list is asked again
+ok   tests/frontend/pages/pages-discovery-filters.test.mjs :: what is set is said piece by piece: a range once, in the viewer's numbers, a list per thing ticked
+ok   tests/frontend/pages/pages-discovery-filters.test.mjs :: with the admin option the services and the feed ask for the user's Seerr streaming region
+ok   tests/frontend/pages/pages-discovery-filters.test.mjs :: each open group keeps the rule that closes it; only the menu's last group goes without one
+ok   tests/frontend/pages/pages-discovery-filters.test.mjs :: the English locales say what en.json says for every filter string they share (an English edit takes a new key)
+ok   tests/frontend/pages/pages-discovery-filters.test.mjs :: Undo says what the last change did: the piece it set, as said alone; a rule it switched; a piece it took away
+ok   tests/frontend/pages/pages-discovery-filters.test.mjs :: the services and the feed ask for the admin's region; an unusable region is the US
+ok   tests/frontend/pages/pages-discovery-filters.test.mjs :: a list page's further filters are typed or ticked, and asked of Seerr: ranges by each feed's own names, lists whole
+ok   tests/frontend/pages/pages-discovery-filters.test.mjs :: nothing matches: the section says so and offers the way out; the admin's switches take a filter away for good
+ok   tests/frontend/pages/pages-discovery-filters.test.mjs :: Undo is not offered once what is set was replaced some other way (a saved set applied, the address followed)
+ok   tests/frontend/pages/pages-discovery-filters.test.mjs :: a list showing one kind says nothing matches when only the other kind's cards (hidden) are left
+ok   tests/frontend/pages/pages-discovery-filters.test.mjs :: a person's titles are filtered here: by role, by years, by score and votes, by genre and language
+ok   tests/frontend/pages/pages-discovery-filters.test.mjs :: the tabs' choice repaints the button: a type other than All is said beside the icon where the tabs are out of sight
+test --only: pass (0 failed, 27 passed) in 4s on 3fdc5016; recorded for je12 evidence
+
+## on the port: bootstrap-native-tabs.test.mjs
+ok   tests/frontend/bootstrap/bootstrap-native-tabs.test.mjs :: native tabs mount once, escape labels, and remain stable across duplicate registration and mutations
+ok   tests/frontend/bootstrap/bootstrap-native-tabs.test.mjs :: Custom Tabs count reserves positional slots before JE tabs
+ok   tests/frontend/bootstrap/bootstrap-native-tabs.test.mjs :: late Custom Tabs DOM collision moves existing JE panels without remounting or losing content
+ok   tests/frontend/bootstrap/bootstrap-native-tabs.test.mjs :: header-only external tab claims get placeholders to preserve positional selection
+ok   tests/frontend/bootstrap/bootstrap-native-tabs.test.mjs :: stable JE deep link rewrites stale index and clears partially selected host panels
+ok   tests/frontend/bootstrap/bootstrap-native-tabs.test.mjs :: a stale index is corrected without the address's other pairs (a Recommendations category, its filters) being lost
+ok   tests/frontend/bootstrap/bootstrap-native-tabs.test.mjs :: Home with only the Recommendations filters' fragment after it (a tab reached by clicking, then reloaded) is Home: the tabs are added
+ok   tests/frontend/bootstrap/bootstrap-native-tabs.test.mjs :: a stale index is corrected with the Recommendations filters' fragment kept after the query
+ok   tests/frontend/bootstrap/bootstrap-native-tabs.test.mjs :: user selection consumes deep link so later mutations do not steal the chosen tab
+ok   tests/frontend/bootstrap/bootstrap-native-tabs.test.mjs :: unregister removes button, panel and allows a clean future mount
+ok   tests/frontend/bootstrap/bootstrap-native-tabs.test.mjs :: unknown Custom Tabs state never blocks the JE tab and recovers from provider failure
+ok   tests/frontend/bootstrap/bootstrap-native-tabs.test.mjs :: a Custom Tabs count that arrives late relabels the mounted JE tab without remounting it
+ok   tests/frontend/bootstrap/bootstrap-native-tabs.test.mjs :: a jeTab left in #/home?jeTab=requests without our tab index is not a deep link
+ok   tests/frontend/bootstrap/bootstrap-native-tabs.test.mjs :: a jeTab left in #/home?tab=1&jeTab=requests without our tab index is not a deep link
+ok   tests/frontend/bootstrap/bootstrap-native-tabs.test.mjs :: a jeTab left in #/home?tab=0&jeTab=requests without our tab index is not a deep link
+ok   tests/frontend/bootstrap/bootstrap-native-tabs.test.mjs :: the Android app's Back on a JE tab selects the Home tab instead of exiting the app
+ok   tests/frontend/bootstrap/bootstrap-native-tabs.test.mjs :: the Android app's Back closes an open category page or More Info modal through history, and is left alone when the router can go back
+ok   tests/frontend/bootstrap/bootstrap-native-tabs.test.mjs :: the Android app's Back goes through the router when it can go back, even on a JE tab
+ok   tests/frontend/bootstrap/bootstrap-native-tabs.test.mjs :: the app Back wrapper finds a NavigationHelper that the app defines after the page scripts
+ok   tests/frontend/bootstrap/bootstrap-native-tabs.test.mjs :: a tab the user picked stays picked when a jellyfin-web dialog opens over it (the deep link)
+test --only: pass (0 failed, 21 passed) in 5s on 3fdc5016; recorded for je12 evidence
+
+## on the port: ApiDiscoveryFilterProfilesTests
+ok   JE.Tests.Features.Seerr.ApiDiscoveryFilterProfilesTests.ProfilesAreCheckedForShapeSavedByNameCappedAndDeletable
+ok   JE.Tests.Features.Seerr.ApiDiscoveryFilterProfilesTests.UsersCannotReadSaveOrDeleteAnotherUsersProfiles
+test --only: pass (0 failed, 2 passed) in 15s on 3fdc5016; recorded for je12 evidence
+
+## the backend test before the port: tests/backend/Features/Seerr/ApiDiscoveryFilterProfilesTests.cs does not compile on ce694a1d (JeSeerrController has no GetDiscoveryFilterProfiles, SaveDiscoveryFilterProfile or DeleteDiscoveryFilterProfile).

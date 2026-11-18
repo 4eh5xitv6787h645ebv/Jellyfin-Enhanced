@@ -1,0 +1,7 @@
+GET    200 default   /api/v1/discover/genreslider/movie
+GET    200 default   /api/v1/discover/genreslider/tv
+GET    200 rule      /api/v1/discover/movies?page=1&primaryReleaseDateGte=2026-11-18&voteAverageGte=7
+GET    200 rule      /api/v1/discover/movies?page=1&voteAverageGte=7
+GET    200 rule      /api/v1/discover/trending?page=1
+GET    200 rule      /api/v1/discover/tv?page=1&firstAirDateGte=2026-11-18&voteAverageGte=7
+GET    200 rule      /api/v1/discover/tv?page=1&voteAverageGte=7

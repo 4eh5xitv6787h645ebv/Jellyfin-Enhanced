@@ -1,0 +1,10 @@
+{"id": 52703, "cast": [
+ {"id": 990001, "mediaType": "movie", "title": "Mock Movie 1", "character": "Self", "posterPath": null, "releaseDate": "2010-01-01", "voteAverage": 8.1, "voteCount": 900, "popularity": 10, "genreIds": [28], "originalLanguage": "en"},
+ {"id": 990002, "mediaType": "movie", "title": "Mock Movie 2", "character": "Self", "posterPath": null, "releaseDate": "2011-01-01", "voteAverage": 6.0, "voteCount": 300, "popularity": 9, "genreIds": [35], "originalLanguage": "fr"},
+ {"id": 990003, "mediaType": "movie", "title": "Mock Movie 3", "character": "Self", "posterPath": null, "releaseDate": "2012-01-01", "voteAverage": 7.5, "voteCount": 500, "popularity": 8, "genreIds": [16, 35], "originalLanguage": "ja"},
+ {"id": 991003, "mediaType": "movie", "title": "Mock Movie 4", "character": "Self", "posterPath": null, "releaseDate": "2013-01-01", "voteAverage": 5.0, "voteCount": 100, "popularity": 7, "genreIds": [18], "originalLanguage": "en"},
+ {"id": 990101, "mediaType": "tv", "name": "Mock Show 1", "character": "Self", "posterPath": null, "firstAirDate": "2014-01-01", "voteAverage": 8.6, "voteCount": 700, "popularity": 6, "genreIds": [16], "originalLanguage": "ja"},
+ {"id": 990102, "mediaType": "tv", "name": "Mock Show 2", "character": "Self", "posterPath": null, "firstAirDate": "2015-01-01", "voteAverage": 7.2, "voteCount": 400, "popularity": 5, "genreIds": [35], "originalLanguage": "en"},
+ {"id": 991004, "mediaType": "tv", "name": "Mock Show 3", "character": "Self", "posterPath": null, "firstAirDate": "2016-01-01", "voteAverage": 6.5, "voteCount": 200, "popularity": 4, "genreIds": [18], "originalLanguage": "fr"},
+ {"id": 991005, "mediaType": "movie", "title": "Mock Movie 5", "character": "Self", "posterPath": null, "releaseDate": "2017-01-01", "voteAverage": 9.0, "voteCount": 1000, "popularity": 3, "genreIds": [28], "originalLanguage": "en"}
+], "crew": []}
