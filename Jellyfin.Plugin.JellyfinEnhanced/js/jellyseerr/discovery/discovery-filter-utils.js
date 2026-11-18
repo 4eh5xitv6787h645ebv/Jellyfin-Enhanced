@@ -532,6 +532,9 @@ html:has(.jellyseerr-sort-menu[data-over-list]) .jellyseerr-discovery-section:ha
 /* Filter and sort are no taller than their words (each keeps 44px to press, the ::after), so the row
    is the same height at the join and held, at every width. */
 .jellyseerr-discovery-filter .jellyseerr-filter-btn { padding: .55em .9em; min-height: 2.75em; font-size: inherit; }
+/* All three types always show: a theme's rule for a third tab of its own (Zesty hides a library's
+   Trailers tab with button.emby-tab-button:nth-child(3)) would otherwise take Series away. */
+.jellyseerr-discovery-filter .jellyseerr-filter-btn.emby-tab-button { display: inline-flex; }
 .jellyseerr-discovery-header .jellyseerr-filter-btn { position: relative; padding-block: .2em; min-height: 0; overflow: visible; }
 .jellyseerr-discovery-header .jellyseerr-filter-btn::after { content: ''; position: absolute; inset: 50% 0 auto; height: 44px; transform: translateY(-50%); }
 /* The chosen filter: the theme's accent, as Jellyfin marks the page you are on in its top bar, and a
@@ -2418,6 +2421,7 @@ html:not(.layout-tv) .jellyseerr-sort-menu .jellyseerr-menu-clear { flex: 1 1 au
         const set = activeFilterCount(selectionOf(moduleName));
         const typed = filterModeOf(moduleName) === MIXED() ? 0 : 1;
         button.toggleAttribute("data-on", set > 0);
+        if (place) button.classList.toggle("emby-tab-button-active", set > 0);
         button.toggleAttribute("data-type-on", typed > 0);
         typeWord.textContent = typed > 0 ? typeOf()?.groupOf().choices?.find((choice) => choice.selected)?.name ?? "" : "";
         button.toggleAttribute("data-type-only", offered.length === 0);
