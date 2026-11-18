@@ -1,0 +1,15 @@
+# Upstream 8bff0750: the new test, run with je12 test --only.
+
+tests/frontend/features/media-tags/features-quality-display.test.mjs :: the quality stylesheet writes the chip box once and one colour rule per quality
+
+## before the port: ce5875ce with the test added
+FAILED on ce5875ce+dirty@0c514c2a: AssertionError: 0 !== 1 (the test's first draft read the stylesheet before the
+  renderer injected it; the test now injects it as the tag pipeline does on registration)
+FAILED on ce5875ce+dirty@87bd43ef: AssertionError: Expected values to be strictly equal: 92 !== 1 (92 chip boxes)
+
+## on the port
+passed on ce5875ce+dirty@b5e2a287 (the port, uncommitted)
+passed on 06939bc8 (the port's committed tree: the commit has exactly the files of that run)
+
+## je12 test (the repo's quick mode, feature media-tags), on the port before it was committed
+node 2061 passed, 0 failed
