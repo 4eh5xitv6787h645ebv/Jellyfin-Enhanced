@@ -2808,7 +2808,9 @@
         "tests/frontend/pages/pages-recommendations-filters.test.mjs"
       ],
       "status": "ported",
-      "rewriteCommits": [],
+      "rewriteCommits": [
+        "cf203615c739cd1ea5c9ed4f3fe94f6bccd1bf7d"
+      ],
       "unmappedPaths": [
         "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs",
         "Jellyfin.Plugin.JellyfinEnhanced/Helpers/DiscoveryFilterProfiles.cs",
