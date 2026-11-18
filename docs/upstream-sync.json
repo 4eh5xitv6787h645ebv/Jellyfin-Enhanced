@@ -2846,7 +2846,9 @@
         "tests/frontend/pages/pages-recommendations-filters.test.mjs"
       ],
       "status": "ported",
-      "rewriteCommits": [],
+      "rewriteCommits": [
+        "db9090b02db2795d4e7c374dc20efa89a1100ca9"
+      ],
       "evidence": "artifacts/restructure-plan/step-logs/upstream-sync-evidence/p86-*",
       "notes": "Three fixes to the #1084 port's controls under community themes, as upstream: on a page of its own (the Recommendations page and its category pages) the Filters button also carries emby-tab-button-active while something is set, as the chosen All / Movies / Series beside it does, so a theme that fills only the chosen tab button (Jellyfish, Zesty) fills it too (client/src/features/seerr/discovery/filter-panel.ts; a section's header keeps its accent-coloured word); the All / Movies / Series tabs keep display: inline-flex so Zesty's unscoped button.emby-tab-button:nth-child(3) { display: none } no longer hides Series (discovery.css); and the pill's ::after, only its press area, draws nothing, so JellyFlix's chosen-tab bar no longer runs through 'Filters: 1' (recommendation-tiles.css). No other difference. Tests: upstream's new tests/browser/discovery-theme-tabs.spec.cjs, loading discovery-filter-utils.js (which bundles the discovery stylesheet and the filter panel here) where upstream loads the separate scripts; its two test changes are merged into pages-discovery-filters.test.mjs and pages-recommendations-filters.test.mjs. Before the port the browser spec fails 6 of 6 (chromium, mobile-chromium, Firefox) and the Recommendations filters file 2 of 20 (the section-header assertion is a guard that holds either way); all pass on the port."
     }
