@@ -1,0 +1,31 @@
+Build started
+Warning: anchor does not exist
+     ╭─[ advanced/css-customization.md:599:47 ]
+     │
+ 599 │ The opt-in [Leaving soon](../enhanced/tags.md#leaving-soon-maintainerr) badges are `.status-tag--leaving` with `data-je-status="leaving"`; the [direct-play warning](../enhanced/tags.md#direct-play-warning) is `.status-tag--playback` with `data-je-status="direct_play"` and `data-je-dp`, which takes pointer events so its `title` tooltip shows:
+     │                                               ────────────┬───────────  
+     │                                                           ╰───────────── anchor does not exist
+─────╯
+Warning: anchor does not exist
+     ╭─[ enhanced/enhanced-settings.md:807:702 ]
+     │
+ 807 │ Under **Media Tags** → **Status badges**, the eight personal switches are Just Added, New releases (New Movie / New Series / New Episode), Trending, Schedule (Airing Today / Airs / Returns / Coming Soon), Milestones (New Season / Premiere / Finale / Complete Season), Series status (Returning / Ended / Cancelled), Leaving soon (Maintainerr or leaving collections) and Direct-play warning (Transcode / Won't direct play, web only). The first five default on; the last three off. The administrator sets the Leaving soon source (Maintainerr URL and API key, or existing collection names, and how often it is read) in the **Status badges** section of the Media Tags admin tab; see [Leaving soon](tags.md#leaving-soon-maintainerr) and [Direct-play warning](tags.md#direct-play-warning). Administrators set starting defaults and the two shared day windows in the **Status badges** section of that tab. Finale and series schedule enrichment require a TMDB key; Jellyfin date badges work without one. **Compact** density shortens long milestone labels. See [Status Tags](tags.md#status-tags) for sources and first-match priority by card type.
+     │                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              ────────────┬───────────  
+     │                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          ╰───────────── anchor does not exist
+─────╯
+Warning: anchor does not exist
+     ╭─[ enhanced/tags.md:876:155 ]
+     │
+ 876 │ | **Leaving soon** | Off | Shows **Leaving in 5d** (or **Leaving soon**) on items the server will remove; needs an administrator's [Leaving soon source](#leaving-soon-maintainerr) |
+     │                                                                                                                                                           ────────────┬───────────  
+     │                                                                                                                                                                       ╰───────────── anchor does not exist
+─────╯
+Warning: page does not exist
+    ╭─[ rewrite/README.md:32:17 ]
+    │
+ 32 │ Use [REVIEW.md](../../REVIEW.md) for independent review of each stable feature slice. Keep findings and command output under ignored artifacts, tied to the reviewed revision. Repeated mistakes should become executable checks or simpler interfaces. The review protocol does not replace real-host validation.
+    │                 ───────┬───────  
+    │                        ╰───────── page does not exist
+────╯
+4 issues found
+Build finished in 1.69s

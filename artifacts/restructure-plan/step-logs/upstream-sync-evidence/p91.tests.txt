@@ -1,0 +1,27 @@
+Recorded `je12 test --only` runs (je12 2.5.0), oldest first, with the tree each ran on.
+
+2026-11-19 20:09:06  FAIL  tests/frontend/pages/pages-activity.test.mjs :: activity active streams name an episode with its season and episode, and a movie by its name  on 5e9ce7ce+dirty@985f5ebd
+    FAIL tests/frontend/pages/pages-activity.test.mjs :: activity active streams name an episode with its season and episode, and a movie by its name  -- AssertionError: Expected values to be strictly deep-equal:
++ actual - expected
+
+  [
+-   'Final Space - S1:E2 - Chapter One',
+    'Final Space',
++   'Final Space',
+    'Crash'
+  ]
+
+2026-11-19 20:10:09  PASS  tests/frontend/pages/pages-activity.test.mjs :: activity active streams name an episode with its season and episode, and a movie by its name  on 5e9ce7ce+dirty@43f62767
+    PASS tests/frontend/pages/pages-activity.test.mjs :: activity active streams name an episode with its season and episode, and a movie by its name
+2026-11-19 20:18:17  PASS  tests/frontend/pages/pages-activity.test.mjs  on ab0fb0e6+dirty@f977cc8b
+    PASS tests/frontend/pages/pages-activity.test.mjs :: activity disabled module registers nothing and makes no requests
+    PASS tests/frontend/pages/pages-activity.test.mjs :: activity renders separated watch and chronological review/favorite sections with escaped data
+    PASS tests/frontend/pages/pages-activity.test.mjs :: activity escapes user and item names in every section, active streams included
+    PASS tests/frontend/pages/pages-activity.test.mjs :: activity empty and failed responses show explicit state and refresh recovers
+    PASS tests/frontend/pages/pages-activity.test.mjs :: activity refresh coalesces repeated clicks while response is pending
+    PASS tests/frontend/pages/pages-activity.test.mjs :: activity active stream polling ignores idle sessions and cleans up when remounted or detached
+    PASS tests/frontend/pages/pages-activity.test.mjs :: activity stopped pending initial load cannot restart its poller
+    PASS tests/frontend/pages/pages-activity.test.mjs :: activity unauthorized active streams removes section and never polls
+    PASS tests/frontend/pages/pages-activity.test.mjs :: activity active streams name an episode with its season and episode, and a movie by its name
+2026-11-19 20:18:36  PASS  tests/frontend/pages/pages-activity.test.mjs :: activity active streams name an episode with its season and episode, and a movie by its name  on ab0fb0e6+dirty@af02c588
+    PASS tests/frontend/pages/pages-activity.test.mjs :: activity active streams name an episode with its season and episode, and a movie by its name

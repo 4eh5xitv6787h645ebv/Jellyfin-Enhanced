@@ -1,0 +1,5 @@
+SCRIPT {"started":"ok","activeStreams":["real-admin is watching Final Space - S1:E1 - Chapter One"],"stopped":"ok"}
+CONSOLE [Home] failed to get tab controller Error: Cannot find module './'
+    at http://<lab>:8096/web/11851.18f47c0732e376997388.chunk.js:1:26834
+BLOCKED https://www.gstatic.com/cv/js/sender/v1/cast_sender.js
+URL /web/index.html#/home?tab=3&jeTab=activity

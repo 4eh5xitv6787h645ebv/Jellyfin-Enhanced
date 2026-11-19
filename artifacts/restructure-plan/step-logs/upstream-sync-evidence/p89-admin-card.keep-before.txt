@@ -1,0 +1,8 @@
+$ je12 browse '#/home' --script p89-admin-card.mjs
+# deployed build: 5e9ce7ce (dll bee3e11c98b7224e) on the je12 lab, 2026-11-19 20:05:57
+SCRIPT {"arrTab":{"group":null},"servicesTab":{"group":null},"sentFromServicesCopy":[],"servicesLine":null}
+CONSOLE Failed to load resource: the server responded with a status of 404 (Not Found) /JellyfinEnhanced/cdn/selfhst/svg/maintainerr.svg
+CONSOLE Failed to load resource: the server responded with a status of 404 (Not Found) /JellyfinEnhanced/cdn/selfhst/svg/tmdb.svg
+CONSOLE Failed to load resource: the server responded with a status of 404 (Not Found) /JellyfinEnhanced/cdn/selfhst/svg/reclaimerr.svg
+BLOCKED https://www.gstatic.com/cv/js/sender/v1/cast_sender.js
+URL /web/index.html#/configurationpage?name=Jellyfin%20Enhanced&tab=services

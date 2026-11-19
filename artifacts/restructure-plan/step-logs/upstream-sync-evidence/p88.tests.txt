@@ -1,0 +1,26 @@
+Recorded `je12 test --only` runs (je12 2.5.0), oldest first, with the tree each ran on.
+
+2026-11-19 19:56:26  FAIL  tests/frontend/features/media-tags/features-media-tags-docs-links.test.mjs  on a3befa41+dirty@2c2dc41b
+    FAIL tests/frontend/features/media-tags/features-media-tags-docs-links.test.mjs :: every Media Tags tab in ui-panel-media-tags.ts links to an existing user-guide heading  -- AssertionError: #layouts is a heading in docs/enhanced/tags.md
+    FAIL tests/frontend/features/media-tags/features-media-tags-docs-links.test.mjs :: every Media Tags tab in admin-tags.ts links to an existing user-guide heading  -- AssertionError: #layouts is a heading in docs/enhanced/tags.md
+    PASS tests/frontend/features/media-tags/features-media-tags-docs-links.test.mjs :: the docs link copy exists in the English source strings
+2026-11-19 19:56:34  FAIL  tests/frontend/features/media-tags/features-rating-sources.test.mjs :: tag cache reference docs name the schema number in exactly one place  on a3befa41+dirty@2c2dc41b
+    FAIL tests/frontend/features/media-tags/features-rating-sources.test.mjs :: tag cache reference docs name the schema number in exactly one place  -- AssertionError: enhanced/tags.md points to the model constant
+2026-11-19 19:56:37  PASS  tests/frontend/features/media-tags/features-media-tags-docs-links.test.mjs  on a3befa41+dirty@21977f55
+    PASS tests/frontend/features/media-tags/features-media-tags-docs-links.test.mjs :: every Media Tags tab in ui-panel-media-tags.ts links to an existing user-guide heading
+    PASS tests/frontend/features/media-tags/features-media-tags-docs-links.test.mjs :: every Media Tags tab in admin-tags.ts links to an existing user-guide heading
+    PASS tests/frontend/features/media-tags/features-media-tags-docs-links.test.mjs :: the docs link copy exists in the English source strings
+2026-11-19 19:56:40  PASS  tests/frontend/features/media-tags/features-rating-sources.test.mjs :: tag cache reference docs name the schema number in exactly one place  on a3befa41+dirty@21977f55
+    PASS tests/frontend/features/media-tags/features-rating-sources.test.mjs :: tag cache reference docs name the schema number in exactly one place
+2026-11-19 19:58:04  PASS  tests/frontend/bootstrap/bootstrap-panel-resize.test.mjs  on a3befa41+dirty@21977f55
+2026-11-19 19:58:09  PASS  tests/frontend/admin/config/features-config-flag-check.test.mjs  on a3befa41+dirty@21977f55
+    PASS tests/frontend/admin/config/features-config-flag-check.test.mjs :: config flag --check compares bytes and fails on drift without writing
+    PASS tests/frontend/admin/config/features-config-flag-check.test.mjs :: config flag --check passes whatever the default text encoding is
+2026-11-19 19:58:12  PASS  tests/frontend/features/features-api-routes-docs.test.mjs  on a3befa41+dirty@21977f55
+    PASS tests/frontend/features/features-api-routes-docs.test.mjs :: api.md states the inventory's route total in both places
+    PASS tests/frontend/features/features-api-routes-docs.test.mjs :: api.md has an endpoint table row for every route and none for a route that does not exist
+2026-11-19 20:15:02  ERROR tests/frontend/admin/config/features-config-flag-check.test.mjs  on 5e9ce7ce+dirty@162c43ae
+2026-11-19 20:15:07  ERROR tests/frontend/admin/config/features-config-flag-check.test.mjs  on 5e9ce7ce+dirty@162c43ae
+2026-11-19 20:16:23  PASS  tests/frontend/admin/config/features-config-flag-check.test.mjs  on 5e9ce7ce+dirty@f2052ef8
+    PASS tests/frontend/admin/config/features-config-flag-check.test.mjs :: config flag --check compares bytes and fails on drift without writing
+    PASS tests/frontend/admin/config/features-config-flag-check.test.mjs :: config flag --check passes whatever the default text encoding is

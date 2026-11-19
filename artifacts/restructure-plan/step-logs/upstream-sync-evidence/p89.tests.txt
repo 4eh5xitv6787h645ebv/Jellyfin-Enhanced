@@ -1,0 +1,58 @@
+Recorded `je12 test --only` runs (je12 2.5.0), oldest first, with the tree each ran on.
+
+2026-11-19 20:09:10  FAIL  tests/frontend/admin/config/admin-config-rewrite.test.mjs :: Create accounts for all Jellyfin users sends the ticked permissions and pages, from either copy of the card, and puts the new user map in the form  on 5e9ce7ce+dirty@985f5ebd
+    FAIL tests/frontend/admin/config/admin-config-rewrite.test.mjs :: Create accounts for all Jellyfin users sends the ticked permissions and pages, from either copy of the card, and puts the new user map in the form  -- TypeError: Cannot read properties of null (reading 'closest')
+2026-11-19 20:09:27  FAIL  JE.Tests.Features.MediaTags.IntegrationReclaimerrActionsTests.My_requests_merge_the_own_list_with_the_ones_filed_in_their_name_and_a_refused_own_list_hides_nothing  on 5e9ce7ce+dirty@985f5ebd
+    FAIL JE.Tests.Features.MediaTags.IntegrationReclaimerrActionsTests.My_requests_merge_the_own_list_with_the_ones_filed_in_their_name_and_a_refused_own_list_hides_nothing  -- Assert.Equal() Failure: Collections differ
+           ↓ (pos 0)
+Expected: [5]
+Actual:   []
+2026-11-19 20:09:34  FAIL  JE.Tests.Features.MediaTags.IntegrationReclaimerrActionsTests.A_request_filed_in_Reclaimerr_itself_is_shown_as_the_Jellyfin_user_of_the_same_name  on 5e9ce7ce+dirty@985f5ebd
+    FAIL JE.Tests.Features.MediaTags.IntegrationReclaimerrActionsTests.A_request_filed_in_Reclaimerr_itself_is_shown_as_the_Jellyfin_user_of_the_same_name  -- Assert.Equal() Failure: Collections differ
+           ↓ (pos 0)
+Expected: [Tuple (8, "Pat", "6c9502262f76442792143f4b3b3a89a7"), Tuple (9, "Sam", "35a46230eb3e41e88931d30c420c1a9f"), Tuple (10, null, 
+2026-11-19 20:10:13  PASS  tests/frontend/admin/config/admin-config-rewrite.test.mjs :: Create accounts for all Jellyfin users sends the ticked permissions and pages, from either copy of the card, and puts the new user map in the form  on 5e9ce7ce+dirty@43f62767
+    PASS tests/frontend/admin/config/admin-config-rewrite.test.mjs :: Create accounts for all Jellyfin users sends the ticked permissions and pages, from either copy of the card, and puts the new user map in the form
+2026-11-19 20:10:21  ERROR JE.Tests.Features.MediaTags.IntegrationReclaimerrActionsTests  on 5e9ce7ce+dirty@43f62767
+2026-11-19 20:10:43  ERROR JE.Tests.Features.MediaTags.IntegrationReclaimerrActionsTests  on 5e9ce7ce+dirty@b3d1cd87
+2026-11-19 20:11:01  PASS  JE.Tests.Features.MediaTags.IntegrationReclaimerrActionsTests  on 5e9ce7ce+dirty@de3bc6c0
+    PASS JE.Tests.Features.MediaTags.IntegrationReclaimerrActionsTests.A_removal_request_carries_the_mapped_user_and_their_note_and_a_waiting_one_is_not_filed_twice
+    PASS JE.Tests.Features.MediaTags.IntegrationReclaimerrActionsTests.My_requests_merge_the_own_list_with_the_ones_filed_in_their_name_and_a_refused_own_list_hides_nothing
+    PASS JE.Tests.Features.MediaTags.IntegrationReclaimerrActionsTests.Only_administrators_act_and_review_while_anyone_who_can_see_an_item_learns_only_whether_they_may_request
+    PASS JE.Tests.Features.MediaTags.IntegrationReclaimerrActionsTests.Candidates_are_read_with_the_token_and_scheduled_deletions_as_the_service_account_by_name
+    PASS JE.Tests.Features.MediaTags.IntegrationReclaimerrActionsTests.A_request_filed_in_Reclaimerr_itself_is_shown_as_the_Jellyfin_user_of_the_same_name
+    PASS JE.Tests.Features.MediaTags.IntegrationReclaimerrActionsTests.Mark_schedules_only_the_picked_version_of_a_movie_kept_twice_and_refuses_when_it_cannot_tell
+    PASS JE.Tests.Features.MediaTags.IntegrationReclaimerrActionsTests.Create_users_gives_each_Jellyfin_user_without_an_account_one_with_the_picked_permissions_and_maps_it
+2026-11-19 20:15:00  ERROR tests/frontend/admin/config/admin-config-rewrite.test.mjs  on 5e9ce7ce+dirty@162c43ae
+2026-11-19 20:16:16  PASS  tests/frontend/admin/config/admin-config-rewrite.test.mjs  on 5e9ce7ce+dirty@f2052ef8
+2026-11-19 20:16:35  PASS  tests/frontend/admin/config/admin-config-rewrite.test.mjs :: Create accounts for all Jellyfin users sends the ticked permissions and pages, from either copy of the card, and puts the new user map in the form  on 5e9ce7ce+dirty@f2052ef8
+    PASS tests/frontend/admin/config/admin-config-rewrite.test.mjs :: Create accounts for all Jellyfin users sends the ticked permissions and pages, from either copy of the card, and puts the new user map in the form
+2026-11-19 20:19:01  FAIL  JE.Tests.Architecture  on cdda8b3d
+    FAIL JE.Tests.Architecture.AuthHelperCallSnapshotTests.AuthHelperCallsPerActionMatchTheSnapshot  -- auth-helper-calls.snapshot.json differs from the checked-in snapshot. Snapshots are never regenerated to pass a refactor step.
++   "CreateReclaimerrUsers": {"IsAdminUser":1},
+    FAIL JE.Tests.Architecture.AuthHelperCallSnapshotTests.EveryRoutedActionIsCounted  -- Assert.Equal() Failure: Collections differ
+                                                                      ↓ (pos 14)
+Expected: [···, "BroadcastMessage", "CreateReclaimerrServiceAccount", "Delet
+    FAIL JE.Tests.Architecture.RouteAuthSnapshotTests.RouteVerbAuthAndBindingMatchTheSnapshot  -- route-auth.snapshot.json differs from the checked-in snapshot. Snapshots are never regenerated to pass a refactor step.
++   {"verb":"POST","route":"JellyfinEnhanced/reclaimerr/create-users","requiresA
+    FAIL JE.Tests.Architecture.AuthReadClosureSnapshotTests.RoutesMatchGateA  -- Assert.Equal() Failure: Collections differ
+                                                                                                           ↓ (pos 192)
+Expected: [···, "POST JellyfinEnhanced
+    FAIL JE.Tests.Architecture.AuthReadClosureSnapshotTests.TransitiveAuthReadsPerRouteMatchRestructureBase  -- auth-reads-by-route.base.json is anchored to restructure-base and is never regenerated from a later tree. Subject: referenced plugin (current tree).
++     "POST JellyfinEnhanced/reclaimerr/create-user
+2026-11-19 20:19:32  PASS  JE.Tests.Architecture  on cdda8b3d+dirty@1b36e10d
+2026-11-19 20:19:55  PASS  JE.Tests.BundleBudgetTests  on cbab69a3
+    PASS JE.Tests.BundleBudgetTests.ServedBundleIsWithinTheCheckedInBudget
+    PASS JE.Tests.BundleBudgetTests.BudgetOnlyRisesWithADocumentedReason
+2026-11-19 20:20:02  FAIL  JE.Tests.PackedResourcesTests  on cbab69a3
+    PASS JE.Tests.PackedResourcesTests.OnlyPackedResourcesAsksTheAssemblyForAResource
+    PASS JE.Tests.PackedResourcesTests.ScriptsMapsTwinsAndLocalesArePackedAndTheEnumeratedFilesAreNot
+    PASS JE.Tests.PackedResourcesTests.ThePackedLocalesAreWhatTheServerSideCaptionsAreReadFrom
+    FAIL JE.Tests.PackedResourcesTests.WhatThePluginAssemblyEmbedsIsWithinTheCheckedInSizeBudget  -- Jellyfin.Plugin.JellyfinEnhanced.dll embeds 12,058,053 bytes, over the 12,049,175 budget in client/assembly-budget.json. Embed less (or pack it), or raise the budget in a new history entry with a reas
+    PASS JE.Tests.PackedResourcesTests.EveryClientFileReadsBackByteForByteUnderItsOwnResourceName
+2026-11-19 20:21:51  PASS  JE.Tests.PackedResourcesTests  on ff65961d
+    PASS JE.Tests.PackedResourcesTests.ScriptsMapsTwinsAndLocalesArePackedAndTheEnumeratedFilesAreNot
+    PASS JE.Tests.PackedResourcesTests.WhatThePluginAssemblyEmbedsIsWithinTheCheckedInSizeBudget
+    PASS JE.Tests.PackedResourcesTests.OnlyPackedResourcesAsksTheAssemblyForAResource
+    PASS JE.Tests.PackedResourcesTests.ThePackedLocalesAreWhatTheServerSideCaptionsAreReadFrom
+    PASS JE.Tests.PackedResourcesTests.EveryClientFileReadsBackByteForByteUnderItsOwnResourceName

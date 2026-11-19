@@ -1,0 +1,10 @@
+Build started
+Warning: page does not exist
+    ╭─[ rewrite/README.md:32:17 ]
+    │
+ 32 │ Use [REVIEW.md](../../REVIEW.md) for independent review of each stable feature slice. Keep findings and command output under ignored artifacts, tied to the reviewed revision. Repeated mistakes should become executable checks or simpler interfaces. The review protocol does not replace real-host validation.
+    │                 ───────┬───────  
+    │                        ╰───────── page does not exist
+────╯
+1 issue found
+Build finished in 1.66s

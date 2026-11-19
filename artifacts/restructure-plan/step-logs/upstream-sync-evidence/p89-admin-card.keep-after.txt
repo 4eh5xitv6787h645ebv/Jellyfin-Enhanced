@@ -1,0 +1,9 @@
+$ je12 browse '#/home' --script p89-admin-card.mjs
+# deployed build: ff65961d (dll 6b87513ca5599374) on the je12 lab, 2026-11-19 20:23:33
+SCRIPT {"arrTab":{"group":"Create Reclaimerr accounts for Jellyfin users","visible":true,"permissions":["[x] Request removals","[ ] Auto-approve","[ ] Manage requests","[ ] Manage protection","[ ] Manage reclaim"],"pages":["[x] Requests","[x] Candidates","[x] Settings","[ ] Dashboard","[ ] Movies","[ ] Series","[ ] Protected","[ ] Duplicates","[ ] Calendar","[ ] Storage","[ ] History"],"button":"Create accounts for all Jellyfin users"},"servicesTab":{"group":"Create Reclaimerr accounts for Jellyfin users","visible":true,"permissions":["[x] Request removals","[ ] Auto-approve","[ ] Manage requests","[ ] Manage protection","[ ] Manage reclaim"],"pages":["[x] Requests","[x] Candidates","[x] Settings","[ ] Dashboard","[ ] Movies","[ ] Series","[ ] Protected","[ ] Duplicates","[ ] Calendar","[ ] Storage","[ ] History"],"button":"Create accounts for all Jellyfin users"},"sentFromServicesCopy":["{\"permissions\":[\"request\",\"auto_approve\"],\"pages\":[\"requests\",\"candidates\"]}"],"servicesLine":"Could not create the accounts: Create the service account first."}
+CONSOLE Failed to load resource: the server responded with a status of 404 (Not Found) /JellyfinEnhanced/cdn/selfhst/svg/maintainerr.svg
+CONSOLE Failed to load resource: the server responded with a status of 404 (Not Found) /JellyfinEnhanced/cdn/selfhst/svg/reclaimerr.svg
+CONSOLE Failed to load resource: the server responded with a status of 404 (Not Found) /JellyfinEnhanced/cdn/selfhst/svg/tmdb.svg
+CONSOLE Failed to load resource: the server responded with a status of 400 (Bad Request) /JellyfinEnhanced/reclaimerr/create-users
+BLOCKED https://www.gstatic.com/cv/js/sender/v1/cast_sender.js
+URL /web/index.html#/configurationpage?name=Jellyfin%20Enhanced&tab=services
