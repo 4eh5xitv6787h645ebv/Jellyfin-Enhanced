@@ -2946,8 +2946,8 @@
       "subject": "feat(reclaimerr): create Reclaimerr accounts for Jellyfin users and show a person's own removal requests",
       "class": "feature",
       "features": [
-        "admin",
-        "media-tags"
+        "media-tags",
+        "admin"
       ],
       "issues": [],
       "release": null,
@@ -2962,8 +2962,10 @@
         "Jellyfin.Plugin.JellyfinEnhanced/Controllers/ReclaimerrController.cs",
         "Jellyfin.Plugin.JellyfinEnhanced/Services/ReclaimerrActions.cs"
       ],
-      "status": "pending",
+      "status": "ported",
       "rewriteCommits": [],
+      "evidence": "artifacts/restructure-plan/step-logs/upstream-sync-evidence/p89-*",
+      "notes": "Re-implemented in the media-tags feature: upstream's ReclaimerrController and LeavingSoonController are the partials JeMediaTagsController.Reclaimerr.cs and JeMediaTagsController.LeavingSoon.cs here, and its Services/ReclaimerrActions.cs is Features/MediaTags/Services/ReclaimerrActions.cs (upstream's hunk applies there as is). Server, as upstream: POST reclaimerr/create-users (CreateReclaimerrUsers: [Authorize], administrators only through IsAdminUser, else Forbid; 404 while Reclaimerr is not the tool in use; 400 with {error} for a refusal, no service account or no grantable page; 502 with Reclaimerr's reason), with ReclaimerrActions.CreateAccountsAsync and its GrantablePermissions and GrantablePages (never manage_users); each new account is added to ReclaimerrUserMap (a partial save) and the answer carries the map as userMap; the body type is ReclaimerrCreateUsersRequest in Features/MediaTags/Models/ReclaimerrRequests.cs (client contracts regenerated). RequestsAsync's own list (mine) is the user's Reclaimerr list, read as them, together with the requests the service account filed in their name, each request once; a refused own read is logged and hides nothing. The Leaving soon page names the Jellyfin user of the same name as a request's Reclaimerr requester when its reason does not name one. Client: the group Create Reclaimerr accounts for Jellyfin users in the Reclaimerr card (client/src/admin/config/sections/arr.ts) and its button in page/service-status.ts (wireCreateUsers beside wireCreateAccount, on the view's lifecycle; an answer that arrives after the view is gone draws nothing), with upstream's labels, starting ticks, confirmation and result line. Difference from upstream: the configuration page also shows the card as a linked copy on the Services tab; upstream's copy shows every box unticked and ignores ticks made there, its button sending the *arr tab's ticks (seen on the lab with upstream's build; filed as a found bug). Here a tick in either copy is made in the other, so both copies show and send the same choice. The boxes carry no ids, as upstream's do not: the page's mirroring and docs/advanced/config-flag-groups.json treat an input with an id as a setting. Part of this commit: upstream's docs commit 34c70f16 (its api.md row as is; this tree's route totals 227 to 228) and its bot's inventory regeneration ba49f5f2 (tests/docs/production-inventory.json, generated here by je12 regen). Tests: upstream adds none. tests/backend/Features/MediaTags/IntegrationReclaimerrActionsTests.cs gains three, through the routes against the loopback Reclaimerr: My requests merging the two lists, with a refused own list (on the tree before the port it shows nothing), a request filed in Reclaimerr itself shown as the Jellyfin user of the same name (before: no person), and create-users (who may, the refusals that send nothing, which users get an account, the names made from theirs, the permissions and pages sent, the credentials, the map; it cannot compile before the port). tests/frontend/admin/config/admin-config-rewrite.test.mjs gains one for the page (the starting ticks, no page ticked, a declined confirmation, the request, the map in the form, the result line, both copies of the card, a refusal), which fails before the port. tests/fixtures/admin-config-baseline.json gains the group's eight element ids (four, and their Services copies), as docs/rewrite/admin-config.md prescribes for an intended page change; no setting, so the What's New index is unchanged. Contract: one route, POST JellyfinEnhanced/reclaimerr/create-users (CreateReclaimerrUsers, IsAdminUser 1), added by the branch's contract commit. On the lab (Jellyfin 12.4; Reclaimerr switched on with no service account) upstream's build of 34c70f16 and the port answer an administrator 400 'Create the service account first.' and a viewer 403 (the tree before the port: 404), and show the same group, labels, starting ticks and button; the Services copy differs as above. No setting, cached-output version or stored shape changes. Outbound: as upstream, the server now writes to the administrator's Reclaimerr (POST /api/account/users) after reading its users and identity links, through the existing guarded client; nothing new reaches the browser.",
       "unmappedPaths": [
         "Jellyfin.Plugin.JellyfinEnhanced/Controllers/LeavingSoonController.cs",
         "Jellyfin.Plugin.JellyfinEnhanced/Controllers/ReclaimerrController.cs"
@@ -2974,7 +2976,9 @@
       "date": "2026-11-18T20:14:22+00:00",
       "subject": "chore(tests): regenerate production inventory",
       "class": "test",
-      "features": [],
+      "features": [
+        "media-tags"
+      ],
       "issues": [],
       "release": null,
       "size": {
@@ -2985,8 +2989,10 @@
       "paths": [
         "tests/docs/production-inventory.json"
       ],
-      "status": "pending",
-      "rewriteCommits": []
+      "status": "ported",
+      "rewriteCommits": [],
+      "with": "3ada0a4e37b6d1af846ca60bbc977226ceb9523d",
+      "notes": "Upstream's bot regenerating its production inventory for 3ada0a4e (routes 223 to 224). This tree's tests/docs/production-inventory.json is generated (je12 regen) in that entry's commit, with the same POST JellyfinEnhanced/reclaimerr/create-users route at its file here (Features/MediaTags/JeMediaTagsController.Reclaimerr.cs, action CreateReclaimerrUsers) and this tree's count (227 to 228)."
     },
     {
       "sha": "4effcf597e6f533b0d3e5170e306bdcc863e1c7b",
@@ -3014,7 +3020,9 @@
       "date": "2026-11-18T21:44:20+00:00",
       "subject": "docs(api): document reclaimerr/create-users and bump the route total to 224",
       "class": "docs",
-      "features": [],
+      "features": [
+        "media-tags"
+      ],
       "issues": [],
       "release": null,
       "size": {
@@ -3025,8 +3033,10 @@
       "paths": [
         "docs/advanced/api.md"
       ],
-      "status": "pending",
-      "rewriteCommits": []
+      "status": "ported",
+      "rewriteCommits": [],
+      "with": "3ada0a4e37b6d1af846ca60bbc977226ceb9523d",
+      "notes": "Upstream documents its new route two hours after the feature; here the row goes in the feature's own commit, since tests/frontend/features/features-api-routes-docs.test.mjs requires a row for every route. docs/advanced/api.md gets upstream's reclaimerr/create-users row as is, after reclaimerr/service-account as upstream places it, and this tree's route totals (227 to 228 where upstream's go 223 to 224)."
     }
   ]
 }
