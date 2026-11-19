@@ -1,0 +1,33 @@
+# Entry 94 (upstream abcaa16d): the contract lines upstream's bundle.js?g= changes
+#
+# Probe, not committed: upstream's two action signatures (Controllers/JellyfinEnhancedController.cs) applied to
+# this tree's Features/Platform/JePlatformController.Assets.cs, nothing else changed, then one recorded test run:
+#   je12 test --only 'JE.Tests.Architecture.RouteAuthSnapshotTests.RouteVerbAuthAndBindingMatchTheSnapshot'
+# on ed273847+dirty (je12 2.5.0). The probe was reverted afterwards.
+
+diff --git a/Jellyfin.Plugin.JellyfinEnhanced/Features/Platform/JePlatformController.Assets.cs b/Jellyfin.Plugin.JellyfinEnhanced/Features/Platform/JePlatformController.Assets.cs
+index 1cfb1e9b..5e893e5a 100644
+--- a/Jellyfin.Plugin.JellyfinEnhanced/Features/Platform/JePlatformController.Assets.cs
++++ b/Jellyfin.Plugin.JellyfinEnhanced/Features/Platform/JePlatformController.Assets.cs
+@@ -51,10 +51,10 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Features.Platform
+         /// response compression, so it is never compressed twice.
+         /// </summary>
+         [HttpGet("bundle.js")]
+-        public ActionResult GetScriptBundle() => GetScriptBundleResource(map: false);
++        public ActionResult GetScriptBundle([FromQuery] string? g = null) => GetScriptBundleResource(map: false);
+ 
+         [HttpGet("bundle.js.map")]
+-        public ActionResult GetScriptBundleMap() => GetScriptBundleResource(map: true);
++        public ActionResult GetScriptBundleMap([FromQuery] string? g = null) => GetScriptBundleResource(map: true);
+ 
+         private ActionResult GetScriptBundleResource(bool map)
+         {
+
+# Result (je12 summary line, then the snapshot difference from the test's log):
+test --only: FAIL (1 failed, 0 passed) on ed273847+dirty@43ad613c
+FAIL JE.Tests.Architecture.RouteAuthSnapshotTests.RouteVerbAuthAndBindingMatchTheSnapshot
+       route-auth.snapshot.json differs from the checked-in snapshot. Snapshots are never regenerated to pass a refactor step.
+-   {"verb":"GET","route":"JellyfinEnhanced/bundle.js","requiresAuth":false,"auth":"","action":"GetScriptBundle","apiBehavior":true,"parameters":[]},
+-   {"verb":"GET","route":"JellyfinEnhanced/bundle.js.map","requiresAuth":false,"auth":"","action":"GetScriptBundleMap","apiBehavior":true,"parameters":[]},
++   {"verb":"GET","route":"JellyfinEnhanced/bundle.js","requiresAuth":false,"auth":"","action":"GetScriptBundle","apiBehavior":true,"parameters":["g:Query"]},
++   {"verb":"GET","route":"JellyfinEnhanced/bundle.js.map","requiresAuth":false,"auth":"","action":"GetScriptBundleMap","apiBehavior":true,"parameters":["g:Query"]},
