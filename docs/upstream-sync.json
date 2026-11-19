@@ -3079,7 +3079,9 @@
         "tests/frontend/features/features-leavingsoon-request-cards.test.mjs"
       ],
       "status": "ported",
-      "rewriteCommits": [],
+      "rewriteCommits": [
+        "93e90c96c8bed90dcb0df979e8d80a25d9480357"
+      ],
       "unmappedPaths": [
         "Jellyfin.Plugin.JellyfinEnhanced/Controllers/LeavingSoonController.cs",
         "Jellyfin.Plugin.JellyfinEnhanced/js/extras/leavingsoon-page.js"
