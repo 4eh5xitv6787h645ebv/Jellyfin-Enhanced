@@ -1,0 +1,21 @@
+je12 smoke: started as a job, expected about 37s on 10 CPUs (help-text times are for 10). If this call is cut off, `je12 wait` collects the result.
+smoke: comparing the deployed 6be487cf with the baseline of 9d553490490c (docs(sync): step log and evidence for upstream abcaa16d), from the start of this lab (je12 up)
+page admin           ok      14 tabs; Media Tags section 7 tabs (2.5s)
+page settings        ok      panel open, 24 tabs (1.9s)
+page media-tags-hub  ok      #jeMediaTagsHub visible (2.1s)
+page poster          ok      53/100 cards tagged (2.0s)
+page details         ok      101 Dalmatians II: Patch's London Adventure: 78 JE elements (1.9s)
+page hidden-content  ok      page rendered (1.3s)
+page bookmarks       ok      page rendered (1.3s)
+page calendar        ok      5 events (4.0s)
+page downloads       ok      4 items (4.7s)
+page activity        ok      Activity tab rendered (1.8s)
+page catchup         ok      Catch Up tab rendered (1.4s)
+page seerr           ok      5 Seerr cards (1.6s)
+page player          ok      playing 1.2s; OSD rating present (4.1s)
+plugin               ok      12.16.0.0 Active
+scheduled tasks      ok      17 JE tasks (keys and ids)
+openapi              ok      HTTP 200, 498 paths, 204 under /JellyfinEnhanced
+bundle wire          ok      br 200 549728B 304:yes, gzip 200 728862B 304:yes, identity 200 2668922B 304:yes; decoded bodies identical
+server log           ok      272 ERR/WRN lines, 0 new kind(s)
+smoke: pass (0 failing, 0 flaky, 0 changed, 0 known, 0 fixed) in 37s

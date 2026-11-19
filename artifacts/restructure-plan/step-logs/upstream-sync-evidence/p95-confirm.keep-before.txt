@@ -1,0 +1,10 @@
+before: je12 browse '#/home' --script p95-confirm.mjs
+  deployed 9d553490+dirty (dll 3df5af52abc8208e) on lab je125ce284, 2026-11-19 22:49:36
+SCRIPT asked with: Jellyfin's dialog: "Rebuild the server tag cache?"
+history entries added while the dialog was open: 1
+after Cancel: configuration pages in the DOM: 2; the shown page has the sidebar: false; its Media Tags tab is drawn: false; "Loading Media Tags settings" shown: true; dialogs left open: 0
+CONSOLE Failed to load resource: the server responded with a status of 404 (Not Found) /JellyfinEnhanced/cdn/selfhst/svg/reclaimerr.svg
+CONSOLE Failed to load resource: the server responded with a status of 404 (Not Found) /JellyfinEnhanced/cdn/selfhst/svg/tmdb.svg
+CONSOLE Failed to load resource: the server responded with a status of 404 (Not Found) /JellyfinEnhanced/cdn/selfhst/svg/maintainerr.svg
+BLOCKED https://www.gstatic.com/cv/js/sender/v1/cast_sender.js
+URL /web/index.html#/configurationpage?name=Jellyfin%20Enhanced&jeSection=media-tags&tab=overview

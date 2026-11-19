@@ -1,0 +1,19 @@
+tests/frontend/features/media-tags/admin/features-admin-config-media-tags-tab.test.mjs :: the tab's confirmations use the page's own dialog, not Jellyfin's, which builds the page again when it closes
+  FAILED on 9d553490+dirty@e03f8c17 at 2026-11-19 22:50:31: AssertionError: Expected values to be strictly deep-equal: + [] / - [
+  passed on 9d553490+dirty@7cef6e85 at 2026-11-19 22:51:02
+  passed on 6be487cf at 2026-11-19 22:52:55
+  => failed on 9d553490+dirty@e03f8c17 (2026-11-19 22:50:31), passes on 6be487cf (2026-11-19 22:52:55); the commit 6be487cf has exactly the files of that run
+JE.Tests.BundleBudgetTests.ServedBundleIsWithinTheCheckedInBudget
+  passed on 6be487cf at 2026-11-19 22:55:40
+JE.Tests.BundleBudgetTests.BudgetOnlyRisesWithADocumentedReason
+  passed on 6be487cf at 2026-11-19 22:55:40
+JE.Tests.PackedResourcesTests.WhatThePluginAssemblyEmbedsIsWithinTheCheckedInSizeBudget
+  passed on 6be487cf at 2026-11-19 22:55:48
+JE.Tests.PackedResourcesTests.ThePackedLocalesAreWhatTheServerSideCaptionsAreReadFrom
+  passed on 6be487cf at 2026-11-19 22:55:48
+JE.Tests.PackedResourcesTests.OnlyPackedResourcesAsksTheAssemblyForAResource
+  passed on 6be487cf at 2026-11-19 22:55:48
+JE.Tests.PackedResourcesTests.EveryClientFileReadsBackByteForByteUnderItsOwnResourceName
+  passed on 6be487cf at 2026-11-19 22:55:48
+JE.Tests.PackedResourcesTests.ScriptsMapsTwinsAndLocalesArePackedAndTheEnumeratedFilesAreNot
+  passed on 6be487cf at 2026-11-19 22:55:48

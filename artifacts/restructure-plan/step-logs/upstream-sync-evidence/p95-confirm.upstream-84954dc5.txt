@@ -1,0 +1,12 @@
+upstream: JE12=<je12> python3 scripts/upstream_lab_deploy.py 84954dc57d60527ab30af5daf982958301aec0dd, then
+je12 browse '#/home' --script p95-confirm.mjs
+deployed upstream-84954dc57d60 (dll d2feef8587a37866) on lab je125ce284, 2026-11-19 22:48
+SCRIPT asked with: the configuration page's dialog: "Rebuild the server tag cache?"
+history entries added while the dialog was open: 0
+after Cancel: configuration pages in the DOM: 1; the shown page has the sidebar: true; its Media Tags tab is drawn: true; "Loading Media Tags settings" shown: false; dialogs left open: 0
+CONSOLE Failed to load resource: the server responded with a status of 404 (Not Found) /JellyfinEnhanced/cdn/selfhst/svg/maintainerr.svg
+CONSOLE Failed to load resource: the server responded with a status of 404 (Not Found) /JellyfinEnhanced/cdn/selfhst/svg/reclaimerr.svg
+CONSOLE Failed to load resource: the server responded with a status of 404 (Not Found) /JellyfinEnhanced/cdn/selfhst/svg/tmdb.svg
+BLOCKED https://www.gstatic.com/cv/js/sender/v1/cast_sender.js
+BLOCKED https://api.github.com/repos/n00bcodr/Jellyfin-Enhanced/contents/Jellyfin.Plugin.JellyfinEnhanced/js/locales
+URL /web/index.html#/configurationpage?name=Jellyfin%20Enhanced&jeSection=media-tags&tab=overview
