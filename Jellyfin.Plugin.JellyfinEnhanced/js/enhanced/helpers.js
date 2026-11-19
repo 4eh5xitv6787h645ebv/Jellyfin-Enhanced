@@ -233,9 +233,29 @@
       const rect = element.getBoundingClientRect();
       return rect.top >= 0 && rect.left >= 0 && rect.bottom <= (window.innerHeight || document.documentElement.clientHeight) && rect.right <= (window.innerWidth || document.documentElement.clientWidth);
     }
+    let renderedLegacyHeader = null;
+    let legacyHeaderWatched = false;
+    function watchLegacyHeader() {
+      const onNavigate = JE2.core?.navigation?.onNavigate;
+      if (legacyHeaderWatched || typeof onNavigate !== "function") return;
+      legacyHeaderWatched = true;
+      onNavigate(() => {
+        renderedLegacyHeader = null;
+      });
+    }
+    function hiddenByInlineStyle(element) {
+      for (let node = element; node && node !== document.body; node = node.parentElement) {
+        if (node.style?.display === "none") return true;
+      }
+      return false;
+    }
     function getHeaderRightContainer() {
       const legacy = document.querySelector(".headerRight:not([data-je-header-fallback])");
-      if (legacy && legacy.offsetParent !== null) {
+      if (legacy && !hiddenByInlineStyle(legacy) && (legacy === renderedLegacyHeader || legacy.offsetParent !== null)) {
+        if (renderedLegacyHeader !== legacy) {
+          renderedLegacyHeader = legacy;
+          watchLegacyHeader();
+        }
         attachDrawerAutoClose(legacy);
         return legacy;
       }

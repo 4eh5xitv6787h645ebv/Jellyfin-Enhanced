@@ -432,7 +432,6 @@
         this.createOverlay();
         this.setupKeyboardAccessibility();
         this.setupVideoObserver();
-        this.setupInteractionListeners();
       }
       getCredentials() {
         return storedCredentials(() => (typeof ApiClient.serverId === "function" ? ApiClient.serverId() : ApiClient.serverId) || null);
@@ -627,7 +626,14 @@
         };
         this.pauseScreenTimer = setTimeout(tryShowWhenIdle, this.pauseScreenDelayMs);
       }
+      /**
+       * Listen for the interaction that postpones the overlay, for as long as there is a
+       * video (handleVideoChange to clearState). The time of the last interaction is only
+       * read while a video is paused, and a pause sets it itself, so without a video these
+       * seven document listeners (wheel and mousemove among them) ran on every page for nothing.
+       */
       setupInteractionListeners() {
+        if (this.interactionListeners) return;
         let lastMouseX = null;
         let lastMouseY = null;
         const MOUSE_MOVE_THRESHOLD = 15;
@@ -659,6 +665,14 @@
         document.addEventListener("mousemove", handleMouseMove, { passive: true });
         this.interactionListeners.push({ event: "mousemove", listener: handleMouseMove });
       }
+      /** Stop listening for interaction (no video, or teardown). */
+      removeInteractionListeners() {
+        if (!this.interactionListeners) return;
+        this.interactionListeners.forEach(({ event, listener }) => {
+          document.removeEventListener(event, listener);
+        });
+        this.interactionListeners = null;
+      }
       checkForVideoChanges() {
         const video = document.querySelector(".videoPlayerContainer video");
         if (video && video !== this.currentVideo) {
@@ -671,6 +685,8 @@
         this.clearState();
         this.currentVideo = video;
         this.cleanupListeners = this.attachVideoListeners(video);
+        this.lastUserInteractionAt = Date.now();
+        this.setupInteractionListeners();
         this.itemCache.clear();
         this.imgProbeCache.clear();
         const np = nowPlaying();
@@ -1011,6 +1027,7 @@
         this.currentItemId = null;
         this.readyItemId = null;
         this.currentVideo = null;
+        this.removeInteractionListeners();
       }
       destroy() {
         this.destroyed = true;
@@ -1026,12 +1043,7 @@
           this.observer.unsubscribe();
           this.observer = null;
         }
-        if (this.interactionListeners) {
-          this.interactionListeners.forEach(({ event, listener }) => {
-            document.removeEventListener(event, listener);
-          });
-          this.interactionListeners = null;
-        }
+        this.removeInteractionListeners();
         for (const url of this.imgBlobCache.values()) URL.revokeObjectURL(url);
         this.imgBlobCache.clear();
         this.imgProbeCache.clear();

@@ -95,7 +95,6 @@ JE.initializePauseScreen = function() {
           this.createOverlay();
           this.setupKeyboardAccessibility();
           this.setupVideoObserver();
-          this.setupInteractionListeners();
         }
 
         getCredentials() {
@@ -337,7 +336,14 @@ JE.initializePauseScreen = function() {
           this.pauseScreenTimer = setTimeout(tryShowWhenIdle, this.pauseScreenDelayMs);
         }
 
+        /**
+         * Listen for the interaction that postpones the overlay, for as long as there is a
+         * video (handleVideoChange to clearState). The time of the last interaction is only
+         * read while a video is paused, and a pause sets it itself, so without a video these
+         * seven document listeners (wheel and mousemove among them) ran on every page for nothing.
+         */
         setupInteractionListeners() {
+          if (this.interactionListeners) return;
           // Track last mouse position for movement threshold
           let lastMouseX: number | null = null;
           let lastMouseY: number | null = null;
@@ -383,6 +389,15 @@ JE.initializePauseScreen = function() {
           this.interactionListeners.push({ event: 'mousemove', listener: handleMouseMove });
         }
 
+        /** Stop listening for interaction (no video, or teardown). */
+        removeInteractionListeners() {
+          if (!this.interactionListeners) return;
+          this.interactionListeners.forEach(({ event, listener }) => {
+            document.removeEventListener(event, listener);
+          });
+          this.interactionListeners = null;
+        }
+
         checkForVideoChanges() {
           const video = document.querySelector<HTMLVideoElement>(".videoPlayerContainer video");
           if (video && video !== this.currentVideo) {
@@ -396,6 +411,8 @@ JE.initializePauseScreen = function() {
           this.clearState();
           this.currentVideo = video;
           this.cleanupListeners = this.attachVideoListeners(video);
+          this.lastUserInteractionAt = Date.now();
+          this.setupInteractionListeners();
 
           // Clear item cache on video change so a new item always fetches fresh data
           this.itemCache.clear();
@@ -752,6 +769,7 @@ JE.initializePauseScreen = function() {
           this.currentItemId = null;
           this.readyItemId = null;
           this.currentVideo = null;
+          this.removeInteractionListeners();
         }
 
         destroy() {
@@ -767,12 +785,7 @@ JE.initializePauseScreen = function() {
           if (this.observer) { this.observer.unsubscribe(); this.observer = null; }
 
           // Clean up interaction listeners
-          if (this.interactionListeners) {
-            this.interactionListeners.forEach(({ event, listener }) => {
-              document.removeEventListener(event, listener);
-            });
-            this.interactionListeners = null;
-          }
+          this.removeInteractionListeners();
 
           // Revoke blob URLs
           for (const url of this.imgBlobCache.values()) URL.revokeObjectURL(url);
