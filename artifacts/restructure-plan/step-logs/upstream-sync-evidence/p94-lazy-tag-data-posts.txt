@@ -1,0 +1,7 @@
+# POST /JellyfinEnhanced/tag-data/<user> per cold Home load in p94-lazy-backdrop.mjs (je12 browse --count), same lab
+# (Jellyfin 12.4, status tags on, generated artwork on the eight status-tagged series), three builds in turn.
+# The rewrite's run of the backdrop pair printed a STORM line (15 or more); this shows the count is timing-dependent
+# on every build, the main line before the port included, and not changed by the port.
+this branch (ce961e7b8+dirty):            13, 24
+main line before the port (1651839c):     14, 26, 26
+upstream abcaa16d:                        25, 13, 13

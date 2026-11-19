@@ -1,0 +1,192 @@
+# je12 test media-tags chrome player platform --no-dotnet, on f67613fe with upstream abcaa16d's tests applied (paths mapped) and no client port yet
+je12 test media-tags chrome player platform --no-dotnet: started as a job, expected about 1m39s on 10 CPUs (help-text times are for 10). If this call is cut off, `je12 wait` collects the result.
+features: media-tags, chrome, player, platform
+je12: waiting for another dotnet build or test to finish ($JE12_HOME/dotnet.lock); held by `je12 test --no-dotnet` in another checkout (pid 2227017), for 47s
+je12: dotnet.lock acquired after 37s
+  == QUICK: features media-tags chrome player platform
+  == QUICK: 171 node test files (failures ratcheted by name vs artifacts/restructure-plan/baselines/npm-failures.txt)
+  QUICK: node 3530 passed, 170 failed
+  == QUICK: dotnet tests for media-tags chrome player platform
+  dotnet tests: skipped (--no-dotnet; the repo's quick would have run them for the .cs change)
+  node: 1 failing test(s) not in the known-failure list:
+    tests/frontend/bootstrap/bootstrap-bundle-budget.test.mjs :: tests/frontend/bootstrap/bootstrap-bundle-budget.test.mjs
+       'test failed'
+       rerun alone: je12 test --only 'tests/frontend/bootstrap/bootstrap-bundle-budget.test.mjs :: tests/frontend/bootstrap/bootstrap-bundle-budget.test.mjs'
+  dotnet: no test result: the step stopped in the an unrecognised point (the last lines of its output follow) before any test ran
+    je12: dotnet test skipped (je12 test --no-dotnet)
+test: FAIL in 144s (the repo's quick mode, without its dotnet tests (--no-dotnet)); log $JE12_HOME/logs/1ebcc75d/quick-repo.log
+je12: FAILED (in your change): a step or test above failed
+next: fix it, or if a failing test is unrelated to your change, rerun it alone with the printed command (flake protocol: alone, then the whole step again)
+
+## failing tests (node)
+✖ a background write whose slice ran out of time resumes after what was written: every entry once, in order, then the commit
+✖ a band the slot paints is blurred into the picture and stays under it
+✖ a boot batch of several groups runs as one paced list: one wait for idle time, not one per group
+✖ a bootstrap with a module the manifest lacks loads the whole manifest as one bundle
+✖ a bootstrap with an "after" naming a later group loads the whole manifest as one bundle
+✖ a bootstrap with a repeated group id loads the whole manifest as one bundle
+✖ a bootstrap with no ComponentGroups loads the whole manifest as one bundle
+✖ a box that is moved moves the grid with it, by transform or by translate, and is read again on every pass
+✖ a box with a scale or a rotation that is more than nothing starts a grid of its own
+✖ a browser missing any piece the flow rules are written with keeps every card positioned
+✖ a browser whose typed style map throws for a property it does not know still decides every card
+✖ a bundle that defines some of its groups loads only the missing groups' files, keeping the run order
+✖ a canvas that answers with other pixels than were drawn is not used
+✖ a canvas the browser will not let us read: no picture, and that artwork is not tried again
+✖ a card about to be fitted is un-nudged first, so the fitting pass reads the layout as it is, and is measured after it
+✖ a card a fraction of a pixel off the size it is laid out at is not measured, once the browser has said that size
+✖ a card image nothing names yet is scanned again when its artwork arrives, without waiting for another change on the page
+✖ a card in use gives its pictures up for the live filter, and takes them back once it rests
+✖ a card is drawn again only when its geometry changed; a tag that moved loses its old picture after the next paint
+✖ a card is measured again when its size changes, once the size has held; its containers are not watched one by one
+✖ a card measured again with nothing changed is written nothing: the nudge it has is taken out of what is read
+✖ a card measured while a transform scales it has the live filter, and its pictures back when that is over
+✖ a card of an ended series stays watched until the parent facts its finale rules read are held
+✖ a card on its way back from its hover size is measured when it has arrived, not when the pointer leaves
+✖ a card presented again in place gets its pictures on the new slot, without drawing them again
+✖ a card presented again is never painted bare: its old pictures go and the filter stands in before the paint
+✖ a card taken off the page and put back with the same nodes keeps the filter meanwhile and is taken up again
+✖ a card that cannot be measured stays positioned until one of its kind can
+✖ a card that goes to rest in flow is measured again as it then stands
+✖ a card that holds focus or has the pointer on it is laid out positioned, genre icons or not; a pointer that hides the tags changes nothing
+✖ a card that leaves flow for a moment (a status tag back on its live filter under the pointer) is not measured for it
+✖ a card under the pointer when a font arrives is fitted when the pointer has left
+✖ a card whose series is answered rests off the schedule observer, and one drawn for an answered series is never watched
+✖ a container with no box is written nothing, and loses the nudge it had
+✖ a content security policy that refuses data: images turns the pictures off
+✖ a corners card flows, with or without genre icons, and the mark follows the groups it holds
+✖ a dimmed partial flag keeps the card positioned, and flow returns when it goes
+✖ a failed bundle request loads that batch's files one by one, in order, async=false
+✖ a failed group the page no longer needs is not retried
+✖ a font that arrives has the cards that are fitted fitted again
+✖ a font that arrives has the cards that are fitted fitted again (in Firefox too, where nothing is nudged)
+✖ after a user switch the incoming user's groups load, and initialize, before the tag re-initialization runs
+✖ "after" groups and "with" companions load in one request in file order (Hidden Content off)
+✖ "after" groups and "with" companions load in one request in file order (Hidden Content on)
+✖ a group that keeps failing is retried on a timer with a growing pause, and loads without another trigger once it can
+✖ a group that starts a pixel grid of its own snaps its tag from its own corner
+✖ a group whose rule turns true on a navigation loads alone, initializes once, and is not asked for again
+✖ a half goes up, as the browser rounds it
+✖ a header with room to spare measures More once, then again only after a resize
+✖ a hidden card whose kinds an earlier slice has answered for is marked in its own slice
+✖ a kind of slot is asked about once, in idle time after its card was drawn, and its card rests in flow from then on
+✖ a lazy batch of which nothing arrives is forgotten, and asked for again after a pause, not on every trigger
+✖ an address that becomes a details page while boot is under way: the boot features start before that page's groups are fetched
+✖ an element the fitting pass adds inside a group already inspected is inspected too
+✖ an explicit request for a group that failed to load does not wait for the pause
+✖ an image that loads in a tag, or a font that arrives, gives containers other sizes: the card is measured again
+✖ a page delivered standalone (no Home tab flag) loads at boot
+✖ a page full of new cards is measured a few cards a frame
+✖ a page loads when the Home tab holding its placeholder becomes the active one
+✖ a picture stops at its slot's box: a column the filter reached past it is left out
+✖ a request that brought no painter waits before it is made again, twice as long each time; without a loader the tag keeps the live filter
+✖ a resting card is watched again when its series' hour ends, and asks when it next comes on screen
+✖ a resting card whose series' hour ended is watched again on a draw
+✖ a resting card whose series' hour ended is watched again on a dropped cache
+✖ a resting card whose series' hour ended is watched again on focus
+✖ artwork that is not there yet gets its picture when it arrives
+✖ artwork that Jellyfin unloads and loads again shows the pictures the card already has
+✖ artwork the lazy loader parks while a card is out of view leaves its pictures alone: nothing is measured or written as a row scrolls
+✖ a rule that tells one chip's part from another's, or one type of card from another, is seen
+✖ a scaled card is not measured: distances read under a scale are not the layout's. It is measured when that ends
+✖ a scaled card whose scale ends with a transition is measured when it ends, the pointer gone
+✖ a scroll reads no layout, and neither a scroll nor the pointer nor focus has a card measured again
+✖ a second switch while the first user's groups load initializes nothing for the stale user (next user's tags off)
+✖ a second switch while the first user's groups load initializes nothing for the stale user (next user's tags on)
+✖ a slice fits what the idle period has left, and takes two cards at least
+✖ a slot whose image is still loading is not asked about: empty boxes are the same in any layout
+✖ a stand-in export loads its group, then makes the same call once on the real function
+✖ a stand-in whose group does not define the function logs that it is not available
+✖ a status tag with the live backdrop filter keeps its card positioned, until the painter says its picture stands in
+✖ a style sheet arriving re-asks one card of each kind where it stands; a hidden page keeps what it has until it is shown
+✖ a style sheet that arrives after the cards were drawn is seen when a card is next placed, and every card is looked at again
+✖ a tag gets its picture once the card is laid out: the artwork under it, blurred, on the slot
+✖ a tag has the live filter from the moment it is tracked until its picture stands in, and keeps it wherever no picture can
+✖ a tag that is itself translucent gets no picture, and gets one when it is opaque again
+✖ a tag with a chip of an earlier slot under it keeps the live filter: only the filter shows that chip as it is
+✖ a touch leaves its card hovered and sends no pointerout later: the host rests when the pointer shows up elsewhere
+✖ a user switch takes the outgoing user's pictures away at once
+✖ a user switch with the tags group already loaded restarts the incoming user's tag types once
+✖ a <video> that starts loading loads the player group, wherever the address is
+✖ a window width that holds re-asks the page's CSS (a media query may have been crossed); a height change alone does not
+✖ Bands' top band: a band whose own size its margins changed is left as it is across, until it changes size for another reason
+✖ Bands' top band: a first report that is not the pass's reading to the last unit holds nothing
+✖ Bands' top band: a group between the ends gets its auto margin as a length, and one that never was contained stays exactly where it is
+✖ Bands' top band: a line more because of what the band holds is no doing of its margins, however soon after them
+✖ Bands' top band: a line with no room to spare is left as it is across
+✖ Bands' top band: lengths do not follow a card that changes size, so they come off the moment one does
+✖ Bands' top band: two groups on a line are held by its ends, and each moves through the margin it has
+✖ batches run strictly in the order they were asked for, even when a later request arrives first
+✖ boot asks for one bundle of the needed groups in file order, runs them in order, then stage 6 for those groups only
+✖ cards gone from the page are released, a user switch redraws, and off takes every picture away
+✖ cards the page's CSS can tell apart are asked about apart: by their indicators and by the page they are on
+✖ cards with nothing to do cost a slice nothing: they do not make a card look free, and do not hold the others up
+✖ centre anchors, Flush, Summary and Minimal keep the positioned layout; Tight, Bands and Caption flow
+✖ chips drawn inside a card tag host do not wake body subscribers; the host coming or going does
+✖ clearing a card removes the mark with everything else
+✖ core is marked loaded even when none of its files arrives, so boot finishes
+✖ CSS values and geometry: layers, colours, gradients, image placement, pixel grids
+✖ custom CSS can keep the positioned layout with --je-tag-flow: off, read again when the settings are re-applied
+✖ custom CSS that moves a box keeps its kind of card positioned, with no opt-out: the browser lays it out differently in flow
+✖ dev mode never asks for a bundle: the needed groups' files load at boot, a lazy group's on demand
+✖ direct play: a card removed from the page while off screen is let go, though no observer report ever comes for it
+✖ direct play: a card whose item is answered is released from the observer, and one drawn for an answered item is never watched
+✖ direct play: an answer re-badges every card of its item and reads no other card
+✖ direct play: an observer report with nothing to ask or tell queues no idle slice
+✖ direct play: another profile or bitrate lapses the answers of the released cards
+✖ direct play: a released card is watched again when its answer lapses, and asked about when it next comes on screen
+✖ direct play: stored answers that arrive after the cards were drawn badge every card of their items, on screen or not
+✖ drawing a badge tracks its card; a browser without a readable canvas keeps the live filter
+✖ each contained group is moved to the whole pixel it was painted from, in one pass once the page is at rest
+✖ each group's modules read the same exports at load time as in the single bundle (every feature off)
+✖ each group's modules read the same exports at load time as in the single bundle (every feature on)
+✖ each stage-6 initializer and lazy export is defined by a module of its own group
+✖ every group has a loading rule, and every rule and initializer names a real group
+✖ failing tests:
+✖ Firefox and WebKit paint a contained box where they paint a plain one: nothing is nudged, measured or watched there
+✖ focus first, then the pointer: the card is live from the focus on, so its genre names are bounded where they are rendered
+✖ genre names custom CSS shows inline keep their cards positioned
+✖ groups loaded for a page the user went to run in idle time; a group asked for directly does not wait for it
+✖ Hide Tags on Hover: a card drawn under the pointer does not turn flow off for its kind, and is inspected once the pointer has gone
+✖ in a vertical writing mode the size reported is the height first: a card that is nearly square is still measured
+✖ no picture is shown where it would not be what the page shows
+✖ nothing is measured until the browser has said which grid it snaps to; another grid measures every card again
+✖ on a device where a card is dear, slices stay small
+✖ only fonts that can draw a character of a card's tags have it fitted again, once for a burst of them
+✖ only the cards a layering rule reaches stay positioned, and the styles are read once per kind of element
+✖ only the seven groups that were contained are moved
+✖ pictures are painted only once no new status tag has been drawn for a while; the live filter shows meanwhile
+✖ pictures of an older layout are not put back when the artwork goes and returns
+✖ schedule labels advance to the local day on identical lookup
+✖ settings saved before layouts: an exact top-right container below a malformed one still clears the indicator
+✖ settings saved before layouts keep the 4px phone edge offsets of rating, age rating and status
+✖ slices with nothing to draw from do not make cards look free: the first slice that draws takes a slice's worth
+✖ tags arriving on a card the pointer is already on are laid out positioned at once
+✖ tests/frontend/bootstrap/bootstrap-bundle-budget.test.mjs
+✖ the blur is Chromium's backdrop blur: the same pixels, bit for bit
+✖ the first plan reads the saved settings before JE.loadSettings exists
+✖ the grid is the one the browser lays out in: device pixels, or CSS pixels under an emulated ratio
+✖ the idle pass takes a slice of the cards at a time, and leaves the rest to the idle periods that follow
+✖ the idle pass waits while cards are still being drawn: one pass decides them all
+✖ the layout controller's marks on the host are not a move: no measuring pass
+✖ the legacy header hidden by an inline display:none wrapper is recognised without a layout read
+✖ the loader registers the eight Home tabs right after core, in the single bundle's order, exactly as the pages' own modules do
+✖ the painter is fetched when the first status tag is drawn, once; tags never wait for it and it takes them up when it arrives
+✖ the pause screen listens for interaction only while there is a video
+✖ the pipeline hears the artwork of scanned card images only, not every inline style on the page
+✖ the plan is made again once settings resolve: a group only the resolved settings need loads after the boot features start, before JE.initialized
+✖ the pointer does not bound genre names on a card whose tags hide on hover; focus still does, and so does a layout with a hover reveal
+✖ the pointer on a card with genre icons lays it out positioned so their names can float, and it rests again once the pointer has gone
+✖ the quality stylesheet writes the chip box once and one colour rule per quality
+✖ the status-tag backdrop painter is its own group: no boot and no page change loads it, a direct request loads it alone
+✖ the stylesheet lays a flow card out as grid items with the same insets, and the bottom corners as rising grids
+✖ the stylesheet restates every anchor with the edge inset and leaves the default rules alone
+✖ the switch turns flow off for cards already on the page, and back on
+✖ the switch: with whole pixels off, cards presented again carry no nudge
+✖ the tag layout's custom properties are registered as the loader starts, in Chromium's family only
+✖ what the styles say of the pixel grid is read once for each element, not on every pass
+✖ while the browser has not said which grid it snaps to, the cards wait and no idle period is asked for on their account
+✖ window.JE names the plugin once the component scripts have run whenever Bookmarks is enabled, with no group loaded for it
+✖ without a bootstrap, a groups file that answers decides between the whole bundle and groups
+✖ without a bootstrap, a groups file that fails decides between the whole bundle and groups
+✖ with the real manifest and groups file, boot loads exactly the needed groups' modules once, in order

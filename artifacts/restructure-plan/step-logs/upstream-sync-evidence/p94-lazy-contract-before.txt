@@ -1,0 +1,42 @@
+  Determining projects to restore...
+  All projects are up-to-date for restore.
+  Client: 618 TypeScript sources checked; 210 mapped browser entries; 10 typed HTML pages.
+  JellyfinEnhanced -> Jellyfin.Plugin.JellyfinEnhanced/bin/Release/net10.0/Jellyfin.Plugin.JellyfinEnhanced.dll
+  JE.Tests -> tests/backend/bin/Release/net10.0/JE.Tests.dll
+Test run for tests/backend/bin/Release/net10.0/JE.Tests.dll (.NETCoreApp,Version=v10.0)
+A total of 1 test files matched the specified pattern.
+[xUnit.net 00:00:00.61]     JE.Tests.Architecture.RouteAuthSnapshotTests.RouteVerbAuthAndBindingMatchTheSnapshot [FAIL]
+  Failed JE.Tests.Architecture.RouteAuthSnapshotTests.RouteVerbAuthAndBindingMatchTheSnapshot [178 ms]
+  Error Message:
+   route-auth.snapshot.json differs from the checked-in snapshot. Snapshots are never regenerated to pass a refactor step.
+-   {"verb":"GET","route":"JellyfinEnhanced/bundle.js","requiresAuth":false,"auth":"","action":"GetScriptBundle","apiBehavior":true,"parameters":[]},
+-   {"verb":"GET","route":"JellyfinEnhanced/bundle.js.map","requiresAuth":false,"auth":"","action":"GetScriptBundleMap","apiBehavior":true,"parameters":[]},
++   {"verb":"GET","route":"JellyfinEnhanced/bundle.js","requiresAuth":false,"auth":"","action":"GetScriptBundle","apiBehavior":true,"parameters":["g:Query"]},
++   {"verb":"GET","route":"JellyfinEnhanced/bundle.js.map","requiresAuth":false,"auth":"","action":"GetScriptBundleMap","apiBehavior":true,"parameters":["g:Query"]},
+
+  Stack Trace:
+     at JE.Tests.Architecture.Arch.AssertSameLines(String expected, String actual, String headline) in tests/backend/Architecture/ArchitectureSupport.cs:line 77
+   at JE.Tests.Architecture.Arch.VerifySnapshot(String fileName, String actual) in tests/backend/Architecture/ArchitectureSupport.cs:line 61
+   at JE.Tests.Architecture.RouteAuthSnapshotTests.RouteVerbAuthAndBindingMatchTheSnapshot() in tests/backend/Architecture/RouteAuthSnapshotTests.cs:line 90
+   at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)
+   at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+  Standard Output Messages:
+ routes: 228, anonymous: 13
+ anonymous: GET JellyfinEnhanced/Configuration/jeAdmin.css (GetAdminStylesheet)
+ anonymous: GET JellyfinEnhanced/Configuration/jeAdmin.js (GetAdminScript)
+ anonymous: GET JellyfinEnhanced/ElsewhereBrandingIcon (GetElsewhereBrandingIcon)
+ anonymous: GET JellyfinEnhanced/bundle.js (GetScriptBundle)
+ anonymous: GET JellyfinEnhanced/bundle.js.map (GetScriptBundleMap)
+ anonymous: GET JellyfinEnhanced/cdn/{source}/{**path} (GetCdnAsset)
+ anonymous: GET JellyfinEnhanced/fonts/{name} (GetBundledFont)
+ anonymous: GET JellyfinEnhanced/js/{**path} (GetScript)
+ anonymous: GET JellyfinEnhanced/locales/{lang}.json (GetLocale)
+ anonymous: GET JellyfinEnhanced/logo/{size}/{file} (GetLogoImage)
+ anonymous: GET JellyfinEnhanced/public-config (GetPublicConfig)
+ anonymous: GET JellyfinEnhanced/script (GetMainScript)
+ anonymous: GET JellyfinEnhanced/version (GetVersion)
+
+
+Results File: $JE12_HOME/logs/1ebcc75d/only-trx/only.trx
+
+Failed!  - Failed:     1, Passed:    23, Skipped:     0, Total:    24, Duration: 682 ms - JE.Tests.dll (net10.0)
