@@ -2876,6 +2876,157 @@
       ],
       "evidence": "artifacts/restructure-plan/step-logs/upstream-sync-evidence/p87-*",
       "notes": "Re-implemented in client/src/features/media-tags/types/quality/quality-data.ts (qualityCss, which qualitytags.ts's buildCss calls; upstream's change is in js/tags/qualitytags.js's buildCss): the chip box from JE.core.tagRenderer.chipBaseCss is written once before the colour rules instead of once per quality colour. No other difference from upstream. The box declares no background or colour and every colour rule is more specific, so the chips look the same: on a lab every quality chip's computed look on the home page is identical on this tree before the port, after it and on upstream 8bff0750, and the stylesheet is 373,840 characters before and 25,583 after (upstream: 25,583). Upstream adds no test; tests/frontend/features/media-tags/features-quality-display.test.mjs gains 'the quality stylesheet writes the chip box once and one colour rule per quality', which injects the stylesheet as the tag pipeline does on registration and failed before the port (92 chip boxes). The other place that writes quality colours, tag-styles.ts (Tag Styles), writes no chip box per rule. Nothing stored or cached changes."
+    },
+    {
+      "sha": "801e1f1b802d94b5bd9e7944e13d2bf6822dd352",
+      "date": "2026-11-18T18:30:57+00:00",
+      "subject": "docs: Open in Jellyfin page, docs restructure, and move the build to Zensical (#1086)",
+      "class": "docs",
+      "features": [
+        "media-tags"
+      ],
+      "issues": [
+        "#1086"
+      ],
+      "release": null,
+      "size": {
+        "files": 46,
+        "insertions": 3416,
+        "deletions": 3873
+      },
+      "paths": [
+        ".github/docs/requirements.in",
+        ".github/docs/requirements.txt",
+        ".github/workflows/docs.yml",
+        "docs/about.md",
+        "docs/open-in-jellyfin.md",
+        "docs/advanced/community-analytics-dashboard.md",
+        "docs/advanced/community-analytics-settings.md",
+        "docs/advanced/community-analytics.md",
+        "docs/advanced/css-customization.md",
+        "docs/advanced/project-structure.md",
+        "docs/arr/arr-features.md",
+        "docs/arr/arr-settings.md",
+        "docs/arr/troubleshooting-support.md",
+        "docs/elsewhere/elsewhere-features.md",
+        "docs/elsewhere/elsewhere-settings.md",
+        "docs/enhanced/ (8 files)",
+        "docs/faq-support/faq.md",
+        "docs/getting-started/compatibility.md",
+        "docs/getting-started/index.md",
+        "docs/getting-started/pages-and-tabs.md",
+        "docs/getting-started/settings-overview.md",
+        "docs/installation/troubleshooting.md",
+        "docs/javascripts/extra.js",
+        "docs/other-projects/other-projects.md",
+        "docs/other/other-features.md",
+        "docs/other/other-settings.md",
+        "docs/seerr/permission-audit.md",
+        "docs/seerr/seerr-features.md",
+        "docs/seerr/seerr-settings.md",
+        "docs/spoiler-guard/spoiler-guard-features.md",
+        "docs/spoiler-guard/spoiler-guard-settings.md",
+        "docs/stylesheets/extra.css",
+        "mkdocs.yml",
+        "overrides/partials/copyright.html",
+        "overrides/partials/header.html",
+        "overrides/partials/je-icons.html",
+        "overrides/partials/nav-item.html",
+        "tests/frontend/features/features-media-tags-docs-links.test.mjs",
+        "tests/frontend/features/features-rating-sources.test.mjs"
+      ],
+      "status": "ported",
+      "rewriteCommits": [],
+      "evidence": "artifacts/restructure-plan/step-logs/upstream-sync-evidence/p88-*",
+      "notes": "Applied with git show 801e1f1b | git apply --3way. The workflow (.github/workflows/docs.yml), .github/docs/requirements.in and requirements.txt, docs/javascripts/extra.js, docs/stylesheets/extra.css, the overrides/ templates and the new pages (open-in-jellyfin.md, community-analytics-dashboard.md, community-analytics-settings.md, tags-groups.md, tags-layouts.md, tags-quality.md, tags-server.md, tags-status.md) are byte-identical to upstream's at 801e1f1b, apart from the lines below; mkdocs.yml is upstream's with this tree's own exclude of upstream-sync*. Nine pages conflicted because this tree's docs already said more than upstream's (community-analytics, arr-features, arr-settings, arr troubleshooting-support, enhanced-features, enhanced-settings, tags, other-features, seerr-features): each takes upstream's restructured text, and this tree's own wording goes to wherever upstream moved the sentence: the jf12-only build target note (community-analytics.md) and the dashboard's version check (now in community-analytics-dashboard.md); the Filter by Library Access wording (arr-settings.md, troubleshooting-support.md; arr-features.md's copy of the table is gone upstream); the Seerr watchlist settings under their names here (Requested media goes on the requester's watchlist, Seerr → Jellyfin: add Seerr watchlist items to Jellyfin) on the three arr pages; Show Playback Info opening Jellyfin's own panel (enhanced-settings.md's merged shortcut table, enhanced-features.md); the Activity paragraph about alternate versions without its 10.11 sentence; Size and opacity per tag (the Layout bullet in enhanced-settings.md, the tab table in tags.md, and a row of the Tag size and spacing table in tags-layouts.md, because upstream folded the personal Media Tags table this tree's row lived in into bullets); the Splash Screen Image URL default (other-settings.md, where the only table now is); and, in tags-status.md, the New Episode rule, Maintainerr's paged member reads and refresh conditions, its API key field, season marking and the TagCacheService path under Features/MediaTags. Upstream's two test edits are applied by hand at tests/frontend/features/media-tags/ (one folder deeper here): features-media-tags-docs-links.test.mjs accepts a heading on tags.md or a redirect in extra.js whose target heading exists, and the schema test in features-rating-sources.test.mjs looks across all tags*.md pages; both failed on the split docs with the old tests and pass with the new ones. Built locally with Zensical 0.1.2 from the hash-pinned requirements: before the port 4 warnings (three links to the missing #leaving-soon-maintainerr anchor, which upstream fixes, and docs/rewrite/README.md's link to REVIEW.md outside docs/), after it only that last one, which is this tree's and pre-existing. Nothing the plugin ships changes."
+    },
+    {
+      "sha": "3ada0a4e37b6d1af846ca60bbc977226ceb9523d",
+      "date": "2026-11-18T20:12:54+00:00",
+      "subject": "feat(reclaimerr): create Reclaimerr accounts for Jellyfin users and show a person's own removal requests",
+      "class": "feature",
+      "features": [
+        "admin",
+        "media-tags"
+      ],
+      "issues": [],
+      "release": null,
+      "size": {
+        "files": 4,
+        "insertions": 174,
+        "deletions": 7
+      },
+      "paths": [
+        "Jellyfin.Plugin.JellyfinEnhanced/Configuration/admin/sections.js",
+        "Jellyfin.Plugin.JellyfinEnhanced/Controllers/LeavingSoonController.cs",
+        "Jellyfin.Plugin.JellyfinEnhanced/Controllers/ReclaimerrController.cs",
+        "Jellyfin.Plugin.JellyfinEnhanced/Services/ReclaimerrActions.cs"
+      ],
+      "status": "pending",
+      "rewriteCommits": [],
+      "unmappedPaths": [
+        "Jellyfin.Plugin.JellyfinEnhanced/Controllers/LeavingSoonController.cs",
+        "Jellyfin.Plugin.JellyfinEnhanced/Controllers/ReclaimerrController.cs"
+      ]
+    },
+    {
+      "sha": "ba49f5f2402e2c30f326f72f1f7730d33d7497ce",
+      "date": "2026-11-18T20:14:22+00:00",
+      "subject": "chore(tests): regenerate production inventory",
+      "class": "test",
+      "features": [],
+      "issues": [],
+      "release": null,
+      "size": {
+        "files": 1,
+        "insertions": 11,
+        "deletions": 1
+      },
+      "paths": [
+        "tests/docs/production-inventory.json"
+      ],
+      "status": "pending",
+      "rewriteCommits": []
+    },
+    {
+      "sha": "4effcf597e6f533b0d3e5170e306bdcc863e1c7b",
+      "date": "2026-11-18T20:29:04+00:00",
+      "subject": "fix(activity): show season and episode for episodes in Active Streams",
+      "class": "fix",
+      "features": [
+        "activity"
+      ],
+      "issues": [],
+      "release": null,
+      "size": {
+        "files": 1,
+        "insertions": 2,
+        "deletions": 1
+      },
+      "paths": [
+        "Jellyfin.Plugin.JellyfinEnhanced/js/extras/activity-page.js"
+      ],
+      "status": "pending",
+      "rewriteCommits": []
+    },
+    {
+      "sha": "34c70f16a54f554e953d6d0e6561347bba405522",
+      "date": "2026-11-18T21:44:20+00:00",
+      "subject": "docs(api): document reclaimerr/create-users and bump the route total to 224",
+      "class": "docs",
+      "features": [],
+      "issues": [],
+      "release": null,
+      "size": {
+        "files": 1,
+        "insertions": 3,
+        "deletions": 2
+      },
+      "paths": [
+        "docs/advanced/api.md"
+      ],
+      "status": "pending",
+      "rewriteCommits": []
     }
   ]
 }
