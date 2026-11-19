@@ -3012,8 +3012,10 @@
       "paths": [
         "Jellyfin.Plugin.JellyfinEnhanced/js/extras/activity-page.js"
       ],
-      "status": "pending",
-      "rewriteCommits": []
+      "status": "ported",
+      "rewriteCommits": [],
+      "evidence": "artifacts/restructure-plan/step-logs/upstream-sync-evidence/p91-*",
+      "notes": "Re-implemented in client/src/features/activity: the Active Streams row names its item with getItemDisplayName (activity-page.ts renderSessionRow), as the history rows do, so an episode reads 'Series - S1:E2 - Episode'. Upstream maps the live item's ParentIndexNumber and IndexNumber at the render site; here the wire reader does it (model.ts readSessionItem, used by readSessions): a session's item is Jellyfin's own, a logged entry's carries SeasonNumber and EpisodeNumber. No other difference. The server already sends both numbers (Shared/Sessions/ActiveSessionsService.cs), on the direct route and in the bootstrap; under Spoiler Guard the episode's name is the one the server already hides it as, as upstream. The other session list, Chrome's Active Streams panel (features/chrome/active-streams.ts), already shows season and episode. Upstream adds no test; tests/frontend/pages/pages-activity.test.mjs gains one (an episode with both numbers, a special without them, a movie), which fails before the port. On the lab (Jellyfin 12.4) the web client's session reported as playing Final Space S1E1 shows on the Activity tab as 'real-admin is watching Final Space' before the port and 'real-admin is watching Final Space - S1:E1 - Chapter One' on upstream's build of 34c70f16 and on the port."
     },
     {
       "sha": "34c70f16a54f554e953d6d0e6561347bba405522",
