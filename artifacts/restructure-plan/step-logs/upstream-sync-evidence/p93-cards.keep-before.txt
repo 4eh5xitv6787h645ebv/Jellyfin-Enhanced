@@ -1,0 +1,11 @@
+$ je12 browse '#/home' --script p93-cards.mjs
+# deployed a90507e5+dirty (dll 8fe4500825476b63) on the je12 lab, 2026-11-19 21:30:46
+SCRIPT list: The Adventures of Paddington (Series) size=absent; Abominable (Movie) size=absent
+list keys: provider,admin,canRequest,actions,items,requests,mine
+grid columns: 6
+card: chip warn=Leaves in 5d | name=The Adventures of Paddington | sub=2019
+  layout: column, poster 171x257
+card: chip soon=Leaves in 12d | name=Abominable | sub=2019
+  layout: column, poster 171x257
+BLOCKED https://www.gstatic.com/cv/js/sender/v1/cast_sender.js
+URL /web/index.html#/home

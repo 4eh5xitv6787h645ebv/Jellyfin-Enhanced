@@ -1,0 +1,11 @@
+$ je12 browse '#/home' --script p93-cards.mjs
+# deployed aed3bc2d (dll 4d2b4ebbf990d322) on the je12 lab, 2026-11-19 21:52:12
+SCRIPT list: The Adventures of Paddington (Series) size=28688892866; Abominable (Movie) size=4391457063
+list keys: provider,admin,canRequest,actions,items,requests,mine,requestsUnavailable
+grid columns: 3
+card: name=The Adventures of Paddington | year=(2019) | chip warn=Leaves in 5d | sub=Leaves on 24 Nov 2026 · 26.7 GB
+  layout: row, poster 80x120
+card: name=Abominable | year=(2019) | chip soon=Leaves in 12d | sub=Leaves on 01 Dec 2026 · 4.1 GB
+  layout: row, poster 80x120
+BLOCKED https://www.gstatic.com/cv/js/sender/v1/cast_sender.js
+URL /web/index.html#/home

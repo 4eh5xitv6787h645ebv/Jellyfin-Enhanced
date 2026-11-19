@@ -1,0 +1,166 @@
+Recorded `je12 test --only` runs (je12 2.5.0), oldest first, with the tree each ran on.
+a90507e5+dirty@... is the tree before the port with the new tests (@f746754e and @8189cceb without the two new test
+files that cannot compile before it), a90507e5+dirty@5f3df788 the port with upstream's own review logic,
+@963e6062 and @68a384f3 the finished port before its commit, 93e90c96 the port's commit, fb7868c8 the ledger commit.
+
+2026-11-19 21:34:23  FAIL  tests/frontend/features/media-tags/features-leavingsoon-request-cards.test.mjs  on a90507e5+dirty@e88371b0
+    FAIL tests/frontend/features/media-tags/features-leavingsoon-request-cards.test.mjs :: a request says what it would delete, approving names that scope and carries the note, and a failed deletion stays visible  -- TypeError: Cannot read properties of null (reading 'textContent')
+    FAIL tests/frontend/features/media-tags/features-leavingsoon-request-cards.test.mjs :: the page says so when the requests could not be read, and a leaving card shows its date and a one-version note  -- TypeError: Cannot read properties of null (reading 'textContent')
+    FAIL tests/frontend/features/media-tags/features-leavingsoon-request-cards.test.mjs :: dates read like the Requests page: day, short month, year for the leave date, and "ago" for a recent request  -- AssertionError: not a numeric 12/10/2026
+    FAIL tests/frontend/features/media-tags/features-leavingsoon-request-cards.test.mjs :: a requester reads the note an administrator wrote, without the "by NAME in Jellyfin" attribution  -- AssertionError: Expected values to be strictly deep-equal: / + actual - expected /  /   [ / -   'gone in a week', /     '', / +   '', / +   '', / +   '' / -   'Not on Netflix or in Jellyfin', / -   'Not on Netflix or in Jellyfin)' /   ] / 
+    FAIL tests/frontend/features/media-tags/features-leavingsoon-request-cards.test.mjs :: a request's poster is the item's own, else TMDB's, and never another host Reclaimerr names  -- AssertionError: Expected values to be strictly equal: / + actual - expected /  / + 'https://image.tmdb.org/t/p/w185https://image.tmdb.org/t/p/w500/q.jpg' / - 'https://image.tmdb.org/t/p/w500/q.jpg' / 
+
+2026-11-19 21:34:37  FAIL  tests/frontend/features/media-tags/features-leavingsoon-page.test.mjs :: one version of a movie leaving says so, and item names are text, never markup  on a90507e5+dirty@e88371b0
+    FAIL tests/frontend/features/media-tags/features-leavingsoon-page.test.mjs :: one version of a movie leaving says so, and item names are text, never markup  -- TypeError: Cannot read properties of null (reading 'textContent')
+
+2026-11-19 21:34:52  ERROR  JE.Tests.Features.MediaTags.IntegrationReclaimerrActionsTests  on a90507e5+dirty@e88371b0
+    dotnet stopped in the build before any test ran: tests/backend/Features/MediaTags/IntegrationReclaimerrVersionSizeTests.cs(105,49): error CS1061: 'ReclaimerrActions' does not contain a definition for 'VersionSizeAsync' and no access; tests/backend/Features/MediaTags/IntegrationReclaimerrVersionSizeTests.cs(106,49): error CS1
+
+2026-11-19 21:35:15  FAIL  JE.Tests.Features.MediaTags.IntegrationReclaimerrActionsTests  on a90507e5+dirty@f746754e
+    FAIL JE.Tests.Features.MediaTags.IntegrationReclaimerrActionsTests.A_review_the_service_account_sends_names_the_administrator_in_the_note_and_one_sent_as_them_does_not  -- Assert.IsType() Failure: Value is not the exact type / Expected: typeof(Microsoft.AspNetCore.Mvc.OkObjectResult) / Actual:   typeof(Microsoft.AspNetCore.Mvc.NotFoundResult)
+    PASS JE.Tests.Features.MediaTags.IntegrationReclaimerrActionsTests.Candidates_are_read_with_the_token_and_scheduled_deletions_as_the_service_account_by_name
+    PASS JE.Tests.Features.MediaTags.IntegrationReclaimerrActionsTests.Mark_schedules_only_the_picked_version_of_a_movie_kept_twice_and_refuses_when_it_cannot_tell
+    FAIL JE.Tests.Features.MediaTags.IntegrationReclaimerrActionsTests.Requests_that_cannot_be_read_in_time_are_reported_and_a_slow_title_lookup_keeps_the_rows  -- Assert.Empty() Failure: Collection was not empty / Collection: [5]
+    FAIL JE.Tests.Features.MediaTags.IntegrationReclaimerrActionsTests.Leaving_items_carry_the_size_leaving_frees_and_one_version_the_size_of_that_version  -- System.Collections.Generic.KeyNotFoundException : The given key was not present in the dictionary.
+    PASS JE.Tests.Features.MediaTags.IntegrationReclaimerrActionsTests.A_removal_request_carries_the_mapped_user_and_their_note_and_a_waiting_one_is_not_filed_twice
+    PASS JE.Tests.Features.MediaTags.IntegrationReclaimerrActionsTests.Create_users_gives_each_Jellyfin_user_without_an_account_one_with_the_picked_permissions_and_maps_it
+    PASS JE.Tests.Features.MediaTags.IntegrationReclaimerrActionsTests.My_requests_merge_the_own_list_with_the_ones_filed_in_their_name_and_a_refused_own_list_hides_nothing
+    PASS JE.Tests.Features.MediaTags.IntegrationReclaimerrActionsTests.Only_administrators_act_and_review_while_anyone_who_can_see_an_item_learns_only_whether_they_may_request
+    FAIL JE.Tests.Features.MediaTags.IntegrationReclaimerrActionsTests.Approved_requests_that_failed_or_wait_stay_listed_with_their_scope_and_only_the_service_account_files_for_a_user  -- Assert.Equal() Failure: Collections differ /               ↓ (pos 1) / Expected: [1, 2, 4] / Actual:   [1]
+    PASS JE.Tests.Features.MediaTags.IntegrationReclaimerrActionsTests.A_request_filed_in_Reclaimerr_itself_is_shown_as_the_Jellyfin_user_of_the_same_name
+
+2026-11-19 21:35:34  FAIL  JE.Tests.Features.MediaTags.IntegrationReclaimerrActionsTests.A_review_the_service_account_sends_names_the_administrator_in_the_note_and_one_sent_as_them_does_not  on a90507e5+dirty@8189cceb
+    FAIL JE.Tests.Features.MediaTags.IntegrationReclaimerrActionsTests.A_review_the_service_account_sends_names_the_administrator_in_the_note_and_one_sent_as_them_does_not  -- Assert.Equal() Failure: Values differ / Expected: Tuple ("svc", "gone in a week (Approved by Admin in Jellyfin)") / Actual:   Tuple ("svc", "gone in a week")
+
+2026-11-19 21:36:43  FAIL  JE.Tests.Features.MediaTags.IntegrationReclaimerrActionsTests.A_review_the_service_account_sends_names_the_administrator_in_the_note_and_one_sent_as_them_does_not  on a90507e5+dirty@5f3df788
+    FAIL JE.Tests.Features.MediaTags.IntegrationReclaimerrActionsTests.A_review_the_service_account_sends_names_the_administrator_in_the_note_and_one_sent_as_them_does_not  -- Assert.Equal() Failure: Values differ / Expected: Tuple ("svc", "gone (Approved by Admin in Jellyfin)") / Actual:   Tuple ("svc", "gone")
+
+2026-11-19 21:37:14  FAIL  JE.Tests.Features.MediaTags.IntegrationReclaimerrActionsTests  on a90507e5+dirty@7f81656a
+    PASS JE.Tests.Features.MediaTags.IntegrationReclaimerrActionsTests.Create_users_gives_each_Jellyfin_user_without_an_account_one_with_the_picked_permissions_and_maps_it
+    FAIL JE.Tests.Features.MediaTags.IntegrationReclaimerrActionsTests.A_review_the_service_account_sends_names_the_administrator_in_the_note_and_one_sent_as_them_does_not  -- Assert.IsType() Failure: Value is not the exact type / Expected: typeof(Microsoft.AspNetCore.Mvc.OkObjectResult) / Actual:   typeof(Microsoft.AspNetCore.Mvc.ObjectResult)
+    PASS JE.Tests.Features.MediaTags.IntegrationReclaimerrActionsTests.Only_administrators_act_and_review_while_anyone_who_can_see_an_item_learns_only_whether_they_may_request
+    PASS JE.Tests.Features.MediaTags.IntegrationReclaimerrActionsTests.A_removal_request_carries_the_mapped_user_and_their_note_and_a_waiting_one_is_not_filed_twice
+    PASS JE.Tests.Features.MediaTags.IntegrationReclaimerrActionsTests.Candidates_are_read_with_the_token_and_scheduled_deletions_as_the_service_account_by_name
+    PASS JE.Tests.Features.MediaTags.IntegrationReclaimerrActionsTests.Approved_requests_that_failed_or_wait_stay_listed_with_their_scope_and_only_the_service_account_files_for_a_user
+    PASS JE.Tests.Features.MediaTags.IntegrationReclaimerrActionsTests.Mark_schedules_only_the_picked_version_of_a_movie_kept_twice_and_refuses_when_it_cannot_tell
+    PASS JE.Tests.Features.MediaTags.IntegrationReclaimerrActionsTests.My_requests_merge_the_own_list_with_the_ones_filed_in_their_name_and_a_refused_own_list_hides_nothing
+    PASS JE.Tests.Features.MediaTags.IntegrationReclaimerrActionsTests.A_request_filed_in_Reclaimerr_itself_is_shown_as_the_Jellyfin_user_of_the_same_name
+    FAIL JE.Tests.Features.MediaTags.IntegrationReclaimerrActionsTests.Requests_that_cannot_be_read_in_time_are_reported_and_a_slow_title_lookup_keeps_the_rows  -- Assert.Single() Failure: The collection was empty
+    PASS JE.Tests.Features.MediaTags.IntegrationReclaimerrActionsTests.Leaving_items_carry_the_size_leaving_frees_and_one_version_the_size_of_that_version
+
+2026-11-19 21:37:21  PASS  JE.Tests.Features.MediaTags.IntegrationReclaimerrVersionSizeTests  on a90507e5+dirty@7f81656a
+    PASS JE.Tests.Features.MediaTags.IntegrationReclaimerrVersionSizeTests.A_scheduled_deletion_gives_its_own_estimate_and_it_is_kept_between_asks
+    PASS JE.Tests.Features.MediaTags.IntegrationReclaimerrVersionSizeTests.Without_an_answer_the_size_is_unknown_instead_of_wrong
+    PASS JE.Tests.Features.MediaTags.IntegrationReclaimerrVersionSizeTests.A_candidate_gives_the_size_of_the_version_it_names_not_of_another_copy
+
+2026-11-19 21:37:27  PASS  JE.Tests.Features.MediaTags.ReclaimerrRequestRowTests  on a90507e5+dirty@7f81656a
+    PASS JE.Tests.Features.MediaTags.ReclaimerrRequestRowTests.The_filter_keeps_only_approved_requests_that_failed_or_are_held_back
+    PASS JE.Tests.Features.MediaTags.ReclaimerrRequestRowTests.A_request_keeps_its_scope_version_and_failure_so_the_page_never_shows_a_season_as_a_whole_title
+
+2026-11-19 21:37:34  PASS  JE.Tests.Features.MediaTags.LeavingSoonTests.A_request_row_serializes_with_the_lower_case_names_the_page_reads  on a90507e5+dirty@7f81656a
+    PASS JE.Tests.Features.MediaTags.LeavingSoonTests.A_request_row_serializes_with_the_lower_case_names_the_page_reads
+
+2026-11-19 21:37:49  FAIL  JE.Tests.Features.MediaTags.IntegrationReclaimerrActionsTests.A_review_the_service_account_sends_names_the_administrator_in_the_note_and_one_sent_as_them_does_not  on a90507e5+dirty@7f81656a
+    FAIL JE.Tests.Features.MediaTags.IntegrationReclaimerrActionsTests.A_review_the_service_account_sends_names_the_administrator_in_the_note_and_one_sent_as_them_does_not  -- Assert.IsType() Failure: Value is not the exact type / Expected: typeof(Microsoft.AspNetCore.Mvc.OkObjectResult) / Actual:   typeof(Microsoft.AspNetCore.Mvc.ObjectResult)
+
+2026-11-19 21:38:17  FAIL  JE.Tests.Features.MediaTags.IntegrationReclaimerrActionsTests.Requests_that_cannot_be_read_in_time_are_reported_and_a_slow_title_lookup_keeps_the_rows  on a90507e5+dirty@9010ba2f
+    FAIL JE.Tests.Features.MediaTags.IntegrationReclaimerrActionsTests.Requests_that_cannot_be_read_in_time_are_reported_and_a_slow_title_lookup_keeps_the_rows  -- Assert.Single() Failure: The collection was empty
+
+2026-11-19 21:38:54  PASS  JE.Tests.Features.MediaTags.IntegrationReclaimerrActionsTests  on a90507e5+dirty@68a384f3
+    PASS JE.Tests.Features.MediaTags.IntegrationReclaimerrActionsTests.A_removal_request_carries_the_mapped_user_and_their_note_and_a_waiting_one_is_not_filed_twice
+    PASS JE.Tests.Features.MediaTags.IntegrationReclaimerrActionsTests.A_request_filed_in_Reclaimerr_itself_is_shown_as_the_Jellyfin_user_of_the_same_name
+    PASS JE.Tests.Features.MediaTags.IntegrationReclaimerrActionsTests.Leaving_items_carry_the_size_leaving_frees_and_one_version_the_size_of_that_version
+    PASS JE.Tests.Features.MediaTags.IntegrationReclaimerrActionsTests.A_review_the_service_account_sends_names_the_administrator_in_the_note_and_one_sent_as_them_does_not
+    PASS JE.Tests.Features.MediaTags.IntegrationReclaimerrActionsTests.My_requests_merge_the_own_list_with_the_ones_filed_in_their_name_and_a_refused_own_list_hides_nothing
+    PASS JE.Tests.Features.MediaTags.IntegrationReclaimerrActionsTests.Only_administrators_act_and_review_while_anyone_who_can_see_an_item_learns_only_whether_they_may_request
+    PASS JE.Tests.Features.MediaTags.IntegrationReclaimerrActionsTests.Requests_that_cannot_be_read_in_time_are_reported_and_a_slow_title_lookup_keeps_the_rows
+    PASS JE.Tests.Features.MediaTags.IntegrationReclaimerrActionsTests.Approved_requests_that_failed_or_wait_stay_listed_with_their_scope_and_only_the_service_account_files_for_a_user
+    PASS JE.Tests.Features.MediaTags.IntegrationReclaimerrActionsTests.Candidates_are_read_with_the_token_and_scheduled_deletions_as_the_service_account_by_name
+    PASS JE.Tests.Features.MediaTags.IntegrationReclaimerrActionsTests.Create_users_gives_each_Jellyfin_user_without_an_account_one_with_the_picked_permissions_and_maps_it
+    PASS JE.Tests.Features.MediaTags.IntegrationReclaimerrActionsTests.Mark_schedules_only_the_picked_version_of_a_movie_kept_twice_and_refuses_when_it_cannot_tell
+
+2026-11-19 21:42:26  PASS  tests/frontend/features/media-tags/features-tag-translation-coverage.test.mjs  on a90507e5+dirty@963e6062
+    PASS tests/frontend/features/media-tags/features-tag-translation-coverage.test.mjs :: every shipped locale is reported and its translated Media Tags strings keep their placeholders
+    PASS tests/frontend/features/media-tags/features-tag-translation-coverage.test.mjs :: the coverage report counts every string the Media Tags code uses
+
+2026-11-19 21:42:29  PASS  tests/frontend/features/media-tags/features-leavingsoon-request-cards.test.mjs  on a90507e5+dirty@963e6062
+    PASS tests/frontend/features/media-tags/features-leavingsoon-request-cards.test.mjs :: a request says what it would delete, approving names that scope and carries the note, and a failed deletion stays visible
+    PASS tests/frontend/features/media-tags/features-leavingsoon-request-cards.test.mjs :: the page says so when the requests could not be read, and a leaving card shows its date and a one-version note
+    PASS tests/frontend/features/media-tags/features-leavingsoon-request-cards.test.mjs :: dates read like the Requests page: day, short month, year for the leave date, and "ago" for a recent request
+    PASS tests/frontend/features/media-tags/features-leavingsoon-request-cards.test.mjs :: a requester reads the note an administrator wrote, without the "by NAME in Jellyfin" attribution
+    PASS tests/frontend/features/media-tags/features-leavingsoon-request-cards.test.mjs :: a request's poster is the item's own, else TMDB's, and never another host Reclaimerr names
+
+2026-11-19 21:42:33  PASS  tests/frontend/features/media-tags/features-leavingsoon-page.test.mjs  on a90507e5+dirty@963e6062
+    PASS tests/frontend/features/media-tags/features-leavingsoon-page.test.mjs :: the page lists what is leaving with a days-left chip and filters movies and shows
+    PASS tests/frontend/features/media-tags/features-leavingsoon-page.test.mjs :: one version of a movie leaving says so, and item names are text, never markup
+    PASS tests/frontend/features/media-tags/features-leavingsoon-page.test.mjs :: an empty list says nothing is leaving, and a page that is off registers nothing
+    PASS tests/frontend/features/media-tags/features-leavingsoon-page.test.mjs :: a list that cannot be read says so instead of showing nothing is leaving, and a failed reload keeps the last list
+    PASS tests/frontend/features/media-tags/features-leavingsoon-page.test.mjs :: an administrator gets Keep and the date change on each card, and approves or denies pending requests
+    PASS tests/frontend/features/media-tags/features-leavingsoon-page.test.mjs :: a regular user sees their own requests with their state, and Maintainerr says postpone
+    PASS tests/frontend/features/media-tags/features-leavingsoon-page.test.mjs :: an action from the item menu reloads the page; stopping the page stops listening
+    PASS tests/frontend/features/media-tags/features-leavingsoon-page.test.mjs :: the native Home tab is registered only when the page uses it
+
+2026-11-19 21:42:42  PASS  tests/frontend/features/media-tags/features-tag-translation-coverage.test.mjs  on a90507e5+dirty@963e6062
+    PASS tests/frontend/features/media-tags/features-tag-translation-coverage.test.mjs :: every shipped locale is reported and its translated Media Tags strings keep their placeholders
+    PASS tests/frontend/features/media-tags/features-tag-translation-coverage.test.mjs :: the coverage report counts every string the Media Tags code uses
+
+2026-11-19 21:47:36  PASS  JE.Tests.Features.MediaTags.IntegrationReclaimerrActionsTests  on 93e90c96
+    PASS JE.Tests.Features.MediaTags.IntegrationReclaimerrActionsTests.A_review_the_service_account_sends_names_the_administrator_in_the_note_and_one_sent_as_them_does_not
+    PASS JE.Tests.Features.MediaTags.IntegrationReclaimerrActionsTests.Mark_schedules_only_the_picked_version_of_a_movie_kept_twice_and_refuses_when_it_cannot_tell
+    PASS JE.Tests.Features.MediaTags.IntegrationReclaimerrActionsTests.My_requests_merge_the_own_list_with_the_ones_filed_in_their_name_and_a_refused_own_list_hides_nothing
+    PASS JE.Tests.Features.MediaTags.IntegrationReclaimerrActionsTests.Requests_that_cannot_be_read_in_time_are_reported_and_a_slow_title_lookup_keeps_the_rows
+    PASS JE.Tests.Features.MediaTags.IntegrationReclaimerrActionsTests.Create_users_gives_each_Jellyfin_user_without_an_account_one_with_the_picked_permissions_and_maps_it
+    PASS JE.Tests.Features.MediaTags.IntegrationReclaimerrActionsTests.Leaving_items_carry_the_size_leaving_frees_and_one_version_the_size_of_that_version
+    PASS JE.Tests.Features.MediaTags.IntegrationReclaimerrActionsTests.Candidates_are_read_with_the_token_and_scheduled_deletions_as_the_service_account_by_name
+    PASS JE.Tests.Features.MediaTags.IntegrationReclaimerrActionsTests.Only_administrators_act_and_review_while_anyone_who_can_see_an_item_learns_only_whether_they_may_request
+    PASS JE.Tests.Features.MediaTags.IntegrationReclaimerrActionsTests.A_removal_request_carries_the_mapped_user_and_their_note_and_a_waiting_one_is_not_filed_twice
+    PASS JE.Tests.Features.MediaTags.IntegrationReclaimerrActionsTests.A_request_filed_in_Reclaimerr_itself_is_shown_as_the_Jellyfin_user_of_the_same_name
+    PASS JE.Tests.Features.MediaTags.IntegrationReclaimerrActionsTests.Approved_requests_that_failed_or_wait_stay_listed_with_their_scope_and_only_the_service_account_files_for_a_user
+
+2026-11-19 21:47:42  PASS  JE.Tests.Features.MediaTags.IntegrationReclaimerrVersionSizeTests  on 93e90c96
+    PASS JE.Tests.Features.MediaTags.IntegrationReclaimerrVersionSizeTests.Without_an_answer_the_size_is_unknown_instead_of_wrong
+    PASS JE.Tests.Features.MediaTags.IntegrationReclaimerrVersionSizeTests.A_scheduled_deletion_gives_its_own_estimate_and_it_is_kept_between_asks
+    PASS JE.Tests.Features.MediaTags.IntegrationReclaimerrVersionSizeTests.A_candidate_gives_the_size_of_the_version_it_names_not_of_another_copy
+
+2026-11-19 21:47:50  PASS  JE.Tests.Features.MediaTags.ReclaimerrRequestRowTests  on 93e90c96
+    PASS JE.Tests.Features.MediaTags.ReclaimerrRequestRowTests.The_filter_keeps_only_approved_requests_that_failed_or_are_held_back
+    PASS JE.Tests.Features.MediaTags.ReclaimerrRequestRowTests.A_request_keeps_its_scope_version_and_failure_so_the_page_never_shows_a_season_as_a_whole_title
+
+2026-11-19 21:47:56  PASS  JE.Tests.Features.MediaTags.LeavingSoonTests.A_request_row_serializes_with_the_lower_case_names_the_page_reads  on 93e90c96
+    PASS JE.Tests.Features.MediaTags.LeavingSoonTests.A_request_row_serializes_with_the_lower_case_names_the_page_reads
+
+2026-11-19 21:47:59  PASS  tests/frontend/features/media-tags/features-leavingsoon-request-cards.test.mjs  on 93e90c96
+    PASS tests/frontend/features/media-tags/features-leavingsoon-request-cards.test.mjs :: a request says what it would delete, approving names that scope and carries the note, and a failed deletion stays visible
+    PASS tests/frontend/features/media-tags/features-leavingsoon-request-cards.test.mjs :: the page says so when the requests could not be read, and a leaving card shows its date and a one-version note
+    PASS tests/frontend/features/media-tags/features-leavingsoon-request-cards.test.mjs :: dates read like the Requests page: day, short month, year for the leave date, and "ago" for a recent request
+    PASS tests/frontend/features/media-tags/features-leavingsoon-request-cards.test.mjs :: a requester reads the note an administrator wrote, without the "by NAME in Jellyfin" attribution
+    PASS tests/frontend/features/media-tags/features-leavingsoon-request-cards.test.mjs :: a request's poster is the item's own, else TMDB's, and never another host Reclaimerr names
+
+2026-11-19 21:48:02  PASS  tests/frontend/features/media-tags/features-leavingsoon-page.test.mjs  on 93e90c96
+    PASS tests/frontend/features/media-tags/features-leavingsoon-page.test.mjs :: the page lists what is leaving with a days-left chip and filters movies and shows
+    PASS tests/frontend/features/media-tags/features-leavingsoon-page.test.mjs :: one version of a movie leaving says so, and item names are text, never markup
+    PASS tests/frontend/features/media-tags/features-leavingsoon-page.test.mjs :: an empty list says nothing is leaving, and a page that is off registers nothing
+    PASS tests/frontend/features/media-tags/features-leavingsoon-page.test.mjs :: a list that cannot be read says so instead of showing nothing is leaving, and a failed reload keeps the last list
+    PASS tests/frontend/features/media-tags/features-leavingsoon-page.test.mjs :: an administrator gets Keep and the date change on each card, and approves or denies pending requests
+    PASS tests/frontend/features/media-tags/features-leavingsoon-page.test.mjs :: a regular user sees their own requests with their state, and Maintainerr says postpone
+    PASS tests/frontend/features/media-tags/features-leavingsoon-page.test.mjs :: an action from the item menu reloads the page; stopping the page stops listening
+    PASS tests/frontend/features/media-tags/features-leavingsoon-page.test.mjs :: the native Home tab is registered only when the page uses it
+
+2026-11-19 21:48:06  PASS  tests/frontend/features/media-tags/features-tag-translation-coverage.test.mjs  on 93e90c96
+    PASS tests/frontend/features/media-tags/features-tag-translation-coverage.test.mjs :: every shipped locale is reported and its translated Media Tags strings keep their placeholders
+    PASS tests/frontend/features/media-tags/features-tag-translation-coverage.test.mjs :: the coverage report counts every string the Media Tags code uses
+
+2026-11-19 21:48:33  FAIL  JE.Tests.BundleBudgetTests  on fb7868c8
+    PASS JE.Tests.BundleBudgetTests.BudgetOnlyRisesWithADocumentedReason
+    FAIL JE.Tests.BundleBudgetTests.ServedBundleIsWithinTheCheckedInBudget  -- bundle.js is 728,842 bytes gzip-9, over the 727,979 budget in client/bundle-budget.json. Make it smaller, or raise the budget in a new history entry with a reason.
+
+2026-11-19 21:48:39  PASS  JE.Tests.PackedResourcesTests  on fb7868c8
+    PASS JE.Tests.PackedResourcesTests.ScriptsMapsTwinsAndLocalesArePackedAndTheEnumeratedFilesAreNot
+    PASS JE.Tests.PackedResourcesTests.EveryClientFileReadsBackByteForByteUnderItsOwnResourceName
+    PASS JE.Tests.PackedResourcesTests.OnlyPackedResourcesAsksTheAssemblyForAResource
+    PASS JE.Tests.PackedResourcesTests.ThePackedLocalesAreWhatTheServerSideCaptionsAreReadFrom
+    PASS JE.Tests.PackedResourcesTests.WhatThePluginAssemblyEmbedsIsWithinTheCheckedInSizeBudget
+
+2026-11-19 21:50:08  PASS  JE.Tests.BundleBudgetTests  on fb7868c8+dirty@ce1c3918
+    PASS JE.Tests.BundleBudgetTests.ServedBundleIsWithinTheCheckedInBudget
+    PASS JE.Tests.BundleBudgetTests.BudgetOnlyRisesWithADocumentedReason

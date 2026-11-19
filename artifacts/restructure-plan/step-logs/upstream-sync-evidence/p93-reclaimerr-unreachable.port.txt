@@ -1,0 +1,5 @@
+$ sh p89-reclaimerr-config.sh on && je12 api admin GET /JellyfinEnhanced/leaving-soon/list
+# deployed build: a90507e5 with the port uncommitted (the same source as 93e90c96), Leaving soon page on; je12 logs then showed
+# [WRN] "[Reclaimerr] Could not read the deletion requests (not reachable)."
+HTTP 200
+{"provider": "reclaimerr", "admin": true, "canRequest": false, "actions": true, "items": [], "requests": [], "mine": [], "requestsUnavailable": false}
