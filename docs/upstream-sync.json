@@ -3228,7 +3228,9 @@
         "tests/frontend/features/features-leavingsoon-approval-timing.test.mjs"
       ],
       "status": "ported",
-      "rewriteCommits": [],
+      "rewriteCommits": [
+        "6d5dfdc5e1ec7bdf54412929b98658fb5a246383"
+      ],
       "unmappedPaths": [
         "Jellyfin.Plugin.JellyfinEnhanced/Controllers/LeavingSoonController.cs",
         "Jellyfin.Plugin.JellyfinEnhanced/Controllers/ReclaimerrController.cs",
