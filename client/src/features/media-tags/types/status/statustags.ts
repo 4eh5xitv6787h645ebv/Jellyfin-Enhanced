@@ -3,6 +3,7 @@ import { finite, isRecord, own, record, stringList, text, type JsonRecord } from
 import { addedDate, fromItem, fromServerEntry, normId, readFacts, readLeaving, releasedInOneDrop, toInt, toMs, watchedAll, type EpisodeFacts, type LeavingFacts, type MediaInputs, type StatusData } from './status-facts';
 import type { RefreshInfo, TagCtx, TagSpec } from '../../pipeline/contract';
 import { createSeriesWatch } from './series-watch';
+import { backdropStyles, createBackdropRequest } from './status-backdrop-request';
 
 interface BadgeDefinition { kind: string; style: string; label: string; compact?: string }
 interface StatusBadge { kind: string; key: string; label: string; compact?: string; rank?: number; title?: string }
@@ -73,6 +74,7 @@ export function createStatusTags(JE: TagRuntimeBridge) {
     const logPrefix = '🪼 Jellyfin Enhanced: Status Tags:';
     const containerClass = 'status-overlay-container';
     const tagClass = 'status-tag';
+    const { trackBackdrop, hostOf } = createBackdropRequest(JE, tagClass);
     const vocabulary = JE.statusVocabulary;
     const badgeDefinitions: Readonly<Record<string, BadgeDefinition>> = vocabulary.badges;
     const DAY_MS = vocabulary.thresholds.dayMs;
@@ -759,7 +761,8 @@ export function createStatusTags(JE: TagRuntimeBridge) {
         }
         container.appendChild(tag);
 
-        ctx.commitOverlay(el, container);
+        // The badge's blurred backdrop follows once the card is laid out (status-backdrop-request.ts).
+        if (ctx.commitOverlay(el, container)) trackBackdrop(hostOf(el));
     }
 
     /**
@@ -1293,7 +1296,7 @@ export function createStatusTags(JE: TagRuntimeBridge) {
                     text-overflow: ellipsis;
                     max-width: 100%;
                     pointer-events: none;
-                }
+                }${backdropStyles(tagClass)}
                 .${tagClass}--trending .${tagClass}-rank { color: #ffd166; }
                 /* Only the direct-play warning takes hover, for its tooltip. */
                 .${tagClass}[data-je-dp] { pointer-events: auto; cursor: help; }

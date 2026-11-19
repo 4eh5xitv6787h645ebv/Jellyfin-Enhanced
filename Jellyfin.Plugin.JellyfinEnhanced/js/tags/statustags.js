@@ -305,11 +305,80 @@
     };
   }
 
+  // client/src/features/media-tags/types/status/status-backdrop-request.ts
+  var BACKDROP_GROUP = "tag-status-backdrop";
+  var BACKDROP_RETRY_MS = 5e3;
+  var BACKDROP_RETRY_MAX_MS = 6e4;
+  function createBackdropRequest(JE, tagClass) {
+    let backdropAsked = false;
+    let backdropPause = 0;
+    let backdropNotBefore = 0;
+    let backdropTimer = 0;
+    function trackBackdrop(host) {
+      if (!host) return;
+      if (JE.statusTagBackdrop) {
+        JE.statusTagBackdrop.track(host);
+        return;
+      }
+      if (host.dataset.jeBlur !== "1") {
+        host.dataset.jeBlur = "1";
+        JE.core?.tagLayout?.syncFlowOf?.(host);
+      }
+      if (Date.now() >= backdropNotBefore) askForBackdrop();
+    }
+    function askForBackdrop() {
+      const loader = JE.loader;
+      if (backdropAsked || JE.statusTagBackdrop || typeof loader?.ensure !== "function") return;
+      backdropAsked = true;
+      if (backdropTimer) clearTimeout(backdropTimer);
+      backdropTimer = 0;
+      let asked;
+      try {
+        asked = Promise.resolve(loader.ensure([BACKDROP_GROUP], { pace: "boot" }));
+      } catch {
+        asked = Promise.resolve();
+      }
+      asked.catch(() => {
+      }).then(() => {
+        backdropAsked = false;
+        if (JE.statusTagBackdrop) return;
+        let ran = false;
+        try {
+          ran = loader.state?.()[BACKDROP_GROUP] === "ready";
+        } catch {
+          ran = false;
+        }
+        if (ran) {
+          backdropNotBefore = Infinity;
+          return;
+        }
+        backdropPause = Math.min(BACKDROP_RETRY_MAX_MS, backdropPause ? backdropPause * 2 : BACKDROP_RETRY_MS);
+        backdropNotBefore = Date.now() + backdropPause;
+        backdropTimer = setTimeout(() => {
+          backdropTimer = 0;
+          if (document.querySelector(`.je-tag-host .${tagClass}`)) askForBackdrop();
+        }, backdropPause);
+      });
+    }
+    function hostOf(el) {
+      if (el.classList?.contains("je-tag-host")) return el;
+      const host = Array.from(el.children || []).find((child) => child.classList.contains("je-tag-host"));
+      return host instanceof HTMLElement ? host : null;
+    }
+    return { trackBackdrop, hostOf };
+  }
+  var backdropStyles = (tagClass) => `
+                .je-tag-host:not([data-je-blur]) .${tagClass} {
+                    -webkit-backdrop-filter: none;
+                    backdrop-filter: none;
+                }`;
+
   // client/src/features/media-tags/types/status/statustags.ts
   function createStatusTags(JE) {
     const logPrefix = "🪼 Jellyfin Enhanced: Status Tags:";
     const containerClass = "status-overlay-container";
     const tagClass = "status-tag";
+    const { trackBackdrop, hostOf } = createBackdropRequest(JE, tagClass);
     const vocabulary = JE.statusVocabulary;
     const badgeDefinitions = vocabulary.badges;
     const DAY_MS = vocabulary.thresholds.dayMs;
@@ -734,7 +803,7 @@
         tag.textContent = badge.label;
       }
       container.appendChild(tag);
-      ctx.commitOverlay(el, container);
+      if (ctx.commitOverlay(el, container)) trackBackdrop(hostOf(el));
     }
     function badgeKey(badge) {
       return `${localDay(Date.now())}|${badge ? `${badge.kind}|${badge.key}|${badge.label}|${badge.rank ?? ""}|${badge.title ?? ""}` : ""}`;
@@ -1107,7 +1176,7 @@
                     text-overflow: ellipsis;
                     max-width: 100%;
                     pointer-events: none;
-                }
+                }${backdropStyles(tagClass)}
                 .${tagClass}--trending .${tagClass}-rank { color: #ffd166; }
                 /* Only the direct-play warning takes hover, for its tooltip. */
                 .${tagClass}[data-je-dp] { pointer-events: auto; cursor: help; }

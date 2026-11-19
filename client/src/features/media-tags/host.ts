@@ -19,6 +19,7 @@ import type { DirectPlay } from './types/direct-play/tag-direct-play';
 import type { ItemEditor } from './editor/tag-item-editor';
 import type { MaintainerrMenu } from './editor/maintainerr-item-menu';
 import type { JsonRecord } from './pipeline/dto';
+import type { StatusTagBackdrop } from './types/status/backdrop/painter';
 
 /** Mutable settings documents with dynamic group keys; values stay unknown until read. */
 export type SettingsDocument = Record<string, unknown>;
@@ -107,6 +108,8 @@ export interface TagRuntimeBridge {
         state?(): Record<string, 'loading' | 'ready'>;
     };
     internals?: TagRuntimeInternals;
+    /** The status tags' painted backdrop (tags/status-tag-backdrop.js, its own component group): set once that group has run. */
+    statusTagBackdrop?: StatusTagBackdrop;
     spoilerBlur?: SpoilerGuardFacade;
     /** media-tags' facade for the details page's visits: the object in `JE.internals.peopleTags` (step C4). */
     peopleTags?: TagRuntimeInternals['peopleTags'];

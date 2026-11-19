@@ -145,6 +145,8 @@ export function createGroupRules(JE: LoaderNamespace) {
         'tags': { needed: route => posterTagsOn() || removalOffered() || pageRule('tags')(route) },
         'tag-direct-play': { needed: () => posterTagsOn() && userSetting('statusTagsEnabled') && userSetting('statusTagsDirectPlay') },
         'tag-poster-colours': { needed: () => posterTagsOn() && !!config().TagStyleWebActive },
+        // Asked for by tags/statustags.js when the first status tag is drawn (JE.loader.ensure), never at boot.
+        'tag-status-backdrop': { needed: () => false },
         'tag-people': { needed: route => isDetailsRoute(route) && userSetting('peopleTagsEnabled') },
         // Both act before content paints, so they are never deferred.
         'spoiler-guard': { needed: () => !!config().SpoilerBlurEnabled },

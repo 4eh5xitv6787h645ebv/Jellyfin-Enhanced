@@ -9,8 +9,8 @@
     "outsideOrderedManifest": 27
   },
   "currentCounts": {
-    "javascriptFiles": 210,
-    "typedOutputs": 210,
+    "javascriptFiles": 211,
+    "typedOutputs": 211,
     "legacyJavascript": 0,
     "inlineRuntimeScripts": 0,
     "typedHtmlScripts": 11
@@ -1622,6 +1622,14 @@
       "existedAtBaseline": true,
       "status": "typed-output",
       "source": "client/src/features/media-tags/types/ratings/ratingtags-entry.ts",
+      "manifest": "client/entries/tag-runtime.json"
+    },
+    {
+      "path": "js/tags/status-tag-backdrop.js",
+      "orderedComponent": true,
+      "existedAtBaseline": false,
+      "status": "typed-output",
+      "source": "client/src/features/media-tags/types/status/backdrop/status-tag-backdrop-entry.ts",
       "manifest": "client/entries/tag-runtime.json"
     },
     {

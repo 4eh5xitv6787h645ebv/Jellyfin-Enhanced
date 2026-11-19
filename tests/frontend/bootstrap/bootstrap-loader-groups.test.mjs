@@ -654,3 +654,35 @@ test('the tag layout\'s custom properties are registered as the loader starts, i
   assert.deepEqual(seen, names);
   assert.equal(typeof again.h.window.JellyfinEnhanced.cdn.url, 'function', 'the loader ran on');
 });
+
+test('the status-tag backdrop painter is its own group: no boot and no page change loads it, a direct request loads it alone', async t => {
+  const manifest = manifestModules();
+  const groups = rawGroups();
+  const resolved = new Map(resolveGroups(manifest, groups).map(group => [group.id, group.scripts]));
+  assert.deepEqual(resolved.get('tag-status-backdrop'), ['tags/status-tag-backdrop.js'], 'the group holds the painter and nothing else');
+  assert.deepEqual(groups.find(group => group.id === 'tag-status-backdrop').after, ['tags']);
+  // tags/statustags.js asks for the group by this id when the first status tag is drawn (the built script: either quote).
+  const statusTags = readFileSync(resolve(jsRoot, 'tags/statustags.js'), 'utf8');
+  assert.match(statusTags, /\bBACKDROP_GROUP = ['"]tag-status-backdrop['"];/);
+  assert.ok(resolved.get('tags').includes('tags/statustags.js') && !resolved.get('tags').includes('tags/status-tag-backdrop.js'));
+
+  const boot = bootLoader(t, { manifest, groups, real: TAB_MODULES, userSettings: { StatusTagsEnabled: true, StatusTagsDirectPlay: true } });
+  await boot.booted();
+  await boot.navigate('#/details?id=1');
+  await boot.navigate('#/home');
+  const loaded = () => boot.asked.flatMap(list => list.split(','));
+  assert.ok(loaded().includes('tags'), 'status tags are on: the tags load at boot');
+  assert.ok(!loaded().includes('tag-status-backdrop'), `the painter is not part of a boot or a page change (${boot.asked.join(' | ')})`);
+  assert.ok(!modulesRun(boot.log).includes('tags/status-tag-backdrop.js'));
+
+  // Asked for as tags/statustags.js does: at the boot bundle's pace, when the page is idle and at low priority.
+  assert.match(statusTags, /\.ensure\(\[BACKDROP_GROUP\], \{ pace: ['"]boot['"] \}\)/);
+  const before = boot.log.length;
+  await boot.plugin.loader.ensure(['tag-status-backdrop'], { pace: 'boot' });
+  assert.equal(boot.asked.at(-1), 'tag-status-backdrop', 'one request, for that group alone');
+  assert.equal(boot.requests.at(-1).priority, 'low');
+  assert.deepEqual(modulesRun(boot.log.slice(before)), ['tags/status-tag-backdrop.js']);
+  const requests = boot.asked.length;
+  await boot.plugin.loader.ensure(['tag-status-backdrop']);
+  assert.equal(boot.asked.length, requests, 'asked for once');
+});

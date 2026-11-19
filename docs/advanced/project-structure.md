@@ -109,6 +109,7 @@ The groups, in the order they run:
 | `tags` | Poster tags: shared renderer, layout, look rules, cache store and pipeline, the nine poster tag renderers, web tag styles, review ratings on posters, and the item menu's Media Tags row and editor. Its `tags/tag-item-menu.js` also carries the Maintainerr and removal-request rows of the item menu and the Leaving Soon page with its Home tab (upstream's groups `removal-menu` and `leavingsoon-page`, folded into that output here). | | At boot, when any poster tag type (quality, genre, rating, age rating, status, awards, custom, language or logo) is on for the user, or when the server offers Maintainerr actions or removal requests; and by the JE page rule above for Leaving Soon (no standalone delivery). |
 | `tag-direct-play` | Status tags' direct-play warning. | `tags` | With the tags, when Status tags and their direct-play warning are on for the user. |
 | `tag-poster-colours` | Poster colour sampling for the Poster tag style. | `tags` | With the tags, when web tag styles are active (`TagStyleWebActive`). |
+| `tag-status-backdrop` | The blurred backdrop of status tags, painted as a picture under each tag. | `tags` | When the first status tag is drawn on a page (`tags/statustags.js` asks for it); never at boot. |
 | `tag-people` | People tags on cast cards. | | On an item's details page, when People tags are on for the user. |
 | `spoiler-guard` | Spoiler Guard. | | At boot, when Spoiler Guard is enabled. Never waits for a page, so it acts before content paints. |
 | `details` | Details-page chips and buttons: media information, release dates and their page wiring. | | On an item's details page. |
@@ -144,7 +145,7 @@ The details-page groups other than `details` read the shared module `details-pro
 
 | Member | What it does |
 |---|---|
-| `ensure(ids, { pace })` | Loads the groups (and their `after` groups) if needed. Resolves once they have run and started, after every batch asked for before them; it never rejects. `pace` is optional: `'boot'` fetches at low priority and runs the modules in idle time, for work that can wait for the page. |
+| `ensure(ids, { pace })` | Loads the groups (and their `after` groups) if needed. Resolves once they have run and started, after every batch asked for before them; it never rejects. `pace` is optional: `'boot'` fetches at low priority and runs the modules in idle time, for work that can wait for the page (the status-tag backdrop is asked for this way). |
 | `needed()` | The groups the current page, configuration and user need. |
 | `state()` | Each group asked for so far: `loading` or `ready`. |
 | `settled()` | Resolves when nothing is loading. |
@@ -428,6 +429,7 @@ Administrator settings under [**\*arr** → **Shoko**](../open-in-jellyfin.md?ta
 | `logotags.js` | Logo Tags: the streaming provider, network or studio logo chips (server-proxied images, name chips with initials as the fallback); also builds the hub preview's samples. |
 | `customtags.js` | Custom Tags: one chip per administrator rule the item matched (label, optional genre-set icon, with source tooltips for administrators only), from the cache entry's or `tag-data`'s `CustomTags`; Tag Styles hooks `data-je-custom`. |
 | `statustags.js` | Status Tags: first-match badge per card for added/release dates, season milestones, schedules, trending and optional series status. Batches visible series through `status-tags/series`, guards stale card/user answers and supplies compact labels and `data-je-status` styling hooks. |
+| `status-tag-backdrop.js` | The blurred backdrop of status tags, painted once as a picture under each tag instead of `backdrop-filter` (the artwork under the tag, blurred the way Chromium's backdrop filter blurs it, in idle slices, once the page has been quiet). A component group of its own: `statustags.js` asks for it when the first status tag is drawn, so a page without one never downloads it, and a tag has the live `backdrop-filter` until its picture is there and wherever a picture cannot stand in. |
 | `peopletags.js` | Cast age, birthplace flags and deceased indicators. |
 | `userreviewtags.js` | Average of rated reviews visible to the current viewer, composed into the rating group through the layout controller. Uses tag-cache averages or batched `/JellyfinEnhanced/reviews/ratings` requests. |
 | `tag-cache-store.js` | IndexedDB snapshot scoped by server and user; memory-only fallback when unavailable. A snapshot from another entry schema is not restored. |
