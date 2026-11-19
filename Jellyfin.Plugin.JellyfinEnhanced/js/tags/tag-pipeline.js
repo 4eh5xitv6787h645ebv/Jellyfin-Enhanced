@@ -1707,7 +1707,6 @@
                 .je-tag-host .age-rating-overlay-container,
                 .je-tag-host .status-overlay-container,
                 .je-tag-host .logo-overlay-container {
-                    contain: layout style;
                     pointer-events: none;
                     z-index: auto !important;
                 }

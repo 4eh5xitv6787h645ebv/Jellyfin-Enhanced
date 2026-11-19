@@ -126,12 +126,14 @@ export function createTagPipeline(JE: TagRuntimeBridge) {
             });
         }
 
-        // Inject CSS containment for all tag overlay containers.
-        // This tells the browser these elements are independent from the rest of the
-        // card layout, so hover transforms don't trigger re-layout/re-paint of overlays.
-        // will-change:transform promotes each container to its own compositor layer.
+        // Base CSS for the tag host and the group containers inside it. The containers used
+        // to carry `contain: layout style` (from when cards scaled on hover). It made each one
+        // a stacking context of its own, around six a card, which cost more to paint, composite
+        // and hit-test on every frame than it saved: they are flex containers positioned by
+        // their slot, so nothing about their layout or paint order needs it. (Chromium painted
+        // a contained box from a whole pixel; layout/snap.ts moves the containers there instead.)
         if (JE.helpers?.addCSS) {
-            // Base CSS: tag host and containment
+            // Base CSS: tag host
             JE.helpers.addCSS('je-tag-pipeline-perf', `
                 .je-tag-host {
                     position: absolute !important;
@@ -147,7 +149,6 @@ export function createTagPipeline(JE: TagRuntimeBridge) {
                 .je-tag-host .age-rating-overlay-container,
                 .je-tag-host .status-overlay-container,
                 .je-tag-host .logo-overlay-container {
-                    contain: layout style;
                     pointer-events: none;
                     z-index: auto !important;
                 }
