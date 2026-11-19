@@ -3190,7 +3190,9 @@
         "tests/frontend/features/features-admin-config-media-tags-tab.test.mjs"
       ],
       "status": "ported",
-      "rewriteCommits": [],
+      "rewriteCommits": [
+        "6be487cfbe844549282e602c81ed9211fe4707b9"
+      ],
       "evidence": "artifacts/restructure-plan/step-logs/upstream-sync-evidence/p95-*",
       "notes": "Re-implemented in the media-tags feature: upstream's askOnPage is in client/src/features/media-tags/admin/admin-tags.ts and goes to page.ts as its askConfirm dependency, so every confirmation the tab asks through confirmAction (ctx.confirm: Apply defaults to all users, Rebuild cache, Reset all colours, the import, preset removal, Clear all browser caches) uses JEAdmin.confirm. JEAdmin is read through a new pageDialogs() accessor in the tab's host surface (admin/host.ts), typed with its confirm only. As upstream: the question goes to JEAdmin.confirm as text, the way the page's other confirmations pass theirs (that dialog escapes it except the few formatting tags it allows, and turns line breaks into <br>), an answer that throws or rejects counts as No, Jellyfin's dialog is used only when JEAdmin.confirm is missing, and the prompt after leaving the page with unsaved edits (leaveWithPending) still asks with Jellyfin's dialog. Upstream's test applies as is in tests/frontend/features/media-tags/admin/features-admin-config-media-tags-tab.test.mjs."
     }
