@@ -13,7 +13,7 @@
 
   // client/generated-shared/stub/client/src/features/media-tags/host.ts
   var shared = /* @__PURE__ */ sharedModule("features/media-tags/host");
-  var export4 = /* @__PURE__ */ sharedExport(shared, "tagRuntimeHost");
+  var export5 = /* @__PURE__ */ sharedExport(shared, "tagRuntimeHost");
 
   // client/src/features/media-tags/layout/tag-layout-styles.ts
   function createLayoutStyles(JE) {
@@ -742,7 +742,7 @@
   }
 
   // client/src/features/media-tags/layout/tag-layout-styles-entry.ts
-  createLayoutStyles(export4());
+  createLayoutStyles(export5());
 })();
 })();
 //# sourceMappingURL=tag-layout-styles.js.map

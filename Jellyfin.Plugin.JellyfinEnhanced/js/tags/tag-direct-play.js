@@ -15,11 +15,11 @@
   var shared = /* @__PURE__ */ sharedModule("features/media-tags/host");
   var export0 = /* @__PURE__ */ sharedExport(shared, "apiClient");
   var export1 = /* @__PURE__ */ sharedExport(shared, "hasApiClient");
-  var export4 = /* @__PURE__ */ sharedExport(shared, "tagRuntimeHost");
+  var export5 = /* @__PURE__ */ sharedExport(shared, "tagRuntimeHost");
 
   // client/generated-shared/stub/client/src/features/media-tags/pipeline/dto.ts
   var shared2 = /* @__PURE__ */ sharedModule("features/media-tags/pipeline/dto");
-  var export42 = /* @__PURE__ */ sharedExport(shared2, "isRecord");
+  var export4 = /* @__PURE__ */ sharedExport(shared2, "isRecord");
   var export9 = /* @__PURE__ */ sharedExport(shared2, "own");
   var export10 = /* @__PURE__ */ sharedExport(shared2, "record");
   var export11 = /* @__PURE__ */ sharedExport(shared2, "records");
@@ -723,7 +723,7 @@
 
   // client/src/features/media-tags/types/direct-play/tag-direct-play.ts
   function isTimedOut(error) {
-    return export42(error) && error.timedOut === true;
+    return export4(error) && error.timedOut === true;
   }
   function storedResult(value) {
     return {
@@ -896,7 +896,7 @@ ${name}=${value}`;
       return isProfile(copy) ? copy : profile;
     }
     function isProfile(p) {
-      return export42(p) && Array.isArray(p.DirectPlayProfiles);
+      return export4(p) && Array.isArray(p.DirectPlayProfiles);
     }
     function build() {
       const b = browserFlags();
@@ -919,7 +919,7 @@ ${name}=${value}`;
         const shell = typeof window !== "undefined" ? profileWindow().NativeShell?.AppHost : null;
         const version = export1() && export0().appVersion?.() || "";
         const native = typeof shell?.getDeviceProfile === "function" ? shell.getDeviceProfile(builder, version) : null;
-        if (export42(native) && typeof native.then === "function") {
+        if (export4(native) && typeof native.then === "function") {
           const pending = Promise.resolve(native).then((answer) => {
             if (!isProfile(answer) || own !== builds) return;
             const profile2 = recording(() => withHostSettings(profileSettings, clone(answer), b));
@@ -979,7 +979,7 @@ ${name}=${value}`;
       const answers = export10(info).MediaSources;
       const sources = Array.isArray(answers) ? answers : [];
       const source = sourceId && export11(sources).find((s) => s.Id === sourceId) || sources[0] || null;
-      if (!export42(source)) return null;
+      if (!export4(source)) return null;
       let reasons = Array.isArray(source.TranscodeReasons) ? export12(source.TranscodeReasons) : typeof source.TranscodeReasons === "string" ? source.TranscodeReasons.split(/[,\s]+/).filter(Boolean) : [];
       if (!reasons.length && typeof source.TranscodingUrl === "string") {
         const match = /[?&]TranscodeReasons=([^&]+)/i.exec(source.TranscodingUrl);
@@ -1420,7 +1420,7 @@ ${name}=${value}`;
   }
 
   // client/src/features/media-tags/types/direct-play/tag-direct-play-entry.ts
-  createDirectPlay(export4());
+  createDirectPlay(export5());
 })();
 })();
 //# sourceMappingURL=tag-direct-play.js.map

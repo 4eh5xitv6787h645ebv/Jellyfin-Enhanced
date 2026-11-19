@@ -15,15 +15,15 @@
   var shared = /* @__PURE__ */ sharedModule("features/media-tags/host");
   var export0 = /* @__PURE__ */ sharedExport(shared, "apiClient");
   var export1 = /* @__PURE__ */ sharedExport(shared, "hasApiClient");
-  var export4 = /* @__PURE__ */ sharedExport(shared, "tagRuntimeHost");
+  var export5 = /* @__PURE__ */ sharedExport(shared, "tagRuntimeHost");
 
   // client/generated-shared/stub/client/src/features/media-tags/pipeline/dto.ts
   var shared2 = /* @__PURE__ */ sharedModule("features/media-tags/pipeline/dto");
   var export12 = /* @__PURE__ */ sharedExport(shared2, "errorStatus");
   var export2 = /* @__PURE__ */ sharedExport(shared2, "finite");
   var export3 = /* @__PURE__ */ sharedExport(shared2, "idText");
-  var export42 = /* @__PURE__ */ sharedExport(shared2, "isRecord");
-  var export5 = /* @__PURE__ */ sharedExport(shared2, "memberRecord");
+  var export4 = /* @__PURE__ */ sharedExport(shared2, "isRecord");
+  var export52 = /* @__PURE__ */ sharedExport(shared2, "memberRecord");
   var export7 = /* @__PURE__ */ sharedExport(shared2, "members");
   var export8 = /* @__PURE__ */ sharedExport(shared2, "normalizeItemId");
   var export10 = /* @__PURE__ */ sharedExport(shared2, "record");
@@ -32,14 +32,14 @@
 
   // client/src/features/media-tags/pipeline/state.ts
   function entryPairs(items) {
-    return Object.entries(export10(items)).filter((pair) => export42(pair[1]));
+    return Object.entries(export10(items)).filter((pair) => export4(pair[1]));
   }
   var servedAtOf = (resp) => typeof resp.servedAt === "number" ? resp.servedAt : 0;
   var textOrEmpty = (value) => typeof value === "string" ? value : "";
   var cursorOf = (resp) => export2(resp.timestamp) ?? 0;
   function firstItem(response) {
     const first = Array.isArray(response.Items) ? response.Items[0] : null;
-    return export42(first) ? first : null;
+    return export4(first) ? first : null;
   }
   var MEDIA_TYPES = /* @__PURE__ */ new Set(["Movie", "Episode", "Series", "Season", "BoxSet", "Video"]);
   var isMediaType = (type) => typeof type === "string" && MEDIA_TYPES.has(type);
@@ -273,7 +273,7 @@
           dataType: "json"
         });
         if (JE.session && !JE.session.isCurrent(requestEpoch)) return;
-        if (!export42(resp) || !resp.items || !s.serverCache || generation !== s.cacheGeneration) return;
+        if (!export4(resp) || !resp.items || !s.serverCache || generation !== s.cacheGeneration) return;
         deps.applyReviewRatings(resp, requestedAt);
         const revision = textOrEmpty(resp.filterRevision);
         const rolledBack = typeof resp.timestamp === "number" && resp.timestamp < base.timestamp;
@@ -484,7 +484,7 @@
             dataType: "json"
           }));
           if (generation !== s.cacheGeneration || JE.session && !JE.session.isCurrent(epoch)) return;
-          for (const entry of export7(response.Items)) rememberItemFacts(export5(entry));
+          for (const entry of export7(response.Items)) rememberItemFacts(export52(entry));
         } catch {
         }
       }
@@ -519,9 +519,9 @@
         }
         const stored = JSON.parse(localStorage.getItem(LOOK_FACTS_KEY) || "{}");
         const clearedAt = Number(JE.pluginConfig?.ClearLocalStorageTimestamp || 0);
-        if (export42(stored)) {
+        if (export4(stored)) {
           for (const [id, facts] of Object.entries(stored)) {
-            if (export42(facts) && Number(facts.at) > clearedAt) s.lookFacts.set(id, facts);
+            if (export4(facts) && Number(facts.at) > clearedAt) s.lookFacts.set(id, facts);
           }
           if (s.lookFacts.size !== Object.keys(stored).length) saveLookFacts();
         }
@@ -659,8 +659,8 @@
         }));
         const answered = export7(response.Items);
         if (!isCurrent()) return;
-        if (needsLatestEpisode) answered.forEach((item) => deps.rememberItemFacts(export5(item)));
-        const items = answered.map(export5);
+        if (needsLatestEpisode) answered.forEach((item) => deps.rememberItemFacts(export52(item)));
+        const items = answered.map(export52);
         const stripRevision = typeof response.StripRevision === "string" ? response.StripRevision : null;
         s.tagStripRevision = stripRevision;
         const parentSeriesNeeded = /* @__PURE__ */ new Set();
@@ -741,7 +741,7 @@
         const pendingFirstEps = [];
         let renderedSinceYield = 0;
         for (const item of items) {
-          const firstEpisode = export42(item.FirstEpisode) ? item.FirstEpisode : null;
+          const firstEpisode = export4(item.FirstEpisode) ? item.FirstEpisode : null;
           if (anyNeedsFirstEp && firstEpisode?.NeedsStreamFetch) {
             pendingFirstEps.push(
               deps.getFirstEpisode(userId, String(item.Id), export3(firstEpisode.Id)).then((ep) => renderItem(item, ep)).catch(() => renderItem(item, null)).then(() => {
@@ -772,7 +772,7 @@
           try {
             const item = JE.helpers?.getItemCached ? await JE.helpers.getItemCached(itemId, { userId }) : await deps.apiClient().getItem(userId, itemId);
             if (!isCurrent()) return;
-            if (!export42(item) || !isMediaType(item.Type)) continue;
+            if (!export4(item) || !isMediaType(item.Type)) continue;
             deps.rememberLookFacts(itemId, item, "item");
             const firstEpisode = item.Type === "Series" || item.Type === "Season" ? await deps.getFirstEpisode(userId, String(item.Id)) : null;
             if (!isCurrent()) break;
@@ -1198,7 +1198,7 @@
       const promise = (async () => {
         try {
           const item = JE.helpers?.getItemCached ? await JE.helpers.getItemCached(seriesId, { userId }) : await deps.apiClient().getItem(userId, seriesId);
-          return export42(item) ? item : null;
+          return export4(item) ? item : null;
         } catch {
           return null;
         }
@@ -1228,13 +1228,13 @@
       s.reviewRatingsRequestedAt = requestedAt;
       const previous = s.reviewRatings;
       const raw = resp.reviewRatings;
-      if (!export42(raw)) {
+      if (!export4(raw)) {
         s.reviewRatings = null;
       } else {
         const map = /* @__PURE__ */ new Map();
         for (const key in raw) {
           const value = raw[key];
-          if (export42(value) && typeof value.average === "number" && Number.isFinite(value.average)) {
+          if (export4(value) && typeof value.average === "number" && Number.isFinite(value.average)) {
             map.set(key, value.average);
           }
         }
@@ -1468,7 +1468,7 @@
     async function fetchFullPages(userId, fresh, requestEpoch, scope) {
       const get = async (params) => {
         const resp = await deps.apiClient().ajax({ type: "GET", url: deps.apiClient().getUrl(`/JellyfinEnhanced/tag-cache/${userId}`, params), dataType: "json" });
-        return JE.session && !JE.session.isCurrent(requestEpoch) || !export42(resp) ? null : resp;
+        return JE.session && !JE.session.isCurrent(requestEpoch) || !export4(resp) ? null : resp;
       };
       const base = fresh ? { fresh } : {};
       for (let attempt = 0; attempt <= FULL_LOAD_RESTARTS; attempt++) {
@@ -1940,7 +1940,7 @@
   }
 
   // client/src/features/media-tags/pipeline/tag-pipeline-entry.ts
-  createTagPipeline(export4());
+  createTagPipeline(export5());
 })();
 })();
 //# sourceMappingURL=tag-pipeline.js.map

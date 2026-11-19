@@ -15,12 +15,12 @@
   var shared = /* @__PURE__ */ sharedModule("features/media-tags/host");
   var export0 = /* @__PURE__ */ sharedExport(shared, "apiClient");
   var export1 = /* @__PURE__ */ sharedExport(shared, "hasApiClient");
-  var export4 = /* @__PURE__ */ sharedExport(shared, "tagRuntimeHost");
+  var export5 = /* @__PURE__ */ sharedExport(shared, "tagRuntimeHost");
 
   // client/generated-shared/stub/client/src/features/media-tags/pipeline/dto.ts
   var shared2 = /* @__PURE__ */ sharedModule("features/media-tags/pipeline/dto");
   var export2 = /* @__PURE__ */ sharedExport(shared2, "finite");
-  var export42 = /* @__PURE__ */ sharedExport(shared2, "isRecord");
+  var export4 = /* @__PURE__ */ sharedExport(shared2, "isRecord");
   var export9 = /* @__PURE__ */ sharedExport(shared2, "own");
   var export10 = /* @__PURE__ */ sharedExport(shared2, "record");
   var export11 = /* @__PURE__ */ sharedExport(shared2, "records");
@@ -30,7 +30,7 @@
   // client/src/features/media-tags/types/status/status-facts.ts
   var MAX_DATE_MS = 864e13;
   function readLeaving(raw) {
-    if (!export42(raw)) return null;
+    if (!export4(raw)) return null;
     const deleteAt = toMs(raw.DeleteAt ?? raw.deleteAt ?? null);
     return { deleteAt: deleteAt !== null && Math.abs(deleteAt) <= MAX_DATE_MS ? deleteAt : null };
   }
@@ -60,7 +60,7 @@
     const count = toInt(span.Count);
     const isLast = export10(src.EpisodeIndex).IsLast;
     return {
-      scenes: export42(src.Scenes) ? src.Scenes : null,
+      scenes: export4(src.Scenes) ? src.Scenes : null,
       status: typeof src.Status === "string" && src.Status ? src.Status : null,
       latestAired: toMs(src.LatestEpisodeAired),
       isLast: typeof isLast === "boolean" ? isLast : null,
@@ -652,7 +652,7 @@
     }
     function getCachedEntry(ctx, itemId) {
       const entry = ctx.getPersistent(itemId) ?? ctx.hot?.get(itemId);
-      if (!export42(entry) || entry.v !== CACHE_ENTRY_VERSION) return null;
+      if (!export4(entry) || entry.v !== CACHE_ENTRY_VERSION) return null;
       if (typeof entry.timestamp !== "number" || Date.now() - entry.timestamp > CACHE_FRESH_MS) return null;
       return {
         fetchedAt: entry.timestamp,
@@ -662,7 +662,7 @@
         premiere: export2(entry.p),
         latest: export2(entry.l),
         status: export13(entry.st),
-        scenes: export42(entry.sc) ? entry.sc : null,
+        scenes: export4(entry.sc) ? entry.sc : null,
         latestAired: export2(entry.la),
         isLast: typeof entry.il === "boolean" ? entry.il : null,
         latestIndex: Array.isArray(entry.li) ? { s: Number(entry.li[0]), e: Number(entry.li[1]), isLast: entry.li[2] === true } : null,
@@ -936,14 +936,14 @@
       }
     }
     function readSeriesFacts(raw) {
-      if (!export42(raw)) return null;
-      const episode = (ep, withType) => export42(ep) && airDay(ep.date) !== null ? { date: String(ep.date), season: toInt(ep.season), episode: toInt(ep.episode), ...withType ? { type: typeof ep.type === "string" ? ep.type : null } : {} } : null;
+      if (!export4(raw)) return null;
+      const episode = (ep, withType) => export4(ep) && airDay(ep.date) !== null ? { date: String(ep.date), season: toInt(ep.season), episode: toInt(ep.episode), ...withType ? { type: typeof ep.type === "string" ? ep.type : null } : {} } : null;
       return {
         status: typeof raw.status === "string" ? raw.status : null,
         last: episode(raw.lastAired, true),
         regular: episode(raw.lastRegularAired, true),
         next: episode(raw.nextAired, false),
-        seasonEpisodes: export42(raw.seasonEpisodes) ? raw.seasonEpisodes : null
+        seasonEpisodes: export4(raw.seasonEpisodes) ? raw.seasonEpisodes : null
       };
     }
     async function flushSeries(ctx) {
@@ -1246,7 +1246,7 @@
   }
 
   // client/src/features/media-tags/types/status/statustags-entry.ts
-  createStatusTags(export4());
+  createStatusTags(export5());
 })();
 })();
 //# sourceMappingURL=statustags.js.map

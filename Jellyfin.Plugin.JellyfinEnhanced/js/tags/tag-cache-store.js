@@ -13,11 +13,11 @@
 
   // client/generated-shared/stub/client/src/features/media-tags/host.ts
   var shared = /* @__PURE__ */ sharedModule("features/media-tags/host");
-  var export4 = /* @__PURE__ */ sharedExport(shared, "tagRuntimeHost");
+  var export5 = /* @__PURE__ */ sharedExport(shared, "tagRuntimeHost");
 
   // client/generated-shared/stub/client/src/features/media-tags/pipeline/dto.ts
   var shared2 = /* @__PURE__ */ sharedModule("features/media-tags/pipeline/dto");
-  var export42 = /* @__PURE__ */ sharedExport(shared2, "isRecord");
+  var export4 = /* @__PURE__ */ sharedExport(shared2, "isRecord");
 
   // client/src/features/media-tags/pipeline/tag-cache-store.ts
   function createTagCacheStore() {
@@ -107,7 +107,7 @@
       const db = await openDb();
       const tx = db.transaction(META_STORE, "readonly");
       const meta = await settle(tx.objectStore(META_STORE).get(scope));
-      return export42(meta) ? meta : null;
+      return export4(meta) ? meta : null;
     }
     async function getMany(scope, ids) {
       const found = /* @__PURE__ */ new Map();
@@ -120,12 +120,12 @@
         const request = store.get(prefix + id);
         request.onsuccess = () => {
           const entry = request.result;
-          if (export42(entry)) found.set(id, entry);
+          if (export4(entry)) found.set(id, entry);
         };
       }
       await committed(tx);
       const meta = metaRequest.result;
-      return { entries: found, meta: export42(meta) ? meta : null };
+      return { entries: found, meta: export4(meta) ? meta : null };
     }
     function isNewer(a, b) {
       return Number(a.servedAt || 0) > (b.servedAt || 0);
@@ -138,7 +138,7 @@
       let claimed = false;
       request.onsuccess = () => {
         const meta = request.result;
-        if (export42(meta) && isNewer(meta, snapshot)) return;
+        if (export4(meta) && isNewer(meta, snapshot)) return;
         claimed = true;
         tx.objectStore(ITEM_STORE).delete(scopeRange(scope));
         metaStore.put({ scope, pending: token, servedAt: snapshot.servedAt });
@@ -154,7 +154,7 @@
       let written = 0;
       request.onsuccess = () => {
         const claim = request.result;
-        owned = export42(claim) && claim.pending === token;
+        owned = export4(claim) && claim.pending === token;
         if (!owned) return;
         const items = tx.objectStore(ITEM_STORE);
         const prefix = scope + KEY_SEP;
@@ -177,7 +177,7 @@
       let owned = false;
       request.onsuccess = () => {
         const claim = request.result;
-        owned = export42(claim) && claim.pending === token;
+        owned = export4(claim) && claim.pending === token;
         if (owned) store.put({ ...meta, scope, entrySchema: ENTRY_SCHEMA });
       };
       await committed(tx);
@@ -191,7 +191,7 @@
       let applied = false;
       request.onsuccess = () => {
         const meta = request.result;
-        if (!export42(meta) || meta.pending || meta.timestamp !== base.timestamp || meta.version !== base.version || meta.filterRevision !== base.filterRevision) {
+        if (!export4(meta) || meta.pending || meta.timestamp !== base.timestamp || meta.version !== base.version || meta.filterRevision !== base.filterRevision) {
           return;
         }
         applied = true;
@@ -212,7 +212,7 @@
       const prefix = scope + KEY_SEP;
       const meta = await settle(metaStore.get(scope));
       const result = { applied: false, dropped: [] };
-      if (export42(meta) && !meta.pending && meta.timestamp === base.timestamp && meta.version === base.version && meta.filterRevision === base.filterRevision) {
+      if (export4(meta) && !meta.pending && meta.timestamp === base.timestamp && meta.version === base.version && meta.filterRevision === base.filterRevision) {
         const held = new Set((await settle(items.getAllKeys(scopeRange(scope)))).map((key) => String(key).slice(prefix.length)));
         for (const [id] of entries) held.add(id);
         let complete = true;
@@ -274,7 +274,7 @@
       const values = await settle(store.getAll(range));
       keys.map((key, i) => {
         const value = values[i];
-        return { key, t: export42(value) ? Number(value.t) || 0 : 0 };
+        return { key, t: export4(value) ? Number(value.t) || 0 : 0 };
       }).sort((a, b) => a.t - b.t).slice(0, keys.length - cap).forEach(({ key }) => store.delete(key));
     }
     async function getPosterColours(scope, algorithm) {
@@ -289,7 +289,7 @@
       const out = /* @__PURE__ */ new Map();
       keysRequest.result.forEach((key, i) => {
         const value = valuesRequest.result[i];
-        if (!export42(value)) return;
+        if (!export4(value)) return;
         const colour = readColour(value.d);
         if (colour !== void 0) out.set(String(key).slice(prefix.length), colour);
       });
@@ -317,7 +317,7 @@
       const out = /* @__PURE__ */ new Map();
       keysRequest.result.forEach((key, i) => {
         const value = valuesRequest.result[i];
-        if (!export42(value) || !export42(value.r) || typeof value.t !== "number") return;
+        if (!export4(value) || !export4(value.r) || typeof value.t !== "number") return;
         out.set(String(key).slice(prefix.length), { ...value, r: value.r, t: value.t });
       });
       return out;
@@ -357,7 +357,7 @@
   }
 
   // client/src/features/media-tags/pipeline/tag-cache-store-entry.ts
-  export4().tagCacheStore = createTagCacheStore();
+  export5().tagCacheStore = createTagCacheStore();
 })();
 })();
 //# sourceMappingURL=tag-cache-store.js.map

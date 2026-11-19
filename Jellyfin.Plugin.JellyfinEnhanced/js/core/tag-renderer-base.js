@@ -100,6 +100,7 @@
     hasApiClient: () => hasApiClient,
     mediaTagsContext: () => mediaTagsContext,
     settingsUi: () => settingsUi,
+    settingsUiLoaded: () => settingsUiLoaded,
     tagRuntimeHost: () => tagRuntimeHost
   });
   function tagRuntimeHost() {
@@ -118,6 +119,7 @@
   function settingsUi(JE2) {
     return JE2.internals?.enhancedUi;
   }
+  var settingsUiLoaded = (JE2) => JE2.loader?.ensure(["settings"]);
   function hasApiClient() {
     const host = window;
     return host.ApiClient !== void 0 && host.ApiClient !== null;
