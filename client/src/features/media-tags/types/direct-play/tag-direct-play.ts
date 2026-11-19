@@ -445,9 +445,9 @@ export function createDirectPlay(JE: TagRuntimeBridge) {
                         loaded.push(String(id).split('@')[0] ?? '');
                     }
                 }
-                // Cards drawn before the stored answers arrived: one pass, and no request for those.
+                // Cards drawn before the stored answers arrived (watched, and on screen: without WeakRef none is watched).
                 if (!loaded.length) return;
-                for (const card of cards.watchedCards()) {
+                for (const card of new Set([...cards.watchedCards(), ...visible])) {
                     const entry = tracked.get(card);
                     if (!entry) continue;
                     const memoryKey = `${hash}|${itemKey(entry)}`;

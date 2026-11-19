@@ -1157,6 +1157,27 @@ test('direct play: stored answers that arrive after the cards were drawn badge e
   assert.equal(h.requests.length, 0, 'and nothing is asked when one comes on screen');
 });
 
+test('direct play: without WeakRef, stored answers that arrive after the cards were drawn still reach the cards on screen, and nothing is asked', async t => {
+  // Older TV browsers have no WeakRef, so no card is remembered as watched; the cards on screen must still hear.
+  const stored = { r: { directPlay: false, remux: true, reasons: ['ContainerNotSupported'], container: 'mkv', video: 'h264', audio: 'aac' }, t: NOW - 1000, m: (0x811c9dc5).toString(36) };
+  const store = { available: () => true, getDirectPlay: async () => new Map([['m1', stored], ['m2', stored]]), putDirectPlay: async () => {} };
+  const h = setup(t, { settings: { statusTagsDirectPlay: true }, store, autoIntersect: false });
+  const Real = h.window.WeakRef;
+  h.window.WeakRef = undefined;
+  t.after(() => { h.window.WeakRef = Real; });
+  h.show(movie(), h.hosts[0], 'm1');
+  h.show(movie(), h.hosts[1], 'm2');
+  h.intersect(h.hosts[0]);
+  await h.settle();
+  await h.slice(); await h.slice();
+  assert.equal(h.badge(h.hosts[0]), "Won't direct play", 'the card on screen is drawn from the restored answer');
+  assert.deepEqual(h.requests.map(r => r.id), [], 'and its item is not asked about');
+  h.intersect(h.hosts[1]);
+  await h.slice(); await h.slice();
+  assert.equal(h.badge(h.hosts[1]), "Won't direct play", 'a card that comes on screen later is drawn from memory');
+  assert.equal(h.requests.length, 0);
+});
+
 test('direct play: a replaced file is asked about again, and an answer for the old file never shows for the new one', async t => {
   let verdict = 'transcode';
   const h = setup(t, { settings: { statusTagsDirectPlay: true }, answer: () => verdict });

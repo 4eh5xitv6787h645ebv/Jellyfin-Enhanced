@@ -1035,7 +1035,7 @@ ${name}=${value}`;
             }
           }
           if (!loaded.length) return;
-          for (const card of cards.watchedCards()) {
+          for (const card of /* @__PURE__ */ new Set([...cards.watchedCards(), ...visible])) {
             const entry = tracked.get(card);
             if (!entry) continue;
             const memoryKey = `${hash}|${itemKey(entry)}`;
