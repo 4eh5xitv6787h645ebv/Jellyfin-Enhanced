@@ -414,6 +414,8 @@ export function createLanguageTags(JE: TagRuntimeBridge) {
                    it, its dark ring under their edge, as when every chip had a
                    transform; without one in the group no chip needs a layer. */
                 .${containerClass}:has(.${partialFlagClass}) .language-chip { position: relative; }
+                /* A browser without :has() drops that rule: every chip stays positioned there, as when each had a transform. */
+                @supports not selector(:has(*)) { .${containerClass} .language-chip { position: relative; } }
                 .layout-mobile .${flagClass} {
                     width: calc(clamp(20px, 5vw, 26px) * var(--je-tag-scale, 1));
                 }
