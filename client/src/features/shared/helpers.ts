@@ -1,6 +1,7 @@
 import { safeExternalUrl } from './url-domain';
 import { decodeItem } from './item-domain';
 import type { HelpersBridge, SharedCore, SharedClient } from './host';
+import { createLegacyHeaderCheck } from './header-lookup';
 export function createHelpers(JE: HelpersBridge, api: () => SharedClient) {
 
 
@@ -334,29 +335,8 @@ export function createHelpers(JE: HelpersBridge, api: () => SharedClient) {
         );
     }
 
-    /** The legacy header last measured as rendered; forgotten on the next navigation. */
-    let renderedLegacyHeader: Element | null = null;
-    let legacyHeaderWatched = false;
-
-    /** Forget the rendered legacy header on every navigation (the video page and the login page hide it). */
-    function watchLegacyHeader(): void {
-        const onNavigate = JE.core?.navigation?.onNavigate;
-        if (legacyHeaderWatched || typeof onNavigate !== 'function') return;
-        legacyHeaderWatched = true;
-        onNavigate(() => { renderedLegacyHeader = null; });
-    }
-
-    /**
-     * Whether an element sits inside (or is) an element hidden by its own inline
-     * `display: none`, read from the markup without a style or layout pass. False says
-     * nothing: a stylesheet may still hide it.
-     */
-    function hiddenByInlineStyle(element: Element): boolean {
-        for (let node: Element | null = element; node && node !== document.body; node = node.parentElement) {
-            if ((node as HTMLElement).style?.display === 'none') return true;
-        }
-        return false;
-    }
+    /** Whether the legacy header is rendered, read with as few layouts as can be (header-lookup.ts). */
+    const legacyHeaderShown = createLegacyHeaderCheck(() => JE.core?.navigation);
 
     /**
      * Finds (or creates) the container plugin buttons should be injected into.
@@ -375,19 +355,7 @@ export function createHelpers(JE: HelpersBridge, api: () => SharedClient) {
      */
     function getHeaderRightContainer() {
         const legacy = document.querySelector<HTMLElement>('.headerRight:not([data-je-header-fallback])');
-        // offsetParent needs an up-to-date layout, and this runs many times while the page is
-        // still being built (every feature that adds a header button, every header-actions
-        // pass): each call laid the whole document out again. The Modern layout hides the
-        // legacy header with an inline display:none wrapper, which the markup alone answers; a
-        // header that is not hidden that way (the Legacy layout, a theme's own rule) is
-        // measured once a navigation, and only a rendered answer is kept: a header not ready
-        // yet is asked again, so early retries still find it.
-        if (legacy && !hiddenByInlineStyle(legacy)
-            && (legacy === renderedLegacyHeader || legacy.offsetParent !== null)) {
-            if (renderedLegacyHeader !== legacy) {
-                renderedLegacyHeader = legacy;
-                watchLegacyHeader();
-            }
+        if (legacy && legacyHeaderShown(legacy)) {
             attachDrawerAutoClose(legacy);
             return legacy;
         }

@@ -30,6 +30,8 @@
     const DIRECT_PLAY_STORE = "directPlay";
     const KEY_SEP = "|";
     const ENTRY_SCHEMA = 52;
+    const BUDGET_MIN_PUTS = 16;
+    const BUDGET_CHECK_EVERY = 4;
     let dbPromise = null;
     let unavailable = false;
     function available() {
@@ -144,21 +146,28 @@
       await committed(tx);
       return claimed;
     }
-    async function putManyIfOwner(scope, token, entries) {
+    async function putManyIfOwner(scope, token, entries, budgetMs) {
       const db = await openDb();
       const tx = db.transaction([META_STORE, ITEM_STORE], "readwrite");
       const request = tx.objectStore(META_STORE).get(scope);
       let owned = false;
+      let written = 0;
       request.onsuccess = () => {
         const claim = request.result;
         owned = export42(claim) && claim.pending === token;
         if (!owned) return;
         const items = tx.objectStore(ITEM_STORE);
         const prefix = scope + KEY_SEP;
-        for (const [id, entry] of entries) items.put(entry, prefix + id);
+        const until = budgetMs && budgetMs > 0 ? performance.now() + budgetMs : 0;
+        for (const [id, entry] of entries) {
+          items.put(entry, prefix + id);
+          written++;
+          if (until && written >= BUDGET_MIN_PUTS && written % BUDGET_CHECK_EVERY === 0 && performance.now() >= until) break;
+        }
       };
       await committed(tx);
-      return owned;
+      if (!owned) return false;
+      return written >= entries.length ? true : written;
     }
     async function commitFullWrite(scope, token, meta) {
       const db = await openDb();

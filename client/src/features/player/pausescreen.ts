@@ -336,12 +336,7 @@ JE.initializePauseScreen = function() {
           this.pauseScreenTimer = setTimeout(tryShowWhenIdle, this.pauseScreenDelayMs);
         }
 
-        /**
-         * Listen for the interaction that postpones the overlay, for as long as there is a
-         * video (handleVideoChange to clearState). The time of the last interaction is only
-         * read while a video is paused, and a pause sets it itself, so without a video these
-         * seven document listeners (wheel and mousemove among them) ran on every page for nothing.
-         */
+        /** Listen for the interaction that postpones the overlay while there is a video (handleVideoChange to clearState). */
         setupInteractionListeners() {
           if (this.interactionListeners) return;
           // Track last mouse position for movement threshold
@@ -391,10 +386,7 @@ JE.initializePauseScreen = function() {
 
         /** Stop listening for interaction (no video, or teardown). */
         removeInteractionListeners() {
-          if (!this.interactionListeners) return;
-          this.interactionListeners.forEach(({ event, listener }) => {
-            document.removeEventListener(event, listener);
-          });
+          this.interactionListeners?.forEach(({ event, listener }) => document.removeEventListener(event, listener));
           this.interactionListeners = null;
         }
 

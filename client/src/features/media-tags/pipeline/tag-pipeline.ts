@@ -80,12 +80,15 @@ export function createTagPipeline(JE: TagRuntimeBridge) {
         }, { priority: 0 });
 
         // Cards reused in place for another item (see releaseReusedCards):
-        // one attribute observer for the page, never one per card.
+        // one attribute observer for the page, never one per card. It hears
+        // the item id attributes page-wide, and the artwork of each scanned
+        // card image through that image's own registration (scan.ts watchArtwork).
         const createObserver = JE.core?.dom?.createObserver || JE.helpers?.createObserver;
         if (typeof createObserver === 'function') {
-            createObserver('tag-pipeline-card-identity', deps.releaseReusedCards, document.body, {
-                subtree: true, attributes: true, attributeFilter: ['data-id', 'data-itemid', 'style'], attributeOldValue: true,
+            const observer: unknown = createObserver('tag-pipeline-card-identity', deps.releaseReusedCards, document.body, {
+                subtree: true, attributes: true, attributeFilter: ['data-id', 'data-itemid'], attributeOldValue: true,
             });
+            if (observer instanceof MutationObserver) deps.adoptIdentityObserver(observer);
         }
 
         // Also trigger on navigation
@@ -222,6 +225,7 @@ export function createTagPipeline(JE: TagRuntimeBridge) {
         lookupServerEntries: deps.lookupServerEntries,
         rememberItemFacts: deps.rememberItemFacts,
         peekItemFacts: deps.peekItemFacts,
+        itemFactsExpiry: deps.itemFactsExpiry,
         lookupItemFacts: deps.lookupItemFacts,
         peekSeasonFacts: deps.peekSeasonFacts,
         /**
