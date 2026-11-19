@@ -1,0 +1,8 @@
+$ je12 api admin POST /JellyfinEnhanced/reclaimerr/requests/7/approve '{"when":"date","date":"2026-12-10T12:00:00Z"}'
+# deployed 26e472da+dirty (dll 1d1b42eae396ff9d) on lab je125ce284, 2026-11-20 01:21:53
+HTTP 502
+{"error": "Reclaimerr: not reachable"}
+
+$ je12 api viewer POST /JellyfinEnhanced/reclaimerr/requests/7/approve '{"when":"now"}'
+# deployed 26e472da+dirty (dll 1d1b42eae396ff9d) on lab je125ce284, 2026-11-20 01:21:53
+HTTP 403

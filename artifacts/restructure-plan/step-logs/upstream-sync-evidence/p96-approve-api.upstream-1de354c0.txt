@@ -1,0 +1,9 @@
+$ je12 api admin POST /JellyfinEnhanced/reclaimerr/requests/7/approve '{"when":"date","date":"2026-12-10T12:00:00Z"}'
+HTTP 400
+{"error": "This Reclaimerr cannot schedule an approval yet (update it), so nothing was approved."}
+$ je12 api admin POST /JellyfinEnhanced/reclaimerr/requests/7/approve '{}'
+HTTP 502
+{"error": "Reclaimerr: not reachable"}
+$ je12 api viewer POST /JellyfinEnhanced/reclaimerr/requests/7/approve '{"when":"now"}'
+HTTP 403
+

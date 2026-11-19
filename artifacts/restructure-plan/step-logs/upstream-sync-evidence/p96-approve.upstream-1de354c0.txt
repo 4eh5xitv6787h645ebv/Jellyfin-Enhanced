@@ -1,0 +1,23 @@
+$ je12 browse '#/home' --script p96-approve.mjs
+SCRIPT server list keys: provider,admin,canRequest,actions,items,requests,mine,requestsUnavailable,canSchedule
+server canSchedule=false graceDays=undefined
+== can schedule, 14-day grace period
+card: name plain=12th Fail | chip warn=Waiting
+card: name plain=Cars | chip ok=Approved | sub=Leaves on 10 Dec 2026
+card: name plain=Coco | chip urgent=Deletion failed | sub=Leaves on 11 Dec 2026
+approve step: warn="Approving deletes this from your library on 04 Dec 2026." confirm="Approve" select=default:Use Reclaimerr's grace period (14 days) / now:Delete now / date:Choose a date date input=hidden
+  select colorScheme=dark option colours set=true
+  choose now: warn="Approving deletes this from your library now." date input=hidden confirm disabled=false
+  choose date: warn="Approving deletes this from your library on 27 Nov 2026." date input=shown confirm disabled=false
+  a past day: warn="" confirm disabled=true
+  2027-01-15T10:00: warn="Approving deletes this from your library on 15 Jan 2027." confirm disabled=false
+sent: POST reclaimerr/requests/7/approve {"note":"next week","when":"date","date":"2027-01-15T02:00:00.000Z"}
+== cannot schedule
+card: name plain=12th Fail | chip warn=Waiting
+card: name plain=Cars | chip ok=Approved | sub=Leaves on 10 Dec 2026
+card: name plain=Coco | chip urgent=Deletion failed | sub=Leaves on 11 Dec 2026
+approve step: warn="Approving deletes this from your library now." confirm="Delete now" select=none date input=none
+sent: POST reclaimerr/requests/7/approve {"note":"next week"}
+browser time zone: Australia/Perth
+BLOCKED https://www.gstatic.com/cv/js/sender/v1/cast_sender.js
+URL /web/index.html#/home

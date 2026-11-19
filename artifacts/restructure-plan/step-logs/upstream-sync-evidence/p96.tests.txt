@@ -1,0 +1,102 @@
+# `je12 evidence`, the tests run alone for this port (je12 test --only), each with the tree it ran on.
+# The trimmed backend file for the failing-first run (only its tests that compile before the port) is described in the step log.
+JE.Tests.Features.MediaTags.IntegrationReclaimerrApprovalTimingTests.The_list_tells_an_administrator_whether_an_approval_can_take_a_day_and_the_grace_period_and_tells_a_viewer_neither
+  FAILED on 26e472da+dirty@31968f37 at 2026-11-20 01:22:57: System.Collections.Generic.KeyNotFoundException : The given key was not present in the dictionary.
+  passed on 26e472da+dirty@1630afcf at 2026-11-20 01:26:03
+  passed on 6d5dfdc5 at 2026-11-20 01:31:20
+  => failed on 26e472da+dirty@31968f37 (2026-11-20 01:22:57), passes on 6d5dfdc5 (2026-11-20 01:31:20); the files changed since (now 2eef87b6): rerun it before you report it
+JE.Tests.Features.MediaTags.IntegrationReclaimerrApprovalTimingTests.Approving_without_a_day_sends_the_old_body_so_an_older_Reclaimerr_behaves_as_before
+  passed on 26e472da+dirty@31968f37 at 2026-11-20 01:22:57
+  passed on 26e472da+dirty@1630afcf at 2026-11-20 01:26:03
+  passed on 6d5dfdc5 at 2026-11-20 01:31:20
+  => passes on 6d5dfdc5 (2026-11-20 01:31:20); no failing run of it is recorded; the files changed since (now 2eef87b6): rerun it before you report it
+JE.Tests.Features.MediaTags.IntegrationReclaimerrApprovalTimingTests.The_grace_period_is_read_from_Reclaimerr_and_unknown_when_it_cannot_be
+  passed on 26e472da+dirty@1630afcf at 2026-11-20 01:26:03
+  passed on 6d5dfdc5 at 2026-11-20 01:31:20
+  => passes on 6d5dfdc5 (2026-11-20 01:31:20); no failing run of it is recorded; the files changed since (now 2eef87b6): rerun it before you report it
+JE.Tests.Features.MediaTags.IntegrationReclaimerrApprovalTimingTests.The_approve_route_sends_when_and_date_and_an_older_Reclaimerr_is_sent_nothing_for_a_day
+  passed on 26e472da+dirty@1630afcf at 2026-11-20 01:26:03
+  passed on 6d5dfdc5 at 2026-11-20 01:31:20
+  => passes on 6d5dfdc5 (2026-11-20 01:31:20); no failing run of it is recorded; the files changed since (now 2eef87b6): rerun it before you report it
+JE.Tests.Features.MediaTags.IntegrationReclaimerrApprovalTimingTests.Approving_now_sends_scheduled_at_null_and_on_a_day_sends_that_moment_in_UTC
+  passed on 26e472da+dirty@1630afcf at 2026-11-20 01:26:03
+  passed on 6d5dfdc5 at 2026-11-20 01:31:20
+  => passes on 6d5dfdc5 (2026-11-20 01:31:20); no failing run of it is recorded; the files changed since (now 2eef87b6): rerun it before you report it
+JE.Tests.Features.MediaTags.IntegrationReclaimerrApprovalTimingTests.A_day_is_refused_without_calling_approve_when_Reclaimerr_cannot_schedule_or_the_day_is_past_or_missing
+  passed on 26e472da+dirty@1630afcf at 2026-11-20 01:26:03
+  passed on 6d5dfdc5 at 2026-11-20 01:31:20
+  => passes on 6d5dfdc5 (2026-11-20 01:31:20); no failing run of it is recorded; the files changed since (now 2eef87b6): rerun it before you report it
+JE.Tests.Features.MediaTags.IntegrationReclaimerrApprovalTimingTests.A_Reclaimerr_account_is_named_by_the_mapping_else_by_the_Jellyfin_login_Reclaimerr_linked_to_it
+  passed on 26e472da+dirty@1630afcf at 2026-11-20 01:26:03
+  passed on 6d5dfdc5 at 2026-11-20 01:31:20
+  => passes on 6d5dfdc5 (2026-11-20 01:31:20); no failing run of it is recorded; the files changed since (now 2eef87b6): rerun it before you report it
+JE.Tests.Features.MediaTags.IntegrationReclaimerrApprovalTimingTests.The_kept_answer_is_for_one_Reclaimerr_address_so_another_Reclaimerr_is_asked_again
+  passed on 26e472da+dirty@1630afcf at 2026-11-20 01:26:03
+  passed on 6d5dfdc5 at 2026-11-20 01:31:20
+  => passes on 6d5dfdc5 (2026-11-20 01:31:20); no failing run of it is recorded; the files changed since (now 2eef87b6): rerun it before you report it
+JE.Tests.Features.MediaTags.IntegrationReclaimerrApprovalTimingTests.The_mapping_reads_both_ways_so_a_Reclaimerr_account_is_found_for_its_Jellyfin_name
+  passed on 26e472da+dirty@1630afcf at 2026-11-20 01:26:03
+  passed on 6d5dfdc5 at 2026-11-20 01:31:20
+  => passes on 6d5dfdc5 (2026-11-20 01:31:20); no failing run of it is recorded; the files changed since (now 2eef87b6): rerun it before you report it
+JE.Tests.Features.MediaTags.IntegrationReclaimerrApprovalTimingTests.Scheduling_is_supported_only_when_the_approve_body_that_takes_a_day_is_in_the_OpenAPI
+  passed on 26e472da+dirty@1630afcf at 2026-11-20 01:26:03
+  passed on 6d5dfdc5 at 2026-11-20 01:31:20
+  => passes on 6d5dfdc5 (2026-11-20 01:31:20); no failing run of it is recorded; the files changed since (now 2eef87b6): rerun it before you report it
+JE.Tests.Features.MediaTags.IntegrationReclaimerrApprovalTimingTests.An_approval_reads_the_Leaving_soon_facts_again_at_once_and_a_denial_does_not
+  passed on 26e472da+dirty@1630afcf at 2026-11-20 01:26:03
+  passed on 6d5dfdc5 at 2026-11-20 01:31:20
+  => passes on 6d5dfdc5 (2026-11-20 01:31:20); no failing run of it is recorded; the files changed since (now 2eef87b6): rerun it before you report it
+JE.Tests.Features.MediaTags.IntegrationReclaimerrApprovalTimingTests.Denying_never_carries_a_day
+  passed on 26e472da+dirty@1630afcf at 2026-11-20 01:26:03
+  passed on 6d5dfdc5 at 2026-11-20 01:31:20
+  => passes on 6d5dfdc5 (2026-11-20 01:31:20); no failing run of it is recorded; the files changed since (now 2eef87b6): rerun it before you report it
+JE.Tests.Features.MediaTags.LeavingSoonTests.A_request_row_serializes_with_the_lower_case_names_the_page_reads
+  passed on 0d439ea3 at 2026-11-17 17:35:41
+  passed on a90507e5+dirty@7f81656a at 2026-11-19 21:37:34
+  passed on 93e90c96 at 2026-11-19 21:47:56
+  FAILED on 26e472da+dirty@31968f37 at 2026-11-20 01:23:32: Assert.Equal() Failure: Collections differ / ↓ (pos 19) / Expected: [···, "adminNotes", "executionError", "deferred", "scheduledAt", "scheduleState"]
+  passed on 6d5dfdc5 at 2026-11-20 01:31:27
+  => failed on 26e472da+dirty@31968f37 (2026-11-20 01:23:32), passes on 6d5dfdc5 (2026-11-20 01:31:27); the files changed since (now 2eef87b6): rerun it before you report it
+JE.Tests.BundleBudgetTests.ServedBundleIsWithinTheCheckedInBudget
+  passed on cbab69a3 at 2026-11-19 20:19:55
+  FAILED on fb7868c8 at 2026-11-19 21:48:33: bundle.js is 728,842 bytes gzip-9, over the 727,979 budget in client/bundle-budget.json. Make it smaller, or raise the budget in a new history entry with a reason.
+  passed on fb7868c8+dirty@ce1c3918 at 2026-11-19 21:50:08
+  passed on 6be487cf at 2026-11-19 22:55:40
+  FAILED on 26e472da+dirty@1a1cf362 at 2026-11-20 01:29:49: bundle.js is 729,898 bytes gzip-9, over the 728,848 budget in client/bundle-budget.json. Make it smaller, or raise the budget in a new history entry with a reason.
+  passed on 6d5dfdc5+dirty@d2e8610f at 2026-11-20 01:33:12
+  => failed on 1111a593 (2026-11-17 18:02:54, the first of 6 failing runs), passes on 6d5dfdc5+dirty@d2e8610f (2026-11-20 01:33:12); the commit 2eef87b6 has exactly the files of that run
+JE.Tests.BundleBudgetTests.BudgetOnlyRisesWithADocumentedReason
+  passed on cbab69a3 at 2026-11-19 20:19:55
+  passed on fb7868c8 at 2026-11-19 21:48:33
+  passed on fb7868c8+dirty@ce1c3918 at 2026-11-19 21:50:08
+  passed on 6be487cf at 2026-11-19 22:55:40
+  passed on 26e472da+dirty@1a1cf362 at 2026-11-20 01:29:49
+  passed on 6d5dfdc5+dirty@d2e8610f at 2026-11-20 01:33:12
+  => passes on 6d5dfdc5+dirty@d2e8610f (2026-11-20 01:33:12); no failing run of it is recorded; the commit 2eef87b6 has exactly the files of that run
+JE.Tests.PackedResourcesTests.WhatThePluginAssemblyEmbedsIsWithinTheCheckedInSizeBudget
+  FAILED on cbab69a3 at 2026-11-19 20:20:02: Jellyfin.Plugin.JellyfinEnhanced.dll embeds 12,058,053 bytes, over the 12,049,175 budget in client/assembly-budget.json. Embed less (or pack it), or raise the budget in a new history entry with a reas
+  passed on ff65961d at 2026-11-19 20:21:51
+  passed on fb7868c8 at 2026-11-19 21:48:39
+  passed on 6be487cf at 2026-11-19 22:55:48
+  FAILED on 26e472da+dirty@1a1cf362 at 2026-11-20 01:29:56: Jellyfin.Plugin.JellyfinEnhanced.dll embeds 12,072,376 bytes, over the 12,069,530 budget in client/assembly-budget.json. Embed less (or pack it), or raise the budget in a new history entry with a reas
+  passed on 6d5dfdc5+dirty@d2e8610f at 2026-11-20 01:33:19
+  => failed on 809c2d4b+dirty@81fe9083 (2026-11-16 08:58:28, the first of 7 failing runs), passes on 6d5dfdc5+dirty@d2e8610f (2026-11-20 01:33:19); the commit 2eef87b6 has exactly the files of that run
+tests/frontend/features/media-tags/features-leavingsoon-approval-timing.test.mjs (every test in the file, je12 test --only):
+  FAIL on 26e472da+dirty@31968f37 at 2026-11-20 01:23:11
+    PASS without scheduling support the approve step is unchanged: no choice of when, the body carries no timing
+    FAIL with scheduling support an approval is sent with the grace period, now, or a chosen day: AssertionError: Expected values to be strictly deep-equal:
+    FAIL a chosen day is sent as that moment in UTC, shown in the warning, and a day that is not in the future cannot be approved: TypeError: Cannot read properties of null (reading 'hidden')
+    FAIL an approved request shows the day it is deleted, and a schedule that failed or is blocked shows as failed: AssertionError: a time without a zone is read as UTC
+    FAIL the grace period is named in the choice and the warning when Reclaimerr says what it is: TypeError: Cannot read properties of null (reading 'textContent')
+  PASS on 26e472da+dirty@1630afcf at 2026-11-20 01:25:49
+    PASS without scheduling support the approve step is unchanged: no choice of when, the body carries no timing
+    PASS with scheduling support an approval is sent with the grace period, now, or a chosen day
+    PASS a chosen day is sent as that moment in UTC, shown in the warning, and a day that is not in the future cannot be approved
+    PASS an approved request shows the day it is deleted, and a schedule that failed or is blocked shows as failed
+    PASS the grace period is named in the choice and the warning when Reclaimerr says what it is
+  PASS on 6d5dfdc5 at 2026-11-20 01:31:07
+    PASS without scheduling support the approve step is unchanged: no choice of when, the body carries no timing
+    PASS with scheduling support an approval is sent with the grace period, now, or a chosen day
+    PASS a chosen day is sent as that moment in UTC, shown in the warning, and a day that is not in the future cannot be approved
+    PASS an approved request shows the day it is deleted, and a schedule that failed or is blocked shows as failed
+    PASS the grace period is named in the choice and the warning when Reclaimerr says what it is

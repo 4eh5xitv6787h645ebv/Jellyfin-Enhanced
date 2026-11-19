@@ -1,0 +1,19 @@
+$ je12 browse '#/home' --script p96-approve.mjs
+# deployed 26e472da3b85 (dll be4bb2c4eee1ac09) on lab je125ce284, 2026-11-20 01:38:01
+SCRIPT server list keys: provider,admin,canRequest,actions,items,requests,mine,requestsUnavailable
+server canSchedule=undefined graceDays=undefined
+== can schedule, 14-day grace period
+card: name plain=12th Fail | chip warn=Waiting
+card: name plain=Cars | chip ok=Approved
+card: name plain=Coco | chip ok=Approved
+approve step: warn="Approving deletes this from your library now." confirm="Delete now" select=none date input=none
+sent: POST reclaimerr/requests/7/approve {"note":"next week"}
+== cannot schedule
+card: name plain=12th Fail | chip warn=Waiting
+card: name plain=Cars | chip ok=Approved
+card: name plain=Coco | chip ok=Approved
+approve step: warn="Approving deletes this from your library now." confirm="Delete now" select=none date input=none
+sent: POST reclaimerr/requests/7/approve {"note":"next week"}
+browser time zone: Australia/Perth
+BLOCKED https://www.gstatic.com/cv/js/sender/v1/cast_sender.js
+URL /web/index.html#/home

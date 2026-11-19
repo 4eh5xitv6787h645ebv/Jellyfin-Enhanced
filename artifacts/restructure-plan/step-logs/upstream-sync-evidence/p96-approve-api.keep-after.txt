@@ -1,0 +1,13 @@
+$ je12 api admin POST /JellyfinEnhanced/reclaimerr/requests/7/approve '{"when":"date","date":"2026-12-10T12:00:00Z"}'
+# deployed 2eef87b6 (dll 9ed29612bbf7ebda) on lab je125ce284, 2026-11-20 01:34:44
+HTTP 400
+{"error": "This Reclaimerr cannot schedule an approval yet (update it), so nothing was approved."}
+
+$ je12 api viewer POST /JellyfinEnhanced/reclaimerr/requests/7/approve '{"when":"now"}'
+# deployed 2eef87b6 (dll 9ed29612bbf7ebda) on lab je125ce284, 2026-11-20 01:34:44
+HTTP 403
+
+$ je12 api admin POST /JellyfinEnhanced/reclaimerr/requests/7/approve '{}'
+# run right after the two above, on the same deploy of 2eef87b6 (copied from the terminal; not a je12 --keep)
+HTTP 502
+{"error": "Reclaimerr: not reachable"}

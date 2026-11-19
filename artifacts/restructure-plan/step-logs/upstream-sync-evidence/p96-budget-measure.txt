@@ -1,0 +1,31 @@
+# BundleBudgetTests and PackedResourcesTests (gate T's own measures) in scratch detached worktrees of 26e472da and 6d5dfdc5
+# with the budget limits set to 1 so each test prints the size (+dirty is that edit; the second pair raised the raw limit
+# so the gzip-9 check is reached).
+== 26e472da
+je12 test --only JE.Tests.BundleBudgetTests: started as a job, expected about 6s on 10 CPUs (help-text times are for 10). If this call is cut off, `je12 wait` collects the result.
+       bundle.js is 2,668,906 bytes raw, over the 1 budget in client/bundle-budget.json. Make it smaller, or raise the budget in a new history entry with a reason.
+test --only: FAIL (2 failed, 0 passed) in 15s on 26e472da+dirty@ce6d7aff; recorded for je12 evidence
+next: a test written before its fix should fail here, and je12 evidence now shows that; otherwise fix what the message says. After the fix, rerun the same je12 test --only
+je12 test --only JE.Tests.PackedResourcesTests.WhatThePluginAssemblyEmbedsIsWithinTheCheckedInSizeBudget: started as a job, expected about 6s on 10 CPUs (help-text times are for 10). If this call is cut off, `je12 wait` collects the result.
+       Jellyfin.Plugin.JellyfinEnhanced.dll embeds 12,065,782 bytes, over the 1 budget in client/assembly-budget.json. Embed less (or pack it), or raise the budget in a new history entry with a reason.
+test --only: FAIL (1 failed, 0 passed) in 6s on 26e472da+dirty@ce6d7aff; recorded for je12 evidence
+next: a test written before its fix should fail here, and je12 evidence now shows that; otherwise fix what the message says. After the fix, rerun the same je12 test --only
+== 6d5dfdc5
+je12 test --only JE.Tests.BundleBudgetTests: started as a job, expected about 6s on 10 CPUs (help-text times are for 10). If this call is cut off, `je12 wait` collects the result.
+       bundle.js is 2,671,672 bytes raw, over the 1 budget in client/bundle-budget.json. Make it smaller, or raise the budget in a new history entry with a reason.
+test --only: FAIL (2 failed, 0 passed) in 13s on 6d5dfdc5+dirty@ca5734fb; recorded for je12 evidence
+next: a test written before its fix should fail here, and je12 evidence now shows that; otherwise fix what the message says. After the fix, rerun the same je12 test --only
+je12 test --only JE.Tests.PackedResourcesTests.WhatThePluginAssemblyEmbedsIsWithinTheCheckedInSizeBudget: started as a job, expected about 13s on 10 CPUs (help-text times are for 10). If this call is cut off, `je12 wait` collects the result.
+       Jellyfin.Plugin.JellyfinEnhanced.dll embeds 12,072,376 bytes, over the 1 budget in client/assembly-budget.json. Embed less (or pack it), or raise the budget in a new history entry with a reason.
+test --only: FAIL (1 failed, 0 passed) in 6s on 6d5dfdc5+dirty@ca5734fb; recorded for je12 evidence
+next: a test written before its fix should fail here, and je12 evidence now shows that; otherwise fix what the message says. After the fix, rerun the same je12 test --only
+== 26e472da
+je12 test --only JE.Tests.BundleBudgetTests.ServedBundleIsWithinTheCheckedInBudget: started as a job, expected about 6s on 10 CPUs (help-text times are for 10). If this call is cut off, `je12 wait` collects the result.
+       bundle.js is 728,842 bytes gzip-9, over the 1 budget in client/bundle-budget.json. Make it smaller, or raise the budget in a new history entry with a reason.
+test --only: FAIL (1 failed, 0 passed) in 6s on 26e472da+dirty@c0cefbfc; recorded for je12 evidence
+next: a test written before its fix should fail here, and je12 evidence now shows that; otherwise fix what the message says. After the fix, rerun the same je12 test --only
+== 6d5dfdc5
+je12 test --only JE.Tests.BundleBudgetTests.ServedBundleIsWithinTheCheckedInBudget: started as a job, expected about 7s on 10 CPUs (help-text times are for 10). If this call is cut off, `je12 wait` collects the result.
+       bundle.js is 729,898 bytes gzip-9, over the 1 budget in client/bundle-budget.json. Make it smaller, or raise the budget in a new history entry with a reason.
+test --only: FAIL (1 failed, 0 passed) in 6s on 6d5dfdc5+dirty@fdf8bd67; recorded for je12 evidence
+next: a test written before its fix should fail here, and je12 evidence now shows that; otherwise fix what the message says. After the fix, rerun the same je12 test --only
