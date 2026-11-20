@@ -316,6 +316,33 @@ test.describe('admin configuration page', () => {
     await expect.poll(() => page.evaluate(() => window.__routed.slice(-1)[0])).toBe('#/home');
   });
 
+  test('Overview and What\'s new jumps land on a control that is on screen, on the tab they open', async ({ page }) => {
+    const whatsNew = () => {
+      const ajax = window.ApiClient.ajax;
+      window.ApiClient.ajax = async request => (/\/whats-new$/.test(request.url) && (request.type || 'GET') === 'GET'
+        ? { pluginVersion: '12.16.0.0', newSettings: { mdblistApiKey: '12.16.0.0' }, mediaTags: {} } : ajax(request));
+    };
+    await open(page, { saved: { ...SAVED, TMDB_API_KEY: '', ShowReviews: true, DoesTheDogDieEnabled: true, DoesTheDogDieApiKey: '', MdblistRatingsEnabled: false }, before: whatsNew });
+    await settled(page);
+    const landed = () => page.evaluate(() => {
+      const shown = Array.from(document.querySelectorAll('.je-jump-flash')).filter(el => {
+        const box = el.getBoundingClientRect();
+        return el.getClientRects().length > 0 && box.bottom > 0 && box.top < innerHeight;
+      });
+      return { tab: document.querySelector('.jellyfin-tab-content.active')?.id, ids: shown.map(el => el.querySelector('input, select')?.id ?? el.id ?? '') };
+    });
+    for (const [service, id] of [['tmdb', 'TMDB_API_KEY--mirror'], ['ddd', 'doesTheDogDieApiKey--mirror']]) {
+      await clickTab(page, 'overview');
+      await page.locator(`#je-service-dashboard [data-status-id="${service}"]`).click();
+      await expect.poll(landed, { timeout: 4000 }).toEqual({ tab: 'services', ids: expect.arrayContaining([id]) });
+    }
+    // A new setting hidden by its card's main switch: the jump lands on that switch.
+    await clickTab(page, 'overview');
+    await page.locator('.je-whats-new-toggle').click();
+    await page.locator('.je-whats-new-chip').first().click();
+    await expect.poll(landed, { timeout: 4000 }).toEqual({ tab: 'display', ids: ['mdblistRatingsEnabled'] });
+  });
+
   test('the bars pinned at the top sit below Jellyfin\'s bar and are opaque', async ({ page }, info) => {
     const appBar = () => {
       document.body.insertAdjacentHTML('afterbegin', '<div class="MuiAppBar-root" style="position:fixed;top:0;left:0;right:0;height:48px;z-index:1100;background:#202020"></div>');

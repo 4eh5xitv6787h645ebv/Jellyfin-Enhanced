@@ -1067,7 +1067,7 @@
       "manifest": "client/html-entries/admin-config.json",
       "template": "client/html/admin-config/configPage.html",
       "templateSha256": "cbda7620063586f509d914d7ef5eb7d3efb98a0baa175b727a2e32cc3433ffa8",
-      "outputSha256": "87158f8bca32186abdaa5c974e46863390283dbe3a4810a1d3cb694db2b137b2",
+      "outputSha256": "12247293e83d10060daa3b044575746feadb0eee7097a728c838ec2ccd5d5cf7",
       "scripts": [
         {
           "name": "startup",
@@ -1085,7 +1085,7 @@
           "name": "main",
           "scriptIndex": 1,
           "source": "client/src/admin/config/page-entry.ts",
-          "sha256": "e0a3451070a109617609d02363bb7af1adcda5c6793985fb88cc4ee1e83a7dbb",
+          "sha256": "de58bf53a20828fa1fe7207eadd87e1124c196d6652869b9cc42b76fef8b3ee0",
           "inputs": {
             "client/src/admin/config/domain/config-values.ts": "438b48bcac728b62b61c59dd541e190beadc5329a3b387fce0857ef3c2c720e9",
             "client/src/admin/config/domain/config.ts": "9d01375f8e8fae1d4daba8d3b517bba38697fc32aad5926b57966703fa313e01",
@@ -1112,7 +1112,7 @@
             "client/src/admin/config/page/blocked-users.ts": "87794ca84ded2d82331b5f7fa39c00aae6274edf80926acb9422d1952ae43129",
             "client/src/admin/config/page/boot.ts": "ec99b132ea29a8ebd953d70bbaa7e25d0e97f98fae07127e752f1eb2bdbcc25e",
             "client/src/admin/config/page/branding.ts": "4c5118797fcb145584d084472a880be498293e2827fc11deb7badb256c64f0dc",
-            "client/src/admin/config/page/connections.ts": "6266bfa3b450c8c5948de9646fe4b3b986cadb6fab0789045b03f322b90f4c82",
+            "client/src/admin/config/page/connections.ts": "8058d41d38bc582eec38421b765f4f3b575f6334e754a829465651d711be9193",
             "client/src/admin/config/page/custom-tabs.ts": "4c941a39a1e11de1e45a325f0fb2d8bf33cca66d01b8fbefc941e66c42f1eb72",
             "client/src/admin/config/page/dep-wiring.ts": "b7c7bd6b4b8f3e807d47aa5a90bf8330434e0e32ff1507dedfadeaf5fbcc467c",
             "client/src/admin/config/page/dependencies.ts": "fc0ee33edb9bc6b53f9771483a3050fd4d9b101a9601adb996ff41566eec42a9",
@@ -1131,17 +1131,17 @@
             "client/src/admin/config/page/overview-cards.ts": "8479b7cf347838defbbf07d49adf47e96839924ac6bae7ceb8538c0cb994d7a8",
             "client/src/admin/config/page/page.ts": "314ef714fb293d13ff4b006c49372ba031741006cff0f42edc86272b37ce6841",
             "client/src/admin/config/page/plugins.ts": "73b80050e840a68c9a44cdae8932e0925d4424ec7d805a3c24d2e97442973885",
-            "client/src/admin/config/page/probes.ts": "31f5e70334d290273d38170c24ea7e3408d9c50f978a8ab811df2b337b077094",
+            "client/src/admin/config/page/probes.ts": "067418a5236c7f11096db1b321b701e7811205782c7d94dbd733a46b5560429d",
             "client/src/admin/config/page/regions.ts": "c81a071ae15d657c51b25ac5ba7dd9397b6cb6de3a6278bb08f7bad3eaeaeeff",
             "client/src/admin/config/page/save.ts": "8dd8c80de4d866560a41da533c5fb9f5e09e7a2fd89f59189f58f66ce6d5ea35",
             "client/src/admin/config/page/search.ts": "79e179d6be2f8fe58e975b93b66b50d296522f816ca3928b2ce332970553b742",
-            "client/src/admin/config/page/service-status.ts": "49cc40d957a9213d89625b9bd51bc36a716016b61b1677a92c4a3617a0d6939a",
+            "client/src/admin/config/page/service-status.ts": "c7a5d549852336c7a089994b43e78c0b262788fa35209982ae22f77f8cdc6140",
             "client/src/admin/config/page/shortcuts.ts": "4e540cb52b2c8b81824e095d7a814ff10896f02967eb78465747be10f36e90de",
             "client/src/admin/config/page/spoiler.ts": "1db92449acde485a42047b83b14c9b64e7b54441d0531bfbfb6ab4cf354b2913",
             "client/src/admin/config/page/tabs.ts": "381df57f0b9837837f75af076509a05b8b8171a1e44280ed44b0c835e610ad84",
-            "client/src/admin/config/page/theme.ts": "ddd9df68bc66595c0b810fc8ee5284556f8f62b14ddef55b3fe87439ea51aa75",
+            "client/src/admin/config/page/theme.ts": "54f81b278fc0c8bd90f9d5bc90fcfffff67b274dd99852db3f10f5d1bed05fd6",
             "client/src/admin/config/page/timing.ts": "1f2dfe654c091c93dddfdde858f4710add193d1a8b0977bb6d88b03020052676",
-            "client/src/admin/config/page/whats-new.ts": "53651b4825950e8cf0ab8193d82b5a108ead2ab92f7b980a5ee99565b4305c4b",
+            "client/src/admin/config/page/whats-new.ts": "106fb3434adecaa61df15cfc8c7703e52fa00c2be9a146a7d04f36b2fed49221",
             "client/src/host/admin-config-host.ts": "51d1c7bc66dac67da27ec07a5daad50d2f0b08ecf958667237d7a5b6a21e4851"
           }
         }
@@ -1330,8 +1330,8 @@
   "outputs": {
     "Jellyfin.Plugin.JellyfinEnhanced/Configuration/admin/per-user.js.map": "290d31e63546a83b3ef79b653f4f4e41af017ee8903f833c870bb3debbdd0eaf",
     "Jellyfin.Plugin.JellyfinEnhanced/Configuration/admin/per-user.js": "cc0adb89e7970dd8a25ce736d582483a203b92eeaeca22a21caa4000c3b80af3",
-    "Jellyfin.Plugin.JellyfinEnhanced/Configuration/admin/sections.js.map": "5f141e34899f598bd735a825317c2d691b0f269c5bcdd60af2dacf0fa8707fad",
-    "Jellyfin.Plugin.JellyfinEnhanced/Configuration/admin/sections.js": "e4ee3f4e93a7641450713bd27ee7b649eb4bfb563fda8fb53fbd3d9fa64e8606",
+    "Jellyfin.Plugin.JellyfinEnhanced/Configuration/admin/sections.js.map": "2e9888fa528352fda36418df6667f46ea0fa17aacf59c41356d1883d95d76337",
+    "Jellyfin.Plugin.JellyfinEnhanced/Configuration/admin/sections.js": "6d27ed1ec90acb13a4778a068aea869093fa159aacc21f5ad9c6121bcfc05ef6",
     "Jellyfin.Plugin.JellyfinEnhanced/Configuration/jeAdmin.js.map": "6e18cdf8c43a200c1bdd84a74f0a986a3b49f834435564598fe39df5d2b99a2f",
     "Jellyfin.Plugin.JellyfinEnhanced/Configuration/jeAdmin.js": "c8955b916c98675e57c027be5db7eb20926f06c3b1c2ee6e067dc42d77f82139",
     "Jellyfin.Plugin.JellyfinEnhanced/js/arr/arr-links.js.map": "8fa93b5e06ef9078c108c3e1a38e3f1ed00be509847ee62e35f29e0718390129",
@@ -2116,7 +2116,7 @@
     "Jellyfin.Plugin.JellyfinEnhanced/min/js/tags/tag-styles.js": "9f2dc55268ee097135b731220760ed974da4d8057b929b0abae4130b7305174e",
     "Jellyfin.Plugin.JellyfinEnhanced/min/js/tags/userreviewtags.js.map": "3e2aff4067994cc826ae1f0847c628a6e4e760eac6a3eaad1ff18214accca62b",
     "Jellyfin.Plugin.JellyfinEnhanced/min/js/tags/userreviewtags.js": "0dfda75266bb34405fbcd426bb0f9287a1f272c9d50b1836d1f9f1d42a8aab1f",
-    "Jellyfin.Plugin.JellyfinEnhanced/Configuration/configPage.html": "87158f8bca32186abdaa5c974e46863390283dbe3a4810a1d3cb694db2b137b2",
+    "Jellyfin.Plugin.JellyfinEnhanced/Configuration/configPage.html": "12247293e83d10060daa3b044575746feadb0eee7097a728c838ec2ccd5d5cf7",
     "Jellyfin.Plugin.JellyfinEnhanced/Configuration/mediaTagsPage.html": "852a722753d35261a5456aa8e6b30ec435939344335c8ea1741bd836d6c7a691",
     "Jellyfin.Plugin.JellyfinEnhanced/PluginPages/ActivityPage.html": "1cda55a578ba682c73b7049146f5062360e04f5bab8f0ab3a6532579d24f1079",
     "Jellyfin.Plugin.JellyfinEnhanced/PluginPages/BookmarksPage.html": "a42f0099ec8131bb8593ea7537621f53afc44794f74df9a01e190a73c6768012",

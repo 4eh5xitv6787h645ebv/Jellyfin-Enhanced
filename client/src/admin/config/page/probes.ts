@@ -76,9 +76,12 @@ export function createProbes(m: ProbesDeps) {
 
             const _testToken = m.connections.beginConnectionTest();
 
-            // Determine which status indicator to update based on button context
+            // The status indicator of the row whose Test was pressed (not the icon of the key's Show button beside it).
             const button = closestTo(event, 'button');
-            const statusIndicator = asHtml(button?.parentElement?.querySelector('.material-icons') ?? null) ?? needHtml(tmdbStatusIndicator);
+            const statusIndicator = asHtml(button?.parentElement?.querySelector(':scope > span.material-icons') ?? null) ?? needHtml(tmdbStatusIndicator);
+            const resultKey = m.connections.tmdbTestKey(apiKey);
+            // A result is shown only while the key it was for is still the one entered.
+            const stillCurrent = (): boolean => (needControl(document.querySelector('#TMDB_API_KEY')).value || '').trim() === apiKey;
 
             // Disable all test buttons during the test
             const allTestButtons = document.querySelectorAll<HTMLButtonElement>('.testTmdbBtn');
@@ -92,9 +95,13 @@ export function createProbes(m: ProbesDeps) {
                 // The key goes in a header, out of the logged request line.
                 await ApiClient.ajax({ type: 'GET', url: ApiClient.getUrl('/JellyfinEnhanced/tmdb/validate'), headers: { 'X-Arr-ApiKey': apiKey } });
 
-                statusIndicator.textContent = 'check_circle';
-                statusIndicator.style.color = '#52b54b';
-                try { m.connections.setConnectionTestResult('tmdb', 'ok', 'API key valid', _testToken); } catch (err) { /* cache is best-effort */ }
+                if (stillCurrent()) {
+                    statusIndicator.textContent = 'check_circle';
+                    statusIndicator.style.color = '#52b54b';
+                } else {
+                    statusIndicator.textContent = '';
+                }
+                try { m.connections.setConnectionTestResult(resultKey, 'ok', 'API key valid', _testToken); } catch (err) { /* cache is best-effort */ }
                 m.connections.jeTestAlert({ title: 'Success', message: 'Successfully connected to TMDB!' });
 
             } catch (e) {
@@ -109,13 +116,17 @@ export function createProbes(m: ProbesDeps) {
                     errorMessage = 'Connection failed (error ' + status + '). Check the key and your network.';
                 }
 
-                statusIndicator.textContent = 'error';
-                statusIndicator.style.color = '#dc3545';
+                if (stillCurrent()) {
+                    statusIndicator.textContent = 'error';
+                    statusIndicator.style.color = '#dc3545';
+                } else {
+                    statusIndicator.textContent = '';
+                }
                 try {
                     var shortDetail = status === 401 ? 'API key rejected'
                         : (status === 500 || status === 0 || !status) ? 'Unreachable'
                         : 'Error ' + status;
-                    m.connections.setConnectionTestResult('tmdb', 'error', shortDetail, _testToken);
+                    m.connections.setConnectionTestResult(resultKey, 'error', shortDetail, _testToken);
                 } catch (err) { /* cache is best-effort */ }
                 m.connections.jeTestAlert({ title: 'Connection Failed', message: errorMessage });
             } finally {

@@ -56,7 +56,8 @@ test('What\'s new is one line under Service Status, and Show lists the new setti
   assert.ok(banner);
   const status = doc.querySelector('#overview > fieldset');
   assert.equal(banner.previousElementSibling, status, 'directly below Service Status');
-  assert.match(banner.querySelector('.je-whats-new-heading').textContent, /^3 new settings in v12\.16\.0\.0$/);
+  // It counts what Show lists (fix round 2): one entry per card with new settings.
+  assert.match(banner.querySelector('.je-whats-new-heading').textContent, /^3 sections have new settings in v12\.16\.0\.0$/);
   const list = banner.querySelector('.je-whats-new-list');
   assert.equal(list.hidden, true, 'the list starts closed');
   const show = banner.querySelector('.je-whats-new-toggle');

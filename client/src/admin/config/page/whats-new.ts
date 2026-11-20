@@ -119,9 +119,12 @@ export function createWhatsNew(m: WhatsNewDeps) {
                 var distinctVersions = new Set(versions);
                 var singleVersion = distinctVersions.size === 1 ? versions[0] ?? null : null;
 
-                renderWhatsNewBanner((perSetting.length ? groupWhatsNewByFieldset(perSetting) : []).concat(movedEntries), pluginVersion, singleVersion, perSetting.length + moved.length);
-                renderWhatsNewBadges(perSetting);
-                jeWatchMediaTagsBadges(new Map(Object.keys(newSettings).map(function(id) { return [id, shown(newSettings[id])]; })));
+                var oldestVersion = Array.from(distinctVersions).sort(function(a, b) { return a.localeCompare(b, undefined, { numeric: true }); })[0] ?? null;
+                renderWhatsNewBanner((perSetting.length ? groupWhatsNewByFieldset(perSetting) : []).concat(movedEntries), pluginVersion, singleVersion, oldestVersion);
+                // The list keeps everything not yet dismissed; a badge marks only what this release added (the server
+                // records the version each setting was first seen in, so older ones were there on earlier visits).
+                renderWhatsNewBadges(perSetting.filter(function(f) { return f.version === pluginVersion; }));
+                jeWatchMediaTagsBadges(new Map(Object.keys(newSettings).filter(function(id) { return shown(newSettings[id]) === pluginVersion; }).map(function(id) { return [id, shown(newSettings[id])]; })));
             }).catch(function(err) {
                 console.warn('[JE] whats-new check failed:', err);
             });
@@ -213,7 +216,7 @@ export function createWhatsNew(m: WhatsNewDeps) {
          * One line under Service Status: how many settings are new, Show (the list grouped by tab in sidebar order),
          * the release notes and Dismiss. The page opens on status; the list is there when the administrator asks.
          */
-        function renderWhatsNewBanner(unseen: readonly WhatsNewEntry[], pluginVersion: string, singleVersion: string | null, settingCount?: number) : void {
+        function renderWhatsNewBanner(unseen: readonly WhatsNewEntry[], pluginVersion: string, singleVersion: string | null, oldestVersion?: string | null) : void {
             var existing = asHtml(document.getElementById('je-whats-new-banner'));
             if (existing) existing.remove();
             if (!pluginVersion) return;
@@ -234,12 +237,14 @@ export function createWhatsNew(m: WhatsNewDeps) {
             body.className = 'je-whats-new-body';
             var headingRow = document.createElement('div');
             headingRow.className = 'je-whats-new-heading-row';
-            var count = settingCount ?? unseen.length;
+            // Counts what Show lists: one entry per card (or Media Tags section) with new settings.
+            var count = unseen.length;
             var heading = document.createElement('strong');
             heading.className = 'je-whats-new-heading';
             heading.textContent = unseen.length === 0
                 ? 'No new settings in v' + pluginVersion
-                : count + ' new setting' + (count === 1 ? '' : 's') + (singleVersion ? ' in v' + singleVersion : ' since you last checked');
+                : count + (count === 1 ? ' section has' : ' sections have') + ' new settings'
+                    + (singleVersion ? ' in v' + singleVersion : oldestVersion ? ' (v' + oldestVersion + ' to v' + pluginVersion + ')' : '');
             headingRow.appendChild(heading);
 
             var list: HTMLElement | null = null;
@@ -379,6 +384,8 @@ export function createWhatsNew(m: WhatsNewDeps) {
             if (!container) return;
             var badge = document.createElement('span');
             badge.className = 'je-new-badge';
+            // Not part of the control's name (it sits in its label): the What's new list says what is new.
+            badge.setAttribute('aria-hidden', 'true');
             var badgeIcon = document.createElement('i');
             badgeIcon.className = 'material-icons';
             badgeIcon.setAttribute('aria-hidden', 'true');

@@ -170,13 +170,16 @@ export function createServiceStatus(m: ServiceStatusDeps) {
             var tmdbNeeded = !tmdbKey && ['showReviews', 'showReleaseDate', 'autoMovieRequestEnabled'].some(function(id) {
                 return !!asInput(document.getElementById(id))?.checked;
             });
+            // With a key, the last Test of that same key decides: rejected, accepted, or not tested yet.
+            var tmdbTest = tmdbKey ? m.connections.checklistRowState(m.connections.tmdbTestKey(tmdbKey), '') : null;
             pushCard({
                 id: 'tmdb',
                 name: 'TMDB',
                 tab: 'services',
                 scrollTo: '#TMDB_API_KEY',
-                state: tmdbKey ? 'ok' : tmdbNeeded ? 'warn' : 'off',
-                detail: tmdbKey ? 'API key set' : tmdbNeeded ? 'Enabled but API key missing' : 'No API key',
+                state: !tmdbTest ? (tmdbNeeded ? 'warn' : 'off') : tmdbTest.state === 'error' ? 'error' : tmdbTest.state === 'ok' ? 'ok' : 'pending',
+                detail: !tmdbTest ? (tmdbNeeded ? 'Enabled but API key missing' : 'No API key')
+                    : tmdbTest.state === 'pending' ? 'API key set, not tested yet' : tmdbTest.detail,
                 icon: 'vpn_key'
             });
 
@@ -191,13 +194,13 @@ export function createServiceStatus(m: ServiceStatusDeps) {
                     var r = m.connections.checklistRowState('seerr', 'Configured, not yet verified');
                     var urlCount = seerrUrls.split(/\r?\n/).filter(function(u) { return u.trim(); }).length;
                     pushCard({
-                        id: 'seerr', name: 'Seerr', tab: 'seerr', icon: 'bolt',
+                        id: 'seerr', name: 'Seerr', tab: 'seerr', scrollTo: '#jellyseerrUrls', icon: 'bolt',
                         state: r.state === 'amber' ? 'warn' : r.state === 'pending' ? 'pending' : r.state,
                         detail: r.detail + (urlCount > 1 ? ' · ' + urlCount + ' URLs' : '')
                     });
                 } else {
                     pushCard({
-                        id: 'seerr', name: 'Seerr', tab: 'seerr', icon: 'bolt', state: 'warn',
+                        id: 'seerr', name: 'Seerr', tab: 'seerr', scrollTo: '#jellyseerrUrls', icon: 'bolt', state: 'warn',
                         detail: !seerrUrls && !seerrKey ? 'Enabled but URL and API key missing'
                             : !seerrUrls ? 'URL missing'
                             : !seerrUrlValid ? 'URL must start with http:// or https://' : 'API key missing'
@@ -205,7 +208,7 @@ export function createServiceStatus(m: ServiceStatusDeps) {
                 }
             } else if (seerrUrls || seerrKey) {
                 pushCard({
-                    id: 'seerr', name: 'Seerr', tab: 'seerr', icon: 'bolt', state: 'off',
+                    id: 'seerr', name: 'Seerr', tab: 'seerr', scrollTo: '#jellyseerrUrls', icon: 'bolt', state: 'off',
                     detail: 'Configured but integration disabled'
                 });
             }
@@ -215,7 +218,9 @@ export function createServiceStatus(m: ServiceStatusDeps) {
                 var list = asHtml(document.getElementById(type + 'InstancesList'));
                 if (!list) return;
                 var arrCards = list.querySelectorAll<HTMLElement>('.arr-instance-card');
-                arrCards.forEach(function(card) {
+                arrCards.forEach(function(card, index) {
+                    // Each card opens its own instance on the *arr tab.
+                    var at = '#' + type + 'InstancesList > .arr-instance-card:nth-child(' + (index + 1) + ') .arr-instance-url';
                     var urlEl = asControl(card.querySelector('.arr-instance-url'));
                     var keyEl = asControl(card.querySelector('.arr-instance-apikey'));
                     var nameEl = asControl(card.querySelector('.arr-instance-name'));
@@ -236,7 +241,7 @@ export function createServiceStatus(m: ServiceStatusDeps) {
                     var isDisabled = enCb && !enCb.checked;
                     if (isDisabled) {
                         pushCard({
-                            id: cacheKey, name: nameVal, tab: 'arr', icon: icon, state: 'off',
+                            id: cacheKey, name: nameVal, tab: 'arr', scrollTo: at, icon: icon, state: 'off',
                             detail: 'Disabled'
                         });
                         return;
@@ -244,14 +249,14 @@ export function createServiceStatus(m: ServiceStatusDeps) {
 
                     if (!urlVal || !keyVal) {
                         pushCard({
-                            id: cacheKey, name: nameVal, tab: 'arr', icon: icon, state: 'warn',
+                            id: cacheKey, name: nameVal, tab: 'arr', scrollTo: at, icon: icon, state: 'warn',
                             detail: !urlVal ? 'URL missing' : 'API key missing'
                         });
                         return;
                     }
                     var r = m.connections.checklistRowState(cacheKey, 'Configured, not yet verified');
                     pushCard({
-                        id: cacheKey, name: nameVal, tab: 'arr', icon: icon,
+                        id: cacheKey, name: nameVal, tab: 'arr', scrollTo: at, icon: icon,
                         state: r.state === 'amber' ? 'warn' : r.state === 'pending' ? 'pending' : r.state,
                         detail: r.detail
                     });
@@ -319,11 +324,11 @@ export function createServiceStatus(m: ServiceStatusDeps) {
                 var enabled = !!(asInput(document.querySelector(s.on)) || {}).checked;
                 var hasKey = !!readFieldValue(s.key);
                 if (!hasKey && !enabled) {
-                    pushCard({ id: s.id, name: s.name, tab: 'services', icon: s.icon, state: 'off', detail: 'Not set up' });
+                    pushCard({ id: s.id, name: s.name, tab: 'services', icon: s.icon, scrollTo: s.key, state: 'off', detail: 'Not set up' });
                     return;
                 }
                 if (!hasKey) {
-                    pushCard({ id: s.id, name: s.name, tab: 'services', icon: s.icon, state: 'warn', detail: 'Enabled but API key missing' });
+                    pushCard({ id: s.id, name: s.name, tab: 'services', icon: s.icon, scrollTo: s.key, state: 'warn', detail: 'Enabled but API key missing' });
                     return;
                 }
                 jeLoadServiceUsage(s.id);
@@ -515,12 +520,16 @@ export function createServiceStatus(m: ServiceStatusDeps) {
 
     /** Runs this module's start-up work, in the page's original order. */
     function wire(): void {
-        // Maintainerr and Reclaimerr are one choice: switching either on switches the other off (upstream da0ea773).
+        // Maintainerr and Reclaimerr are one choice: switching either on switches the other off (upstream da0ea773), and
+        // switching it off again brings back the one this switched off, so trying the other one is undone in one click.
+        var switchedOff: HTMLInputElement | null = null;
         document.addEventListener('change', function(e) {
             var target = asInput(e.target instanceof Element ? e.target : null);
-            if (!target || !target.checked || (target.id !== 'LeavingSoonMaintainerrEnabled' && target.id !== 'ReclaimerrEnabled')) return;
+            if (!target || (target.id !== 'LeavingSoonMaintainerrEnabled' && target.id !== 'ReclaimerrEnabled')) return;
             var other = asInput(document.getElementById(target.id === 'ReclaimerrEnabled' ? 'LeavingSoonMaintainerrEnabled' : 'ReclaimerrEnabled'));
-            if (other && other.checked) { other.checked = false; other.dispatchEvent(new Event('change', { bubbles: true })); }
+            if (!other) return;
+            if (target.checked && other.checked) { switchedOff = other; other.checked = false; other.dispatchEvent(new Event('change', { bubbles: true })); }
+            else if (!target.checked && switchedOff === other) { switchedOff = null; other.checked = true; other.dispatchEvent(new Event('change', { bubbles: true })); }
         }, { signal: m.context.lifecycle.signal });
         wireCreateAccount();
         wireCreateUsers();

@@ -94,6 +94,20 @@ export function createTheme(m: ThemeDeps) {
             } catch (e) {
                 console.warn('[JE] Failed to rewrite CDN image sources', e);
             }
+            // Logos drawn later (the Media Tags tab's service cards, MDBList's rating sources) fall back the same way.
+            page.addEventListener('error', (e) => {
+                const img = e.target;
+                if (!(img instanceof HTMLImageElement) || img.hasAttribute('data-je-cdn')) return;
+                const card = img.closest('.je-ta-card-icon-img');
+                if (card) { card.className = 'material-icons je-ta-card-icon'; card.textContent = 'link'; return; }
+                if (!img.closest('.je-quality-cat-admin-row')) return;
+                const icon = document.createElement('i');
+                icon.className = 'material-icons';
+                icon.setAttribute('aria-hidden', 'true');
+                icon.textContent = 'star_rate';
+                icon.style.cssText = 'font-size:16px;vertical-align:middle;margin:0 8px;';
+                img.replaceWith(icon);
+            }, { capture: true, signal: lifecycle.signal });
 
             // Next frame, before it paints (the page's first frame already has
             // the right theme classes): reading the computed background here, in

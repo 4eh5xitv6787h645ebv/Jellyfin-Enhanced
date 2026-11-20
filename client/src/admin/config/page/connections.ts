@@ -221,9 +221,19 @@ export function createConnections(m: ConnectionsDeps) {
          * (FNV-1a, so the key itself is never stored), so a result never shows for another key at the same address.
          */
         function arrTestKey(type: string, url: string, apiKey: string) : string {
+            return type + ':' + _jeNormalizeArrUrl(url) + '#' + keyFingerprint(apiKey);
+        }
+
+        /** FNV-1a of an API key: results are kept per key without keeping the key. */
+        function keyFingerprint(apiKey: string) : string {
             let hash = 0x811c9dc5;
             for (let i = 0; i < apiKey.length; i++) hash = Math.imul(hash ^ apiKey.charCodeAt(i), 0x01000193) >>> 0;
-            return type + ':' + _jeNormalizeArrUrl(url) + '#' + hash.toString(16);
+            return hash.toString(16);
+        }
+
+        /** Cache key of a TMDB test result: per key tested, so a result never shows for another key. */
+        function tmdbTestKey(apiKey: string) : string {
+            return 'tmdb#' + keyFingerprint(apiKey);
         }
 
     /** Runs this module's start-up work, in the page's original order. */
@@ -242,5 +252,6 @@ export function createConnections(m: ConnectionsDeps) {
         invalidatePersistedTest,
         jeTestAlert,
         setConnectionTestResult,
+        tmdbTestKey,
     };
 }

@@ -161,6 +161,70 @@ test('search finds both spellings of a word, in either direction', async t => {
   }
 });
 
+test('What\'s new counts what it lists, badges only this release\'s settings, and a badge is not part of a control\'s name', async t => {
+  const h = await page(t);
+  const doc = h.document;
+  const banner = doc.getElementById('je-whats-new-banner');
+  const chips = banner.querySelectorAll('.je-whats-new-chip').length;
+  assert.equal(chips, 3);
+  assert.equal(banner.querySelector('.je-whats-new-heading').textContent, '3 sections have new settings (v12.8.0.0 to v12.16.0.0)');
+  const badge = doc.getElementById('showFileSizes').closest('label').querySelector('.je-new-badge');
+  assert.ok(badge, 'a setting new in this release is badged');
+  assert.equal(badge.getAttribute('aria-hidden'), 'true', 'outside the switch\'s accessible name');
+  assert.equal(doc.querySelector('label[for="DefaultSubtitleStyle"] .je-new-badge'), null, 'one from an older release is listed, not badged');
+});
+
+test('a linked copy does not carry a note that only makes sense on the original card', async t => {
+  const h = await page(t);
+  const original = h.document.querySelector('[data-desc-for="TMDB_API_KEY"]').textContent;
+  const copy = h.document.querySelector('[data-desc-for="TMDB_API_KEY--mirror"]').textContent;
+  assert.match(original, /The Services tab shows the same field/);
+  assert.equal(h.document.querySelector('[data-desc-for="TMDB_API_KEY--mirror"]').closest('.jellyfin-tab-content').id, 'services');
+  assert.doesNotMatch(copy, /Services tab/, 'not on the Services tab itself');
+  assert.match(copy, /TMDB Reviews, Release Dates and per-season providers need it/, 'the rest of the note stays');
+});
+
+test('TMDB Test shows its result in the status indicator, not the Show button, and Overview reports the result for the key tested', async t => {
+  const h = await page(t, { answers: [[/tmdb\/validate/, () => { throw Object.assign(new Error('Unauthorized'), { status: 401 }); }]] });
+  const doc = h.document;
+  const show = doc.querySelector('#elsewhere .je-api-row .je-secret-toggle i');
+  assert.equal(show.textContent, 'visibility');
+  doc.querySelector('#elsewhere .testTmdbBtn').click();
+  await settle(h.window, 80);
+  assert.equal(show.textContent, 'visibility', 'the Show button keeps its icon');
+  assert.equal(doc.getElementById('tmdbStatusIndicator').textContent, 'error', 'the indicator says the key was refused');
+  const status = () => doc.querySelector('#je-service-dashboard [data-status-id="tmdb"]');
+  assert.match(status().className, /je-state-error/, 'Overview is not green for a refused key');
+  assert.match(status().textContent, /API key rejected/);
+  const key = doc.getElementById('TMDB_API_KEY');
+  key.value = 'another-key';
+  key.dispatchEvent(new h.window.Event('input', { bubbles: true }));
+  key.dispatchEvent(new h.window.Event('change', { bubbles: true }));
+  await settle(h.window, 60);
+  tabButton(h, 'overview').click();
+  await settle(h.window, 60);
+  assert.doesNotMatch(status().className, /je-state-error|je-state-ok/, 'another key has no result yet');
+  assert.match(status().textContent, /not tested/);
+});
+
+test('a logo that cannot load anywhere on the page becomes an icon', async t => {
+  const h = await page(t);
+  const doc = h.document;
+  const holder = doc.createElement('span');
+  holder.className = 'je-ta-card-icon je-ta-card-icon-img';
+  holder.innerHTML = '<img alt="" src="http://jf.test/JellyfinEnhanced/cdn/selfhst/svg/tmdb.svg">';
+  doc.getElementById('JellyfinEnhancedPage').append(holder);
+  holder.querySelector('img').dispatchEvent(new h.window.Event('error'));
+  assert.equal(holder.querySelector('img'), null, 'no broken image on the Media Tags card');
+  assert.ok(holder.classList.contains('material-icons'));
+  const source = doc.querySelector('.je-quality-cat-admin-row img');
+  assert.ok(source, 'MDBList\'s rating sources have logos');
+  const row = source.closest('.je-quality-cat-admin-row');
+  source.dispatchEvent(new h.window.Event('error'));
+  assert.equal(row.querySelector('img'), null);
+  assert.ok(row.querySelector('i.material-icons'), 'a rating source logo falls back too');
+});
+
 test('"Skip to settings" is the page\'s first stop, card titles are headings, and no two boxes are both named "Movies"', async t => {
   const h = await page(t, { getJSON: async url => (/VirtualFolders/.test(url) ? [{ ItemId: 'a1', Name: 'Movies', CollectionType: 'movies' }] : []) });
   const doc = h.document;
@@ -200,6 +264,20 @@ test('a card picked on another tab is dropped when a different tab is picked bef
   assert.equal(h.document.querySelector('.jellyfin-tab-content.active').id, 'admin');
   assert.equal(cardParam(h), null, 'no card from the other tab in the address');
   assert.equal(h.document.querySelector('.jellyfin-tab-content.jea-focused'), null, 'and no tab is showing one card');
+});
+
+test('switching Reclaimerr on and off again brings Maintainerr back, so nothing is left changed', async t => {
+  const h = await page(t, { saved: { TMDB_API_KEY: 'key', LeavingSoonMaintainerrEnabled: true, ReclaimerrEnabled: false } });
+  await wait(650);
+  const maintainerr = h.document.getElementById('LeavingSoonMaintainerrEnabled');
+  const reclaimerr = h.document.getElementById('ReclaimerrEnabled');
+  const flip = input => { input.checked = !input.checked; input.dispatchEvent(new h.window.Event('change', { bubbles: true })); };
+  flip(reclaimerr);
+  assert.equal(maintainerr.checked, false, 'one choice: Maintainerr goes off');
+  flip(reclaimerr);
+  assert.equal(maintainerr.checked, true, 'and comes back');
+  await settle(h.window);
+  assert.equal(h.document.querySelector('.je-save-dock.je-dirty'), null, 'nothing unsaved');
 });
 
 test('a shortcut on the space bar is shown as "Space", not as a blank key', async t => {
