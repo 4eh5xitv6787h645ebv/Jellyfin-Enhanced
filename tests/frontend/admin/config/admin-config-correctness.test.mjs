@@ -545,3 +545,23 @@ test('a sub-setting that is on while its parent is off can be turned off and say
   assert.equal(links.disabled, true);
   assert.match(hintOf(links), /^Needs “[^”]+” on$/);
 });
+
+// ── Seerr connection test ──────────────────────────────────────────────────────
+
+test('testing a Seerr URL without http:// says the address needs it, and asks the server nothing', async t => {
+  const h = await page(t, { saved: { ...SEERR, JellyseerrUrls: 'seerr.local' } });
+  h.document.getElementById('testJellyseerrBtn').click();
+  await settle(h.window, 60);
+  assert.equal(h.calls.ajax.filter(r => /jellyseerr\/validate/.test(r.url)).length, 0);
+  assert.match(h.dialogs().join(' '), /seerr\.local.*http:\/\/ or https:\/\//);
+  assert.doesNotMatch(h.dialogs().join(' '), /Missing URL or API key/);
+});
+
+test('a Seerr URL the server refuses is reported with the server\'s reason, not as a missing key', async t => {
+  const refused = () => { throw Object.assign(new Error('Bad Request'), { status: 400, responseText: JSON.stringify({ ok: false, message: 'Invalid URL' }) }); };
+  const h = await page(t, { saved: { ...SEERR, JellyseerrUrls: 'http://169.254.169.254' }, answers: [[/jellyseerr\/validate/, refused]] });
+  h.document.getElementById('testJellyseerrBtn').click();
+  await settle(h.window, 60);
+  assert.doesNotMatch(h.dialogs().join(' '), /Missing URL or API key/);
+  assert.match(h.dialogs().join(' '), /refused/);
+});

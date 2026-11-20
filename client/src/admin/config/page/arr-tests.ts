@@ -33,6 +33,8 @@ export function createArrTests(m: ArrTestsDeps) {
             if (failure.status === 504) return 'Connection timed out. The server may be unreachable.';
             if (failure.status === 401) return 'The API key was rejected. Check the key is correct.';
             if (failure.status === 403) return 'Permission denied. Check the API key has the correct permissions, or that CSRF protection is not enabled in ' + serviceName + '.';
+            // The server names what it refused ("Invalid URL": not an http(s) address, or one it does not contact).
+            if (failure.status === 400 && body && body.message === 'Invalid URL') return 'The server refused ' + url + ' as the ' + serviceName + ' address: it must be a full http:// or https:// address of a host the server may contact.';
             if (failure.status === 400) return 'Missing URL or API key.';
             if (failure.status === 404) return 'The URL responded but did not look like a valid ' + serviceName + ' instance (HTTP 404 on /api/v1/user). It may be a reverse-proxy auth challenge.';
             return 'Connection to ' + serviceName + ' failed (error ' + (failure.status || 'unknown') + ').';

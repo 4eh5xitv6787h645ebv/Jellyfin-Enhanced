@@ -1,6 +1,7 @@
 import type { PageModules } from './modules';
 import { asObject } from '../domain/config';
 import { requestFailure, requestFailureWithBody } from '../domain/http';
+import { httpUrls } from '../domain/config-values';
 import { asHtml, closestTo, needControl, needHtml } from './dom';
 
 /** Dependencies this module calls; members are resolved lazily, after every module exists. */
@@ -21,6 +22,12 @@ export function createProbes(m: ProbesDeps) {
 
             if (!urls.length || !apiKey) {
                 Dashboard.alert({ title: 'Missing Information', message: 'Please provide at least one Seerr URL and an API key to test the connection.' });
+                return;
+            }
+            // Save drops these lines; the test says why instead of sending them.
+            const notHttp = httpUrls(urls).invalid;
+            if (notHttp.length) {
+                Dashboard.alert({ title: 'Check the Seerr URL', message: notHttp.join(', ') + ' is not a full address: a Seerr URL must start with http:// or https://, for example http://192.168.1.10:5055. Nothing was tested.' });
                 return;
             }
 
