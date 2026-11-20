@@ -1,0 +1,81 @@
+# `je12 test --only` runs of this port, from je12's test record (every run on 2026-11-21 in this checkout), in order.
+# Tree labels: 3a17eeacc+dirty@076e4653 = the new tests before the port; 3a17eeacc+dirty@630414e6 = the port before
+# its commit (two edits since: a comment in search.ts and the Media Tags test waits); be9935103 = the committed port.
+
+## 2026-11-21 04:50:15  je12 test --only tests/frontend/admin/config/admin-config-sidebar-search.test.mjs  ->  fail on 3a17eeacc+dirty@076e4653
+  FAIL tests/frontend/admin/config/admin-config-sidebar-search.test.mjs :: a card whose main toggle is off hides its group links in the sidebar, and shows them again when it is on : AssertionError: {"Auto-enable":false,"Hide metadata on unwatched episodes":false,"Advanced per-category reveals":false}
+  FAIL tests/frontend/admin/config/admin-config-sidebar-search.test.mjs :: a group hidden by its showIf condition loses its sidebar link; the other groups of the card keep theirs : AssertionError: Expected values to be strictly deep-equal:
+  FAIL tests/frontend/admin/config/admin-config-sidebar-search.test.mjs :: the search starts at 3 characters, 300 ms after the last keystroke : AssertionError: Expected values to be strictly equal:
+  FAIL tests/frontend/admin/config/admin-config-sidebar-search.test.mjs :: the stylesheet hides a hidden sidebar link, spaces the cards in search mode, and lets a New badge wrap on a phone : AssertionError: The input did not match the regular expression /\.jea-nav-leaf\[hidden\]\s*\{\s*display:\s*none;?\s*\}/. Input:
+
+## 2026-11-21 04:50:36  je12 test --only tests/frontend/admin/config/admin-config-address.test.mjs :: a failed read of the list is tried once more, and its answer still draws the icons  ->  fail on 3a17eeacc+dirty@076e4653
+  FAIL tests/frontend/admin/config/admin-config-address.test.mjs :: a failed read of the list is tried once more, and its answer still draws the icons : AssertionError: the second read
+
+## 2026-11-21 04:50:41  je12 test --only tests/frontend/admin/config/admin-config-address.test.mjs :: the list is kept: a setting whose icon is gone gets it back when its card next changes  ->  fail on 3a17eeacc+dirty@076e4653
+  FAIL tests/frontend/admin/config/admin-config-address.test.mjs :: the list is kept: a setting whose icon is gone gets it back when its card next changes : AssertionError: drawn again, once
+
+## 2026-11-21 04:51:37  je12 test --only tests/frontend/admin/config/admin-config-sidebar-search.test.mjs  ->  pass on 3a17eeacc+dirty@630414e6
+  PASS tests/frontend/admin/config/admin-config-sidebar-search.test.mjs :: a card whose main toggle is off hides its group links in the sidebar, and shows them again when it is on
+  PASS tests/frontend/admin/config/admin-config-sidebar-search.test.mjs :: a group hidden by its showIf condition loses its sidebar link; the other groups of the card keep theirs
+  PASS tests/frontend/admin/config/admin-config-sidebar-search.test.mjs :: the search starts at 3 characters, 300 ms after the last keystroke
+  PASS tests/frontend/admin/config/admin-config-sidebar-search.test.mjs :: the stylesheet hides a hidden sidebar link, spaces the cards in search mode, and lets a New badge wrap on a phone
+
+## 2026-11-21 04:51:46  je12 test --only tests/frontend/admin/config/admin-config-address.test.mjs :: a failed read of the list is tried once more, and its answer still draws the icons  ->  pass on 3a17eeacc+dirty@630414e6
+  PASS tests/frontend/admin/config/admin-config-address.test.mjs :: a failed read of the list is tried once more, and its answer still draws the icons
+
+## 2026-11-21 04:51:50  je12 test --only tests/frontend/admin/config/admin-config-address.test.mjs :: the list is kept: a setting whose icon is gone gets it back when its card next changes  ->  pass on 3a17eeacc+dirty@630414e6
+  PASS tests/frontend/admin/config/admin-config-address.test.mjs :: the list is kept: a setting whose icon is gone gets it back when its card next changes
+
+## 2026-11-21 05:01:35  je12 test --only JE.Tests.BundleBudgetTests  ->  pass on be9935103
+  PASS JE.Tests.BundleBudgetTests.ServedBundleIsWithinTheCheckedInBudget
+  PASS JE.Tests.BundleBudgetTests.BudgetOnlyRisesWithADocumentedReason
+
+## 2026-11-21 05:01:42  je12 test --only JE.Tests.PackedResourcesTests  ->  pass on be9935103
+  PASS JE.Tests.PackedResourcesTests.ThePackedLocalesAreWhatTheServerSideCaptionsAreReadFrom
+  PASS JE.Tests.PackedResourcesTests.OnlyPackedResourcesAsksTheAssemblyForAResource
+  PASS JE.Tests.PackedResourcesTests.EveryClientFileReadsBackByteForByteUnderItsOwnResourceName
+  PASS JE.Tests.PackedResourcesTests.ScriptsMapsTwinsAndLocalesArePackedAndTheEnumeratedFilesAreNot
+  PASS JE.Tests.PackedResourcesTests.WhatThePluginAssemblyEmbedsIsWithinTheCheckedInSizeBudget
+
+## 2026-11-21 05:02:16  je12 test --only tests/frontend/admin/config/admin-config-sidebar-search.test.mjs  ->  pass on be9935103
+  PASS tests/frontend/admin/config/admin-config-sidebar-search.test.mjs :: a card whose main toggle is off hides its group links in the sidebar, and shows them again when it is on
+  PASS tests/frontend/admin/config/admin-config-sidebar-search.test.mjs :: a group hidden by its showIf condition loses its sidebar link; the other groups of the card keep theirs
+  PASS tests/frontend/admin/config/admin-config-sidebar-search.test.mjs :: the search starts at 3 characters, 300 ms after the last keystroke
+  PASS tests/frontend/admin/config/admin-config-sidebar-search.test.mjs :: the stylesheet hides a hidden sidebar link, spaces the cards in search mode, and lets a New badge wrap on a phone
+
+## 2026-11-21 05:02:28  je12 test --only tests/frontend/admin/config/admin-config-address.test.mjs  ->  pass on be9935103
+  PASS tests/frontend/admin/config/admin-config-address.test.mjs :: settings the usage report carries get an icon that opens the Usage Statistics card, without changing the setting
+  PASS tests/frontend/admin/config/admin-config-address.test.mjs :: no icon, and no error, when the list cannot be read or is not a list
+  PASS tests/frontend/admin/config/admin-config-address.test.mjs :: the address names the tab and the card shown, and loses the card when a whole tab is shown
+  PASS tests/frontend/admin/config/admin-config-address.test.mjs :: an address with a tab and a card opens that card, also when the session kept another tab
+  PASS tests/frontend/admin/config/admin-config-address.test.mjs :: a link to a setting opens its tab, not the tab the session kept
+  PASS tests/frontend/admin/config/admin-config-address.test.mjs :: the address the page writes keeps the page name as Jellyfin writes it
+  PASS tests/frontend/admin/config/admin-config-address.test.mjs :: a failed read of the list is tried once more, and its answer still draws the icons
+  PASS tests/frontend/admin/config/admin-config-address.test.mjs :: the list is kept: a setting whose icon is gone gets it back when its card next changes
+
+## 2026-11-21 05:03:01  je12 test --only tests/frontend/features/media-tags/admin/features-admin-config-media-tags-tab.test.mjs  ->  pass on be9935103
+  PASS tests/frontend/features/media-tags/admin/features-admin-config-media-tags-tab.test.mjs :: the tab: after the form, between Display and Elsewhere in the sidebar with its sections, drawn the first time it opens
+  PASS tests/frontend/features/media-tags/admin/features-admin-config-media-tags-tab.test.mjs :: addresses open the tab at their section: the tab's own, older jeSection ids, and tab= for any tab
+  PASS tests/frontend/features/media-tags/admin/features-admin-config-media-tags-tab.test.mjs :: the address follows the Media Tags tab and its section, and the next tab replaces both
+  PASS tests/frontend/features/media-tags/admin/features-admin-config-media-tags-tab.test.mjs :: showing the Media Tags tab again keeps its section in the address
+  PASS tests/frontend/features/media-tags/admin/features-admin-config-media-tags-tab.test.mjs :: an address naming a Media Tags section opens it, not the tab the session kept
+  PASS tests/frontend/features/media-tags/admin/features-admin-config-media-tags-tab.test.mjs :: links to the page itself (the Display card, the tab's own links) open in place, without navigating
+  PASS tests/frontend/features/media-tags/admin/features-admin-config-media-tags-tab.test.mjs :: Save never puts an older Media Tags value back: a pending field save goes first, and one made during the write waits for it
+  PASS tests/frontend/features/media-tags/admin/features-admin-config-media-tags-tab.test.mjs :: the page's Save persists after the Media Tags tab has loaded, over Jellyfin's strict getUrl
+  PASS tests/frontend/features/media-tags/admin/features-admin-config-media-tags-tab.test.mjs :: an account that cannot be read (its server): the tab reads nothing and says so, and Save says it did not save
+  PASS tests/frontend/features/media-tags/admin/features-admin-config-media-tags-tab.test.mjs :: an account that cannot be read (its server, from a client read anew each time): the tab reads nothing and says so, and Save says it did not save
+  PASS tests/frontend/features/media-tags/admin/features-admin-config-media-tags-tab.test.mjs :: Apply all plugin settings and Apply the above save a pending Media Tags change first and never write one
+  PASS tests/frontend/features/media-tags/admin/features-admin-config-media-tags-tab.test.mjs :: the sidebar marks a Media Tags change that is not saved, and a saved change updates the Display card
+  PASS tests/frontend/features/media-tags/admin/features-admin-config-media-tags-tab.test.mjs :: searching and clearing the search leaves the Media Tags tab as it was
+  PASS tests/frontend/features/media-tags/admin/features-admin-config-media-tags-tab.test.mjs :: the settings search lists matching Media Tags settings under the form, and a hit opens the setting on its tab
+  PASS tests/frontend/features/media-tags/admin/features-admin-config-media-tags-tab.test.mjs :: the stylesheet keeps the hidden Media Tags result list hidden and draws its rows
+  PASS tests/frontend/features/media-tags/admin/features-admin-config-media-tags-tab.test.mjs :: a search answered after a newer one, or after the view is gone, draws nothing
+  PASS tests/frontend/features/media-tags/admin/features-admin-config-media-tags-tab.test.mjs :: a new setting on the Media Tags tab gets its New badge on its row, keeps it when the tab redraws, and loses it on Dismiss
+  PASS tests/frontend/features/media-tags/admin/features-admin-config-media-tags-tab.test.mjs :: the Media Tags badge watcher ends with the view
+  PASS tests/frontend/features/media-tags/admin/features-admin-config-media-tags-tab.test.mjs :: an address naming a Media Tags section, with Media Tags the tab restored from the session, opens it while the tab loads, without an error
+  PASS tests/frontend/features/media-tags/admin/features-admin-config-media-tags-tab.test.mjs :: the Media Tags tab keeps no transform once shown: its Undo bar stays fixed to the window
+  PASS tests/frontend/features/media-tags/admin/features-admin-config-media-tags-tab.test.mjs :: at a 1400px window (896px for the tab beside the drawer and the sidebar) the live preview stays beside the settings
+  PASS tests/frontend/features/media-tags/admin/features-admin-config-media-tags-tab.test.mjs :: the tab is a section of the page: the sidebar navigates it on a desktop, the page's chip row on a phone, no title row of its own
+  PASS tests/frontend/features/media-tags/admin/features-admin-config-media-tags-tab.test.mjs :: a tab that cannot be drawn says so, and its message and button name the same action (Retry)
+  PASS tests/frontend/features/media-tags/admin/features-admin-config-media-tags-tab.test.mjs :: ATB-R2-001: through the real save store, a confirmation resumed after an account change writes nothing
+  PASS tests/frontend/features/media-tags/admin/features-admin-config-media-tags-tab.test.mjs :: the tab's confirmations use the page's own dialog, not Jellyfin's, which builds the page again when it closes

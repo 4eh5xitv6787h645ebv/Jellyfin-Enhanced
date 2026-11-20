@@ -1,0 +1,9 @@
+$ je12 browse '#/configurationpage?name=Jellyfin%20Enhanced&tab=display' --profile phone --eval '(() => { const t = document.querySelector('"'"'#JellyfinEnhancedForm .jea-section .jea-toggle'"'"'); const s = getComputedStyle(t); return '"'"'width '"'"' + innerWidth + '"'"': .jea-toggle flex-wrap='"'"' + s.flexWrap + '"'"'; New badges on the page='"'"' + document.querySelectorAll('"'"'.je-new-badge'"'"').length; })()'
+# deployed HEAD = be993510 (dll 32986baf3a61f854) on lab je125ce284, 2026-11-21 04:58:05
+PROFILE phone {"ua":"Mozilla/5.0 (Linux; Android 14; Pixel 7) AppleWebKit/537.36 ","layout":["layout-mobile"]}
+EVAL width 390: .jea-toggle flex-wrap=wrap; New badges on the page=59
+CONSOLE Failed to load resource: the server responded with a status of 404 (Not Found) /JellyfinEnhanced/cdn/selfhst/svg/maintainerr.svg
+CONSOLE Failed to load resource: the server responded with a status of 404 (Not Found) /JellyfinEnhanced/cdn/selfhst/svg/reclaimerr.svg
+CONSOLE Failed to load resource: the server responded with a status of 404 (Not Found) /JellyfinEnhanced/cdn/selfhst/svg/tmdb.svg
+BLOCKED https://www.gstatic.com/cv/js/sender/v1/cast_sender.js
+URL /web/index.html#/configurationpage?name=Jellyfin%20Enhanced&tab=display
