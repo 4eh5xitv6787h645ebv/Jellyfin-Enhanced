@@ -12,6 +12,8 @@ function start(admin: AdminEngine, page: HTMLElement, replayShow: boolean): void
     if (!(form instanceof HTMLFormElement)) throw new Error('The Jellyfin Enhanced settings form is missing');
     // jellyfin-web fires this when it drops a view from its cache.
     page.addEventListener('viewdestroy', () => lifecycle.dispose(), { once: true, signal: lifecycle.signal });
+    // A newer view of this page took over (startup.ts claimPage): this one is emptied, so everything it registered goes.
+    page.addEventListener('jeadminretire', () => lifecycle.dispose(), { once: true, signal: lifecycle.signal });
     startPage({
         pluginId: PLUGIN_ID,
         ApiClient: apiClient(),

@@ -1031,3 +1031,40 @@ test('the Seerr region switch is off by default, saved with the form, and announ
   assert.equal(box.checked, false);
   assert.match(box.closest('label').textContent, /Use each user's Seerr streaming region/);
 });
+
+/** Insert the page a second time the way jellyfin-web inserts a view: the markup first, then its scripts run in order. */
+function openSecondView(h) {
+  const parsed = new h.window.DOMParser().parseFromString(pageHtml(), 'text/html');
+  const template = parsed.getElementById('JellyfinEnhancedPage');
+  const view = h.document.createElement('div');
+  for (const attr of template.attributes) view.setAttribute(attr.name, attr.value);
+  view.innerHTML = template.innerHTML;
+  h.document.body.appendChild(view);
+  view.querySelectorAll('script').forEach(inert => {
+    const script = h.document.createElement('script');
+    script.textContent = inert.textContent;
+    inert.replaceWith(script);
+  });
+  return view;
+}
+
+test('ADMIN-CONFIG-04: a second view of the page takes the page over from the cached first one', async t => {
+  const h = boot(t, { saved: { ShowFileSizes: true } });
+  await h.ready();
+  h.show();
+  await settle(h.window);
+  const first = h.page();
+  assert.ok(first.querySelector('.jea-layout'), 'the first view has its sidebar layout');
+  // jellyfin-web hides the cached view and inserts the page again for an address it has not cached.
+  first.classList.add('hide');
+  const second = openSecondView(h);
+  await settle(h.window);
+  second.dispatchEvent(new h.window.Event('pageshow'));
+  await settle(h.window);
+  assert.deepEqual(Array.from(h.document.querySelectorAll('[id="JellyfinEnhancedPage"]')), [second], 'one element holds the page id');
+  assert.equal(first.childElementCount, 0, 'the superseded view keeps no controls with the same ids');
+  assert.equal(h.document.querySelector('[data-je-section]'), null, 'every section of the new view is mounted');
+  assert.ok(second.querySelector('.jea-layout .jea-nav .je-tab-bar'), 'the new view has the sidebar layout, not the bare tab strip');
+  assert.equal(second.querySelector('#showFileSizes').checked, true, 'the new view loaded the saved settings');
+  assert.equal(h.document.querySelectorAll('#showFileSizes').length, 1);
+});

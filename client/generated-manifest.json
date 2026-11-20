@@ -1067,16 +1067,17 @@
       "manifest": "client/html-entries/admin-config.json",
       "template": "client/html/admin-config/configPage.html",
       "templateSha256": "98ee64b18132e05f98aa1d94f1a359b0a2028dca2a745ac15cbd840d859046eb",
-      "outputSha256": "67c119429e428e97453f41feacdb1343f4368471b6daa9c15d99b1bda4a1140a",
+      "outputSha256": "1db542b0937b7e10acd2c5c8677c41b18b33f38276f4f249fc95d48829ba3600",
       "scripts": [
         {
           "name": "startup",
           "scriptIndex": 0,
           "source": "client/src/admin/config/startup-entry.ts",
-          "sha256": "39574f81b7cedbfdb06f8e875d712439c4570c8a85a0241b1823271a3be02c32",
+          "sha256": "482a0f7fa09159e7ad58fd9d4d4e243cc9a93d5664721ac2ccbd250987a3da2c",
           "inputs": {
+            "client/src/admin/config/engine/address.ts": "e851665c8cdfe40a7f067f3ab378b5229f2bf7073d45dad02f1247d36de25ae7",
             "client/src/admin/config/startup-entry.ts": "c0f00cc5cb997a6cf30ed25c5121644ca6a748b3ee46a230bf504ee6bffbdc7e",
-            "client/src/admin/config/startup.ts": "073f4d045361f56714042967ed446d8a2498230cff5dd724a19d5a13a2e42a04",
+            "client/src/admin/config/startup.ts": "301c799fdc566a8b605e6659d0121d7cce9e92ffacd7196b64b4f973db72b566",
             "client/src/host/admin-config-host.ts": "909c2e1fb06fcfae85d95e90a9c01f7eccc9cf98f2014b430b374a920449e686"
           }
         },
@@ -1084,7 +1085,7 @@
           "name": "main",
           "scriptIndex": 1,
           "source": "client/src/admin/config/page-entry.ts",
-          "sha256": "065a0a4c571e11463e083ec053b330585005e4b2e19db197b64aa701a9398177",
+          "sha256": "6055c7855dbedec433635c65ce483a3a265d6852d6d541520eb48ee294572a7f",
           "inputs": {
             "client/src/admin/config/domain/config-values.ts": "438b48bcac728b62b61c59dd541e190beadc5329a3b387fce0857ef3c2c720e9",
             "client/src/admin/config/domain/config.ts": "9d01375f8e8fae1d4daba8d3b517bba38697fc32aad5926b57966703fa313e01",
@@ -1105,7 +1106,7 @@
             "client/src/admin/config/page/banners.ts": "befa95a3b7f60dbbe0115772f3a400a4394d3be5314de96219fc11d8963ec215",
             "client/src/admin/config/page/bindings.ts": "40dab5561bfff042491f4bda125dec913c470c5376ca22d1d8164a0f01605c0a",
             "client/src/admin/config/page/blocked-users.ts": "87794ca84ded2d82331b5f7fa39c00aae6274edf80926acb9422d1952ae43129",
-            "client/src/admin/config/page/boot.ts": "c328c388c941e6d7bfda5beeed3585248a4d38f4c6fb3ab175c5af610e019da9",
+            "client/src/admin/config/page/boot.ts": "ec99b132ea29a8ebd953d70bbaa7e25d0e97f98fae07127e752f1eb2bdbcc25e",
             "client/src/admin/config/page/branding.ts": "4c5118797fcb145584d084472a880be498293e2827fc11deb7badb256c64f0dc",
             "client/src/admin/config/page/connections.ts": "6266bfa3b450c8c5948de9646fe4b3b986cadb6fab0789045b03f322b90f4c82",
             "client/src/admin/config/page/custom-tabs.ts": "4c941a39a1e11de1e45a325f0fb2d8bf33cca66d01b8fbefc941e66c42f1eb72",
@@ -2111,7 +2112,7 @@
     "Jellyfin.Plugin.JellyfinEnhanced/min/js/tags/tag-styles.js": "9f2dc55268ee097135b731220760ed974da4d8057b929b0abae4130b7305174e",
     "Jellyfin.Plugin.JellyfinEnhanced/min/js/tags/userreviewtags.js.map": "3e2aff4067994cc826ae1f0847c628a6e4e760eac6a3eaad1ff18214accca62b",
     "Jellyfin.Plugin.JellyfinEnhanced/min/js/tags/userreviewtags.js": "0dfda75266bb34405fbcd426bb0f9287a1f272c9d50b1836d1f9f1d42a8aab1f",
-    "Jellyfin.Plugin.JellyfinEnhanced/Configuration/configPage.html": "67c119429e428e97453f41feacdb1343f4368471b6daa9c15d99b1bda4a1140a",
+    "Jellyfin.Plugin.JellyfinEnhanced/Configuration/configPage.html": "1db542b0937b7e10acd2c5c8677c41b18b33f38276f4f249fc95d48829ba3600",
     "Jellyfin.Plugin.JellyfinEnhanced/Configuration/mediaTagsPage.html": "852a722753d35261a5456aa8e6b30ec435939344335c8ea1741bd836d6c7a691",
     "Jellyfin.Plugin.JellyfinEnhanced/PluginPages/ActivityPage.html": "1cda55a578ba682c73b7049146f5062360e04f5bab8f0ab3a6532579d24f1079",
     "Jellyfin.Plugin.JellyfinEnhanced/PluginPages/BookmarksPage.html": "a42f0099ec8131bb8593ea7537621f53afc44794f74df9a01e190a73c6768012",
