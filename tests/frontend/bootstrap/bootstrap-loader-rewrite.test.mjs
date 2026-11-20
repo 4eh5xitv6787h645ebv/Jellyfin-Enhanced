@@ -353,7 +353,7 @@ test('feature initializers run in order and only when enabled', async t => {
     const stage = ['PluginRevisions', 'EnhancedScript', 'ElsewhereScript', 'JellyseerrScript', 'PauseScreen', 'Bookmarks', 'QualityTags', 'GenreTags', 'RatingTags', 'AgeRatingTags', 'StatusTags', 'AwardsTags', 'CustomTags', 'TagStyles', 'UserReviewTags',
         'ArrLinksScript', 'ArrTagLinksScript', 'SeerrDetailLinkScript', 'LetterboxdLinksScript', 'ReviewsScript', 'AwardsScript', 'DoesTheDogDieScript', 'MdblistRatingsScript', 'LanguageTags', 'LogoTags', 'PeopleTags', 'OsdRating', 'PlaybackRatingBadge', 'HiddenContent',
         'ColoredRatings', 'ThemeSelector', 'ActivityIcons', 'PluginIcons', 'DownloadsPage', 'CalendarPage', 'HiddenContentPage'];
-    const flags = ['ElsewhereEnabled', 'JellyseerrEnabled', 'JellyseerrShowSearchResults', 'JellyseerrShowReportButton', 'TagStyleWebActive', 'ShowUserReviews', 'ShowUserRatingOnPosters', 'ArrLinksEnabled', 'ArrTagsShowAsLinks', 'JellyseerrShowDetailPageLink', 'LetterboxdEnabled', 'ShowAwards', 'DoesTheDogDieEnabled', 'MdblistRatingsEnabled', 'MdblistRatingsShowOnItemDetails', 'ShowPlaybackRatingBadge', 'HiddenContentEnabled', 'SpoilerBlurEnabled', 'ColoredRatingsEnabled', 'ThemeSelectorEnabled', 'ColoredActivityIconsEnabled', 'PluginIconsEnabled', 'ActiveStreamsEnabled', 'DownloadsPageEnabled', 'CalendarPageEnabled'];
+    const flags = ['ElsewhereEnabled', 'JellyseerrEnabled', 'JellyseerrShowSearchResults', 'JellyseerrShowReportButton', 'TagStyleWebActive', 'ShowUserReviews', 'ShowUserRatingOnPosters', 'ArrLinksEnabled', 'ArrTagsSyncEnabled', 'ArrTagsShowAsLinks', 'JellyseerrShowDetailPageLink', 'LetterboxdEnabled', 'ShowAwards', 'DoesTheDogDieEnabled', 'MdblistRatingsEnabled', 'MdblistRatingsShowOnItemDetails', 'ShowPlaybackRatingBadge', 'HiddenContentEnabled', 'SpoilerBlurEnabled', 'ColoredRatingsEnabled', 'ThemeSelectorEnabled', 'ColoredActivityIconsEnabled', 'PluginIconsEnabled', 'ActiveStreamsEnabled', 'DownloadsPageEnabled', 'CalendarPageEnabled'];
     const settings = ['QualityTagsEnabled', 'GenreTagsEnabled', 'RatingTagsEnabled', 'AgeRatingTagsEnabled', 'StatusTagsEnabled', 'AwardsTagsEnabled', 'CustomTagsEnabled', 'LanguageTagsEnabled', 'LogoTagsEnabled', 'PeopleTagsEnabled'];
     const run = async (t, on) => {
         const initialized = [];
@@ -374,4 +374,17 @@ test('feature initializers run in order and only when enabled', async t => {
         'ArrLinksScript', 'ArrTagLinksScript', 'SeerrDetailLinkScript', 'LetterboxdLinksScript', 'ReviewsScript', 'AwardsScript', 'DoesTheDogDieScript', 'MdblistRatingsScript', 'LanguageTags', 'LogoTags', 'PeopleTags', 'tagPipeline', 'OsdRating', 'PlaybackRatingBadge', 'HiddenContent', 'spoilerBlur',
         'ColoredRatings', 'ThemeSelector', 'ActivityIcons', 'PluginIcons', 'activeStreams', 'DownloadsPage', 'CalendarPage', 'HiddenContentPage']);
     assert.deepEqual(await run(t, false), ['themer', 'PluginRevisions', 'EnhancedScript', 'PauseScreen', 'Bookmarks', 'tagPipeline', 'OsdRating']);
+});
+
+test('*arr tag links start only while *arr tag sync is on, as the settings page shows them', async t => {
+    const started = async sync => {
+        const initialized = [];
+        const h = boot(t, { data: payload({ PublicConfig: { ArrTagsSyncEnabled: sync, ArrTagsShowAsLinks: true }, UserSettings: { Settings: {} } }), modules: [
+            () => h.load('core/navigation.js'), () => h.load('core/session.js'), () => h.load('enhanced/config.js'),
+            () => { h.JE.initializeArrTagLinksScript = () => initialized.push('ArrTagLinksScript'); }] });
+        await until(() => h.JE.initialized);
+        return initialized;
+    };
+    assert.deepEqual(await started(false), [], 'sync off: no links, whatever "Show synced tags as links" holds');
+    assert.deepEqual(await started(true), ['ArrTagLinksScript']);
 });

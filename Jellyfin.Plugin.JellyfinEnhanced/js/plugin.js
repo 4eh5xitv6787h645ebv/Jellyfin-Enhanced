@@ -570,7 +570,8 @@
     ["tags", "initializeTagStyles", (c) => c.TagStyleWebActive],
     ["tags", "initializeUserReviewTags", (c, s) => c.ShowUserReviews && c.ShowUserRatingOnPosters && s.ratingTagsEnabled],
     ["arr-links", "initializeArrLinksScript", (c) => c.ArrLinksEnabled],
-    ["arr-tag-links", "initializeArrTagLinksScript", (c) => c.ArrTagsShowAsLinks],
+    // Links for the tags the *arr tag sync writes: off with the sync, as the settings page shows them (audio language links likewise).
+    ["arr-tag-links", "initializeArrTagLinksScript", (c) => c.ArrTagsSyncEnabled && c.ArrTagsShowAsLinks],
     ["seerr", "initializeSeerrDetailLinkScript", (c) => c.JellyseerrEnabled && c.JellyseerrShowDetailPageLink],
     ["letterboxd", "initializeLetterboxdLinksScript", (c) => c.LetterboxdEnabled],
     ["reviews", "initializeReviewsScript", (c) => c.ShowReviews || c.ShowUserReviews || c.ShowAnilistReviews],
