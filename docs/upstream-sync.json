@@ -3392,7 +3392,9 @@
         "Jellyfin.Plugin.JellyfinEnhanced/js/locales/ (32 files)"
       ],
       "status": "ported",
-      "rewriteCommits": [],
+      "rewriteCommits": [
+        "ca2aa651d21e23f2c49752cb75d55576a8463515"
+      ],
       "evidence": "artifacts/restructure-plan/step-logs/upstream-sync-evidence/p100-*",
       "notes": "Applied as is (git show 65161c52 | git apply --3way, clean): the 32 locale files under Jellyfin.Plugin.JellyfinEnhanced/js/locales other than en.json are byte for byte upstream's at 65161c52. Each gains 72 keys (2,304 values), translated rather than Weblate's English prefill (209 of the values equal the English text, mostly in en-GB and en-US): 15 leavingsoon_* strings of the Leaving soon page (the scope, removal-date and approval lines) and 57 discovery_filter* strings of the Seerr discovery filters, Undo and rules. No key changes or goes; every value keeps the {placeholders} of this tree's en.json. 71 of the keys are in this tree's en.json. One, leavingsoon_requests_unavailable_reason, is the administrator's reason line of upstream da3d9ee9 (row 97, deferred for a contract review): this tree's en.json and code gain it when that port lands, and until then the 32 translations are unused, as row 46's elsewhere_settings_seerr_region was. The server reads no leavingsoon_* or discovery_* key for poster captions (StatusRules reads leaving_*), so no resolver version moves. The assembly embeds the locales packed: +30,771 bytes, covered by the run's chore(budget) commit."
     }
