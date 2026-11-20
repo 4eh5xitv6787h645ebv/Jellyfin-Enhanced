@@ -41,6 +41,11 @@
     const el = scope?.querySelector(selector);
     return el instanceof HTMLElement ? el : null;
   }
+  function showRow(row, focus2) {
+    if (!focus2) return;
+    row.scrollIntoView?.({ block: "start" });
+    find(row, "input, select, button")?.focus({ preventScroll: true });
+  }
   function must(scope, selector) {
     const el = find(scope, selector);
     if (!el) throw new Error(`Media Tags admin markup is incomplete: ${selector}`);
@@ -921,8 +926,8 @@
         }
         return;
       }
-      const body = must(row, ".je-ta-grow-body");
-      const button = must(row, ".je-ta-expand");
+      const body = find(row, ".je-ta-grow-body"), button = find(row, ".je-ta-expand");
+      if (!body || !button) return showRow(row, open && !!opts.focus);
       openGroups.set(group, open);
       row.dataset.open = String(open);
       body.hidden = !open;

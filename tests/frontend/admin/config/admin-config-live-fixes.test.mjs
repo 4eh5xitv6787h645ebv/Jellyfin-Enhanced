@@ -120,6 +120,15 @@ test('a tab or card shown writes the address quietly, through the plugin\'s writ
   assert.equal(replaced, 0, 'nothing written past the plugin');
 });
 
+test('the Media Tags Overview\'s People button shows the People row and its switch instead of failing', async t => {
+  const h = setup(t);
+  await h.settle();
+  assert.doesNotThrow(() => h.ctx.openTab('groups', { group: 'people', focus: true }));
+  const row = h.$('.je-ta-grow[data-group="people"]');
+  assert.equal(h.root.dataset.tab, 'groups');
+  assert.ok(row.contains(h.document.activeElement), 'its switch has focus');
+});
+
 test('a shortcut on the space bar is shown as "Space", not as a blank key', async t => {
   const h = await page(t);
   tabButton(h, 'keyboard').click();

@@ -6,7 +6,7 @@
 import type { JsonValue } from '../../../contracts/generated';
 import { apiClient, cdnUrl, settingsUi, type AdminTagsBridge } from './host';
 import type { TagPreview } from '../settings/ui-panel-tag-preview';
-import { activeElement, all, allAs, closest, find, focus, isDisabled, must, targetOf } from './dom';
+import { activeElement, all, allAs, closest, find, focus, isDisabled, must, showRow, targetOf } from './dom';
 import { controlValue, fieldValue, fieldsHtml, type TextKit } from './fields';
 import { fmt, word, WORDS } from './format';
 import { hiddenLinkHtml, syncHiddenRow } from './hidden-rows';
@@ -594,8 +594,8 @@ export function createPage(deps: PageDeps, root: HTMLElement, initial: Config, o
             }
             return;
         }
-        const body = must(row, '.je-ta-grow-body');
-        const button = must(row, '.je-ta-expand');
+        const body = find(row, '.je-ta-grow-body'), button = find(row, '.je-ta-expand');
+        if (!body || !button) return showRow(row, open && !!opts.focus); // A row with no panel (People): it and its switch are shown.
         openGroups.set(group, open);
         row.dataset.open = String(open);
         body.hidden = !open;
