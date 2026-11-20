@@ -3469,7 +3469,9 @@
         "tests/frontend/features/features-admin-config-media-tags-tab.test.mjs"
       ],
       "status": "ported",
-      "rewriteCommits": [],
+      "rewriteCommits": [
+        "5afcc38a932c1099db092073044ed4b935aefe57"
+      ],
       "with": "1952fa31e9767d334b57c2a64b17eb92299457de",
       "evidence": "artifacts/restructure-plan/step-logs/upstream-sync-evidence/p103.tests.txt",
       "notes": "Upstream's follow-up to 1952fa31 (row 98, its settings search now waits 300 ms): the Media Tags tab test 'searching and clearing the search leaves the Media Tags tab as it was' (here tests/frontend/features/media-tags/admin/features-admin-config-media-tags-tab.test.mjs) no longer sleeps a fixed time before it checks for search mode; it waits until the form is in search mode with the file's own until helper (polls every 5 ms, about one second at most), as upstream. Row 98's port had already raised this wait to SEARCH_DEBOUNCE + 100 ms, so the test passed before too; the change takes the fixed delay out, which a loaded machine could outrun. The file's other fixed waits after typing are left as they are, as upstream leaves its own. The test and its file (25 tests) pass."
