@@ -1459,7 +1459,7 @@
             label: "Turn off keyboard shortcuts",
             desc: 'Disables all keyboard shortcuts, and hides the "Shortcuts" tab in the Enhanced Panel.'
           },
-          { type: "note", html: '<strong>Users can customise their own settings in the Enhanced Panel:</strong> press <code>?</code> (default shortcut), long-press the profile picture in the top-right corner, use the "Jellyfin Enhanced" link in the sidebar, or open it from the playback controls menu (mobile only).' },
+          { type: "note", html: '<strong>Users can customise their own settings in the Enhanced Panel:</strong> press <code>?</code>, use the "Enhanced Panel" link in the sidebar, choose "Jellyfin Enhanced" in their user menu on Jellyfin 12 or "Jellyfin Enhanced - User Settings" in their Settings, or use the tune button in the player controls (not on desktop layouts).' },
           { type: "html", html: '<div class="fieldDescription je-sc-help">Select a key, then press the new combination (for example <kbd>Shift+A</kbd>). <b>Escape</b> cancels, <b>Delete</b> turns the shortcut off for every user and <b>Backspace</b> restores its default. Users can still change their own keys in their Enhanced Panel.</div><div id="shortcut-error-comment" style="display: none; color: #ff6b6b; margin-top:5px;"></div><div id="shortcut-grid"></div>' }
         ]
       }

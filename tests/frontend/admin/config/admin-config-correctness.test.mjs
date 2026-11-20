@@ -1,6 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { bootGenerated, settle } from '../../helpers/admin-config-page.mjs';
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
+import { bootGenerated, repo, settle } from '../../helpers/admin-config-page.mjs';
 
 // Behaviour of the settings page's actions and status views, driven through the generated page.
 
@@ -564,4 +566,17 @@ test('a Seerr URL the server refuses is reported with the server\'s reason, not 
   await settle(h.window, 60);
   assert.doesNotMatch(h.dialogs().join(' '), /Missing URL or API key/);
   assert.match(h.dialogs().join(' '), /refused/);
+});
+
+// ── Text that names what the client offers ─────────────────────────────────────
+
+test('the Enhanced Panel note names only ways the client offers to open it (the avatar long-press went with #627)', async t => {
+  const h = await page(t);
+  const note = [...h.document.querySelectorAll('#keyboard .je-info-banner, #keyboard [class*="note"]')].map(n => n.textContent).find(text => /Enhanced Panel/.test(text));
+  assert.ok(note);
+  assert.doesNotMatch(note, /long-press|profile picture/i);
+  const client = readFileSync(join(repo, 'client/src/features/settings-panel/ui-entry-points.ts'), 'utf8');
+  const named = [...note.matchAll(/"([^"]+)"/g)].map(m => m[1]);
+  assert.ok(named.length >= 2, note);
+  for (const name of named) assert.ok(client.includes(name), `the client has no "${name}" entry point`);
 });
