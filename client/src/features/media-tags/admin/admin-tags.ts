@@ -82,7 +82,7 @@ const SECTION_SCOPES: Readonly<Record<string, 'new' | 'all'>> = {
 const SECTION_ICONS: Readonly<Record<string, string>> = {
     'layout-look': 'view_quilt', 'layout-groups': 'reorder', 'layout-shapes': 'crop_portrait', 'layout-display': 'tune',
     'rules': 'rule', 'rules-locks': 'lock', 'item-looks': 'movie', 'colours': 'palette',
-    'badges-families': 'new_releases', 'badges-windows': 'schedule', 'badges-tmdb': 'img:selfhst/svg/tmdb.svg', 'badges-leaving': 'event_busy',
+    'badges-families': 'new_releases', 'badges-collections': 'collections_bookmark', 'badges-windows': 'schedule', 'badges-tmdb': 'img:selfhst/svg/tmdb.svg', 'badges-leaving': 'event_busy',
     'server-cache': 'storage', 'server-native': 'devices', 'server-portable': 'import_export', 'server-presets': 'bookmarks',
 };
 
@@ -128,7 +128,7 @@ const sections: SectionDef[] = [];
 const esc = (value: unknown): string => JE.escapeHtml(String(value ?? ''));
 const tx = (value: unknown, params?: FmtParams): string => esc(fmt(value, params));
 /** The configuration page's marker for a setting each user holds a personal copy of (its icon, its tooltip). */
-const perUserMark = (): string => `<i class="material-icons je-ta-peruser" role="img" aria-label="${tx('Per-user setting')}" title="${tx('Each user has a personal copy. Existing users keep theirs until you overwrite it.')}">group</i>`;
+const perUserMark = (): string => `<span class="je-ta-peruser" aria-hidden="true" title="${tx('Each user has a personal copy. Existing users keep theirs until you overwrite it.')}"></span>`;
 const kit: TextKit = { esc, tx, perUserMark };
 
 /**
@@ -184,10 +184,10 @@ function pageUrl(tab?: string | null, group?: string | null): string {
     return `${base}#/configurationpage?name=${encodeURIComponent(MAIN_PAGE_NAME)}&jeSection=${TAB_ID}${tab ? `&tab=${encodeURIComponent(tab)}` : ''}${group ? `&group=${encodeURIComponent(group)}` : ''}`;
 }
 
-/** The main configuration page link, optionally opened at a section (configPage.html reads `jeSection`) and tab. */
-function mainPageUrl(section?: string | null, tab?: string | null): string {
+/** The main configuration page link, optionally opened at a section (configPage.html reads `jeSection`), a tab and a card on it. */
+function mainPageUrl(section?: string | null, tab?: string | null, card?: string | null): string {
     const base = `${window.location.origin}${window.location.pathname}`;
-    return `${base}#/configurationpage?name=${encodeURIComponent(MAIN_PAGE_NAME)}${section ? `&jeSection=${encodeURIComponent(section)}` : ''}${tab ? `&tab=${encodeURIComponent(tab)}` : ''}`;
+    return `${base}#/configurationpage?name=${encodeURIComponent(MAIN_PAGE_NAME)}${section ? `&jeSection=${encodeURIComponent(section)}` : ''}${tab ? `&tab=${encodeURIComponent(tab)}` : ''}${card ? `&card=${encodeURIComponent(card)}` : ''}`;
 }
 
 /** The address whose section was last opened: returning to the tab later keeps the section the administrator chose since. */

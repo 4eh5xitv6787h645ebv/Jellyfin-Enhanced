@@ -72,6 +72,44 @@ export function createGatedHelp(m: GatedHelpDeps) {
                 var loser = changedId === pair.native ? customBox : changedId === pair.custom ? nativeBox : customBox;
                 loser.checked = false;
                 loser.dispatchEvent(new Event('change', { bubbles: true }));
+                // Say so where it happened, rather than silently unticking the other switch.
+                if (changedId) noteExclusivity(loser);
+            });
+            updatePlacementSummaries();
+        }
+
+        /** A short notice under the switch that was turned off because its alternative was turned on. */
+        function noteExclusivity(loser: HTMLInputElement): void {
+            var row = loser.closest('.jea-row');
+            var group = row ? row.closest('.jea-group-body') : null;
+            if (!row || !group) return;
+            group.querySelectorAll(':scope > .jea-excl-note').forEach(function(n) { n.remove(); });
+            var label = (row.querySelector('.jea-label-text')?.textContent ?? '').trim();
+            var note = document.createElement('div');
+            note.className = 'jea-note jea-excl-note';
+            note.setAttribute('role', 'status');
+            note.textContent = '"' + label + '" was turned off: a page can be a native Home tab or a Custom Tabs tab, not both.';
+            var desc = row.nextElementSibling && row.nextElementSibling.classList.contains('je-setting-description') ? row.nextElementSibling : row;
+            desc.after(note);
+        }
+
+        /** Each page's "Where it appears" header says where it appears now, so the group can stay closed. */
+        function updatePlacementSummaries(): void {
+            document.querySelectorAll<HTMLDetailsElement>('#pages details.jea-group').forEach(function(group) {
+                var summary = group.querySelector(':scope > summary');
+                var body = group.querySelector(':scope > .jea-group-body');
+                if (!summary || !body) return;
+                var groupBody: Element = body;
+                var on = function(suffix: string) { var box = asInput(groupBody.querySelector('input[id$="' + suffix + '"]')); return !!box && box.checked; };
+                if (!body.querySelector('input[id$="UseNativeTab"]')) return;
+                var places = [on('UseNativeTab') ? 'Home tab' : '', on('UsePluginPages') ? 'Plugin Pages' : '', on('UseCustomTabs') ? 'Custom Tabs' : ''].filter(Boolean);
+                var value = summary.querySelector<HTMLElement>('.jea-group-value');
+                if (!value) {
+                    value = document.createElement('span');
+                    value.className = 'jea-group-value';
+                    summary.appendChild(value);
+                }
+                value.textContent = places.length ? places.join(', ') : 'Its own page only';
             });
         }
 
@@ -180,7 +218,10 @@ export function createGatedHelp(m: GatedHelpDeps) {
                 var box = asHtml(document.getElementById(id));
                 if (box) box.addEventListener('change', function() { enforceTabExclusivity(id); });
             });
+            var pluginPages = asHtml(document.getElementById(pair.native.replace('UseNativeTab', 'UsePluginPages')));
+            if (pluginPages) pluginPages.addEventListener('change', updatePlacementSummaries);
         });
+        updatePlacementSummaries();
     }
 
     return {

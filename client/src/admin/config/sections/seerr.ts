@@ -16,17 +16,17 @@ define({
         items: [
             { id: 'jellyseerrEnabled', prop: 'JellyseerrEnabled', type: 'toggle', main: true, label: 'Enable Seerr integration',
               desc: 'Enables all Seerr-powered features for this server: Seerr search results, request buttons, the Requests page, auto-requests, and user import. Required for any Seerr feature to work.' },
-            { id: 'jellyseerrUrls', type: 'textarea', manual: true, rows: 3, label: 'Seerr URL(s) (One per line)',
+            { id: 'jellyseerrUrls', type: 'textarea', manual: true, rows: 3, label: 'Seerr URLs (one per line)',
               placeholder: 'http://192.168.1.10:5055\nhttps://jellyseerr.example.com',
-              desc: 'Enter your Seerr instance URLs, one per line. The script will use the first one that connects successfully.' },
-            { type: 'custom', html: keyRow('JellyseerrApiKey', 'JellyseerrApiKey', 'Seerr API Key', 'jellyseerrStatusIndicator',
+              desc: 'Your Seerr addresses, one per line. Jellyfin Enhanced uses the first one that answers.' },
+            { type: 'custom', html: keyRow('JellyseerrApiKey', 'JellyseerrApiKey', 'Seerr API key', 'jellyseerrStatusIndicator',
                 '<button type="button" id="testJellyseerrBtn" class="jea-btn">Test</button>',
-                'API key from Seerr. (Settings &gt; General Settings &gt; API Key)') },
-            { type: 'custom', html: keyRow('jellyseerr_TMDB_API_KEY', 'TMDB_API_KEY', 'TMDB API Key', 'jellyseerrTmdbStatusIndicator',
+                'The API key from Seerr (Settings &gt; General).') },
+            { type: 'custom', html: keyRow('jellyseerr_TMDB_API_KEY', 'TMDB_API_KEY', 'TMDB API key', 'jellyseerrTmdbStatusIndicator',
                 '<button type="button" class="testTmdbBtn jea-btn">Test</button>',
-                'Your API key from The Movie DB (TMDB). <a href="https://www.themoviedb.org/settings/api" target="_blank" rel="noopener">How to?</a><br/>TMDB API key for automatic movie collection requests and Seerr Collection Results. Shared with Elsewhere Settings') },
-            { type: 'group', title: 'Advanced URL Mappings', items: [
-                { id: 'jellyseerrUrlMappings', type: 'textarea', manual: true, rows: 4, label: 'Seerr URL Mappings',
+                'Your API key from The Movie Database (TMDB): <a href="https://www.themoviedb.org/settings/api" target="_blank" rel="noopener noreferrer">get one here<i class="material-icons je-link-ext" aria-hidden="true">open_in_new</i></a>. Auto movie requests and collections in Seerr results need it. It is the same key as on the Elsewhere &amp; Reviews tab.') },
+            { type: 'group', title: 'Advanced URL mappings', items: [
+                { id: 'jellyseerrUrlMappings', type: 'textarea', manual: true, rows: 4, label: 'Seerr URL mappings',
                   placeholder: 'https://jellyfin.mydomain.com|https://jellyseerr.mydomain.com',
                   desc: 'Map your Jellyfin URLs to specific Seerr URLs for displaying links to users. Users will get the appropriate Seerr link when using "Link result titles to Seerr instead of TMDB", based on what link they use to access Jellyfin.<br/>Format: <code>JellyfinURL|SeerrURL</code>, one mapping per line.<br/>If no mapping matches or this is empty, the first URL from above will be used.' },
                 { type: 'note', html: '<strong>URL Mapping Examples:</strong><br/>Remote access: <code>https://jellyfin.mydomain.com|https://jellyseerr.mydomain.com</code><br/>Local access: <code>http://192.168.1.10:8096|http://192.168.1.10:5055</code><br/>With base URL: <code>https://example.com/jellyfin|https://example.com/jellyseerr</code>' },
@@ -42,16 +42,16 @@ define({
     'seerr-search': {
         title: 'Search & Requests', icon: 'search',
         items: [
-            { id: 'jellyseerrShowSearchResults', prop: 'JellyseerrShowSearchResults', type: 'toggle', default: true, label: 'Show Seerr Results in Search',
+            { id: 'jellyseerrShowSearchResults', prop: 'JellyseerrShowSearchResults', type: 'toggle', default: true, label: 'Show Seerr results in search',
               desc: 'Enhance Jellyfin search by showing results from Seerr.<br/>This allows users to discover and request missing movies and shows directly from Jellyfin.' },
-            { id: 'jellyseerrSearchExcludeLibraryItems', prop: 'JellyseerrSearchExcludeLibraryItems', type: 'toggle', label: 'Exclude search items already in library',
+            { id: 'jellyseerrSearchExcludeLibraryItems', prop: 'JellyseerrSearchExcludeLibraryItems', type: 'toggle', label: 'Hide results already in the library',
               desc: 'Hide Seerr search results that already exist in your Jellyfin library (the ones marked as available), including shows where only some seasons are in the library.<br/>If disabled, available items are shown and link to the media item in the library.' },
             { type: 'custom', html: '<div class="jea-note jea-note-warn" id="je-search-exclude-library-warning" style="display:none;"><strong>Warning:</strong> A movie in the library in a lower quality won\'t appear to request in higher quality like 4K, and a show with only some seasons won\'t appear to request the rest. Missing seasons can still be requested with the <strong>Request More</strong> button on the show\'s page, and anything can still be requested directly in Seerr.</div>' },
-            { id: 'showCollectionsInSearch', prop: 'ShowCollectionsInSearch', type: 'toggle', default: true, label: 'Show Collections in Seerr Results',
+            { id: 'showCollectionsInSearch', prop: 'ShowCollectionsInSearch', type: 'toggle', default: true, label: 'Show collections in Seerr results',
               desc: 'Display TMDB collections (e.g., Harry Potter, Marvel Cinematic Universe) in Seerr search results with an option to request the entire collection at once.' },
-            { id: 'jellyseerrEnable4kRequests', prop: 'JellyseerrEnable4KRequests', type: 'toggle', label: 'Enable 4K Requests',
+            { id: 'jellyseerrEnable4kRequests', prop: 'JellyseerrEnable4KRequests', type: 'toggle', label: 'Enable 4K movie requests',
               desc: 'When enabled, movie request buttons include a dropdown to request a 4K version.' },
-            { id: 'jellyseerrEnable4kTvRequests', prop: 'JellyseerrEnable4KTvRequests', type: 'toggle', label: 'Enable 4K TV Requests',
+            { id: 'jellyseerrEnable4kTvRequests', prop: 'JellyseerrEnable4KTvRequests', type: 'toggle', label: 'Enable 4K TV requests',
               desc: 'When enabled, TV request buttons include a dropdown that opens the season request modal in 4K mode.' },
             { id: 'jellyseerrShowAdvanced', prop: 'JellyseerrShowAdvanced', type: 'toggle', label: 'Show advanced request options',
               desc: 'Lets users choose the Server, Quality and Path while requesting. Only shown to users with the Advanced Requests (or Manage Requests) permission in Seerr. <br/> Note: This will disregard any Override Rules set in Seerr.' },
@@ -73,18 +73,18 @@ define({
               desc: 'When enabled, a small report icon will be added to item action icons allowing users to report playback/content issues to Seerr.' },
             { id: 'jellyseerrShowIssueIndicator', prop: 'JellyseerrShowIssueIndicator', type: 'toggle', label: 'Show open issue indicator',
               desc: 'When enabled, the report issue button turns orange and shows a count badge if the item has open issues in Seerr.' },
-            { id: 'showElsewhereOnJellyseerr', prop: 'ShowElsewhereOnJellyseerr', type: 'toggle', label: 'Show Streaming Providers on Posters',
+            { id: 'showElsewhereOnJellyseerr', prop: 'ShowElsewhereOnJellyseerr', type: 'toggle', label: 'Show streaming providers on posters',
               desc: 'Displays icons of available streaming services on Seerr Posters, for your Default Region, or each user\'s Seerr streaming region when "Use each user\'s Seerr streaming region" is on (Elsewhere settings).<br/><br/><b>Needs a TMDB API Key or the Seerr integration (Seerr supplies the data when there is no TMDB key)</b>' },
             { id: 'jellyseerrShowDetailPageLink', prop: 'JellyseerrShowDetailPageLink', type: 'toggle', default: true, label: 'Show Seerr link on item detail pages',
               desc: 'Adds a Seerr tag to the External Links row on movie/show detail pages (the same row TMDB/IMDb icons appear in, and *arr links when enabled; it shows there regardless of whether *arr links are configured). If "Open results in More Info modal" above is enabled, clicking it opens that modal (status, downloads, and who requested it); otherwise it links straight to the item on Seerr.' },
             { id: 'jellyseerrShowDetailPageLinkAsText', prop: 'JellyseerrShowDetailPageLinkAsText', type: 'toggle', label: 'Show as text instead of icon',
               desc: 'Renders the Seerr detail-page link as the word "Seerr" instead of the icon. Independent of the *arr links "show as text" setting, so it applies even when *arr links are disabled.' },
-            { type: 'group', title: 'Item Pages Discovery', items: [
+            { type: 'group', title: 'Discovery on item pages', items: [
                 { id: 'jellyseerrShowSimilar', prop: 'JellyseerrShowSimilar', type: 'toggle', default: true, label: 'Show similar items',
                   desc: 'Displays similar movies/shows from Seerr on item details pages. Limited to 20 items.' },
                 { id: 'jellyseerrShowRecommended', prop: 'JellyseerrShowRecommended', type: 'toggle', default: true, label: 'Show recommended items',
                   desc: 'Displays recommended movies/shows from Seerr on item details pages. Limited to 20 items.' },
-                { id: 'jellyseerrShowRequestMoreOnSeries', prop: 'JellyseerrShowRequestMoreOnSeries', type: 'toggle', default: true, label: 'Show "Request More" button on Series',
+                { id: 'jellyseerrShowRequestMoreOnSeries', prop: 'JellyseerrShowRequestMoreOnSeries', type: 'toggle', default: true, label: 'Show "Request More" on series',
                   desc: 'Adds a "Request More" button beside the Seasons section heading on Series detail pages when the show has unrequested seasons in Seerr. Lets users request additional seasons without going through the search bar.' },
                 { id: 'jellyseerrExcludeLibraryItems', prop: 'JellyseerrExcludeLibraryItems', type: 'toggle', default: true, label: 'Exclude items already in library',
                   desc: 'Hide similar/recommended items that already exist in your Jellyfin library from the results.<br/>If disabled, the items that are available link to the media item in the library.' },
@@ -132,11 +132,11 @@ define({
     'seerr-auto-season': {
         title: 'Auto Season Requests', icon: 'playlist_add',
         items: [
-            { id: 'autoSeasonRequestEnabled', prop: 'AutoSeasonRequestEnabled', type: 'toggle', main: true, label: 'Enable Automatic Advance Season Requests',
+            { id: 'autoSeasonRequestEnabled', prop: 'AutoSeasonRequestEnabled', type: 'toggle', main: true, label: 'Request the next season automatically',
               desc: 'Automatically request the next season in Seerr when a user is about to finish the current season.' },
-            { id: 'autoSeasonRequestRequireAllWatched', prop: 'AutoSeasonRequestRequireAllWatched', type: 'toggle', label: 'Require All Prior Episodes Watched',
+            { id: 'autoSeasonRequestRequireAllWatched', prop: 'AutoSeasonRequestRequireAllWatched', type: 'toggle', label: 'Require all earlier episodes watched',
               desc: 'Require all episodes before the threshold to be watched. For example, if threshold is 2 and there are 10 episodes, when watching episode 8, all episodes 1-7 must be watched or marked as watched. This prevents accidentally triggering requests by jumping to later episodes.<br/>This might cause requests to not be triggered if users skip episodes.' },
-            { id: 'autoSeasonRequestThresholdValue', prop: 'AutoSeasonRequestThresholdValue', type: 'number', min: 1, max: 20, default: 2, label: 'Episodes Remaining Threshold',
+            { id: 'autoSeasonRequestThresholdValue', prop: 'AutoSeasonRequestThresholdValue', type: 'number', min: 1, max: 20, default: 2, label: 'Episodes left before requesting',
               toConfig: (v) => Math.trunc(v) || 2,
               desc: 'Request the next season when the number of unwatched episodes is at or below this number. Default: 2 episodes.' },
             { type: 'note', html: 'Requests are triggered when users start or complete watching episodes.<br/>Set the threshold to 2-3 episodes to give time for downloading before users finish watching.<br/>Example: with threshold 2, when a user starts episode 8 of 10 of season 1, season 2 is requested.<br/>If a user has already triggered a request for a season, it is not requested again even if another user reaches the threshold.' }
@@ -146,28 +146,28 @@ define({
     'seerr-auto-movie': {
         title: 'Auto Movie Requests', icon: 'movie',
         items: [
-            { id: 'autoMovieRequestEnabled', prop: 'AutoMovieRequestEnabled', type: 'toggle', main: true, label: 'Enable Auto Movie Requests',
+            { id: 'autoMovieRequestEnabled', prop: 'AutoMovieRequestEnabled', type: 'toggle', main: true, label: 'Enable auto movie requests',
               desc: 'Automatically request the next movie in a collection based on configured triggers.<br/><strong>Requirements:</strong> TMDB API key must be configured.' },
             // Triggers map to one AutoMovieRequestTriggerType value, so these three stay loaded and saved by configPage.html.
             { id: 'autoMovieRequestTriggerOnStart', manual: true, type: 'toggle', label: 'When movie starts',
               desc: 'Trigger an auto-request for the next movie in the collection as soon as a user starts a movie.' },
             { id: 'autoMovieRequestTriggerOnMinutesWatched', manual: true, type: 'toggle', label: 'After X minutes watched',
               desc: 'Select one or both triggers. If both are selected, the request will be triggered if either condition is met.' },
-            { id: 'autoMovieRequestMinutesWatched', manual: true, type: 'number', min: 1, max: 180, placeholder: '20', label: 'Minutes Watched Threshold',
+            { id: 'autoMovieRequestMinutesWatched', manual: true, type: 'number', min: 1, max: 180, placeholder: '20', label: 'Minutes watched before requesting',
               desc: 'How many minutes a user should watch before triggering a request? Must be between 1 and 180 minutes.' },
             { id: 'autoMovieRequestCheckReleaseDate', prop: 'AutoMovieRequestCheckReleaseDate', type: 'toggle', default: true, label: 'Only request if released',
               desc: 'When enabled, future releases will be skipped. Only movies that have already been released will be requested.' },
-            { id: 'autoMovieRequestQualityMode', prop: 'AutoMovieRequestQualityMode', type: 'select', default: 'default', label: 'Quality Profile Mode',
+            { id: 'autoMovieRequestQualityMode', prop: 'AutoMovieRequestQualityMode', type: 'select', default: 'default', label: 'Quality profile mode',
               options: [['default', 'Default'], ['original', 'Original'], ['custom', 'Custom']],
               desc: '<strong>Default:</strong> Seerr uses its default Radarr server and quality profile.<br/><strong>Original:</strong> Uses the same quality profile as the movie being watched (falls back to default if not found).<br/><strong>Custom:</strong> Always uses the specific Radarr server, quality profile, and root folder selected below.' },
             { id: 'autoMovieRequestFallbackOn4k', prop: 'AutoMovieRequestFallbackOn4k', type: 'toggle', default: true, label: 'Use default instead of 4K fallback',
-              desc: 'Only applies when Quality Profile Mode is set to "Original". If the watched movie was requested with a 4K profile, the auto-request will use Seerr\'s default profile instead. This prevents requests from failing or requiring manual approval for users who don\'t have 4K request permissions in Seerr. Disable this if all your users have 4K request access and you want to preserve the original 4K profile.' },
+              desc: 'Only applies when the quality profile mode is "Original". If the watched movie was requested with a 4K profile, the auto-request will use Seerr\'s default profile instead. This prevents requests from failing or requiring manual approval for users who don\'t have 4K request permissions in Seerr. Disable this if all your users have 4K request access and you want to preserve the original 4K profile.' },
             { type: 'custom', html:
               '<div id="autoMovieRequestCustomSettings" class="jea-custom-box" style="display:none;">' +
-                '<div class="inputContainer jea-row"><label class="inputLabel" for="autoMovieRequestServer">Radarr Server</label><select id="autoMovieRequestServer" name="autoMovieRequestServer" class="jea-input"></select></div>' +
-                '<div class="inputContainer jea-row"><label class="inputLabel" for="autoMovieRequestProfile">Quality Profile</label><select id="autoMovieRequestProfile" name="autoMovieRequestProfile" class="jea-input"></select></div>' +
-                '<div class="inputContainer jea-row"><label class="inputLabel" for="autoMovieRequestRootFolder">Root Folder</label><select id="autoMovieRequestRootFolder" name="autoMovieRequestRootFolder" class="jea-input"></select></div>' +
-                '<div class="je-setting-description" data-desc-for="autoMovieRequestRootFolder"><div class="fieldDescription">These settings are only used when Quality Profile Mode is set to "Custom".</div></div>' +
+                '<div class="inputContainer jea-row"><label class="inputLabel" for="autoMovieRequestServer">Radarr server</label><select id="autoMovieRequestServer" name="autoMovieRequestServer" class="jea-input"></select></div>' +
+                '<div class="inputContainer jea-row"><label class="inputLabel" for="autoMovieRequestProfile">Quality profile</label><select id="autoMovieRequestProfile" name="autoMovieRequestProfile" class="jea-input"></select></div>' +
+                '<div class="inputContainer jea-row"><label class="inputLabel" for="autoMovieRequestRootFolder">Root folder</label><select id="autoMovieRequestRootFolder" name="autoMovieRequestRootFolder" class="jea-input"></select></div>' +
+                '<div class="je-setting-description" data-desc-for="autoMovieRequestRootFolder"><div class="fieldDescription">These are used only when the quality profile mode is "Custom".</div></div>' +
               '</div>' },
             { type: 'note', html: 'Only works for movies that are part of a TMDB collection (e.g., <a class="je-bold-link" href="https://www.themoviedb.org/collection/86311" target="_blank">The Avengers Collection</a>, <a class="je-bold-link" href="https://www.themoviedb.org/collection/10" target="_blank">Star Wars Collection</a>).<br/>Automatically requests the next movie in the collection based on release order.<br/>Movies already available or requested are skipped.' }
         ]
@@ -176,7 +176,7 @@ define({
     'seerr-auto-request-removal': {
         title: 'Auto Request Removal', icon: 'playlist_remove',
         items: [
-            { id: 'autoRequestRemovalEnabled', prop: 'AutoRequestRemovalEnabled', type: 'toggle', main: true, label: 'Remove Watched Requests',
+            { id: 'autoRequestRemovalEnabled', prop: 'AutoRequestRemovalEnabled', type: 'toggle', main: true, label: 'Remove watched requests', descClass: 'je-desc-keep',
               desc: '<ul class="je-desc-list"><li>Delete a Seerr request once the user who made it has watched it. Only the request is deleted; the media stays available in Seerr and in the library</li><li><strong>Destructive:</strong> a deleted request cannot be restored, and its history is gone from Seerr. Use with caution</li><li><strong>Quotas:</strong> if request quotas are enabled in Seerr, removing a request gives that quota back to the user, because Seerr counts quota from the requests that still exist</li></ul>' },
             { type: 'note', tone: 'warn', html: '<strong>Warning:</strong> this permanently deletes requests, and the same applies to the <strong>Remove request</strong> button on the Requests page. If you use Seerr request quotas, each removed request frees up quota again, so users can request more than the limit allows over time. Try it on a small setup first and keep a Seerr backup.' },
             { type: 'note', html: 'Runs daily through the <strong>Remove watched requests from Seerr</strong> scheduled task (Dashboard &gt; Scheduled Tasks); a request is removed on the first run after its requester has watched it.<br/>Only the requester\'s own viewing counts. Movies count once any version is watched; series requests are removed once every episode of every requested season is watched and available.<br/>Pending, declined and failed requests are never removed.' }
@@ -192,7 +192,7 @@ define({
             { id: 'seerrScanDebounceSeconds', manual: true, type: 'number', min: 5, max: 3600, step: 1, label: 'Debounce (seconds)',
               desc: 'Wait this many seconds after the LAST item added before firing the scan. Default 60. Range 5 to 3600.' },
             { type: 'custom', html: '<div class="jea-actions"><button type="button" id="triggerSeerrScanNowBtn" class="jea-btn">Trigger scan now</button><span id="triggerSeerrScanNowStatus" class="material-icons" aria-hidden="true"></span></div>' +
-              '<div class="je-setting-description" data-desc-for="triggerSeerrScanNowBtn"><div class="fieldDescription">Uses the Seerr URL and API key entered in the Connection Setup section above. If multiple URLs are configured, the first reachable one is used.</div></div>' }
+              '<div class="je-setting-description" data-desc-for="triggerSeerrScanNowBtn"><div class="fieldDescription">Uses the Seerr URL and API key in the Seerr Connection Setup card above. If multiple URLs are configured, the first reachable one is used.</div></div>' }
         ]
     },
 
@@ -217,12 +217,12 @@ define({
             ] },
             { type: 'group', title: 'Removing items', open: true, items: [
                 { type: 'note', html: 'Decide whose removals count. Removing an item, or <strong>watching it</strong> (KefinTweaks drops watched items from the Jellyfin watchlist), is a removal. Only items that were on <strong>both</strong> lists are ever removed, so something added on one side and not yet synced is never deleted.' },
-                { id: 'watchlistRemovalSync', prop: 'WatchlistRemovalSync', type: 'select', default: 'jellyfin', label: 'When an item is removed from a watchlist',
+                { id: 'watchlistRemovalSync', prop: 'WatchlistRemovalSync', type: 'select', default: 'jellyfin', label: 'When an item is removed from a watchlist', rowClass: 'jea-stack',
                   options: [
-                      ['jellyfin', 'Jellyfin decides: removed from Jellyfin → also removed from Seerr'],
-                      ['seerr', 'Seerr decides: removed from Seerr → also removed from Jellyfin'],
-                      ['both', 'Both stay in sync: a removal on either side is copied to the other'],
-                      ['off', 'Never remove anything automatically']
+                      ['jellyfin', 'Jellyfin decides (recommended)'],
+                      ['seerr', 'Seerr decides'],
+                      ['both', 'Both stay in sync'],
+                      ['off', 'Never remove automatically']
                   ],
                   desc: '<strong>Jellyfin decides</strong> (recommended): removing or watching an item in Jellyfin removes it from Seerr. Removing it only in Seerr changes nothing in Jellyfin.<br/><strong>Seerr decides</strong>: the opposite. Removing it only in Jellyfin changes nothing in Seerr.<br/><strong>Both stay in sync</strong>: whichever side an item is removed from, the other follows.<br/><strong>Never</strong>: no removals are copied.<br/>Runs daily in Scheduled Tasks &gt; "Sync Watchlist Removals between Jellyfin and Seerr", after the two add syncs. The first run only records what is on both lists and removes nothing. Does nothing unless at least one of the adding options above is on.<br/>With <strong>Jellyfin decides</strong> or <strong>Both</strong>, an item removed in Jellyfin is also removed from Seerr, so it can\'t come back and the "Don\'t re-add" options above are hidden. They appear for <strong>Seerr decides</strong> and <strong>Never</strong>.' }
             ] }
@@ -236,7 +236,7 @@ define({
               desc: 'Automatically import Jellyfin users into Seerr so they can use Seerr Search without needing to visit Seerr directly. New users are imported the first time they use Seerr Search; a scheduled task also bulk-imports periodically. Already-imported users are skipped.<br/>Configure the bulk import frequency in Jellyfin Dashboard &gt; Scheduled Tasks &gt; "Import Jellyfin Users to Seerr".' },
             { type: 'custom', html:
               '<details id="blockedUsersDetails" class="jea-group">' +
-                '<summary>Blocked Users <span id="blockedUsersCount">(none)</span></summary>' +
+                '<summary>Blocked users <span id="blockedUsersCount" class="jea-group-value">(none)</span></summary>' +
                 '<div class="jea-group-body">' +
                   '<div class="fieldDescription">Select users to exclude from Seerr import. Blocked users will never be looked up or imported. No API calls are made for them.</div>' +
                   '<div id="blockedUsersContainer" style="max-height: 200px; overflow-y: auto;"><span class="je-loading-text">Loading users...</span></div>' +
@@ -263,10 +263,10 @@ define({
         items: [
             { id: 'jellyseerrDisableCache', prop: 'JellyseerrDisableCache', type: 'toggle', label: 'Disable server-side response cache',
               desc: 'When enabled, all Seerr proxy requests bypass the server-side cache and are fetched fresh from Seerr every time. This is useful for testing but will increase load on your Seerr instance. <b>Not recommended for normal use.</b>' },
-            { id: 'jellyseerrResponseCacheTtlMinutes', prop: 'JellyseerrResponseCacheTtlMinutes', type: 'number', min: 1, default: 10, label: 'Response Cache TTL (min)',
+            { id: 'jellyseerrResponseCacheTtlMinutes', prop: 'JellyseerrResponseCacheTtlMinutes', type: 'number', min: 1, default: 10, label: 'Response cache lifetime (minutes)',
               toConfig: (v) => Math.trunc(v) || 10,
               desc: 'How long Seerr API responses (search, discovery, recommendations) are cached. Default: 10 minutes.' },
-            { id: 'jellyseerrUserIdCacheTtlMinutes', prop: 'JellyseerrUserIdCacheTtlMinutes', type: 'number', min: 1, default: 30, label: 'User ID Cache TTL (min)',
+            { id: 'jellyseerrUserIdCacheTtlMinutes', prop: 'JellyseerrUserIdCacheTtlMinutes', type: 'number', min: 1, default: 30, label: 'User ID cache lifetime (minutes)',
               toConfig: (v) => Math.trunc(v) || 30,
               desc: 'How long the Jellyfin → Seerr user ID mapping is cached. Default: 30 minutes.' }
         ]

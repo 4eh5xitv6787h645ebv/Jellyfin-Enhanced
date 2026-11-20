@@ -93,7 +93,7 @@
                     <div class="je-ta-card-head"><span class="je-ta-state" data-awards-key></span></div>
                     <p class="je-ta-hint">${ctx.tx("IMDb Top 250, Letterboxd Top 250 and Certified Fresh come from MDBList and need its API key. Oscar and Emmy wins come from Wikidata and need no key.")}</p>
                     <p class="je-ta-hint" data-awards-run></p>
-                    <a class="je-ta-link" href="${ctx.esc(ctx.mainPageUrl("mdblistRatingsEnabled"))}"><span class="je-ta-link-text">${ctx.tx("MDBList settings")}</span><span class="material-icons" aria-hidden="true">open_in_new</span></a>
+                    <a class="je-ta-link" href="${ctx.esc(ctx.mainPageUrl("mdblistRatingsEnabled"))}"><span class="je-ta-link-text">${ctx.tx("MDBList settings")}</span><span class="material-icons" aria-hidden="true">arrow_forward</span></a>
                 </div>`;
       },
       refresh(ctx, body) {

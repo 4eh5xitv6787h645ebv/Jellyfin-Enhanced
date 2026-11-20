@@ -12,7 +12,7 @@ import { fmt, word, WORDS } from './format';
 import { hiddenLinkHtml, syncHiddenRow } from './hidden-rows';
 import type { SaveStore, StoreEvent } from './save-store';
 import type { OpenTabOptions, PageApi, PageContext, PageOptions, SampleChip, SectionDef, SetOptions, TabDef, Target } from './types';
-import { copy, own, sameValue, type Config } from './values';
+import { copy, groupRank, own, sameValue, type Config } from './values';
 
 export interface PageDeps {
     JE(): AdminTagsBridge;
@@ -29,7 +29,7 @@ export interface PageDeps {
     pageFields(): Set<string>;
     seedUser(config: Config): Config;
     pageUrl(tab?: string | null, group?: string | null): string;
-    mainPageUrl(section?: string | null, tab?: string | null): string;
+    mainPageUrl(section?: string | null, tab?: string | null, card?: string | null): string;
     freshTarget(): Target;
     askConfirm(text: string, title: string): Promise<boolean>;
     undoMs: number;
@@ -118,7 +118,7 @@ export function createPage(deps: PageDeps, root: HTMLElement, initial: Config, o
     const openGroups = new Map<string, boolean>();
 
     root.classList.add('je-tag-admin');
-    const groupSections = sections.filter((s) => s.tab === 'groups' && s.group);
+    const groupSections = sections.filter((s) => s.tab === 'groups' && s.group).sort((a, b) => groupRank(a.group?.id) - groupRank(b.group?.id));
     const docsLink = (tab: TabDef): string => `<a class="je-ta-docs" href="${deps.docsUrl}#${own(deps.docsAnchors, tab.id)}" target="_blank" rel="noopener" aria-label="${tx('Learn more about {name} in the documentation (opens in a new tab)', { name: fmt(tab.nameKey) })}">${tx('Learn more')}</a>`;
     // A narrow page shows every tab as an icon over a short label (the accessible name stays the full one).
     const tabButtons = TABS.map((tab, i) => `<button type="button" role="tab" class="je-ta-tab" id="jeTaTab-${tab.id}" data-tab="${tab.id}" aria-controls="jeTaPanel-${tab.id}" aria-selected="${i === 0}" tabindex="${i === 0 ? 0 : -1}"${tab.shortKey ? ` aria-label="${tx(tab.nameKey)}"` : ''}><span class="material-icons" aria-hidden="true">${tab.icon}</span><span class="je-ta-tab-long">${tx(tab.nameKey)}</span>${tab.shortKey ? `<span class="je-ta-tab-short" aria-hidden="true">${tx(tab.shortKey)}</span>` : ''}</button>`).join('');

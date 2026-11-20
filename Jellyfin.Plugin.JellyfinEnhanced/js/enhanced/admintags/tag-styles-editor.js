@@ -50,12 +50,13 @@
   // client/src/features/media-tags/admin/tag-styles-parts.ts
   var T = fmt;
   var GROUPS = [
+    // The groups' one display order (as on the Overview and the Groups list).
     { key: "quality", title: T("Quality") },
-    { key: "ageRating", title: T("Age Rating") },
-    { key: "rating", title: T("Rating") },
     { key: "genre", title: T("Genre") },
-    { key: "status", title: T("Status") },
     { key: "language", title: T("Language") },
+    { key: "rating", title: T("Rating") },
+    { key: "ageRating", title: T("Age Rating") },
+    { key: "status", title: T("Status") },
     { key: "awards", title: T("Awards") },
     { key: "logos", title: T("Logos") },
     { key: "custom", title: T("Custom") }

@@ -19,6 +19,7 @@
     define({
       "ui-preferences": {
         title: "UI Preferences",
+        icon: "tune",
         fields: [
           {
             id: "showWatchProgress",
@@ -33,8 +34,8 @@
             prop: "WatchProgressDefaultMode",
             type: "select",
             default: "percentage",
-            label: "Watch Progress Default",
-            options: [["percentage", "Percentage"], ["time", "Time Watched"], ["remaining", "Time Remaining"]],
+            label: "Watch progress default",
+            options: [["percentage", "Percentage"], ["time", "Time watched"], ["remaining", "Time remaining"]],
             desc: "Choose default display for watch progress (percentage, time watched, or time remaining)."
           },
           {
@@ -42,7 +43,7 @@
             prop: "WatchProgressTimeFormat",
             type: "select",
             default: "hours",
-            label: "Watch Progress Time Format",
+            label: "Watch progress time format",
             options: [["hours", "h:m"], ["full", "y:mo:d:h:m"]],
             desc: "Select how time-based progress is shown."
           },
@@ -59,7 +60,7 @@
             prop: "ShowAudioLanguages",
             type: "toggle",
             perUser: true,
-            label: "Show available audio languages on item detail page",
+            label: "Show available audio languages on item details",
             desc: "List the audio language flags available for each title on its detail page."
           },
           {
@@ -74,6 +75,7 @@
       },
       "icons-theme": {
         title: "Icons & Theme",
+        icon: "emoji_symbols",
         fields: [
           {
             id: "useIcons",
@@ -81,7 +83,7 @@
             type: "toggle",
             main: true,
             default: true,
-            label: "Use Icons in UI",
+            label: "Use icons in the interface",
             descClass: "je-field-desc-lg",
             desc: "Display icons throughout the UI (toasts, settings panel headers, etc.)"
           },
@@ -90,8 +92,8 @@
             prop: "IconStyle",
             type: "select",
             default: "emoji",
-            label: "Icon Style",
-            options: [["emoji", "Emoji"], ["lucide", "Lucide Icons"], ["mui", "Material UI Icons"]],
+            label: "Icon style",
+            options: [["emoji", "Emoji"], ["lucide", "Lucide icons"], ["mui", "Material UI icons"]],
             desc: "Choose between emoji characters, Lucide icons, or Material UI icons."
           }
         ]
@@ -105,7 +107,7 @@
             prop: "DoesTheDogDieEnabled",
             type: "toggle",
             main: true,
-            label: "Show Content Warnings",
+            label: "Show content warnings",
             toConfig: (v) => !!v,
             fromConfig: (v) => !!v,
             desc: '<ul class="je-desc-list"><li>Shows community-voted content warnings (a dog dies, gore, flashing lights and more) on movie and show pages</li><li>Each user picks the triggers they care about with the gear icon on the section</li><li>Requires a free API key from doesthedogdie.com. The free tier is for non-commercial use and allows 5,000 requests a month for the whole server. Results are cached for weeks, so only titles nobody has opened yet cost requests</li></ul>'
@@ -114,7 +116,7 @@
             id: "doesTheDogDieApiKey",
             prop: "DoesTheDogDieApiKey",
             type: "text",
-            label: "DoesTheDogDie API Key",
+            label: "DoesTheDogDie API key",
             toConfig: (v) => String(v || "").trim(),
             fromConfig: (v) => typeof v === "string" ? v : "",
             desc: 'Your API key from your <a class="sectionTitle" href="https://www.doesthedogdie.com/profile" target="_blank">doesthedogdie.com</a> profile page.'
@@ -123,13 +125,14 @@
       },
       "awards": {
         title: "Awards",
+        icon: "emoji_events",
         fields: [
           {
             id: "showAwards",
             prop: "ShowAwards",
             type: "toggle",
             main: true,
-            label: "Show Awards Banner",
+            label: "Show the awards banner",
             descClass: "je-field-desc-sm-font-lg",
             desc: "Shows a wins/nominations banner on item-details pages, sourced from Wikidata by TMDB id. Data is as accurate as what is available in Wikidata."
           }
@@ -137,6 +140,7 @@
       },
       "random-button": {
         title: "Random Button",
+        icon: "casino",
         fields: [
           {
             id: "randomButtonEnabled",
@@ -144,7 +148,7 @@
             type: "toggle",
             perUser: true,
             main: true,
-            label: "Enable Random Button",
+            label: "Enable the Random button",
             desc: `Adds a "Play Random" button to the Jellyfin header that opens a random item from the user's accessible libraries.`
           },
           {
@@ -169,7 +173,7 @@
             type: "toggle",
             perUser: true,
             label: "Include shows",
-            desc: "Include TV Shows in the random pool."
+            desc: "Include TV shows in the random pool."
           },
           {
             id: "randomScopeCurrentContainer",
@@ -190,7 +194,7 @@
             prop: "AudioLanguageTagSyncEnabled",
             type: "toggle",
             main: true,
-            label: "Enable Audio Language Tags Sync",
+            label: "Sync audio language tags",
             descClass: "je-field-desc-xl",
             desc: `Adds each movie's and series' audio languages as Jellyfin tags. A regional track such as en-US gets a base tag ("JE Language: English") and a regional tag ("JE Language: English (United States)").<br/><br/>Existing items are tagged by the "Sync Audio Language Tags to Jellyfin" scheduled task. New and changed items are tagged after a library scan when the Server-Side Tag Cache is enabled.`
           },
@@ -198,7 +202,7 @@
             id: "audioLanguageTagPrefix",
             prop: "AudioLanguageTagPrefix",
             type: "text",
-            label: "Tag Prefix",
+            label: "Tag prefix",
             placeholder: "JE Language: ",
             default: "JE Language: ",
             desc: 'Prefix added before each language, e.g. "JE Language: English".'
@@ -268,7 +272,7 @@
         title: "Media Tags",
         icon: "sell",
         id: "mediaTagsCard",
-        items: [{ type: "custom", html: '<div class="je-media-tags-card"><div class="je-media-tags-card-text"><div class="fieldDescription">Poster tags (quality, genre, language, rating, age rating, status, people), their default layout, rules and colours, the tag cache and Native Poster Tags have their own tab, Media Tags, which saves each change as you make it.</div><dl class="je-media-tags-card-facts" id="jeMediaTagsCardFacts" aria-live="polite"></dl></div><a class="jea-btn jea-btn-primary je-media-tags-open" href="#/configurationpage?name=Jellyfin%20Enhanced&amp;jeSection=media-tags"><i class="material-icons" aria-hidden="true">sell</i><span>Open Media Tags</span></a><div class="je-media-tags-card-links">' + [["layout", "Layout defaults"], ["groups", "Groups"], ["rules", "Rules"], ["colours", "Colours and text"], ["badges", "Status badges"], ["server", "Tag cache &amp; native posters"]].map(([section, label]) => '<a class="je-media-tags-card-link" href="#/configurationpage?name=Jellyfin%20Enhanced&amp;jeSection=media-tags&amp;tab=' + section + '">' + label + "</a>").join("") + "</div></div>" }]
+        items: [{ type: "custom", html: '<div class="je-media-tags-card"><div class="je-media-tags-card-text"><div class="fieldDescription">Poster tags (quality, genre, language, ratings, status, people and more) have their own tab, which saves each change as you make it.</div><dl class="je-media-tags-card-facts" id="jeMediaTagsCardFacts" aria-live="polite"></dl></div><a class="jea-btn jea-btn-primary je-media-tags-open" href="#/configurationpage?name=Jellyfin%20Enhanced&amp;jeSection=media-tags"><i class="material-icons" aria-hidden="true">sell</i><span>Open Media Tags</span></a><div class="je-media-tags-card-links">' + [["layout", "Layout defaults"], ["groups", "Groups"], ["rules", "Rules"], ["colours", "Colours and text"], ["badges", "Status badges"], ["server", "Server"]].map(([section, label]) => '<a class="je-media-tags-card-link" href="#/configurationpage?name=Jellyfin%20Enhanced&amp;jeSection=media-tags&amp;tab=' + section + '">' + label + '<i class="material-icons" aria-hidden="true">arrow_forward</i></a>').join("") + "</div></div>" }]
       },
       "spoiler-guard": {
         title: "Spoiler Guard",
@@ -279,8 +283,8 @@
           sel(
             "spoilerBlurMode",
             "Image replacement mode",
-            [["hide", "Show stock cards (hide images entirely, default)"], ["blur", "Blur images"]],
-            'How protected cards look. <strong>Show stock cards</strong> (default) swaps each unwatched image for a safe parent-level placeholder: episodes show their series backdrop, seasons show the series poster, collection-opted movies show the collection art. <strong>Blur images</strong> instead applies a strong blur to the original so silhouettes and dominant colours still hint at "something is here". Pick stock cards for the strictest hide; pick blur if the placeholders feel too aggressive.'
+            [["hide", "Stock cards (default)"], ["blur", "Blur images"]],
+            'How protected cards look. <strong>Stock cards</strong> (default) swaps each unwatched image for a safe parent-level placeholder: episodes show their series backdrop, seasons show the series poster, collection-opted movies show the collection art. <strong>Blur images</strong> instead applies a strong blur to the original so silhouettes and dominant colours still hint at "something is here". Pick stock cards for the strictest hide; pick blur if the placeholders feel too aggressive.'
           ),
           {
             id: "spoilerBlurIntensity",
@@ -300,7 +304,7 @@
             tog("spoilerAutoEnableOnFirstPlay", "Auto-enable Spoiler Guard on first play of a new show", "When on, Spoiler Guard turns itself on for a series the moment a user starts Season 1 Episode 1 of a show they've never watched. They don't have to remember to flip the toggle before pressing play. Rewatches and jumping in at later episodes are ignored; only a fresh first-play counts."),
             tog("spoilerAutoEnableOnSeerrRequest", "Auto-enable Spoiler Guard on Seerr request", 'When on, requesting something through Seerr also pre-arms Spoiler Guard for that title: when the show or movie lands in the library, protection is already on for the user who requested it. Users can also pre-arm titles manually with the "Enable Spoiler Guard" button in the Seerr details popup (always available regardless of this toggle), handy when someone else requested the title first.'),
             tog("spoilerAutoEnableOnLibraryAdd", "Auto-enable Spoiler Guard when new titles are added to the library", "When on, every new show or movie that appears in the library (from a scan, a Seerr download, or a manual copy) is added to the Spoiler Guard list of every user who can see that library, so protection is in place before anyone presses play. Only brand-new titles are affected: a user who later switches Spoiler Guard off for a title isn't re-armed by metadata refreshes. Library scans are batched, so a big scan results in one settings write per user rather than one per title."),
-            { type: "custom", html: `<div id="spoilerAutoEnableScopeContainer" class="jea-subbox"><div class="jea-subbox-title">Auto-enable applies to</div><div class="fieldDescription">Shared by all three auto-enable options above.</div><div class="checkboxContainer"><label><input id="spoilerAutoEnableSeries" type="checkbox"/><span>TV shows</span></label></div><div class="checkboxContainer"><label><input id="spoilerAutoEnableMovies" type="checkbox"/><span>Movies</span></label></div><div class="fieldDescription">Libraries: leave every library unticked to cover all of them. Doesn't apply to Seerr requests (the title isn't in a library yet).</div><div id="spoilerAutoEnableLibraryList"><div class="fieldDescription">Loading libraries…</div></div></div>` },
+            { type: "custom", html: `<div id="spoilerAutoEnableScopeContainer" class="jea-subbox"><div class="jea-subbox-title">Auto-enable applies to</div><div class="fieldDescription">Shared by all three auto-enable options above.</div><div class="checkboxContainer"><label><input id="spoilerAutoEnableSeries" type="checkbox"/><span>TV shows</span></label></div><div class="checkboxContainer"><label><input id="spoilerAutoEnableMovies" type="checkbox"/><span>Movies</span></label></div><div class="fieldDescription">Libraries: leave them all unchecked to cover every library. Doesn't apply to Seerr requests (the title isn't in a library yet).</div><div id="spoilerAutoEnableLibraryList"><div class="fieldDescription">Loading libraries…</div></div></div>` },
             { type: "custom", html: `<div id="spoilerApplyExistingContainer" class="je-spoiler-apply-existing jea-subbox"><div class="jea-subbox-title">Titles already in the library</div><div class="fieldDescription">Auto-enable only arms titles as they arrive, and a rescan doesn't count (so nobody who switched Spoiler Guard off for a title gets it switched back on). To guard what's already there, apply the <em>saved</em> scope above to existing titles, for every user who can see them. Works whether or not "when new titles are added" is on. Titles a user already has, or has fully watched, are skipped. Also available as the "Spoiler Guard: apply to existing titles" scheduled task.</div><div class="checkboxContainer"><label><input id="spoilerApplyExistingSkipStarted" type="checkbox"/><span>Also skip titles a user has already started watching</span></label></div><div class="jea-actions"><button id="spoilerApplyExistingBtn" type="button" class="jea-btn"><span>Apply to existing titles now…</span></button></div><div id="spoilerApplyExistingStatus" class="fieldDescription" aria-live="polite"></div></div>` }
           ] },
           { type: "group", title: "Hide metadata on unwatched episodes", items: [
@@ -325,7 +329,7 @@
             sel(
               "spoilerStripCastMode",
               "Cast hiding scope",
-              [["GuestStars", "Guest stars only (recommended)"], ["All", "Entire cast (regulars + guest stars)"]],
+              [["GuestStars", "Guest stars only (recommended)"], ["All", "Entire cast"]],
               "<strong>Guest stars only</strong> keeps the regular cast visible, since they're in every episode anyway and don't give anything away. <strong>Entire cast</strong> is the strict option for shows where the recurring cast appearing or not appearing in a given episode is itself the spoiler.",
               { showIf: "spoilerStripCast" }
             ),
@@ -347,23 +351,23 @@
       "default-language": {
         title: "Default Language",
         icon: "language",
-        items: [sel("DefaultLanguage", "Default UI Language", [["", "System Default"]], "Sets the default language for all users. Users can still override this in their own settings.")]
+        items: [sel("DefaultLanguage", "Default interface language", [["", "System default"]], "Sets the default language for all users. Users can still override this in their own settings.")]
       },
       "mdblist": {
         title: "MDBList Ratings",
         iconImg: "mdblist-static/favicon.ico",
         items: [
-          tog("mdblistRatingsEnabled", "Enable MDBList Ratings", UL("Shows TMDB, Rotten Tomatoes, IMDb, Trakt and other ratings on item-details pages", "Can fill in Jellyfin's own missing Community/Critic Rating fields", "Requires a free API key from mdblist.com"), { main: true }),
-          { type: "custom", html: '<div class="inputContainer jea-row"><label class="inputLabel" for="mdblistApiKey">MDBList API Key</label><div class="je-api-row"><input id="mdblistApiKey" type="text" autocomplete="off" class="je-api-input jea-input"/><span id="mdblistStatusIndicator" class="material-icons"></span><button type="button" id="checkMdblistStatusBtn" class="jea-btn">Check</button></div><div id="mdblistStatusLine" class="jea-hint">&nbsp;</div></div><div class="je-setting-description" data-desc-for="mdblistApiKey"><div class="fieldDescription">Your API key from <a class="sectionTitle" href="https://mdblist.com/preferences/#api" target="_blank">mdblist.com</a>.</div></div>' },
-          tog("mdblistRatingsShowOnItemDetails", "Show Ratings Row on Item Details", "Displays the MDBList ratings row on item-details pages."),
-          tog("mdblistRatingsShowPercentSymbol", "Show % Symbol", `Appends "%" after each rating badge's number.`),
+          tog("mdblistRatingsEnabled", "Enable MDBList ratings", UL("Shows TMDB, Rotten Tomatoes, IMDb, Trakt and other ratings on item-details pages", "Can fill in Jellyfin's own missing Community/Critic Rating fields", "Requires a free API key from mdblist.com"), { main: true }),
+          { type: "custom", html: '<div class="inputContainer jea-row"><label class="inputLabel" for="mdblistApiKey">MDBList API key</label><div class="je-api-row"><input id="mdblistApiKey" type="text" autocomplete="off" class="je-api-input jea-input"/><span id="mdblistStatusIndicator" class="material-icons"></span><button type="button" id="checkMdblistStatusBtn" class="jea-btn">Test</button></div><div id="mdblistStatusLine" class="jea-hint">&nbsp;</div></div><div class="je-setting-description" data-desc-for="mdblistApiKey"><div class="fieldDescription">Your API key from <a class="sectionTitle" href="https://mdblist.com/preferences/#api" target="_blank">mdblist.com</a>.</div></div>' },
+          tog("mdblistRatingsShowOnItemDetails", "Show the ratings row on item details", "Displays the MDBList ratings row on item-details pages."),
+          tog("mdblistRatingsShowPercentSymbol", "Show a % sign after each rating", `Appends "%" after each rating badge's number.`),
           { type: "group", title: "Configure ratings shown", items: [
             { type: "note", html: "Pick which ratings appear on the item-details row, and the order they're shown in. Use the " + arrow("up") + " / " + arrow("down") + " buttons to reorder. All checked by default." },
             // Filled by renderMdblistSourcesAdmin (page/display-cards.ts); the Services tab copy gets its own list, kept in step there.
             { type: "custom", html: '<div id="mdblistRatingsSourcesAdmin"></div>' }
           ] },
           { type: "group", title: "Fetch ratings (scheduled task)", items: [
-            tog("mdblistRatingsFetchEnabled", "Fetch Ratings from MDBList", "Enables the <strong>Fetch Ratings from MDBList</strong> scheduled task (Dashboard, Scheduled Tasks):" + UL(
+            tog("mdblistRatingsFetchEnabled", "Fetch ratings from MDBList", "Enables the <strong>Fetch Ratings from MDBList</strong> scheduled task (Dashboard, Scheduled Tasks):" + UL(
               "Looks up MDBList data for any movie/series whose cached ratings are missing or stale, and saves it. Doesn't touch Jellyfin's own rating fields",
               `A found title stays cached for 7 days (3 days for a confirmed "no match") before being refetched. Already-fresh titles are skipped on a re-run, so it's safe to schedule this frequently, even daily`,
               "Stops once today's quota drops to the reserve below"
@@ -372,7 +376,7 @@
               id: "mdblistFetchReserve",
               type: "number",
               manual: true,
-              label: "Fetch Task Reserve",
+              label: "Fetch task reserve",
               min: 1,
               max: 1e5,
               showIf: "mdblistRatingsFetchEnabled",
@@ -380,15 +384,15 @@
             }
           ] },
           { type: "group", title: "Sync ratings into Jellyfin (scheduled task)", items: [
-            tog("mdblistRatingsAutoSyncEnabled", "Sync Ratings from MDBList to Jellyfin", "Enables the <strong>Sync Ratings from MDBList to Jellyfin</strong> scheduled task:" + UL(
+            tog("mdblistRatingsAutoSyncEnabled", "Sync ratings from MDBList to Jellyfin", "Enables the <strong>Sync Ratings from MDBList to Jellyfin</strong> scheduled task:" + UL(
               "Sets Community / Critic Ratings (source selectable below, default TMDB / Rotten Tomatoes) from whatever's already cached (see Fetch above) into Jellyfin's own fields",
               "Requires the <strong>Fetch Ratings from MDBList</strong> task to be enabled and run first"
             )),
-            sel("mdblistCommunityRatingSource", "Star Rating Source (Community Rating)", RS, "The star rating shown by Jellyfin, on a 0-10 scale (e.g. 7.2). Choose which MDBList source fills it. Default TMDB.", { showIf: "mdblistRatingsAutoSyncEnabled" }),
-            sel("mdblistCommunityRatingFallbackSource", "Star Rating Fallback Source", RSN, "Used when the source above has no score for a title. Default none.", { showIf: "mdblistRatingsAutoSyncEnabled" }),
-            sel("mdblistCriticRatingSource", "Tomato Rating Source (Critic Rating)", RS, "The tomato rating shown by Jellyfin, on a 0-100% scale (e.g. 85%). Choose which MDBList source fills it. Default RT Critic.", { showIf: "mdblistRatingsAutoSyncEnabled" }),
-            sel("mdblistCriticRatingFallbackSource", "Tomato Rating Fallback Source", RSN, "Used when the source above has no score for a title. Default none.", { showIf: "mdblistRatingsAutoSyncEnabled" }),
-            tog("mdblistRatingsOverwriteExisting", "Overwrite Existing Jellyfin Ratings", UL("<strong>Off</strong> (default): Only fills an empty rating, never revisits an item once both are set", "<strong>On</strong>: Every run re-sets every item's rating to MDBList's current cached value. This is also the only way ratings stay current over time"), { showIf: "mdblistRatingsAutoSyncEnabled" })
+            sel("mdblistCommunityRatingSource", "Star rating source (community rating)", RS, "The star rating shown by Jellyfin, on a 0-10 scale (e.g. 7.2). Choose which MDBList source fills it. Default TMDB.", { showIf: "mdblistRatingsAutoSyncEnabled" }),
+            sel("mdblistCommunityRatingFallbackSource", "Star rating fallback source", RSN, "Used when the source above has no score for a title. Default none.", { showIf: "mdblistRatingsAutoSyncEnabled" }),
+            sel("mdblistCriticRatingSource", "Tomato rating source (critic rating)", RS, "The tomato rating shown by Jellyfin, on a 0-100% scale (e.g. 85%). Choose which MDBList source fills it. Default RT Critic.", { showIf: "mdblistRatingsAutoSyncEnabled" }),
+            sel("mdblistCriticRatingFallbackSource", "Tomato rating fallback source", RSN, "Used when the source above has no score for a title. Default none.", { showIf: "mdblistRatingsAutoSyncEnabled" }),
+            tog("mdblistRatingsOverwriteExisting", "Overwrite existing Jellyfin ratings", UL("<strong>Off</strong> (default): Only fills an empty rating, never revisits an item once both are set", "<strong>On</strong>: Every run re-sets every item's rating to MDBList's current cached value. This is also the only way ratings stay current over time"), { showIf: "mdblistRatingsAutoSyncEnabled" })
           ] }
         ]
       }
@@ -402,17 +406,18 @@
         title: "TMDB",
         iconImg: "selfhst/svg/tmdb.svg",
         items: [
-          { type: "custom", html: '<div class="inputContainer jea-row"><label class="inputLabel" for="TMDB_API_KEY">TMDB API Key</label><div class="je-api-row"><input id="TMDB_API_KEY" name="TMDB_API_KEY" type="text" autocomplete="off" class="je-api-input jea-input"/><span id="tmdbStatusIndicator" class="material-icons"></span><button type="button" class="testTmdbBtn jea-btn">Test</button></div></div><div class="je-setting-description" data-desc-for="TMDB_API_KEY"><div class="fieldDescription">Your API key from The Movie DB (TMDB). <a class="sectionTitle" href="https://www.themoviedb.org/settings/api" target="_blank">How to?</a> Shared with Seerr Settings. Needed by TMDB Reviews and Release Dates.</div></div>' },
+          { type: "custom", html: '<div class="inputContainer jea-row"><label class="inputLabel" for="TMDB_API_KEY">TMDB API key</label><div class="je-api-row"><input id="TMDB_API_KEY" name="TMDB_API_KEY" type="text" autocomplete="off" class="je-api-input jea-input"/><span id="tmdbStatusIndicator" class="material-icons"></span><button type="button" class="testTmdbBtn jea-btn">Test</button></div></div><div class="je-setting-description" data-desc-for="TMDB_API_KEY"><div class="fieldDescription">Your API key from The Movie Database (TMDB): <a class="sectionTitle" href="https://www.themoviedb.org/settings/api" target="_blank" rel="noopener noreferrer">get one here<i class="material-icons je-link-ext" aria-hidden="true">open_in_new</i></a>. The Services tab shows the same field. TMDB Reviews, Release Dates and per-season providers need it.</div></div>' },
           {
             id: "DEFAULT_REGION",
             prop: "DEFAULT_REGION",
             manual: true,
             type: "select",
             options: [],
-            label: "Default Region",
-            desc: 'The default region for streaming provider lookup and release dates. Empty defaults to US. <a class="sectionTitle" href="https://cdn.jsdelivr.net/gh/n00bcodr/Jellyfin-Elsewhere/resources/regions.txt" target="_blank">Full List</a>'
+            label: "Default region",
+            rowClass: "jea-stack",
+            desc: 'The default region for streaming provider lookup and release dates. Empty means US. <a class="sectionTitle" href="https://cdn.jsdelivr.net/gh/n00bcodr/Jellyfin-Elsewhere/resources/regions.txt" target="_blank" rel="noopener noreferrer">Full list<i class="material-icons je-link-ext" aria-hidden="true">open_in_new</i></a>'
           },
-          { type: "custom", html: '<div class="jea-note je-region-source-note" style="display:none;align-items:flex-start;gap:12px;"><i class="material-icons je-info-icon">info</i><span><strong>Seerr is enabled and no TMDB key is set:</strong> streaming providers come from Seerr. Per-season providers still need a TMDB key.</span></div>' }
+          { type: "custom", html: '<div class="jea-note je-region-source-note" style="display:none;align-items:flex-start;gap:12px;"><i class="material-icons je-info-icon" aria-hidden="true">info</i><span><strong>Seerr is enabled and no TMDB key is set:</strong> streaming providers come from Seerr. Per-season providers still need a TMDB key.</span></div>' }
         ]
       },
       "elsewhere": {
@@ -425,24 +430,23 @@
             type: "toggle",
             main: true,
             label: "Enable Elsewhere",
-            desc: `Adds an "Elsewhere" panel to item detail pages showing where the title is available on streaming services in the user's region (powered by TMDB watch-provider data).`
+            desc: `Adds an "Elsewhere" panel to item detail pages showing where the title is available on streaming services in the user's region. The data comes from TMDB, or from Seerr when no TMDB key is set.`
           },
-          { type: "custom", html: '<div class="jea-note je-region-source-note" style="display:none;align-items:flex-start;gap:12px;"><i class="material-icons je-info-icon">info</i><span><strong>Seerr is enabled and no TMDB key is set:</strong> streaming providers come from Seerr. Per-season providers still need a TMDB key.</span></div>' },
           {
             id: "DEFAULT_PROVIDERS",
             prop: "DEFAULT_PROVIDERS",
             type: "text",
-            label: "Default Providers",
-            placeholder: "e.g., Netflix,Hulu",
-            desc: 'A list of default streaming providers to show. Leave blank to show all. <a class="sectionTitle" href="https://cdn.jsdelivr.net/gh/n00bcodr/Jellyfin-Elsewhere/resources/providers.txt" target="_blank">Full List</a>'
+            label: "Default providers",
+            placeholder: "e.g. Netflix, Hulu",
+            desc: 'A list of default streaming providers to show. Leave blank to show all. <a class="sectionTitle" href="https://cdn.jsdelivr.net/gh/n00bcodr/Jellyfin-Elsewhere/resources/providers.txt" target="_blank" rel="noopener noreferrer">Full list<i class="material-icons je-link-ext" aria-hidden="true">open_in_new</i></a>'
           },
           {
             id: "IGNORE_PROVIDERS",
             prop: "IGNORE_PROVIDERS",
             type: "text",
-            label: "Ignore Providers",
-            placeholder: "e.g., .*with Ads, Hulu",
-            desc: 'A list of providers to ignore from the default region (supports regex). <a class="sectionTitle" href="https://cdn.jsdelivr.net/gh/n00bcodr/Jellyfin-Elsewhere/resources/providers.txt" target="_blank">Full List</a>'
+            label: "Ignored providers",
+            placeholder: "e.g. .*with Ads, Hulu",
+            desc: 'A list of providers to ignore from the default region (regular expressions work). <a class="sectionTitle" href="https://cdn.jsdelivr.net/gh/n00bcodr/Jellyfin-Elsewhere/resources/providers.txt" target="_blank" rel="noopener noreferrer">Full list<i class="material-icons je-link-ext" aria-hidden="true">open_in_new</i></a>'
           },
           {
             id: "ElsewhereUseSeerrRegion",
@@ -460,25 +464,25 @@
             label: "Per-season providers",
             desc: "On Series and Season pages, look up streaming providers per season from TMDB. Requires a TMDB API key (not available when Elsewhere runs on Seerr data). A season is labelled only when seasons differ; seasons TMDB has no data for fall back to the series providers. Only applies when the series uses the default (aired) season order. Users can turn this off for themselves in the Elsewhere search settings."
           },
-          { type: "group", title: "Custom Branding", items: [
+          { type: "group", title: "Custom branding", items: [
             {
               id: "ElsewhereCustomBrandingText",
               prop: "ElsewhereCustomBrandingText",
               type: "text",
-              label: "Custom Branding Message",
-              placeholder: "e.g., Only available on My Server",
+              label: "Custom branding message",
+              placeholder: "e.g. Only available on My Server",
               desc: "Custom message to display when content is not available on any streaming providers. Leave blank to disable custom branding."
             },
             {
               id: "ElsewhereCustomBrandingImageUrl",
               prop: "ElsewhereCustomBrandingImageUrl",
               type: "text",
-              label: "Custom Branding Icon URL",
-              placeholder: "e.g., https://example.com/logo.png",
+              label: "Custom branding icon URL",
+              placeholder: "e.g. https://example.com/logo.png",
               desc: "Optional icon shown next to the custom message, at 24 × 24. Each viewer's browser loads it, so use a web address such as <code>https://example.com/logo.png</code> or a path Jellyfin serves such as <code>/web/favicons/touchicon.png</code>, not a file path on the server. Any image type browsers show works (PNG, SVG, WebP). To use an image from your computer, upload it below instead; an uploaded icon is used in place of this URL. Leave both blank for no icon."
             },
             { type: "custom", html: '<div class="jea-note jea-note-warn" id="je-elsewhere-icon-warning" style="display:none;"></div>' },
-            { type: "custom", html: '<div class="je-branding-grid"><div class="je-branding-card"><label class="je-branding-label-bold">Upload Icon</label><label class="je-branding-label">Stored on the server and used instead of the URL above. Takes effect on the next page load.</label><div class="je-branding-size-hint">Shown at 24×24px &nbsp;·&nbsp; PNG, JPG, GIF, WebP or SVG</div><div class="je-branding-dropzone" id="elsewhereIconDropZone"><input type="file" id="elsewhereIconInput" accept="image/png,image/jpeg,image/gif,image/webp,image/svg+xml" class="je-branding-file-input" /><div id="elsewhereIconPlaceholder" class="je-branding-placeholder"><i class="material-icons je-branding-placeholder-icon">image</i></div><img id="elsewhereIconPreview" class="je-branding-preview" style="display:none;" /><div id="elsewhereIconDimensions" class="je-branding-dimensions" style="display:none;"></div><div id="elsewhereIconStatus" class="je-branding-status"></div><button type="button" class="je-branding-delete" id="elsewhereIconDelete" style="display:none;"><i class="material-icons">delete</i></button></div></div></div>' }
+            { type: "custom", html: '<div class="je-branding-grid"><div class="je-branding-card"><label class="je-branding-label-bold" for="elsewhereIconInput">Upload an icon</label><div class="je-branding-label">Stored on the server and used instead of the URL above. Takes effect on the next page load.</div><div class="je-branding-size-hint">Shown at 24×24px &nbsp;·&nbsp; PNG, JPG, GIF, WebP or SVG</div><div class="je-branding-dropzone" id="elsewhereIconDropZone"><input type="file" id="elsewhereIconInput" accept="image/png,image/jpeg,image/gif,image/webp,image/svg+xml" class="je-branding-file-input" /><div id="elsewhereIconPlaceholder" class="je-branding-placeholder"><i class="material-icons je-branding-placeholder-icon" aria-hidden="true">upload</i><span class="je-branding-choose">Choose file</span><span class="je-branding-formats">or drop it here</span></div><img id="elsewhereIconPreview" class="je-branding-preview" style="display:none;" /><div id="elsewhereIconDimensions" class="je-branding-dimensions" style="display:none;"></div><div id="elsewhereIconStatus" class="je-branding-status"></div><button type="button" class="je-branding-delete" id="elsewhereIconDelete" style="display:none;" aria-label="Remove the uploaded icon" title="Remove"><i class="material-icons" aria-hidden="true">delete</i></button></div></div></div>' }
           ] }
         ]
       },
@@ -491,7 +495,7 @@
             prop: "ReviewsExpandedByDefault",
             type: "toggle",
             label: "Expand reviews by default",
-            desc: "When enabled, the reviews section opens expanded by default for all users (unless they override in their session)."
+            desc: "When enabled, the reviews section opens expanded by default for all users (each user can change this in their own settings)."
           }
         ]
       },
@@ -504,8 +508,8 @@
             prop: "ShowReviews",
             type: "toggle",
             main: true,
-            label: "Show TMDB Reviews",
-            desc: "Requires TMDB API Key to be set."
+            label: "Show TMDB reviews",
+            desc: "Shows reviews written by TMDB users in the reviews section of item pages."
           }
         ]
       },
@@ -518,7 +522,7 @@
             prop: "ShowAnilistReviews",
             type: "toggle",
             main: true,
-            label: "Show AniList Reviews",
+            label: "Show AniList reviews",
             desc: "Shows the top AniList user reviews for anime in the reviews section.<br>Will only work if AniList is a metadata provider, since items are matched by their AniList ID.<br>No API key needed.<br>Spoiler sections of reviews are hidden."
           }
         ]
@@ -532,7 +536,7 @@
             prop: "ReviewTranslationEnabled",
             type: "toggle",
             main: true,
-            label: "Enable Review Translation",
+            label: "Enable review translation",
             desc: `Adds a Translate button to English TMDB and AniList reviews, translating them into the user's Jellyfin language.<br>Desktop Chrome and Edge translate on the device, with nothing sent anywhere, but only over HTTPS or localhost. Firefox, Safari, mobile browsers and the Jellyfin apps do not have a built-in translator.<br>Everyone else uses your own <a class="sectionTitle" href="https://libretranslate.com" target="_blank">LibreTranslate</a> instance, if you set one below. Only the review text is sent to it.<br>Translations are done live and are not stored. The button only shows for languages the browser or your instance offers.`
           },
           {
@@ -548,7 +552,7 @@
             id: "reviewTranslationApiKey",
             prop: "ReviewTranslationApiKey",
             type: "password",
-            label: "LibreTranslate API Key (optional)",
+            label: "LibreTranslate API key (optional)",
             toConfig: (v) => (v || "").trim(),
             desc: "Only needed when your instance requires a key."
           }
@@ -564,7 +568,7 @@
             prop: "ShowUserReviews",
             type: "toggle",
             main: true,
-            label: "Enable User Written Reviews",
+            label: "Enable user-written reviews",
             desc: "Allows users to write reviews and rate items in the library."
           },
           {
@@ -618,8 +622,8 @@
             prop: "ShowReleaseDates",
             type: "toggle",
             main: true,
-            label: "Show Release/Air Date",
-            desc: "Requires TMDB API Key to be set. Shows a chip on Movie, Series, Season and Episode detail pages with the cinema/digital/physical release date or next/last air date, sourced from TMDB. Uses the Default Region set under TMDB Connection above to pick which country's dates to prefer."
+            label: "Show release and air dates",
+            desc: "Shows a chip on Movie, Series, Season and Episode detail pages with the cinema/digital/physical release date or next/last air date, sourced from TMDB. Uses the default region set in the TMDB card above to pick which country's dates to prefer."
           }
         ]
       }
@@ -654,7 +658,7 @@
             prop: "AutoPipEnabled",
             type: "toggle",
             perUser: true,
-            label: "Auto Picture-in-Picture on tab switch",
+            label: "Auto picture-in-picture on tab switch",
             desc: "Enter the browser's Picture-in-Picture mode when switching tabs (browser support required)."
           },
           {
@@ -662,14 +666,15 @@
             prop: "LongPress2xEnabled",
             type: "toggle",
             perUser: true,
-            label: "Long press/hold for 2x speed β",
-            desc: "Long-press anywhere on the player to temporarily play at 2x speed; release to return to normal speed. Beta, touch devices only."
+            label: "Long-press for 2× speed",
+            rowClass: "jea-beta",
+            desc: "Long-press anywhere on the player to temporarily play at 2x speed; release to return to normal speed. Touch devices only."
           },
           {
             id: "showPlaybackRatingBadge",
             prop: "ShowPlaybackRatingBadge",
             type: "toggle",
-            label: "Show Age Rating When Playback Starts",
+            label: "Show the age rating when playback starts",
             desc: "Briefly shows the age rating in a corner of the player when a video starts, followed by a line of any content-advisory tags (such as violence or strong language) and a line of its genres."
           },
           {
@@ -677,7 +682,7 @@
             prop: "PauseScreenEnabled",
             type: "toggle",
             perUser: true,
-            label: "Enable Custom Pause Screen",
+            label: "Enable the custom pause screen",
             desc: "Shows an overlay with details about what is playing while playback is paused."
           }
         ]
@@ -691,7 +696,7 @@
             prop: "AutoSkipIntro",
             type: "toggle",
             perUser: true,
-            label: "Auto-skip Intro",
+            label: "Auto-skip intros",
             desc: "Automatically skip detected intros. Requires the Intro Skipper plugin."
           },
           {
@@ -699,7 +704,7 @@
             prop: "AutoSkipOutro",
             type: "toggle",
             perUser: true,
-            label: "Auto-skip Outro",
+            label: "Auto-skip outros",
             desc: "Automatically skip detected outros (end credits). Requires the Intro Skipper plugin."
           }
         ]
@@ -713,7 +718,7 @@
             prop: "DisableCustomSubtitleStyles",
             type: "toggle",
             perUser: true,
-            label: "Disable Custom Subtitle Styles by default",
+            label: "Turn off custom subtitle styles by default",
             desc: "Globally disables Jellyfin's custom subtitle style overrides so the source subtitle styling is shown unmodified."
           },
           {
@@ -721,7 +726,7 @@
             prop: "SubtitleSyncButtonEnabled",
             type: "toggle",
             perUser: true,
-            label: "Show Subtitle Sync Button in the Player",
+            label: "Show the subtitle sync button in the player",
             desc: "Adds a button next to Subtitles in the player that syncs the subtitles to the line you just heard, from a list of the subtitle lines with their times that can also be searched and jumped through. The Sync Subtitles shortcut (Shift+S) opens the list with or without the button."
           },
           { type: "group", title: "Default appearance for new users", open: true, items: [
@@ -731,8 +736,8 @@
               type: "select",
               perUser: true,
               default: 0,
-              label: "Default Subtitle Style",
-              options: [["0", "Clean White"], ["1", "Classic Black Box"], ["2", "Netflix Style"], ["3", "Cinema Yellow"], ["4", "Soft Gray"], ["5", "High Contrast"]],
+              label: "Subtitle style",
+              options: [["0", "Clean White"], ["1", "Classic black box"], ["2", "Netflix style"], ["3", "Cinema yellow"], ["4", "Soft grey"], ["5", "High contrast"]],
               toConfig: (v) => parseInt(String(v), 10),
               desc: "Default subtitle style preset applied to new users; users can override in their personal settings."
             },
@@ -742,8 +747,8 @@
               type: "select",
               perUser: true,
               default: 0,
-              label: "Default Subtitle Size",
-              options: [["0", "Tiny"], ["1", "Small"], ["2", "Normal"], ["3", "Large"], ["4", "Extra Large"], ["5", "Gigantic"]],
+              label: "Subtitle size",
+              options: [["0", "Tiny"], ["1", "Small"], ["2", "Normal"], ["3", "Large"], ["4", "Extra large"], ["5", "Gigantic"]],
               toConfig: (v) => parseInt(String(v), 10),
               desc: "Default subtitle size applied to new users; users can override in their personal settings."
             },
@@ -753,8 +758,8 @@
               type: "select",
               perUser: true,
               default: 0,
-              label: "Default Subtitle Font",
-              options: [["0", "Default"], ["1", "Noto Sans"], ["2", "Sans Serif"], ["3", "Typewriter"], ["4", "Roboto"]],
+              label: "Subtitle font",
+              options: [["0", "Default"], ["1", "Noto Sans"], ["2", "Sans serif"], ["3", "Typewriter"], ["4", "Roboto"]],
               toConfig: (v) => parseInt(String(v), 10),
               desc: "Default subtitle font applied to new users; users can override in their personal settings."
             },
@@ -764,8 +769,8 @@
               type: "select",
               perUser: true,
               default: 0,
-              label: "Default Subtitle Text Effect",
-              options: [["0", "Auto"], ["1", "None"], ["2", "Shadow"], ["3", "Outline"], ["4", "Outline + Shadow"]],
+              label: "Subtitle text effect",
+              options: [["0", "Auto"], ["1", "None"], ["2", "Shadow"], ["3", "Outline"], ["4", "Outline and shadow"]],
               toConfig: (v) => parseInt(String(v), 10),
               desc: "Default subtitle text effect (outline / drop shadow) applied to new users; users can override in their personal settings. Auto adds a shadow only when the subtitle background is transparent."
             }
@@ -807,30 +812,28 @@
   function definePages(define) {
     const PP = "https://github.com/IAmParadox27/jellyfin-plugin-pages";
     const CT = "https://github.com/IAmParadox27/jellyfin-plugin-custom-tabs";
-    const ppLink = `<a class="sectionTitle" href="${PP}" target="_blank">Plugin Pages</a>`;
-    const PP_NOTE = "<strong>Note:</strong> Plugin Pages 3.0 or newer applies this without a Jellyfin restart. Older versions need one after enabling this option for the first time.";
+    const ppLink = `<a class="sectionTitle" href="${PP}" target="_blank" rel="noopener noreferrer">Plugin Pages<i class="material-icons je-link-ext" aria-hidden="true">open_in_new</i></a>`;
     const PP_BADGE = '<span class="je-installed-badge" data-plugin="pluginpages"><i class="material-icons" aria-hidden="true">check_circle</i>Plugin Pages detected</span>';
     const CT_BADGE = '<span class="je-installed-badge" data-plugin="customtabs"><i class="material-icons" aria-hidden="true">check_circle</i>Custom Tabs detected</span>';
     const escAttr = (s) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
     function placement(o) {
       const code = `<div class="${o.cls}"></div>`;
       const gate = `${o.p}UseCustomTabs,${o.en}`;
-      const guide = `<details class="jea-howto"><summary>Custom Tabs setup guide ${CT_BADGE}</summary><p class="fieldDescription">Display the ${o.noun} in a Custom Tabs tab instead of the sidebar link.</p><p class="fieldDescription je-needs-customtabs">You need the <a class="sectionTitle" href="${CT}" target="_blank">Custom Tabs</a> plugin.</p><ol class="fieldDescription"><li class="je-needs-customtabs">Install the <strong>Custom Tabs</strong> plugin and all its prerequisites.</li><li>Navigate to Dashboard &gt; Plugins &gt; Custom Tabs and add a new tab.</li><li>Add "Display Text" according to your preference (e.g., "${o.text}").</li><li>Copy the code below and paste it into the 'HTML Content' field.</li></ol><div class="je-copy-code-wrapper"><button class="je-copy-html-btn jea-btn" data-copy-text='${escAttr(code)}' type="button"><i class="material-icons je-copy-icon">content_copy</i><span class="copy-btn-text je-copy-btn-text">Copy</span></button><pre class="je-code-pre"><code>${escAttr(code)}</code></pre></div><div class="fieldDescription">Already have Custom Tabs installed? <a class="sectionTitle je-custom-tabs-link" href="#/configurationpage?name=Custom%20Tabs">Click here to configure it.</a></div></details>`;
+      const guide = `<details class="jea-howto"><summary>Custom Tabs setup guide ${CT_BADGE}</summary><p class="fieldDescription">Display the ${o.noun} in a Custom Tabs tab instead of the sidebar link.</p><p class="fieldDescription je-needs-customtabs">You need the <a class="sectionTitle" href="${CT}" target="_blank" rel="noopener noreferrer">Custom Tabs<i class="material-icons je-link-ext" aria-hidden="true">open_in_new</i></a> plugin.</p><ol class="fieldDescription"><li class="je-needs-customtabs">Install the <strong>Custom Tabs</strong> plugin and all its prerequisites.</li><li>Open Dashboard &gt; Plugins &gt; Custom Tabs and add a tab.</li><li>Set its Display Text, for example "${o.text}".</li><li>Copy the code below into its HTML Content field.</li></ol><div class="je-copy-code-wrapper"><button class="je-copy-html-btn jea-btn" data-copy-text='${escAttr(code)}' type="button"><i class="material-icons je-copy-icon" aria-hidden="true">content_copy</i><span class="copy-btn-text je-copy-btn-text">Copy</span></button><pre class="je-code-pre"><code>${escAttr(code)}</code></pre></div><div class="fieldDescription">Custom Tabs already installed? <a class="sectionTitle je-custom-tabs-link" href="#/configurationpage?name=Custom%20Tabs">Open its settings<i class="material-icons je-link-arrow" aria-hidden="true">arrow_forward</i></a></div></details>`;
       return {
         type: "group",
         title: "Where it appears",
-        open: true,
         items: [
           {
             id: `${o.p}UseNativeTab`,
             type: "toggle",
             manual: true,
-            label: `Add ${o.name} as a native Home tab`,
-            desc: `Adds ${o.name} as its own tab on the Home page, no external plugin needed.<br/><strong>Recommended on Jellyfin 12's experimental layout</strong> (the default).`
+            label: "Use a native Home tab",
+            desc: `Adds ${o.name} as its own tab on the Home page. No other plugin needed.`
           },
-          { id: `${o.p}UsePluginPages`, type: "toggle", manual: true, label: o.ppLabel, desc: `${o.ppIntro}<br/>${PP_NOTE} ${PP_BADGE}` },
+          { id: `${o.p}UsePluginPages`, type: "toggle", manual: true, label: o.ppLabel, desc: `${o.ppIntro} ${PP_BADGE}` },
           { id: `${o.p}UseCustomTabs`, type: "toggle", manual: true, label: o.ctLabel, desc: guide },
-          { type: "html", html: `<div class="je-note-banner je-v12-tab-hint-banner" id="je-v12-hint-${o.hint}" style="display:none;"><i class="material-icons je-note-icon">info</i><div>On Jellyfin 12, <strong>"Add ${o.name} as a native Home tab"</strong> is more reliable than Custom Tabs. The two cannot be enabled together.</div></div>` },
+          { type: "html", html: `<div class="je-note-banner je-v12-tab-hint-banner" id="je-v12-hint-${o.hint}" style="display:none;"><i class="material-icons je-note-icon" aria-hidden="true">info</i><div>On Jellyfin 12, <strong>"Use a native Home tab"</strong> is more reliable than Custom Tabs. Only one of the two can be on.</div></div>` },
           {
             id: `${o.p}AutoCreateCustomTab`,
             type: "toggle",
@@ -839,14 +842,14 @@
             rowClass: "je-customtabs-automanage",
             rowAttrs: { "data-gated-by": gate },
             descAttrs: { "data-gated-by": gate },
-            desc: `Jellyfin Enhanced will create the matching Custom Tabs entry on save. Turning off "${o.ctLabel}" removes the entry; turning it back on re-creates it. Leave unchecked to manage the Custom Tabs entry yourself.`
+            desc: `Jellyfin Enhanced will create the matching Custom Tabs entry on save. Turning off "${o.ctLabel}" removes the entry; turning it back on re-creates it. Leave it off to manage the Custom Tabs entry yourself.`
           }
         ]
       };
     }
-    const note = (html, icon) => ({ type: "note", html: icon ? `<i class="material-icons je-info-icon">${icon}</i> ` + html : html });
+    const note = (html, icon) => ({ type: "note", html: icon ? `<i class="material-icons je-info-icon" aria-hidden="true">${icon}</i> ` + html : html });
     const T = (id, prop, label, desc, extra) => ({ id, prop, type: "toggle", label, ...desc === void 0 ? {} : { desc }, ...extra });
-    const HC_DEFAULT = (id, label, desc, on) => T(id, id.charAt(0).toUpperCase() + id.slice(1), label, desc, on ? { default: true } : {});
+    const HC_DEFAULT = (id, label, desc, on, descClass) => T(id, id.charAt(0).toUpperCase() + id.slice(1), label, desc, { ...on ? { default: true } : {}, ...descClass ? { descClass } : {} });
     define({
       "pages-bookmarks": {
         title: "Bookmarks",
@@ -856,17 +859,17 @@
           T(
             "bookmarksEnabled",
             "BookmarksEnabled",
-            "Enable Bookmarks Feature",
-            "Save custom bookmarks/timestamps while watching videos to quickly jump back to your favorite scenes or moments.",
+            "Enable bookmarks",
+            "Lets users save timestamps while watching, to jump back to a scene later.",
             { main: true, default: true }
           ),
           placement({
             p: "bookmarks",
             en: "bookmarksEnabled",
             name: "Bookmarks",
-            ppLabel: "Use Plugin Pages for Bookmarks Library",
+            ppLabel: "Use Plugin Pages",
             ppIntro: `Adds a "Bookmarks" link via ${ppLink}.`,
-            ctLabel: "Use Custom Tabs for Bookmarks",
+            ctLabel: "Use Custom Tabs",
             noun: "Bookmarks library",
             hint: "bookmarks",
             cls: "sections bookmarks",
@@ -883,16 +886,16 @@
             "hiddenContentEnabled",
             "HiddenContentEnabled",
             "Enable Hidden Content",
-            "Enable or disable the Hidden Content feature server-wide. When disabled, hide buttons, filtering, sidebar navigation, and settings panel options are all removed. User data is preserved and restored when re-enabled.",
+            "Turns Hidden Content on or off for the whole server. When disabled, hide buttons, filtering, sidebar navigation, and settings panel options are all removed. User data is preserved and restored when re-enabled.",
             { main: true }
           ),
           placement({
             p: "hiddenContent",
             en: "hiddenContentEnabled",
             name: "Hidden Content",
-            ppLabel: "Use Plugin Pages for Hidden Content",
+            ppLabel: "Use Plugin Pages",
             ppIntro: `Replaces the default Hidden Content page with a ${ppLink} implementation.`,
-            ctLabel: "Use Custom Tabs for Hidden Content",
+            ctLabel: "Use Custom Tabs",
             noun: "Hidden Content page",
             hint: "hiddenContent",
             cls: "jellyfinenhanced hidden-content",
@@ -966,13 +969,13 @@
                 items: [
                   HC_DEFAULT(
                     "hiddenContentDefaultFilterLibrary",
-                    "Filter Library & details pages",
+                    "Filter library and details pages",
                     "When on, hidden items don't appear when users browse a library (Movies, Shows, etc.) or in the suggestion rows on a details page. Turn off if users still want to see hidden items while browsing.",
                     true
                   ),
                   HC_DEFAULT(
                     "hiddenContentDefaultFilterSearch",
-                    "Filter Search results",
+                    "Filter search results",
                     "When on, hidden items don't appear in search results. Off by default because most people still want to be able to search for something they hid in order to bring it back.",
                     false
                   ),
@@ -990,13 +993,13 @@
                   ),
                   HC_DEFAULT(
                     "hiddenContentDefaultFilterUpcoming",
-                    "Filter Upcoming episodes",
+                    "Filter upcoming episodes",
                     "When on, hidden series don't appear on the Upcoming Episodes page.",
                     true
                   ),
                   HC_DEFAULT(
                     "hiddenContentDefaultFilterRecommendations",
-                    "Filter Suggestions / recommendations",
+                    "Filter suggestions and recommendations",
                     `When on, hidden items don't appear in the "Because you watched..." and "Suggested for you" rows on the home and details pages.`,
                     true
                   ),
@@ -1023,8 +1026,9 @@
               HC_DEFAULT(
                 "hiddenContentDefaultExperimentalHideCollections",
                 "Allow hiding collections, libraries, and playlists (experimental)",
-                "<strong>Warning:</strong> Extremely not recommended for average users. Will break things. Only turn this on if you 100% know what you want to use it for. Lets users hide whole collections, libraries, or playlists in addition to individual movies and shows.",
-                false
+                "<strong>Warning:</strong> not for general use; it breaks things. Turn it on only if you know exactly why you need it. Lets users hide whole collections, libraries or playlists as well as individual movies and shows.",
+                false,
+                "je-desc-keep"
               )
             ]
           }
@@ -1038,7 +1042,7 @@
           T(
             "downloadsPageEnabled",
             "DownloadsPageEnabled",
-            "Enable Requests Page",
+            "Enable the Requests page",
             'Adds a "Requests" link to the navigation showing active downloads and requests.',
             { main: true, default: true }
           ),
@@ -1046,9 +1050,9 @@
             p: "downloads",
             en: "downloadsPageEnabled",
             name: "Requests",
-            ppLabel: "Use Plugin Pages for Requests",
+            ppLabel: "Use Plugin Pages",
             ppIntro: `Replaces the default Requests page with a ${ppLink} implementation.`,
-            ctLabel: "Use Custom Tabs for Requests",
+            ctLabel: "Use Custom Tabs",
             noun: "Requests page",
             hint: "downloads",
             cls: "jellyfinenhanced requests",
@@ -1057,36 +1061,36 @@
           T(
             "showDownloadsInRequests",
             "ShowDownloadsInRequests",
-            "Show Downloads in Requests Page",
-            "Shows active downloads from Sonarr/Radarr on the Requests page. (Requires *arr links and API keys to be configured)",
+            "Show downloads on the Requests page",
+            "Shows active Sonarr and Radarr downloads on the Requests page. Needs Sonarr or Radarr set up on the *arr tab.",
             { default: true }
           ),
           T(
             "downloadsFilterByUserRequests",
             "DownloadsFilterByUserRequests",
-            "Filter Downloads by User Requests",
+            "Show users only their own requests",
             "When enabled, non-admin users only see downloads and requests they made themselves, regardless of their Seerr permissions. When disabled, all authenticated users can see every item in the download queue, and the request list follows each user's Seerr permissions.",
             { default: true, showIf: "showDownloadsInRequests" }
           ),
-          T("downloadsPageShowIssues", "DownloadsPageShowIssues", "Show Seerr Issues Section", "Shows open/resolved Seerr issues beneath Requests."),
+          T("downloadsPageShowIssues", "DownloadsPageShowIssues", "Show the Seerr issues section", "Shows open/resolved Seerr issues beneath Requests."),
           T(
             "downloadsShowHistory",
             "DownloadsShowHistory",
-            "Show Download History Section",
+            "Show the download history section",
             "Shows a bounded history of recently imported (or failed-to-import) Sonarr/Radarr downloads beneath Requests, so items that vanish from the active queue after finishing are still visible.",
             { default: true }
           ),
           T(
             "downloadsHistoryAdminOnly",
             "DownloadsHistoryAdminOnly",
-            "Restrict Download History to Admins",
+            "Show download history to administrators only",
             "When enabled, only Jellyfin administrators see the Download History section. Regular users won't see it at all.",
             { showIf: "downloadsShowHistory" }
           ),
           T(
             "downloadsPagePollingEnabled",
             "DownloadsPagePollingEnabled",
-            "Enable Auto-Refresh",
+            "Refresh automatically",
             "Periodically refresh the Requests page so download progress updates without manual reload.",
             { default: true }
           ),
@@ -1097,7 +1101,7 @@
             min: 30,
             max: 300,
             default: 30,
-            label: "Poll Interval (seconds)",
+            label: "Refresh every (seconds)",
             desc: "How often to refresh download status automatically. Minimum is 30 seconds and applies only when auto-refresh is enabled.",
             showIf: "downloadsPagePollingEnabled",
             toConfig: (v) => {
@@ -1111,12 +1115,12 @@
         title: "Calendar Page",
         icon: "calendar_today",
         items: [
-          note("<strong>Calendar Page</strong> adds a Calendar button in the sidebar with a dedicated view of upcoming releases from Sonarr and Radarr.<br/><strong>Requirements:</strong> Configure Sonarr and/or Radarr URLs and API keys."),
+          note("<strong>Calendar Page</strong> adds a Calendar button in the sidebar with a dedicated view of upcoming releases from Sonarr, Radarr and Shoko.<br/><strong>Requirements:</strong> at least one of them set up on the *arr tab."),
           T(
             "calendarPageEnabled",
             "CalendarPageEnabled",
-            "Enable Calendar Page",
-            'Adds a "Calendar" link to the navigation showing upcoming releases from Sonarr/Radarr.',
+            "Enable the Calendar page",
+            'Adds a "Calendar" link to the navigation showing upcoming releases.',
             { main: true, default: true }
           ),
           placement({
@@ -1136,7 +1140,7 @@
             prop: "CalendarFirstDayOfWeek",
             type: "select",
             default: "Monday",
-            label: "First Day of Week",
+            label: "First day of the week",
             options: ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"].map((d) => [d, d]),
             desc: "Which day appears as the first column of the calendar grid."
           },
@@ -1145,29 +1149,29 @@
             prop: "CalendarTimeFormat",
             type: "select",
             default: "5pm/5:30pm",
-            label: "Time Format",
+            label: "Time format",
             options: [["5pm/5:30pm", "5pm/5:30pm"], ["17:00/17:30", "17:00/17:30"]],
             desc: "Whether release times display in 12-hour (5pm) or 24-hour (17:00) format."
           },
-          T("calendarHighlightFavorites", "CalendarHighlightFavorites", "Highlight Favorites/Watchlist", "Show a golden border on calendar entries for items in your Jellyfin favorites."),
-          T("calendarHighlightWatchedSeries", "CalendarHighlightWatchedSeries", "Highlight Watched Series", "Show a border on calendar entries for series you have watched episodes from."),
+          T("calendarHighlightFavorites", "CalendarHighlightFavorites", "Highlight Favorites", "Shows a gold border on entries the user has marked as a Jellyfin Favorite (the calendar's legend calls them Watchlist)."),
+          T("calendarHighlightWatchedSeries", "CalendarHighlightWatchedSeries", "Highlight watched series", "Shows a border on entries for series the user has watched episodes of."),
           T(
             "calendarFilterByLibraryAccess",
             "CalendarFilterByLibraryAccess",
-            "Filter by Library Access",
+            "Filter by library access",
             "When enabled, the calendar only shows items from libraries the user has access to. Upcoming items not yet in Jellyfin are filtered based on their Sonarr/Radarr root folder.",
             { default: true }
           ),
           T(
             "calendarShowOnlyRequested",
             "CalendarShowOnlyRequested",
-            "Show Requested Only (Default)",
+            "Start with requested items only",
             "When enabled, the calendar will load showing only Requested items by default, but users can still change filters."
           ),
           T(
             "calendarForceOnlyRequested",
             "CalendarForceOnlyRequested",
-            "Force Only Requested Items",
+            "Always show requested items only",
             "When enabled, the calendar always shows only your requested items and the Requests filter is hidden."
           )
         ]
@@ -1180,7 +1184,7 @@
           T(
             "recommendationsPageEnabled",
             "RecommendationsPageEnabled",
-            "Enable Recommendations Page",
+            "Enable the Recommendations page",
             'Adds a "Seerr Recommendations" link to the navigation showing Seerr discover rows.',
             { main: true }
           ),
@@ -1227,7 +1231,7 @@
               T(
                 "activityFeedShowActiveStreams",
                 "ActivityFeedShowActiveStreams",
-                "Show Active Streams section",
+                "Show the Active Streams section",
                 `Adds a live "who's watching now" section to this page, independent of whether the Active Streams header widget (Extras tab) is shown. Still requires that feature's data collection to be enabled there.`,
                 { default: true }
               )
@@ -1242,22 +1246,22 @@
         ]
       },
       "pages-leaving-soon": {
-        title: "Leaving Soon",
+        title: "Leaving soon",
         icon: "auto_delete",
         items: [
-          note("<strong>Leaving Soon</strong> lists everything the removal tool that is on (Maintainerr or Reclaimerr) will remove, with the days left, for every user: each one only sees items they can see. Administrators can keep an item or change its date from the page, and with Reclaimerr approve or deny removal requests; other users see their own requests. Set a removal tool up first (the Maintainerr and Reclaimerr cards in the *arr tab)."),
-          T("leavingSoonPageEnabled", "LeavingSoonPageEnabled", "Enable the Leaving Soon page", "Turns the page on. It lists nothing until a removal tool is set up.", { main: true }),
+          note("<strong>Leaving soon</strong> lists everything the removal tool that is on (Maintainerr or Reclaimerr) will remove, with the days left, for every user: each one only sees items they can see. Administrators can keep an item or change its date from the page, and with Reclaimerr approve or deny removal requests; other users see their own requests. Set a removal tool up first (the Maintainerr and Reclaimerr cards in the *arr tab)."),
+          T("leavingSoonPageEnabled", "LeavingSoonPageEnabled", "Enable the Leaving soon page", "Turns the page on. It lists nothing until a removal tool is set up.", { main: true }),
           placement({
             p: "leavingSoonPage",
             en: "leavingSoonPageEnabled",
-            name: "Leaving Soon",
+            name: "Leaving soon",
             ppLabel: "Use Plugin Pages",
-            ppIntro: `Adds a "Leaving Soon" link via ${ppLink}.`,
+            ppIntro: `Adds a "Leaving soon" link via ${ppLink}.`,
             ctLabel: "Use Custom Tabs",
-            noun: "Leaving Soon page",
+            noun: "Leaving soon page",
             hint: "leavingSoonPage",
             cls: "jellyfinenhanced leavingsoon",
-            text: "Leaving Soon"
+            text: "Leaving soon"
           })
         ]
       },
@@ -1293,7 +1297,7 @@
 
   // client/src/admin/config/sections/extras.ts
   function defineExtras(define) {
-    const shot = (alt, file, small) => '<details class="je-screenshot-details"><summary class="je-screenshot-summary">View Screenshot</summary><a href="https://cdn.jsdelivr.net/gh/n00bcodr/Jellyfin-Enhanced@main/docs/images/' + file + '" target="_blank"><img alt="' + alt + '" class="' + (small ? "je-screenshot-img-sm" : "je-screenshot-img") + '" data-je-cdn="je-docs-img/' + file + '"/></a></details>';
+    const shot = (alt, file, small) => '<details class="je-screenshot-details"><summary class="je-screenshot-summary">View screenshot</summary><a href="https://cdn.jsdelivr.net/gh/n00bcodr/Jellyfin-Enhanced@main/docs/images/' + file + '" target="_blank" rel="noopener noreferrer"><img alt="' + alt + '" class="' + (small ? "je-screenshot-img-sm" : "je-screenshot-img") + '" data-je-cdn="je-docs-img/' + file + '"/></a></details>';
     define({
       "extras-ui": {
         title: "UI Tweaks",
@@ -1303,36 +1307,36 @@
             id: "coloredRatingsEnabled",
             prop: "ColoredRatingsEnabled",
             type: "toggle",
-            label: "Colored Ratings Backgrounds",
-            desc: 'Applies color-coded backgrounds to media ratings. If you notice missing or incorrect ratings, please submit a PR to <a class="sectionTitle" href="https://github.com/n00bcodr/Jellyfin-Enhanced/" target="_blank">Jellyfin-Enhanced</a>.' + shot("Colored Ratings Example", "ratings.png")
+            label: "Coloured rating backgrounds",
+            desc: 'Applies colour-coded backgrounds to media ratings. If you notice missing or incorrect ratings, please submit a PR to <a class="sectionTitle" href="https://github.com/n00bcodr/Jellyfin-Enhanced/" target="_blank">Jellyfin-Enhanced</a>.' + shot("Coloured ratings example", "ratings.png")
           },
           {
             id: "themeSelectorEnabled",
             prop: "ThemeSelectorEnabled",
             type: "toggle",
-            label: "Theme Selector (Jellyfish)",
-            desc: "Adds a theme selector to quickly switch between Jellyfish color themes. Only changes the color theme of Jellyfish when used natively, not through KefinTweaks." + shot("Theme Selector Example", "theme-selector.png")
+            label: "Theme selector (Jellyfish)",
+            desc: "Adds a theme selector to quickly switch between Jellyfish colour themes. Only changes the colour theme of Jellyfish when used natively, not through KefinTweaks." + shot("Theme selector example", "theme-selector.png")
           },
           {
             id: "coloredActivityIconsEnabled",
             prop: "ColoredActivityIconsEnabled",
             type: "toggle",
-            label: "Colored Dashboard Icons",
-            desc: "Replaces Dashboard Activity Icons with Material Design icons and background color." + shot("Colored Activity Icons Example", "colored-activity-icons.png")
+            label: "Coloured dashboard icons",
+            desc: "Replaces the Dashboard activity icons with Material Design icons on a coloured background." + shot("Coloured activity icons example", "colored-activity-icons.png")
           },
           {
             id: "loginImageEnabled",
             prop: "EnableLoginImage",
             type: "toggle",
-            label: "Profile Picture on Login",
-            desc: "Displays the user's profile picture on the manual login screen instead of the name. When a user is selected, their avatar appears above the password field." + shot("Login Image Example", "login-image.png")
+            label: "Profile picture on the login screen",
+            desc: "Displays the user's profile picture on the manual login screen instead of the name. When a user is selected, their avatar appears above the password field." + shot("Login image example", "login-image.png")
           },
           {
             id: "pluginIconsEnabled",
             prop: "PluginIconsEnabled",
             type: "toggle",
-            label: "Custom Plugin Menu Icons",
-            desc: "Replaces default plugin folder icons with custom icons on the Dashboard sidebar. Currently replaces icons for (if installed): Jellyfin Enhanced, JavaScript Injector, Intro Skipper, Reports, JellySleep, Home Screen Sections, File Transformation, Jellyfin Helper, Newsletters, Segment Editor and Moonbase." + shot("Plugin Icons Example", "plugin-icons.png", true)
+            label: "Custom plugin menu icons",
+            desc: "Replaces default plugin folder icons with custom icons on the Dashboard sidebar. Currently replaces icons for (if installed): Jellyfin Enhanced, JavaScript Injector, Intro Skipper, Reports, JellySleep, Home Screen Sections, File Transformation, Jellyfin Helper, Newsletters, Segment Editor and Moonbase." + shot("Plugin icons example", "plugin-icons.png", true)
           }
         ]
       },
@@ -1345,10 +1349,16 @@
             prop: "ActiveStreamsEnabled",
             type: "toggle",
             main: true,
-            label: "Active Streams Header Widget",
+            label: "Show the Active Streams header widget",
             desc: "Adds a live stream counter to the header. Click it to open a panel showing who is currently playing, what they're watching, playback state, progress, and transcoding details. By default the widget is only visible to admin accounts."
           },
-          { id: "activeStreamsAllUsers", prop: "ActiveStreamsAllUsers", type: "toggle", label: "Show widget to non-admins" }
+          {
+            id: "activeStreamsAllUsers",
+            prop: "ActiveStreamsAllUsers",
+            type: "toggle",
+            label: "Show the widget to non-admins",
+            desc: "Lets every signed-in user see the stream counter and its panel, not only administrators."
+          }
         ]
       },
       "extras-links": {
@@ -1360,7 +1370,7 @@
             prop: "LetterboxdEnabled",
             type: "toggle",
             main: true,
-            label: "Enable Letterboxd Links",
+            label: "Enable Letterboxd links",
             desc: "Adds Letterboxd links to movie and person details pages."
           },
           {
@@ -1391,10 +1401,10 @@
               type: "textarea",
               rows: 3,
               placeholder: "Page Name | icon_name",
-              label: "Sidebar Custom Links",
-              desc: '<strong>Format:</strong> <code>Configuration Page Name | Material Icon Name</code><br/><strong>Important:</strong> Use the exact name that appears in the configuration page URL (e.g., "Jellyfin%20Tweaks" becomes "Jellyfin Tweaks").<br/><a class="sectionTitle" href="https://fonts.google.com/icons?icon.set=Material+Icons" target="_blank">Browse Material Icons</a><br/>Use "Test Links" to preview your links in the sidebar. They appear immediately and disappear on page refresh.'
+              label: "Sidebar custom links",
+              desc: '<strong>Format:</strong> <code>Configuration Page Name | Material Icon Name</code><br/><strong>Important:</strong> Use the exact name that appears in the configuration page URL (e.g. "Jellyfin%20Tweaks" becomes "Jellyfin Tweaks").<br/><a class="sectionTitle" href="https://fonts.google.com/icons?icon.set=Material+Icons" target="_blank" rel="noopener noreferrer">Browse Material Icons<i class="material-icons je-link-ext" aria-hidden="true">open_in_new</i></a><br/>Use "Test links" to preview your links in the sidebar. They appear immediately and disappear on page refresh.'
             },
-            { type: "button", id: "testCustomPluginLinksBtn", label: "Test Links" }
+            { type: "button", id: "testCustomPluginLinksBtn", label: "Test links" }
           ] }
         ]
       },
@@ -1407,7 +1417,7 @@
             prop: "EnableCustomSplashScreen",
             type: "toggle",
             main: true,
-            label: "Enable Splash Screen Override",
+            label: "Enable the splash screen override",
             desc: "Replace Jellyfin's login splash background with a custom image URL specified below."
           },
           {
@@ -1415,10 +1425,10 @@
             prop: "SplashScreenImageUrl",
             type: "text",
             placeholder: "/web/assets/banner.png",
-            label: "Splash Screen Image URL",
+            label: "Splash screen image URL",
             desc: "URL for the splash screen image. Defaults to Jellyfin banner."
           },
-          { type: "note", tone: "warn", html: 'Might cause strange behaviour if <a class="sectionTitle" href="https://github.com/IAmParadox27/jellyfin-plugin-media-bar" target="_blank">jellyfin-plugin-media-bar</a> is installed. All changes require a page refresh; if old settings persist, force clear the browser cache.' }
+          { type: "note", tone: "warn", html: 'May misbehave when <a class="sectionTitle" href="https://github.com/IAmParadox27/jellyfin-plugin-media-bar" target="_blank" rel="noopener noreferrer">jellyfin-plugin-media-bar</a> is installed. Changes show after a page refresh; if the old image stays, clear the browser cache.' }
         ]
       },
       "extras-branding": {
@@ -1426,14 +1436,14 @@
         icon: "image",
         class: "je-fieldset-wide",
         items: [
-          { type: "note", html: "Uploaded icon / favicon / logo images are applied automatically at request time. Changes apply on next page load (a hard refresh may be needed if your browser cached the old image)." },
+          { type: "note", html: "Uploaded images replace Jellyfin's own as they are served, from the next page load (a hard refresh may be needed if the browser cached the old image)." },
           { type: "custom", html: '<div class="je-branding-grid">' + [
-            ["iconTransparent", "Icon Transparent", "The icon in the top-left beside the server version", "536×536px &nbsp;·&nbsp; PNG with transparency"],
-            ["favicon", "Favicon", "Favicon in the browser tab", "256×256px (.png) &nbsp;·&nbsp; ICO, PNG, or SVG"],
-            ["bannerDark", "Banner Dark", "Splash Screen Banner for Light Mode", "1302×378px &nbsp;·&nbsp; PNG, JPG, or WebP"],
-            ["bannerLight", "Banner Light", "Splash Screen Banner for Dark Mode", "1302×378px &nbsp;·&nbsp; PNG, JPG, or WebP"],
-            ["touchicon", "Apple Touch Icon", "Icon shown when adding to iOS Home Screen", "180×180px &nbsp;·&nbsp; PNG"]
-          ].map(([k, name, what, size]) => '<div class="je-branding-card"><label class="je-branding-label-bold">' + name + '</label><label class="je-branding-label">' + what + '</label><div class="je-branding-size-hint">' + size + '</div><div class="je-branding-dropzone" id="' + k + 'DropZone"><input type="file" id="' + k + 'Input" accept="image/*" class="je-branding-file-input" /><div id="' + k + 'Placeholder" class="je-branding-placeholder"><i class="material-icons je-branding-placeholder-icon">image</i></div><img id="' + k + 'Preview" class="je-branding-preview" style="display:none;" /><div id="' + k + 'Dimensions" class="je-branding-dimensions" style="display:none;"></div><div id="' + k + 'Status" class="je-branding-status"></div><button type="button" class="je-branding-delete" id="' + k + 'Delete" style="display:none;"><i class="material-icons">delete</i></button></div></div>').join("") + "</div>" }
+            ["iconTransparent", "Icon with transparency", "icon-transparent.png", "The icon at the top left, beside the server version", "536×536px", "PNG with transparency"],
+            ["favicon", "Favicon", "favicon.ico", "The icon in the browser tab", "256×256px", "ICO, PNG or SVG"],
+            ["bannerDark", "Banner for light backgrounds", "banner-dark.png", "Dark artwork for the splash screen on light themes", "1302×378px", "PNG, JPG or WebP"],
+            ["bannerLight", "Banner for dark backgrounds", "banner-light.png", "Light artwork for the splash screen on dark themes", "1302×378px", "PNG, JPG or WebP"],
+            ["touchicon", "Apple touch icon", "apple-touch-icon.png", "Shown when Jellyfin is added to an iOS home screen", "180×180px", "PNG"]
+          ].map(([k, name, file, what, size, formats]) => '<div class="je-branding-card"><label class="je-branding-label-bold" for="' + k + 'Input">' + name + '</label><div class="je-branding-file">' + file + '</div><div class="je-branding-label">' + what + '</div><div class="je-branding-size-hint">' + size + " &nbsp;·&nbsp; " + formats + '</div><div class="je-branding-dropzone" id="' + k + 'DropZone"><input type="file" id="' + k + 'Input" accept="image/*" class="je-branding-file-input" aria-describedby="' + k + 'Status" /><div id="' + k + 'Placeholder" class="je-branding-placeholder"><i class="material-icons je-branding-placeholder-icon" aria-hidden="true">upload</i><span class="je-branding-choose">Choose file</span><span class="je-branding-formats">or drop it here</span></div><img id="' + k + 'Preview" class="je-branding-preview" alt="" style="display:none;" /><div id="' + k + 'Dimensions" class="je-branding-dimensions" style="display:none;"></div><div id="' + k + 'Status" class="je-branding-status" aria-live="polite"></div><button type="button" class="je-branding-delete" id="' + k + 'Delete" style="display:none;" aria-label="Remove the ' + String(name).toLowerCase().replace(/^apple/, "Apple") + '" title="Remove"><i class="material-icons" aria-hidden="true">delete</i></button></div></div>').join("") + "</div>" }
         ]
       },
       "keyboard": {
@@ -1444,11 +1454,11 @@
             id: "disableAllShortcuts",
             prop: "DisableAllShortcuts",
             type: "toggle",
-            label: "Disable Keyboard Shortcuts",
+            label: "Turn off keyboard shortcuts",
             desc: 'Disables all keyboard shortcuts, and hides the "Shortcuts" tab in the Enhanced Panel.'
           },
-          { type: "note", html: '<strong>Users can customize their own settings from the Enhanced Panel:</strong> press <code>?</code> (default shortcut), long-press the profile picture in the top-right corner, use the "Jellyfin Enhanced" link in the sidebar, or open it from the playback controls menu (mobile only).' },
-          { type: "html", html: '<div class="fieldDescription je-sc-help">Click a key, then press the new key combination (for example <kbd>Shift+A</kbd>). <b>Delete</b> disables the shortcut for every user, <b>Backspace</b> restores its default. Users can still change their own keys from their Enhanced Panel.</div><div id="shortcut-error-comment" style="display: none; color: #ff6b6b; margin-top:5px;"></div><div id="shortcut-grid"></div>' }
+          { type: "note", html: '<strong>Users can customise their own settings in the Enhanced Panel:</strong> press <code>?</code> (default shortcut), long-press the profile picture in the top-right corner, use the "Jellyfin Enhanced" link in the sidebar, or open it from the playback controls menu (mobile only).' },
+          { type: "html", html: '<div class="fieldDescription je-sc-help">Select a key, then press the new combination (for example <kbd>Shift+A</kbd>). <b>Escape</b> cancels, <b>Delete</b> turns the shortcut off for every user and <b>Backspace</b> restores its default. Users can still change their own keys in their Enhanced Panel.</div><div id="shortcut-error-comment" style="display: none; color: #ff6b6b; margin-top:5px;"></div><div id="shortcut-grid"></div>' }
         ]
       }
     });
@@ -1476,33 +1486,33 @@
             type: "textarea",
             manual: true,
             rows: 3,
-            label: "Seerr URL(s) (One per line)",
+            label: "Seerr URLs (one per line)",
             placeholder: "http://192.168.1.10:5055\nhttps://jellyseerr.example.com",
-            desc: "Enter your Seerr instance URLs, one per line. The script will use the first one that connects successfully."
+            desc: "Your Seerr addresses, one per line. Jellyfin Enhanced uses the first one that answers."
           },
           { type: "custom", html: keyRow(
             "JellyseerrApiKey",
             "JellyseerrApiKey",
-            "Seerr API Key",
+            "Seerr API key",
             "jellyseerrStatusIndicator",
             '<button type="button" id="testJellyseerrBtn" class="jea-btn">Test</button>',
-            "API key from Seerr. (Settings &gt; General Settings &gt; API Key)"
+            "The API key from Seerr (Settings &gt; General)."
           ) },
           { type: "custom", html: keyRow(
             "jellyseerr_TMDB_API_KEY",
             "TMDB_API_KEY",
-            "TMDB API Key",
+            "TMDB API key",
             "jellyseerrTmdbStatusIndicator",
             '<button type="button" class="testTmdbBtn jea-btn">Test</button>',
-            'Your API key from The Movie DB (TMDB). <a href="https://www.themoviedb.org/settings/api" target="_blank" rel="noopener">How to?</a><br/>TMDB API key for automatic movie collection requests and Seerr Collection Results. Shared with Elsewhere Settings'
+            'Your API key from The Movie Database (TMDB): <a href="https://www.themoviedb.org/settings/api" target="_blank" rel="noopener noreferrer">get one here<i class="material-icons je-link-ext" aria-hidden="true">open_in_new</i></a>. Auto movie requests and collections in Seerr results need it. It is the same key as on the Elsewhere &amp; Reviews tab.'
           ) },
-          { type: "group", title: "Advanced URL Mappings", items: [
+          { type: "group", title: "Advanced URL mappings", items: [
             {
               id: "jellyseerrUrlMappings",
               type: "textarea",
               manual: true,
               rows: 4,
-              label: "Seerr URL Mappings",
+              label: "Seerr URL mappings",
               placeholder: "https://jellyfin.mydomain.com|https://jellyseerr.mydomain.com",
               desc: 'Map your Jellyfin URLs to specific Seerr URLs for displaying links to users. Users will get the appropriate Seerr link when using "Link result titles to Seerr instead of TMDB", based on what link they use to access Jellyfin.<br/>Format: <code>JellyfinURL|SeerrURL</code>, one mapping per line.<br/>If no mapping matches or this is empty, the first URL from above will be used.'
             },
@@ -1524,14 +1534,14 @@
             prop: "JellyseerrShowSearchResults",
             type: "toggle",
             default: true,
-            label: "Show Seerr Results in Search",
+            label: "Show Seerr results in search",
             desc: "Enhance Jellyfin search by showing results from Seerr.<br/>This allows users to discover and request missing movies and shows directly from Jellyfin."
           },
           {
             id: "jellyseerrSearchExcludeLibraryItems",
             prop: "JellyseerrSearchExcludeLibraryItems",
             type: "toggle",
-            label: "Exclude search items already in library",
+            label: "Hide results already in the library",
             desc: "Hide Seerr search results that already exist in your Jellyfin library (the ones marked as available), including shows where only some seasons are in the library.<br/>If disabled, available items are shown and link to the media item in the library."
           },
           { type: "custom", html: `<div class="jea-note jea-note-warn" id="je-search-exclude-library-warning" style="display:none;"><strong>Warning:</strong> A movie in the library in a lower quality won't appear to request in higher quality like 4K, and a show with only some seasons won't appear to request the rest. Missing seasons can still be requested with the <strong>Request More</strong> button on the show's page, and anything can still be requested directly in Seerr.</div>` },
@@ -1540,21 +1550,21 @@
             prop: "ShowCollectionsInSearch",
             type: "toggle",
             default: true,
-            label: "Show Collections in Seerr Results",
+            label: "Show collections in Seerr results",
             desc: "Display TMDB collections (e.g., Harry Potter, Marvel Cinematic Universe) in Seerr search results with an option to request the entire collection at once."
           },
           {
             id: "jellyseerrEnable4kRequests",
             prop: "JellyseerrEnable4KRequests",
             type: "toggle",
-            label: "Enable 4K Requests",
+            label: "Enable 4K movie requests",
             desc: "When enabled, movie request buttons include a dropdown to request a 4K version."
           },
           {
             id: "jellyseerrEnable4kTvRequests",
             prop: "JellyseerrEnable4KTvRequests",
             type: "toggle",
-            label: "Enable 4K TV Requests",
+            label: "Enable 4K TV requests",
             desc: "When enabled, TV request buttons include a dropdown that opens the season request modal in 4K mode."
           },
           {
@@ -1617,7 +1627,7 @@
             id: "showElsewhereOnJellyseerr",
             prop: "ShowElsewhereOnJellyseerr",
             type: "toggle",
-            label: "Show Streaming Providers on Posters",
+            label: "Show streaming providers on posters",
             desc: `Displays icons of available streaming services on Seerr Posters, for your Default Region, or each user's Seerr streaming region when "Use each user's Seerr streaming region" is on (Elsewhere settings).<br/><br/><b>Needs a TMDB API Key or the Seerr integration (Seerr supplies the data when there is no TMDB key)</b>`
           },
           {
@@ -1635,7 +1645,7 @@
             label: "Show as text instead of icon",
             desc: 'Renders the Seerr detail-page link as the word "Seerr" instead of the icon. Independent of the *arr links "show as text" setting, so it applies even when *arr links are disabled.'
           },
-          { type: "group", title: "Item Pages Discovery", items: [
+          { type: "group", title: "Discovery on item pages", items: [
             {
               id: "jellyseerrShowSimilar",
               prop: "JellyseerrShowSimilar",
@@ -1657,7 +1667,7 @@
               prop: "JellyseerrShowRequestMoreOnSeries",
               type: "toggle",
               default: true,
-              label: 'Show "Request More" button on Series',
+              label: 'Show "Request More" on series',
               desc: 'Adds a "Request More" button beside the Seasons section heading on Series detail pages when the show has unrequested seasons in Seerr. Lets users request additional seasons without going through the search bar.'
             },
             {
@@ -1812,14 +1822,14 @@
             prop: "AutoSeasonRequestEnabled",
             type: "toggle",
             main: true,
-            label: "Enable Automatic Advance Season Requests",
+            label: "Request the next season automatically",
             desc: "Automatically request the next season in Seerr when a user is about to finish the current season."
           },
           {
             id: "autoSeasonRequestRequireAllWatched",
             prop: "AutoSeasonRequestRequireAllWatched",
             type: "toggle",
-            label: "Require All Prior Episodes Watched",
+            label: "Require all earlier episodes watched",
             desc: "Require all episodes before the threshold to be watched. For example, if threshold is 2 and there are 10 episodes, when watching episode 8, all episodes 1-7 must be watched or marked as watched. This prevents accidentally triggering requests by jumping to later episodes.<br/>This might cause requests to not be triggered if users skip episodes."
           },
           {
@@ -1829,7 +1839,7 @@
             min: 1,
             max: 20,
             default: 2,
-            label: "Episodes Remaining Threshold",
+            label: "Episodes left before requesting",
             toConfig: (v) => Math.trunc(v) || 2,
             desc: "Request the next season when the number of unwatched episodes is at or below this number. Default: 2 episodes."
           },
@@ -1845,7 +1855,7 @@
             prop: "AutoMovieRequestEnabled",
             type: "toggle",
             main: true,
-            label: "Enable Auto Movie Requests",
+            label: "Enable auto movie requests",
             desc: "Automatically request the next movie in a collection based on configured triggers.<br/><strong>Requirements:</strong> TMDB API key must be configured."
           },
           // Triggers map to one AutoMovieRequestTriggerType value, so these three stay loaded and saved by configPage.html.
@@ -1870,7 +1880,7 @@
             min: 1,
             max: 180,
             placeholder: "20",
-            label: "Minutes Watched Threshold",
+            label: "Minutes watched before requesting",
             desc: "How many minutes a user should watch before triggering a request? Must be between 1 and 180 minutes."
           },
           {
@@ -1886,7 +1896,7 @@
             prop: "AutoMovieRequestQualityMode",
             type: "select",
             default: "default",
-            label: "Quality Profile Mode",
+            label: "Quality profile mode",
             options: [["default", "Default"], ["original", "Original"], ["custom", "Custom"]],
             desc: "<strong>Default:</strong> Seerr uses its default Radarr server and quality profile.<br/><strong>Original:</strong> Uses the same quality profile as the movie being watched (falls back to default if not found).<br/><strong>Custom:</strong> Always uses the specific Radarr server, quality profile, and root folder selected below."
           },
@@ -1896,9 +1906,9 @@
             type: "toggle",
             default: true,
             label: "Use default instead of 4K fallback",
-            desc: `Only applies when Quality Profile Mode is set to "Original". If the watched movie was requested with a 4K profile, the auto-request will use Seerr's default profile instead. This prevents requests from failing or requiring manual approval for users who don't have 4K request permissions in Seerr. Disable this if all your users have 4K request access and you want to preserve the original 4K profile.`
+            desc: `Only applies when the quality profile mode is "Original". If the watched movie was requested with a 4K profile, the auto-request will use Seerr's default profile instead. This prevents requests from failing or requiring manual approval for users who don't have 4K request permissions in Seerr. Disable this if all your users have 4K request access and you want to preserve the original 4K profile.`
           },
-          { type: "custom", html: '<div id="autoMovieRequestCustomSettings" class="jea-custom-box" style="display:none;"><div class="inputContainer jea-row"><label class="inputLabel" for="autoMovieRequestServer">Radarr Server</label><select id="autoMovieRequestServer" name="autoMovieRequestServer" class="jea-input"></select></div><div class="inputContainer jea-row"><label class="inputLabel" for="autoMovieRequestProfile">Quality Profile</label><select id="autoMovieRequestProfile" name="autoMovieRequestProfile" class="jea-input"></select></div><div class="inputContainer jea-row"><label class="inputLabel" for="autoMovieRequestRootFolder">Root Folder</label><select id="autoMovieRequestRootFolder" name="autoMovieRequestRootFolder" class="jea-input"></select></div><div class="je-setting-description" data-desc-for="autoMovieRequestRootFolder"><div class="fieldDescription">These settings are only used when Quality Profile Mode is set to "Custom".</div></div></div>' },
+          { type: "custom", html: '<div id="autoMovieRequestCustomSettings" class="jea-custom-box" style="display:none;"><div class="inputContainer jea-row"><label class="inputLabel" for="autoMovieRequestServer">Radarr server</label><select id="autoMovieRequestServer" name="autoMovieRequestServer" class="jea-input"></select></div><div class="inputContainer jea-row"><label class="inputLabel" for="autoMovieRequestProfile">Quality profile</label><select id="autoMovieRequestProfile" name="autoMovieRequestProfile" class="jea-input"></select></div><div class="inputContainer jea-row"><label class="inputLabel" for="autoMovieRequestRootFolder">Root folder</label><select id="autoMovieRequestRootFolder" name="autoMovieRequestRootFolder" class="jea-input"></select></div><div class="je-setting-description" data-desc-for="autoMovieRequestRootFolder"><div class="fieldDescription">These are used only when the quality profile mode is "Custom".</div></div></div>' },
           { type: "note", html: 'Only works for movies that are part of a TMDB collection (e.g., <a class="je-bold-link" href="https://www.themoviedb.org/collection/86311" target="_blank">The Avengers Collection</a>, <a class="je-bold-link" href="https://www.themoviedb.org/collection/10" target="_blank">Star Wars Collection</a>).<br/>Automatically requests the next movie in the collection based on release order.<br/>Movies already available or requested are skipped.' }
         ]
       },
@@ -1911,7 +1921,8 @@
             prop: "AutoRequestRemovalEnabled",
             type: "toggle",
             main: true,
-            label: "Remove Watched Requests",
+            label: "Remove watched requests",
+            descClass: "je-desc-keep",
             desc: '<ul class="je-desc-list"><li>Delete a Seerr request once the user who made it has watched it. Only the request is deleted; the media stays available in Seerr and in the library</li><li><strong>Destructive:</strong> a deleted request cannot be restored, and its history is gone from Seerr. Use with caution</li><li><strong>Quotas:</strong> if request quotas are enabled in Seerr, removing a request gives that quota back to the user, because Seerr counts quota from the requests that still exist</li></ul>'
           },
           { type: "note", tone: "warn", html: "<strong>Warning:</strong> this permanently deletes requests, and the same applies to the <strong>Remove request</strong> button on the Requests page. If you use Seerr request quotas, each removed request frees up quota again, so users can request more than the limit allows over time. Try it on a small setup first and keep a Seerr backup." },
@@ -1941,7 +1952,7 @@
             label: "Debounce (seconds)",
             desc: "Wait this many seconds after the LAST item added before firing the scan. Default 60. Range 5 to 3600."
           },
-          { type: "custom", html: '<div class="jea-actions"><button type="button" id="triggerSeerrScanNowBtn" class="jea-btn">Trigger scan now</button><span id="triggerSeerrScanNowStatus" class="material-icons" aria-hidden="true"></span></div><div class="je-setting-description" data-desc-for="triggerSeerrScanNowBtn"><div class="fieldDescription">Uses the Seerr URL and API key entered in the Connection Setup section above. If multiple URLs are configured, the first reachable one is used.</div></div>' }
+          { type: "custom", html: '<div class="jea-actions"><button type="button" id="triggerSeerrScanNowBtn" class="jea-btn">Trigger scan now</button><span id="triggerSeerrScanNowStatus" class="material-icons" aria-hidden="true"></span></div><div class="je-setting-description" data-desc-for="triggerSeerrScanNowBtn"><div class="fieldDescription">Uses the Seerr URL and API key in the Seerr Connection Setup card above. If multiple URLs are configured, the first reachable one is used.</div></div>' }
         ]
       },
       "seerr-watchlist": {
@@ -2001,11 +2012,12 @@
               type: "select",
               default: "jellyfin",
               label: "When an item is removed from a watchlist",
+              rowClass: "jea-stack",
               options: [
-                ["jellyfin", "Jellyfin decides: removed from Jellyfin → also removed from Seerr"],
-                ["seerr", "Seerr decides: removed from Seerr → also removed from Jellyfin"],
-                ["both", "Both stay in sync: a removal on either side is copied to the other"],
-                ["off", "Never remove anything automatically"]
+                ["jellyfin", "Jellyfin decides (recommended)"],
+                ["seerr", "Seerr decides"],
+                ["both", "Both stay in sync"],
+                ["off", "Never remove automatically"]
               ],
               desc: `<strong>Jellyfin decides</strong> (recommended): removing or watching an item in Jellyfin removes it from Seerr. Removing it only in Seerr changes nothing in Jellyfin.<br/><strong>Seerr decides</strong>: the opposite. Removing it only in Jellyfin changes nothing in Seerr.<br/><strong>Both stay in sync</strong>: whichever side an item is removed from, the other follows.<br/><strong>Never</strong>: no removals are copied.<br/>Runs daily in Scheduled Tasks &gt; "Sync Watchlist Removals between Jellyfin and Seerr", after the two add syncs. The first run only records what is on both lists and removes nothing. Does nothing unless at least one of the adding options above is on.<br/>With <strong>Jellyfin decides</strong> or <strong>Both</strong>, an item removed in Jellyfin is also removed from Seerr, so it can't come back and the "Don't re-add" options above are hidden. They appear for <strong>Seerr decides</strong> and <strong>Never</strong>.`
             }
@@ -2023,7 +2035,7 @@
             label: "Auto import Jellyfin users to Seerr",
             desc: 'Automatically import Jellyfin users into Seerr so they can use Seerr Search without needing to visit Seerr directly. New users are imported the first time they use Seerr Search; a scheduled task also bulk-imports periodically. Already-imported users are skipped.<br/>Configure the bulk import frequency in Jellyfin Dashboard &gt; Scheduled Tasks &gt; "Import Jellyfin Users to Seerr".'
           },
-          { type: "custom", html: '<details id="blockedUsersDetails" class="jea-group"><summary>Blocked Users <span id="blockedUsersCount">(none)</span></summary><div class="jea-group-body"><div class="fieldDescription">Select users to exclude from Seerr import. Blocked users will never be looked up or imported. No API calls are made for them.</div><div id="blockedUsersContainer" style="max-height: 200px; overflow-y: auto;"><span class="je-loading-text">Loading users...</span></div><div id="blockedUsersScrollHint" style="display: none;">▼ scroll for more</div></div></details><input id="jellyseerrImportBlockedUsers" type="hidden" value=""/>' },
+          { type: "custom", html: '<details id="blockedUsersDetails" class="jea-group"><summary>Blocked users <span id="blockedUsersCount" class="jea-group-value">(none)</span></summary><div class="jea-group-body"><div class="fieldDescription">Select users to exclude from Seerr import. Blocked users will never be looked up or imported. No API calls are made for them.</div><div id="blockedUsersContainer" style="max-height: 200px; overflow-y: auto;"><span class="je-loading-text">Loading users...</span></div><div id="blockedUsersScrollHint" style="display: none;">▼ scroll for more</div></div></details><input id="jellyseerrImportBlockedUsers" type="hidden" value=""/>' },
           { type: "button", id: "btnImportJellyseerrUsers", label: "Import Users Now", variant: "primary" },
           { type: "custom", html: '<div id="importUsersResult" style="display: none; margin-top:10px;"></div>' }
         ]
@@ -2054,7 +2066,7 @@
             type: "number",
             min: 1,
             default: 10,
-            label: "Response Cache TTL (min)",
+            label: "Response cache lifetime (minutes)",
             toConfig: (v) => Math.trunc(v) || 10,
             desc: "How long Seerr API responses (search, discovery, recommendations) are cached. Default: 10 minutes."
           },
@@ -2064,7 +2076,7 @@
             type: "number",
             min: 1,
             default: 30,
-            label: "User ID Cache TTL (min)",
+            label: "User ID cache lifetime (minutes)",
             toConfig: (v) => Math.trunc(v) || 30,
             desc: "How long the Jellyfin → Seerr user ID mapping is cached. Default: 30 minutes."
           }
@@ -2152,15 +2164,15 @@
             prop: "BazarrUrl",
             type: "text",
             label: "Bazarr URL",
-            placeholder: "e.g., http://192.168.100.100:6767",
-            desc: "This links to the main movies/series page; Bazarr does not support direct item deep-links.<br/>If Bazarr sits behind an auth proxy (Authentik, Authelia, Cloudflare Access, etc.), put the INTERNAL address here (e.g. <code>http://bazarr:6767</code>) and use the URL Mappings below to redirect user-facing links to the public URL."
+            placeholder: "http://bazarr:6767",
+            desc: "This links to the main movies/series page; Bazarr does not support direct item deep-links.<br/>If Bazarr sits behind an auth proxy (Authentik, Authelia, Cloudflare Access, etc.), put the INTERNAL address here (e.g. <code>http://bazarr:6767</code>) and add URL mappings (shown once a URL is entered) to send users' links to the public address."
           },
           {
             id: "bazarrUrlMappings",
             prop: "BazarrUrlMappings",
             type: "textarea",
             rows: 3,
-            label: "Bazarr URL Mappings",
+            label: "Bazarr URL mappings",
             placeholder: "jellyfin_url|bazarr_url",
             desc: "Map Jellyfin access URLs to Bazarr URLs. Format: <code>jellyfin_url|bazarr_url</code> (one per line)."
           },
@@ -2178,19 +2190,19 @@
             prop: "ShokoUrl",
             type: "text",
             label: "Shoko URL",
-            placeholder: "e.g., http://192.168.100.100:8111",
-            desc: "If Shoko sits behind an auth proxy (Authentik, Authelia, Cloudflare Access, etc.), put the INTERNAL address here (e.g. <code>http://shoko:8111</code>) and use the URL Mappings below to redirect user-facing links to the public URL."
+            placeholder: "http://shoko:8111",
+            desc: "If Shoko sits behind an auth proxy (Authentik, Authelia, Cloudflare Access, etc.), put the INTERNAL address here (e.g. <code>http://shoko:8111</code>) and add URL mappings (shown once a URL is entered) to send users' links to the public address."
           },
           {
             id: "shokoApiKey",
             prop: "ShokoApiKey",
             type: "text",
             showIf: "shokoUrl",
-            label: "Shoko API Key",
+            label: "Shoko API key",
             toConfig: (v) => (v || "").replace(/\s/g, ""),
-            desc: "API key from Shoko's web UI (Settings &gt; API Keys &gt; Add API Key)."
+            desc: "API key from Shoko's web UI (Settings &gt; API keys &gt; Add API key)."
           },
-          { type: "group", showIf: "shokoUrl", title: "Episode types to show on Calendar", open: true, items: [
+          { type: "group", showIf: "shokoUrl", title: "Episode types on the Calendar", open: true, items: [
             { id: "shokoShowEpisodes", prop: "ShokoShowEpisodes", type: "toggle", default: true, label: "Episodes" },
             { id: "shokoShowSpecials", prop: "ShokoShowSpecials", type: "toggle", label: "Specials" },
             { id: "shokoShowCredits", prop: "ShokoShowCredits", type: "toggle", label: "Credits (OP/ED)" },
@@ -2204,13 +2216,13 @@
               desc: "Which AniDB episode types appear as calendar events. Episodes are on by default; the rest are usually calendar noise."
             }
           ] },
-          { type: "group", showIf: "shokoUrl", title: "Advanced URL Mappings", items: [
+          { type: "group", showIf: "shokoUrl", title: "Advanced URL mappings", items: [
             {
               id: "shokoUrlMappings",
               prop: "ShokoUrlMappings",
               type: "textarea",
               rows: 3,
-              label: "Shoko URL Mappings",
+              label: "Shoko URL mappings",
               placeholder: "jellyfin_url|shoko_url",
               desc: "Map Jellyfin access URLs to Shoko URLs. Format: <code>jellyfin_url|shoko_url</code> (one per line)."
             },
@@ -2238,6 +2250,7 @@
             type: "toggle",
             default: true,
             label: "Use Maintainerr",
+            rowClass: "jea-master",
             desc: "Only one of Maintainerr and Reclaimerr feeds <strong>Leaving soon</strong> and the item menu, so they never clash: turning one on turns the other off. The settings of the one that is off are kept."
           },
           {
@@ -2272,6 +2285,7 @@
             type: "toggle",
             default: false,
             label: "Use Reclaimerr",
+            rowClass: "jea-master",
             desc: "Turning this on turns Maintainerr off (and the other way round). Its settings below are kept either way."
           },
           {
@@ -2408,7 +2422,7 @@
             prop: "ArrLinksEnabled",
             type: "toggle",
             main: true,
-            label: "Enable *arr Links on Detail Pages",
+            label: "Show *arr links on item details",
             desc: "Show Sonarr, Radarr, and Bazarr links of the items on item detail pages for quick access. <strong>Admins only</strong>.<br/>If no URL is configured for a service, links for that service are not shown."
           },
           {
@@ -2422,8 +2436,8 @@
             id: "arrLinksShowStatusSingle",
             prop: "ArrLinksShowStatusSingle",
             type: "toggle",
-            label: "Show status badge for single-instance",
-            desc: "When off (default), a single matching Sonarr/Radarr instance renders as a plain icon/text.<br/>When on, it also shows the episode count (e.g. 22/41) and a colored left border indicating download status. Multi-instance dropdowns always show this detail."
+            label: "Show a status badge for a single instance",
+            desc: "When off (default), a single matching Sonarr/Radarr instance renders as a plain icon/text.<br/>When on, it also shows the episode count (e.g. 22/41) and a coloured left border indicating download status. Multi-instance dropdowns always show this detail."
           }
         ]
       },
@@ -2436,7 +2450,7 @@
             prop: "ArrTagsSyncEnabled",
             type: "toggle",
             main: true,
-            label: "Enable Tags Sync",
+            label: "Sync *arr tags to Jellyfin",
             desc: 'Fetches all tags from Radarr and Sonarr instances defined above and adds them as Jellyfin tags.<br/><strong>Note:</strong> Run the sync task from Dashboard &gt; Scheduled Tasks &gt; "Sync Tags from *arr to Jellyfin" and configure how often it should run.'
           },
           {
@@ -2444,9 +2458,9 @@
             prop: "ArrTagsPrefix",
             type: "text",
             default: "JE Arr Tag: ",
-            label: "Tag Prefix",
+            label: "Tag prefix",
             placeholder: "JE Arr Tag: ",
-            desc: 'Prefix to add before each tag (e.g., "JE Arr Tag: " will result in "JE Arr Tag: 1 - Jellyfish")'
+            desc: 'Prefix to add before each tag (e.g. "JE Arr Tag: " gives "JE Arr Tag: 1 - Jellyfish").'
           },
           {
             id: "arrTagsClearOldTags",
@@ -2464,13 +2478,13 @@
             label: "Show synced tags as links",
             desc: "Displays tags with the configured prefix as clickable links on item detail pages. Helpful if your theme hides tags."
           },
-          { type: "group", title: "Tag Filters", items: [
+          { type: "group", title: "Tag filters", items: [
             {
               id: "arrTagsSyncFilter",
               prop: "ArrTagsSyncFilter",
               type: "textarea",
               rows: 3,
-              label: "Sync to Jellyfin Filter",
+              label: "Tags to sync",
               placeholder: "One per line",
               desc: 'Only sync specific tags from *arr to Jellyfin. Enter one tag name per line (without the prefix).<br/>Leave empty to sync all tags.<br/><strong>Example:</strong> to only sync "1 - Jellyfish" and "trakt", enter:<br/><code>1 - Jellyfish</code><br/><code>trakt</code>'
             },
@@ -2479,7 +2493,7 @@
               prop: "ArrTagsLinksFilter",
               type: "textarea",
               rows: 3,
-              label: "Show as Links Filter",
+              label: "Tags to show as links",
               placeholder: "One per line",
               desc: 'Only show specific tags as links. Enter one tag name per line (without the prefix).<br/>Leave empty to show all tags with the prefix.<br/><strong>Example:</strong> to only show "JE Arr Tag: 1 - Jellyfish" and "JE Arr Tag: trakt" as links, enter:<br/><code>1 - Jellyfish</code><br/><code>trakt</code>'
             },
@@ -2488,7 +2502,7 @@
               prop: "ArrTagsLinksHideFilter",
               type: "textarea",
               rows: 3,
-              label: "Hide Specific Links Filter",
+              label: "Tags never shown as links",
               placeholder: "One per line",
               desc: 'Hide specific tags from being displayed as links. Enter one tag name per line (without the prefix).<br/>This filter takes priority over the "Show" filter above.<br/><strong>Example:</strong> to hide "JE Arr Tag: spam_tag" and "JE Arr Tag: test_tag", enter:<br/><code>spam_tag</code><br/><code>test_tag</code>'
             }
@@ -2506,13 +2520,13 @@
         icon: "insights",
         class: "je-fieldset-wide",
         items: [
-          { type: "note", html: 'Fully opt-in and off by default. No URLs, API keys, usernames, filenames, or media titles are ever collected. Turning this on always includes just an anonymous install ID, plugin version, and Jellyfin version/target, enough to answer "how many installs are on the latest version." Untick all three options to share only that. Use the preview below to see exactly what would be sent, or read <a class="sectionTitle" href="https://n00bcodr.github.io/Jellyfin-Enhanced/advanced/community-analytics/" target="_blank" rel="noopener">what each option collects and why</a>.' },
+          { type: "note", html: 'Opt-in and off by default. No URLs, API keys, user names, file names or media titles are ever collected. Once on, every report carries an anonymous install ID, the plugin version and the Jellyfin version; the options that then appear add more, and Preview shows exactly what would be sent. While statistics are shared, the settings a report includes are marked <span class="je-legend-chip"><i class="material-icons" aria-hidden="true">insights</i>Shared</span> on every tab. <a class="sectionTitle" href="https://n00bcodr.github.io/Jellyfin-Enhanced/advanced/community-analytics/" target="_blank" rel="noopener noreferrer">What each option collects and why<i class="material-icons je-link-ext" aria-hidden="true">open_in_new</i></a>' },
           {
             id: "analyticsEnabled",
             type: "toggle",
             main: true,
             manual: true,
-            label: "Share Anonymous Usage Statistics",
+            label: "Share anonymous usage statistics",
             desc: "Periodically sends an anonymous report to the Jellyfin Enhanced community analytics project. Each install gets a random ID that identifies nothing about you or your server."
           },
           { type: "custom", html: '<div id="analyticsSubOptionsContainer"></div>' },
@@ -2543,8 +2557,9 @@
             id: "maintenanceModeEnabled",
             type: "toggle",
             manual: true,
-            label: "Enable Maintenance Mode",
-            desc: "When enabled, the selected action is applied to affected users immediately on save. A banner is shown on the Jellyfin login page. Admins are <strong>never</strong> affected. Disabling restores all users automatically."
+            label: "Enable maintenance mode",
+            rowClass: "jea-master",
+            desc: "Turn this on to choose an action, a message and the users it affects; they take effect when you save. A banner shows on the Jellyfin login page. Administrators are <strong>never</strong> affected, and turning it off restores every user."
           },
           {
             id: "maintenanceModeDurationMinutes",
@@ -2563,7 +2578,7 @@
               type: "textarea",
               manual: true,
               rows: 2,
-              label: "Login Page Banner Message",
+              label: "Login page banner message",
               placeholder: "This server is currently undergoing maintenance. Please try again later.",
               desc: "Shown as a red banner at the top of every page (login + home). Plain text only. Use <code>{countdown}</code> for the time remaining and <code>{ends_at}</code> for the end time; with a duration set and no token, the time remaining is appended automatically."
             },
@@ -2572,7 +2587,7 @@
               type: "textarea",
               manual: true,
               rows: 2,
-              label: "Active Session Notification",
+              label: "Active session notification",
               placeholder: "Server maintenance is starting. Please finish up and try again later.",
               desc: "Sent as a native Jellyfin popup to anyone currently watching; reaches all clients (web, mobile, TV apps). Same <code>{countdown}</code> / <code>{ends_at}</code> tokens as the banner."
             },
@@ -2610,7 +2625,7 @@
               type: "toggle",
               manual: true,
               label: "Enable daily maintenance window",
-              desc: "Turns maintenance mode on and off by itself every day between the times below (server local time), with its own message and action, e.g. for nightly library scans. Uses the <strong>Affected users</strong> selection above. The manual toggle takes precedence while it is on; turning the schedule off ends a running window early."
+              desc: "Turns maintenance mode on and off by itself every day between two times (server local time), with its own message and action, e.g. for nightly library scans. Uses the <strong>Affected users</strong> selection above. The manual toggle takes precedence while it is on; turning the schedule off ends a running window early."
             },
             { type: "custom", showIf: "maintenanceScheduleEnabled", html: '<div class="jea-timepair"><div class="inputContainer jea-row"><label class="inputLabel" for="maintenanceScheduleStart">Start time</label><input id="maintenanceScheduleStart" name="maintenanceScheduleStart" type="time" class="jea-input"/></div><div class="inputContainer jea-row"><label class="inputLabel" for="maintenanceScheduleEnd">End time</label><input id="maintenanceScheduleEnd" name="maintenanceScheduleEnd" type="time" class="jea-input"/></div></div><div id="mmScheduleSameTimeWarning" class="fieldDescription jea-warn-text" style="display:none">Start and end time must differ; the schedule is ignored until they do.</div><div id="mmServerTimeHint" class="fieldDescription"></div>' },
             {
@@ -2619,7 +2634,7 @@
               manual: true,
               showIf: "maintenanceScheduleEnabled",
               rows: 2,
-              label: "Scheduled Banner Message",
+              label: "Scheduled banner message",
               placeholder: "The library is updating; slowdowns are normal. Time remaining: {countdown}",
               desc: "Banner shown while the window is active. Same <code>{countdown}</code> / <code>{ends_at}</code> tokens."
             },
@@ -2629,7 +2644,7 @@
               manual: true,
               showIf: "maintenanceScheduleEnabled",
               rows: 2,
-              label: "Scheduled Session Notification",
+              label: "Scheduled session notification",
               placeholder: "The library is updating; slowdowns are normal.",
               desc: "Popup sent to active sessions when the window starts, and on playback start when reminders are on."
             },
@@ -2648,10 +2663,10 @@
             id: "devMode",
             prop: "DevMode",
             type: "toggle",
-            label: "Dev Mode",
-            desc: "Disables JS caching so scripts are always re-fetched from the server. Default: OFF."
+            label: "Developer mode",
+            desc: "Turns off script caching, so browsers fetch the plugin's scripts from the server every time. Off by default."
           },
-          { type: "note", tone: "warn", html: "Do not change this if you do not know why you are changing it." }
+          { type: "note", tone: "warn", html: "Leave this off unless you are developing the plugin." }
         ]
       }
     });

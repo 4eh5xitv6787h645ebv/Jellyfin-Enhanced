@@ -3,7 +3,7 @@
 /* ===== display ===== */
 /* Display and Overview tabs: helpers for schema-rendered widgets. */
 #JellyfinEnhancedForm .je-desc-list { margin: 4px 0 0 18px; padding: 0; }
-#JellyfinEnhancedForm .jea-subbox { margin: 8px 0; padding: 10px 14px; border: 1px solid rgba(255,255,255,0.1); border-left: 3px solid var(--primary-accent-color, #00a4dc); border-radius: 8px; background: rgba(255,255,255,0.04); }
+#JellyfinEnhancedForm .jea-subbox { margin: 8px 0; padding: 10px 14px; border: 1px solid var(--je-border); border-left: 3px solid var(--primary-accent-color, #00a4dc); border-radius: 8px; background: var(--je-surface-1); }
 #JellyfinEnhancedForm .jea-subbox-title { font-weight: 600; margin-bottom: 4px; }
 #JellyfinEnhancedForm .je-api-row { display: flex; align-items: center; gap: 8px; }
 #JellyfinEnhancedForm .je-api-row .je-api-input { flex: 1; min-width: 0; }
@@ -28,12 +28,10 @@
 /* ===== pages ===== */
 /* Pages tab: Custom Tabs setup guide inside the "Where it appears" group. */
 #JellyfinEnhancedForm .jea-howto { margin-top: 6px; }
-#JellyfinEnhancedForm .jea-howto > summary { cursor: pointer; font-size: 0.9em; opacity: 0.85; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
-#JellyfinEnhancedForm .jea-howto > summary:hover { opacity: 1; }
 #JellyfinEnhancedForm .jea-howto ol { margin: 6px 0 8px; padding-left: 20px; }
 #JellyfinEnhancedForm .jea-howto p { margin: 6px 0; }
 #JellyfinEnhancedForm .jea-howto .je-copy-code-wrapper { display: flex; align-items: center; gap: 8px; margin: 8px 0; flex-wrap: wrap; }
-#JellyfinEnhancedForm .jea-howto .je-code-pre { margin: 0; overflow-x: auto; }
+#JellyfinEnhancedForm .jea-howto .je-code-pre { margin: 0; overflow-x: auto; white-space: pre-wrap; word-break: break-all; }
 
 /* ===== extras ===== */
 /* Extras and Keyboard tabs. */
@@ -42,21 +40,31 @@
 #JellyfinEnhancedForm #extras .je-screenshot-details { margin-top: 6px; }
 #JellyfinEnhancedForm #extras .je-branding-grid { margin-top: 10px; }
 
-/* Shortcut editor (markup is built by the page script). */
-#JellyfinEnhancedForm #shortcut-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 14px; margin-top: 10px; }
+/* Shortcut editor (markup is built by the page script): action on the left, its key and the off switch on the right,
+   in columns no wider than a list needs. */
+#JellyfinEnhancedForm #shortcut-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 14px; margin-top: 10px; align-items: start; max-width: 960px; }
 #JellyfinEnhancedForm #shortcut-grid > div { border: 1px solid var(--je-border); border-radius: 10px; padding: 10px 14px; }
-#JellyfinEnhancedForm #shortcut-grid h4 { margin: 0 0 6px 0; }
-#JellyfinEnhancedForm .je-sc-row { display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 4px 0; }
-#JellyfinEnhancedForm .je-sc-row.je-sc-disabled { opacity: 0.5; }
-#JellyfinEnhancedForm .je-sc-left { display: flex; align-items: center; gap: 6px; }
-#JellyfinEnhancedForm .je-sc-key { min-width: 28px; text-align: center; padding: 2px 8px; border-radius: 4px; background: rgba(255,255,255,0.12); border: 1px solid transparent; cursor: pointer; font-family: monospace; outline: none; }
-#JellyfinEnhancedForm .je-sc-key[data-readonly] { cursor: default; }
-#JellyfinEnhancedForm .je-sc-key:focus { border-color: var(--primary-accent-color, #00a4dc); }
-#JellyfinEnhancedForm .je-sc-key.je-sc-error { background: rgb(255 0 0 / 60%); }
-#JellyfinEnhancedForm .je-sc-btn { background: transparent; border: none; color: inherit; opacity: 0.6; cursor: pointer; padding: 2px; display: flex; align-items: center; }
-#JellyfinEnhancedForm .je-sc-btn:hover { opacity: 1; }
+#JellyfinEnhancedForm #shortcut-grid h4 { margin: 0 0 6px 0; font-size: 11px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--jea-text-muted); }
+#JellyfinEnhancedForm .je-sc-row { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 5px 0; border-top: 1px solid var(--je-border); }
+#JellyfinEnhancedForm #shortcut-grid h4 + .je-sc-row { border-top: 0; }
+#JellyfinEnhancedForm .je-sc-row.je-sc-disabled .je-sc-name { color: var(--jea-text-muted); text-decoration: line-through; }
+#JellyfinEnhancedForm .je-sc-name { flex: 1 1 auto; min-width: 0; display: flex; align-items: center; flex-wrap: wrap; gap: 4px 8px; }
+#JellyfinEnhancedForm .je-sc-left { display: grid; grid-template-columns: 7.5em 32px; align-items: center; gap: 6px; flex: none; }
+#JellyfinEnhancedForm .je-sc-key {
+    min-width: 0; min-height: 32px; padding: 3px 8px; text-align: center; border-radius: 6px; cursor: pointer; color: inherit;
+    font-family: ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace; font-size: .9em; font-variant-numeric: slashed-zero;
+    background: color-mix(in srgb, currentColor 10%, transparent); border: 1px solid var(--je-border-strong); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+#JellyfinEnhancedForm .je-sc-key:hover { border-color: var(--jea-accent); }
+#JellyfinEnhancedForm .je-sc-key:focus-visible { outline: 2px solid var(--jea-accent); outline-offset: 2px; }
+#JellyfinEnhancedForm .je-sc-key.je-sc-recording { border-color: var(--jea-accent); background: color-mix(in srgb, var(--jea-accent) 16%, transparent); font-family: inherit; }
+#JellyfinEnhancedForm .je-sc-key.je-sc-error { background: rgb(255 0 0 / 35%); border-color: #f44336; }
+#JellyfinEnhancedForm .je-sc-btn { display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; padding: 0; border: 0; border-radius: 8px; background: transparent; color: var(--jea-text-muted); cursor: pointer; }
+#JellyfinEnhancedForm .je-sc-btn:hover { background: var(--je-surface-3); color: var(--je-text-strong); }
+#JellyfinEnhancedForm .je-sc-btn:focus-visible { outline: 2px solid var(--jea-accent); outline-offset: 2px; }
+#JellyfinEnhancedForm .je-sc-btn.je-sc-btn-off { color: var(--jea-accent-text); }
 #JellyfinEnhancedForm .je-sc-btn .material-icons { font-size: 18px; }
-#JellyfinEnhancedForm .je-sc-mod { color: var(--primary-accent-color, #00a4dc); font-size: 20px; line-height: 1; margin-right: 6px; }
+#JellyfinEnhancedForm .je-sc-mod { padding: 0 6px; font-size: 11px; font-weight: 600; line-height: 18px; color: var(--jea-accent-text); border: 1px solid color-mix(in srgb, var(--jea-accent) 45%, transparent); border-radius: 999px; }
 
 /* ===== seerr ===== */
 /* Seerr tab. Cards, rows and switches come from jeAdmin.css; this only styles the hand-wired widgets inside them. */

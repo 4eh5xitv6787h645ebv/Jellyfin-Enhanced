@@ -217,7 +217,7 @@
       order: 30,
       title: "TMDB API key",
       render(ctx, body) {
-        body.innerHTML = `<div class="je-ta-state-row"><span class="je-ta-state" data-tmdb-state></span></div><p class="je-ta-hint">${ctx.tx("Daily popular ranks, next air dates and season and series finales use the TMDB API key. Without it, trending can use Seerr's weekly list.")}</p><a class="je-ta-link" href="${ctx.esc(ctx.mainPageUrl(null, "services"))}"><span class="je-ta-link-text">${ctx.tx("TMDB API key setting")}</span><span class="material-icons" aria-hidden="true">open_in_new</span></a>`;
+        body.innerHTML = `<div class="je-ta-state-row"><span class="je-ta-state" data-tmdb-state></span></div><p class="je-ta-hint">${ctx.tx("Daily popular ranks, next air dates and season and series finales use the TMDB API key. Without it, trending can use Seerr's weekly list.")}</p><a class="je-ta-link" href="${ctx.esc(ctx.mainPageUrl(null, "services", "tmdb"))}"><span class="je-ta-link-text">${ctx.tx("TMDB API key setting")}</span><span class="material-icons" aria-hidden="true">arrow_forward</span></a>`;
       },
       refresh(ctx, body) {
         const state = find(body, "[data-tmdb-state]");
@@ -234,10 +234,10 @@
       title: "Leaving soon",
       hint: "Where the Leaving soon badge comes from: the removal tool that is on, Maintainerr's collections or Reclaimerr's candidates (with the day each item goes), or existing Jellyfin collections by name (no date). The tool, its address, item-menu actions and home row are set in the *arr tab (also under Services).",
       fields: [
-        { id: "leavingSoonCollections", key: "LeavingSoonCollections", type: "textarea", rows: 3, placeholder: "Leaving Soon", label: "Leaving collections", desc: "Existing Jellyfin collection names, one per line, whose items count as leaving soon, without a date. For setups that use neither Maintainerr nor Reclaimerr; nothing is created. Up to 20." }
+        { id: "leavingSoonCollections", key: "LeavingSoonCollections", type: "textarea", rows: 3, placeholder: "e.g. Leaving Soon", label: "Leaving collections", desc: "Existing Jellyfin collection names, one per line, whose items count as leaving soon, without a date. For setups that use neither Maintainerr nor Reclaimerr; nothing is created. Up to 20." }
       ],
       render(ctx, body) {
-        body.innerHTML = `<div class="je-ta-state-row"><span class="je-ta-state" data-leaving-state></span></div><p class="je-ta-hint" data-leaving-detail></p><p class="je-ta-hint" data-leaving-row></p><div class="je-ta-actions"><button type="button" class="je-ta-button" id="leavingSoonRefreshBtn"><span class="material-icons" aria-hidden="true">refresh</span>${ctx.tx("Refresh now")}</button></div><p class="je-ta-hint">${ctx.tx("Cards never ask the removal tool: the server reads it on a schedule and keeps the answer in the tag cache.")}</p><a class="je-ta-link" href="${ctx.esc(ctx.mainPageUrl(null, "arr"))}"><span class="je-ta-link-text">${ctx.tx(ctx.config.ReclaimerrEnabled ? "Reclaimerr settings" : "Maintainerr settings")}</span><span class="material-icons" aria-hidden="true">open_in_new</span></a>`;
+        body.innerHTML = `<div class="je-ta-state-row"><span class="je-ta-state" data-leaving-state></span></div><p class="je-ta-hint" data-leaving-detail></p><p class="je-ta-hint" data-leaving-row></p><div class="je-ta-actions"><button type="button" class="je-ta-button" id="leavingSoonRefreshBtn"><span class="material-icons" aria-hidden="true">refresh</span>${ctx.tx("Refresh now")}</button></div><p class="je-ta-hint">${ctx.tx("Cards never ask the removal tool: the server reads it on a schedule and keeps the answer in the tag cache.")}</p><a class="je-ta-link" href="${ctx.esc(ctx.mainPageUrl(null, "arr", ctx.config.ReclaimerrEnabled ? "reclaimerr" : "maintainerr"))}"><span class="je-ta-link-text">${ctx.tx(ctx.config.ReclaimerrEnabled ? "Reclaimerr settings" : "Maintainerr settings")}</span><span class="material-icons" aria-hidden="true">arrow_forward</span></a>`;
         body.querySelector("#leavingSoonRefreshBtn")?.addEventListener("click", () => {
           void loadLeavingStatus(ctx, true);
         });

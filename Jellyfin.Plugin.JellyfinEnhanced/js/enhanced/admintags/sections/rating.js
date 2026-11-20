@@ -173,7 +173,7 @@
         const key = String(c.MdblistApiKey || "").trim() !== "";
         const on = c.MdblistRatingsEnabled === true;
         if (!box.querySelector("[data-mdblist-state]")) {
-          box.innerHTML = `<div class="je-ta-card-head"><span class="je-ta-state" data-mdblist-state></span></div><p class="je-ta-hint" data-mdblist-hint></p><a class="je-ta-link" href="${ctx.esc(ctx.mainPageUrl("mdblistRatingsEnabled"))}"><span class="je-ta-link-text">${ctx.tx("MDBList settings")}</span><span class="material-icons" aria-hidden="true">open_in_new</span></a>`;
+          box.innerHTML = `<div class="je-ta-card-head"><span class="je-ta-state" data-mdblist-state></span></div><p class="je-ta-hint" data-mdblist-hint></p><a class="je-ta-link" href="${ctx.esc(ctx.mainPageUrl("mdblistRatingsEnabled"))}"><span class="je-ta-link-text">${ctx.tx("MDBList settings")}</span><span class="material-icons" aria-hidden="true">arrow_forward</span></a>`;
         }
         const state = must(box, "[data-mdblist-state]");
         state.dataset.state = on && key ? "on" : on ? "warn" : "off";

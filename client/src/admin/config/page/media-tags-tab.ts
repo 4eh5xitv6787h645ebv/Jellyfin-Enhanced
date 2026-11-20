@@ -211,7 +211,7 @@ export function createMediaTagsTab(m: MediaTagsTabDeps) {
                     if (bad && !note) {
                         note = document.createElement('span');
                         note.className = 'je-mt-state-text je-sr-only';
-                        needHtml(btn.querySelector('h3')).appendChild(note);
+                        needHtml(btn.querySelector('.je-tab-label')).appendChild(note);
                     }
                     if (note) note.textContent = bad ? (d.state === 'conflict' ? ' (changed by someone else, not saved)' : ' (not saved)') : '';
                 }

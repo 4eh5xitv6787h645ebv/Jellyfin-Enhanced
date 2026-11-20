@@ -36,6 +36,23 @@ export function createShortcuts(m: ShortcutsDeps) {
             }, 4000);
         }
 
+        /** The shortcut whose key is being recorded, so a redraw can put focus back on it. */
+        let focusAfterRender: string | null = null;
+
+        /** Assigns a key after the same clash check, whichever way it was chosen (typed, restored or re-enabled). */
+        function assignKey(def: ShortcutEntry, combo: string, chip: HTMLElement) : boolean {
+            if (combo) {
+                // Restoring a default is checked too: another shortcut may have taken that key since.
+                const taken = combo === def.Key ? defaultShortcuts.find(other => other.Name !== def.Name && effectiveShortcutKey(other) === combo) : undefined;
+                const clash = shortcutClash(def, combo, defaultShortcuts, effectiveShortcutKey)
+                    ?? (taken ? "The key '" + combo + "' is already used by '" + (taken.Label ?? taken.Name) + "'." : null);
+                if (clash) { showValidationError(chip, clash); return false; }
+            }
+            focusAfterRender = def.Name;
+            setShortcutOverride(def, combo);
+            return true;
+        }
+
         function renderOverrides() : void {
             shortcutGrid.innerHTML = '';
             ['Global', 'Player'].forEach(category => {
@@ -48,66 +65,88 @@ export function createShortcuts(m: ShortcutsDeps) {
                     const key = effectiveShortcutKey(def);
                     const isDisabled = key === '';
                     const isModified = shortcutOverrides.some(x => x.Name === def.Name);
+                    const action = def.Label ?? def.Name;
 
                     const row = document.createElement('div');
                     row.className = 'je-sc-row' + (isDisabled ? ' je-sc-disabled' : '');
+                    row.dataset.scName = def.Name;
 
-                    const left = document.createElement('div');
-                    left.className = 'je-sc-left';
-                    const chip = document.createElement('span');
-                    chip.className = 'je-sc-key';
-                    chip.textContent = isDisabled ? 'Disabled' : key;
-                    {
-                        chip.tabIndex = 0;
-                        chip.setAttribute('data-je-key-recorder', '1');
-                        chip.addEventListener('click', () => chip.focus());
-                        chip.addEventListener('focus', () => { chip.textContent = 'Press a key...'; });
-                        chip.addEventListener('blur', () => { chip.textContent = isDisabled ? 'Disabled' : key; });
-                        chip.addEventListener('keydown', (e) => {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            if (e.key === 'Backspace') { setShortcutOverride(def, def.Key); return; }
-                            if (e.key === 'Delete') { setShortcutOverride(def, ''); return; }
-                            if (['Shift', 'Control', 'Alt', 'Meta'].includes(e.key)) return;
-                            if (e.key === 'Tab') { chip.blur(); return; }
-
-                            const combo = shortcutCombo(e);
-                            const clash = shortcutClash(def, combo, defaultShortcuts, effectiveShortcutKey);
-                            if (clash) {
-                                showValidationError(chip, clash);
-                                return;
-                            }
-                            setShortcutOverride(def, combo);
-                        });
-                    }
-                    left.appendChild(chip);
-
-                    {
-                        const toggle = document.createElement('button');
-                        toggle.type = 'button';
-                        toggle.className = 'je-sc-btn';
-                        toggle.title = isDisabled ? 'Enable (restore default key)' : 'Disable for every user';
-                        toggle.innerHTML = '<span class="material-icons"' + (isDisabled ? ' style="color: #ff6b6b;"' : '') + '>block</span>';
-                        toggle.addEventListener('click', () => setShortcutOverride(def, isDisabled ? def.Key : ''));
-                        left.appendChild(toggle);
-                    }
-
-                    const right = document.createElement('div');
+                    // Action first, then its key and the disable button, so the list reads like a menu.
+                    const name = document.createElement('div');
+                    name.className = 'je-sc-name';
+                    name.appendChild(document.createTextNode(action));
                     if (isModified) {
                         const dot = document.createElement('span');
                         dot.className = 'je-sc-mod';
-                        dot.title = 'Changed from default (' + def.Key + ')';
-                        dot.textContent = '\u2022';
-                        right.appendChild(dot);
+                        dot.textContent = 'Changed';
+                        dot.title = 'Default: ' + (def.Key || 'none');
+                        name.appendChild(dot);
                     }
-                    right.appendChild(document.createTextNode(def.Label ?? ''));
 
-                    row.appendChild(left);
-                    row.appendChild(right);
+                    const controls = document.createElement('div');
+                    controls.className = 'je-sc-left';
+                    const chip = document.createElement('button');
+                    chip.type = 'button';
+                    chip.className = 'je-sc-key';
+                    chip.textContent = isDisabled ? 'Off' : key;
+                    const idleName = action + ': ' + (isDisabled ? 'disabled' : key) + '. Press to record a new key';
+                    chip.setAttribute('aria-label', idleName);
+                    let recording = false;
+                    const stop = () => {
+                        recording = false;
+                        chip.classList.remove('je-sc-recording');
+                        chip.setAttribute('aria-pressed', 'false');
+                        chip.textContent = isDisabled ? 'Off' : key;
+                        chip.setAttribute('aria-label', idleName);
+                    };
+                    chip.setAttribute('aria-pressed', 'false');
+                    // Recording starts only on purpose (click, Enter or Space), never just by tabbing onto the key.
+                    chip.addEventListener('click', () => {
+                        if (recording) return;
+                        recording = true;
+                        chip.classList.add('je-sc-recording');
+                        chip.setAttribute('aria-pressed', 'true');
+                        chip.textContent = 'Press a key…';
+                        chip.setAttribute('aria-label', 'Recording a key for ' + action + '. Escape cancels, Delete turns it off, Backspace restores the default');
+                    });
+                    chip.addEventListener('blur', () => { if (recording) stop(); });
+                    chip.addEventListener('keydown', (e) => {
+                        if (!recording) return;
+                        // Tab cancels and moves on as usual.
+                        if (e.key === 'Tab') { stop(); return; }
+                        e.preventDefault();
+                        e.stopPropagation();
+                        if (e.key === 'Escape') { stop(); return; }
+                        if (['Shift', 'Control', 'Alt', 'Meta'].includes(e.key)) return;
+                        if (e.key === 'Backspace') { assignKey(def, def.Key, chip); return; }
+                        if (e.key === 'Delete') { assignKey(def, '', chip); return; }
+                        assignKey(def, shortcutCombo(e), chip);
+                    });
+                    controls.appendChild(chip);
+
+                    const toggle = document.createElement('button');
+                    toggle.type = 'button';
+                    toggle.className = 'je-sc-btn' + (isDisabled ? ' je-sc-btn-off' : '');
+                    toggle.title = isDisabled ? 'Turn back on with its default key' : 'Turn off for every user';
+                    toggle.setAttribute('aria-label', isDisabled ? 'Turn on ' + action + ' with its default key' : 'Turn off ' + action + ' for every user');
+                    toggle.innerHTML = '<span class="material-icons" aria-hidden="true">' + (isDisabled ? 'settings_backup_restore' : 'block') + '</span>';
+                    toggle.addEventListener('click', () => {
+                        if (assignKey(def, isDisabled ? def.Key : '', chip)) focusAfterRender = null;
+                        shortcutGrid.querySelector<HTMLElement>('[data-sc-name="' + def.Name + '"] .je-sc-btn')?.focus();
+                    });
+                    controls.appendChild(toggle);
+
+                    row.appendChild(name);
+                    row.appendChild(controls);
                     col.appendChild(row);
                 });
                 shortcutGrid.appendChild(col);
             });
+            if (focusAfterRender) {
+                const name = focusAfterRender;
+                focusAfterRender = null;
+                shortcutGrid.querySelector<HTMLElement>('[data-sc-name="' + name + '"] .je-sc-key')?.focus();
+            }
         }
 
     /** Runs this module's start-up work, in the page's original order. */

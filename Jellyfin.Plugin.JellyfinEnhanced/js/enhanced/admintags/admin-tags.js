@@ -100,6 +100,11 @@
   }
   var list = (value) => Array.isArray(value) ? value : [];
   var objects = (value) => list(value).filter(isObject);
+  var GROUP_ORDER = ["quality", "genre", "language", "rating", "ageRating", "status", "awards", "logos", "custom", "people"];
+  function groupRank(group) {
+    const i = GROUP_ORDER.indexOf(group ?? "");
+    return i < 0 ? GROUP_ORDER.length : i;
+  }
 
   // client/src/features/media-tags/admin/mount.ts
   var toolbarRoot = null;
@@ -548,7 +553,7 @@
     let snackTimer = null;
     const openGroups = /* @__PURE__ */ new Map();
     root.classList.add("je-tag-admin");
-    const groupSections = sections2.filter((s) => s.tab === "groups" && s.group);
+    const groupSections = sections2.filter((s) => s.tab === "groups" && s.group).sort((a, b) => groupRank(a.group?.id) - groupRank(b.group?.id));
     const docsLink = (tab) => `<a class="je-ta-docs" href="${deps.docsUrl}#${own(deps.docsAnchors, tab.id)}" target="_blank" rel="noopener" aria-label="${tx2("Learn more about {name} in the documentation (opens in a new tab)", { name: fmt(tab.nameKey) })}">${tx2("Learn more")}</a>`;
     const tabButtons = TABS2.map((tab, i) => `<button type="button" role="tab" class="je-ta-tab" id="jeTaTab-${tab.id}" data-tab="${tab.id}" aria-controls="jeTaPanel-${tab.id}" aria-selected="${i === 0}" tabindex="${i === 0 ? 0 : -1}"${tab.shortKey ? ` aria-label="${tx2(tab.nameKey)}"` : ""}><span class="material-icons" aria-hidden="true">${tab.icon}</span><span class="je-ta-tab-long">${tx2(tab.nameKey)}</span>${tab.shortKey ? `<span class="je-ta-tab-short" aria-hidden="true">${tx2(tab.shortKey)}</span>` : ""}</button>`).join("");
     const panels = TABS2.map((tab, i) => {
@@ -1555,6 +1560,7 @@
     "item-looks": "movie",
     "colours": "palette",
     "badges-families": "new_releases",
+    "badges-collections": "collections_bookmark",
     "badges-windows": "schedule",
     "badges-tmdb": "img:selfhst/svg/tmdb.svg",
     "badges-leaving": "event_busy",
@@ -1656,7 +1662,7 @@
   var sections = [];
   var esc = (value) => JE.escapeHtml(String(value ?? ""));
   var tx = (value, params) => esc(fmt(value, params));
-  var perUserMark = () => `<i class="material-icons je-ta-peruser" role="img" aria-label="${tx("Per-user setting")}" title="${tx("Each user has a personal copy. Existing users keep theirs until you overwrite it.")}">group</i>`;
+  var perUserMark = () => `<span class="je-ta-peruser" aria-hidden="true" title="${tx("Each user has a personal copy. Existing users keep theirs until you overwrite it.")}"></span>`;
   var kit = { esc, tx, perUserMark };
   function registerSection(def) {
     if (!def || !def.id || !TABS.some((t) => t.id === def.tab)) throw new Error(`JE admin tags: bad section ${def && def.id}`);
@@ -1694,9 +1700,9 @@
     const base = `${window.location.origin}${window.location.pathname}`;
     return `${base}#/configurationpage?name=${encodeURIComponent(MAIN_PAGE_NAME)}&jeSection=${TAB_ID}${tab ? `&tab=${encodeURIComponent(tab)}` : ""}${group ? `&group=${encodeURIComponent(group)}` : ""}`;
   }
-  function mainPageUrl(section, tab) {
+  function mainPageUrl(section, tab, card) {
     const base = `${window.location.origin}${window.location.pathname}`;
-    return `${base}#/configurationpage?name=${encodeURIComponent(MAIN_PAGE_NAME)}${section ? `&jeSection=${encodeURIComponent(section)}` : ""}${tab ? `&tab=${encodeURIComponent(tab)}` : ""}`;
+    return `${base}#/configurationpage?name=${encodeURIComponent(MAIN_PAGE_NAME)}${section ? `&jeSection=${encodeURIComponent(section)}` : ""}${tab ? `&tab=${encodeURIComponent(tab)}` : ""}${card ? `&card=${encodeURIComponent(card)}` : ""}`;
   }
   var honouredAddress = null;
   function freshTarget() {

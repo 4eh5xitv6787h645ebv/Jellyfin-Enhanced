@@ -18,6 +18,7 @@ import { createRegions } from './regions';
 import { createSpoiler } from './spoiler';
 import { createLoad } from './load';
 import { createSave } from './save';
+import { createAffordances } from './affordances';
 import { createMaintenance } from './maintenance';
 import { createBranding } from './branding';
 import { createLocales } from './locales';
@@ -77,6 +78,7 @@ export function startPage(context: PageContext): void {
     let timing: PageModules['timing'];
     let banners: PageModules['banners'];
     let misc: PageModules['misc'];
+    let affordances: PageModules['affordances'];
 
     const modules: PageModules = {
         context,
@@ -117,6 +119,7 @@ export function startPage(context: PageContext): void {
         get timing() { return timing; },
         get banners() { return banners; },
         get misc() { return misc; },
+        get affordances() { return affordances; },
     };
 
     theme = createTheme(modules);
@@ -156,6 +159,7 @@ export function startPage(context: PageContext): void {
     timing = createTiming(modules);
     banners = createBanners(modules);
     misc = createMisc(modules);
+    affordances = createAffordances(modules);
 
     theme.wire();
     tabs.wire();
@@ -194,4 +198,5 @@ export function startPage(context: PageContext): void {
     timing.wire();
     banners.wire();
     misc.wire();
+    affordances.wire();
 }

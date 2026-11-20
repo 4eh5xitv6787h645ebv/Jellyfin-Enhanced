@@ -55,6 +55,7 @@ export function createTabs(m: TabsDeps) {
                 }
                 tabs.forEach(t => {
                     const isActive = t.dataset.tab === tabId;
+                    if (isActive) t.setAttribute('aria-current', 'page'); else t.removeAttribute('aria-current');
                     if (isActive) {
                         t.classList.add('active');
                         // Override with the live accent color — CSS fallback covers initial render
@@ -82,6 +83,8 @@ export function createTabs(m: TabsDeps) {
                 _jePrevTabId = tabId;
                 // The Media Tags tab draws itself the first time it opens, and reloads its settings when it opens again.
                 if (page) page.classList.toggle('je-mt-active', tabId === m.mediaTagsTab.JE_MT_TAB);
+                // Read-only tabs (Overview, Credits, Docs) hide the Save dock while nothing elsewhere is unsaved (CSS).
+                if (page) page.dataset.jeTab = tabId;
                 if (tabId === m.mediaTagsTab.JE_MT_TAB) m.mediaTagsTab.jeMountMediaTags();
                 // Lazy-load the Docs iframe the first time the user opens
                 // the Docs tab. Using `about:blank` as the initial src

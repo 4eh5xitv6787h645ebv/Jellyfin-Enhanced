@@ -112,7 +112,7 @@ test.describe('admin configuration page', () => {
     await open(page);
     await page.locator('#settingsSearchInput').fill('tmdb api key');
     await expect(page.locator('#JellyfinEnhancedForm mark.je-search-match').first()).toBeVisible();
-    await expect(page.locator('#settingsSearchCount')).toContainText('of');
+    await expect(page.locator('#settingsSearchCount')).toContainText(/match/);
     await page.locator('#settingsSearchClear').click();
     await expect(page.locator('#JellyfinEnhancedForm')).not.toHaveClass(/je-search-mode/);
     await expect(page.locator('mark.je-search-match')).toHaveCount(0);
@@ -141,10 +141,11 @@ test.describe('admin configuration page', () => {
     await open(page);
     await clickTab(page, 'keyboard');
     const row = page.locator('#shortcut-grid .je-sc-row', { hasText: 'Show Playback Info' });
-    await row.locator('.je-sc-key').focus();
+    // Recording starts on purpose (a click), not when the key is merely focused.
+    await row.locator('.je-sc-key').click();
     await page.keyboard.press('k');
     await expect(page.locator('#shortcut-error-comment')).toContainText('already used by the Jellyfin player');
-    await row.locator('.je-sc-key').focus();
+    await row.locator('.je-sc-key').click();
     await page.keyboard.press('y');
     await expect(page.locator('#shortcut-grid .je-sc-row', { hasText: 'Show Playback Info' }).locator('.je-sc-key')).toHaveText('Y');
   });

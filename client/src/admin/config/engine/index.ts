@@ -11,8 +11,11 @@ import { mountShell, openCard } from './shell';
 
 type ChangedField = { props: string[]; labels: string[] };
 
-/** Fixed markup: the icon links to the Usage Statistics card, where the administrator opts in or out. */
-const ANALYTICS_BADGE = '<a class="material-icons jea-badge jea-analytics" href="#/configurationpage?name=Jellyfin%20Enhanced&tab=admin&card=usage-statistics" aria-label="Shared in Analytics if opted in" title="Shared in Analytics if opted in">insights</a>';
+/**
+ * Fixed markup: a quiet, non-interactive marker after the label text of a setting the usage report carries. It shows only
+ * while Usage Statistics is on (the card lists what is shared), and stays out of the control's name and the tab order.
+ */
+const ANALYTICS_BADGE = '<span class="jea-analytics" aria-hidden="true" title="Included in the usage statistics you share"></span>';
 
 function controlOf(id: string): HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement | null {
     const element = document.getElementById(id);
@@ -96,6 +99,9 @@ export function createEngine(): AdminEngine {
     /** Show the banner in each section with per-user fields that differ from the last loaded or applied values. */
     function refresh(): void {
         syncMirrors();
+        // The analytics markers mean something only while statistics are shared.
+        const stats = controlOf('analyticsEnabled');
+        document.getElementById('JellyfinEnhancedPage')?.classList.toggle('jea-stats-on', !!stats && isChecked(stats));
         syncCollapse();
         syncPos();
         syncShowIf();
@@ -235,11 +241,13 @@ export function createEngine(): AdminEngine {
         // The list comes from the server's own reporting rules, so nothing here names a setting by hand.
         markAnalytics(properties) {
             const reported = new Set(properties);
-            allFields(sections).filter(field => field.id && reported.has(propOf(field))).forEach(field => {
+            allFields(sections).filter(field => field.id && reported.has(field.markOf?.prop ?? propOf(field))).forEach(field => {
                 const control = document.getElementById(field.id);
                 const label = control && (control.closest('label') ?? document.querySelector('label[for="' + field.id + '"]'));
-                if (label && !label.querySelector('.jea-analytics')) label.insertAdjacentHTML('beforeend', ANALYTICS_BADGE);
+                const marks = label?.querySelector('.jea-marks') ?? label;
+                if (marks && !marks.querySelector('.jea-analytics')) marks.insertAdjacentHTML('beforeend', ANALYTICS_BADGE);
             });
+            refresh();
         },
     };
     return engine;

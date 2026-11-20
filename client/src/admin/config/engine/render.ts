@@ -14,6 +14,7 @@ function mirrorItem(item: SectionItem): SectionItem {
     if (copy.type === 'group') copy.items = copy.items.map(mirrorItem);
     if (copy.id) copy.id += MIRROR;
     if (isField(copy) && copy.id) {
+        if (isField(item)) copy.markOf = { prop: propOf(item), perUser: item.perUser };
         copy.manual = true;
         delete copy.prop;
         delete copy.toConfig;
@@ -63,7 +64,22 @@ export function isPerUser(field: FieldSpec, perUserProps: ReadonlySet<string>): 
     return field.perUser === true || (field.perUser !== false && perUserProps.has(propOf(field)));
 }
 
-const BADGE = '<i class="material-icons jea-badge" aria-label="Per-user setting" title="Each user has a personal copy. Existing users keep theirs until you overwrite it.">group</i>';
+/** Whether a row shows the per-user marker: its own setting is per user, or it is the linked copy of one. */
+function marksPerUser(field: FieldSpec, perUserProps: ReadonlySet<string>): boolean {
+    const source = field.markOf;
+    if (!source) return isPerUser(field, perUserProps);
+    return source.perUser === true || (source.perUser !== false && !!source.prop && perUserProps.has(source.prop));
+}
+
+/**
+ * The per-user marker: a quiet chip after the label text (its icon and words come from CSS, so it is not read into the
+ * control's name or matched by the settings search). The tab intros explain it in words.
+ */
+const BADGE = '<span class="jea-badge" aria-hidden="true" title="Each user has a personal copy. Existing users keep theirs until you overwrite it."></span>';
+
+/** Label text, then the row's markers (per-user, analytics, New), which wrap under the text when the row is narrow. */
+const labelBody = (label: string, perUser: boolean): string =>
+    `<span class="jea-label-text">${esc(label)}</span><span class="jea-marks">${perUser ? BADGE : ''}</span>`;
 
 /** A long description reads as a wall of text, so each sentence gets its own line (unless the author already structured it). */
 export function breakLines(html: string | null | undefined): string | null | undefined {
@@ -85,16 +101,16 @@ function optionsHtml(options: ReadonlyArray<readonly [string, string]>): string 
 function fieldHtml(field: FieldSpec, perUserProps: ReadonlySet<string>): string {
     const desc = descriptionHtml(field);
     const label = field.label ?? '';
-    const perUser = isPerUser(field, perUserProps);
+    const perUser = marksPerUser(field, perUserProps);
     if (field.type === 'toggle') {
-        return `<div class="checkboxContainer jea-row${field.main ? ' je-main-feature' : ''}${field.rowClass ? ' ' + field.rowClass : ''}"${attributes(field.rowAttrs)}><label class="jea-toggle"><input id="${field.id}" type="checkbox" class="jea-switch"${attributes(field.attrs)}/><span>${esc(label)}</span>${perUser ? BADGE : ''}</label></div>${desc}`;
+        return `<div class="checkboxContainer jea-row${field.main ? ' je-main-feature' : ''}${field.rowClass ? ' ' + field.rowClass : ''}"${attributes(field.rowAttrs)}><label class="jea-toggle"><input id="${field.id}" type="checkbox" class="jea-switch"${attributes(field.attrs)}/><span class="jea-label">${labelBody(label, perUser)}</span></label></div>${desc}`;
     }
     if (field.type === 'position') {
         // Same 2x2 corner picker as the Enhanced panel. A hidden <select> with the same id keeps load/save working.
         const cells = ['top-left', 'top-right', 'bottom-left', 'bottom-right'].map(p => `<button type="button" class="jea-pos-cell" data-pos="${p}" title="${p.replace('-', ' ')}" aria-label="${p.replace('-', ' ')}"></button>`).join('');
         return `<div class="checkboxContainer jea-row jea-pos-row${field.rowClass ? ' ' + field.rowClass : ''}"${attributes(field.rowAttrs)}><label class="jea-pos-label" for="${field.id}">${esc(label || 'Position')}</label><div class="jea-pos" role="group" aria-label="${esc(label || 'Position')}" data-for="${field.id}">${cells}</div><select id="${field.id}" name="${field.id}" hidden${attributes(field.attrs)}>${optionsHtml(field.options)}</select></div>${desc}`;
     }
-    const labelHtml = `<label class="inputLabel" for="${field.id}">${esc(label)}${perUser ? BADGE : ''}</label>`;
+    const labelHtml = `<label class="inputLabel" for="${field.id}">${labelBody(label, perUser)}</label>`;
     let control: string;
     if (field.type === 'select') {
         control = `<select id="${field.id}" name="${field.id}" class="jea-input"${attributes(field.attrs)}>${optionsHtml(field.options)}</select>`;

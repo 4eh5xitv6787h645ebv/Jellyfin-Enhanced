@@ -130,3 +130,10 @@ export const list = (value: JsonValue | undefined): JsonValue[] => (Array.isArra
  * @returns {JsonObject[]}
  */
 export const objects = (value: JsonValue | undefined): JsonObject[] => list(value).filter(isObject);
+
+/** The groups' one display order on the tab (Overview, the Groups list, the colour chips), People last; unknown groups after. */
+const GROUP_ORDER = ['quality', 'genre', 'language', 'rating', 'ageRating', 'status', 'awards', 'logos', 'custom', 'people'];
+export function groupRank(group: string | undefined): number {
+    const i = GROUP_ORDER.indexOf(group ?? '');
+    return i < 0 ? GROUP_ORDER.length : i;
+}

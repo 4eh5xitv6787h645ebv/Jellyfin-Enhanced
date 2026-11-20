@@ -100,7 +100,8 @@ test('Status badges › Collections: one switch between the families and the win
   const cards = [...h.$$('#jeTaPanel-badges [data-section]')].map((s) => s.dataset.section);
   assert.deepEqual(cards.slice(0, 3), ['badges-families', 'badges-collections', 'badges-windows']);
   const card = h.$('[data-section="badges-collections"]');
-  assert.equal(card.querySelector('.je-ta-card-title').textContent.trim(), 'Collections');
+  // The title's words (the card now carries a section icon, like every other card).
+  assert.equal([...card.querySelector('.je-ta-card-title').childNodes].filter((n) => n.nodeType === 3).map((n) => n.textContent).join('').trim(), 'Collections');
   assert.equal(card.querySelector('.je-ta-hint').textContent.trim(), 'This applies to everyone.');
   const box = h.$('#statusTagsOnCollections');
   assert.equal(box.type, 'checkbox');

@@ -16,7 +16,7 @@
     "X1 defineDisplay.UL": 1
   },
   "client/src/admin/config/sections/pages.ts": {
-    "X1 definePages.placement": 7
+    "X1 definePages.placement": 4
   },
   "client/src/core/ui/runtime.ts": {
     "X1 createUi.skeletonGridHtml": 2,

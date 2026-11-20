@@ -38,11 +38,38 @@ export function createTheme(m: ThemeDeps) {
                     var isLight = sum > 450;
                     page.classList.toggle('je-light-theme', isLight);
                     page.classList.toggle('je-dark-theme',  !isLight);
+                    _jeAccentInk();
                 } catch (e) {
                     console.warn('[JE] theme detection failed, defaulting to dark:', e);
                     page.classList.remove('je-light-theme');
                     page.classList.add('je-dark-theme');
                 }
+            }
+
+            /** sRGB relative luminance of an rgb()/rgba() colour, or null when it cannot be read. */
+            function _jeLuminance(color: string) : number | null {
+                var c = color.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/);
+                if (!c) return null;
+                var lin = function(v: number) { v /= 255; return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4); };
+                return 0.2126 * lin(Number(c[1])) + 0.7152 * lin(Number(c[2])) + 0.0722 * lin(Number(c[3]));
+            }
+
+            /**
+             * Text on the theme's accent (Save, a dialog's main answer): white or near-black, whichever contrasts more.
+             * White on Jellyfin's own #00a4dc is only 2.9:1; near-black is about 6:1.
+             */
+            function _jeAccentInk() : void {
+                if (!page) return;
+                var probe = document.createElement('span');
+                probe.style.cssText = 'position:absolute;visibility:hidden;color:var(--primary-accent-color, #00a4dc)';
+                page.appendChild(probe);
+                var accent = _jeLuminance(getComputedStyle(probe).color);
+                probe.remove();
+                if (accent === null) return;
+                var ink = _jeLuminance('rgb(4, 34, 46)') ?? 0;
+                var onWhite = 1.05 / (accent + 0.05);
+                var onInk = (accent + 0.05) / (ink + 0.05);
+                page.style.setProperty('--jea-on-accent', onWhite >= onInk ? '#fff' : '#04222e');
             }
 
     /** Runs this module's start-up work, in the page's original order. */
@@ -53,6 +80,15 @@ export function createTheme(m: ThemeDeps) {
             // defined in the head <script> above and is base-path-safe.
             try {
                 document.querySelectorAll<HTMLImageElement>('img[data-je-cdn]').forEach((img) => {
+                    // A logo that cannot load (an offline server) falls back to a plain icon, not a broken image.
+                    img.addEventListener('error', () => {
+                        if (!img.isConnected) return;
+                        const icon = document.createElement('i');
+                        icon.className = 'material-icons ' + (img.classList.contains('je-tab-icon-img') ? 'je-tab-icon' : 'je-legend-icon');
+                        icon.setAttribute('aria-hidden', 'true');
+                        icon.textContent = img.classList.contains('je-tab-icon-img') ? 'extension' : 'link';
+                        img.replaceWith(icon);
+                    }, { once: true, signal: lifecycle.signal });
                     img.src = cdnUrl(img.getAttribute('data-je-cdn') ?? '');
                 });
             } catch (e) {

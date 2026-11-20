@@ -10,14 +10,17 @@ export function safeHtml(text: string | null | undefined): string {
         .replace(/\r?\n/g, '<br>');
 }
 
+let dialogCount = 0;
+
 export function dialog({ title, message, confirmLabel, cancelLabel, danger }: DialogOptions): Promise<boolean> {
     return new Promise(resolve => {
         const previous = document.activeElement;
+        const id = 'jea-dialog-' + (++dialogCount);
         const wrap = document.createElement('div');
         wrap.className = 'jea-dialog-backdrop';
-        wrap.innerHTML = `<div class="jea-dialog" role="dialog" aria-modal="true" aria-label="${esc(title || 'Message')}">`
-            + `<h3 class="jea-dialog-title">${esc(title || '')}</h3>`
-            + `<div class="jea-dialog-body">${safeHtml(message)}</div>`
+        wrap.innerHTML = `<div class="jea-dialog" role="${cancelLabel ? 'alertdialog' : 'dialog'}" aria-modal="true" aria-labelledby="${id}-title" aria-describedby="${id}-body">`
+            + `<h3 class="jea-dialog-title" id="${id}-title">${esc(title || 'Message')}</h3>`
+            + `<div class="jea-dialog-body" id="${id}-body">${safeHtml(message)}</div>`
             + `<div class="jea-dialog-actions">${cancelLabel ? `<button type="button" class="jea-btn" data-r="0">${esc(cancelLabel)}</button>` : ''}`
             + `<button type="button" class="jea-btn ${danger ? 'jea-btn-danger' : 'jea-btn-primary'}" data-r="1">${esc(confirmLabel || 'OK')}</button></div></div>`;
         const done = (value: boolean): void => {
@@ -26,8 +29,17 @@ export function dialog({ title, message, confirmLabel, cancelLabel, danger }: Di
             if (previous instanceof HTMLElement) previous.focus();
             resolve(value);
         };
+        // Modal: Escape cancels, and Tab / Shift+Tab stay on the dialog's own buttons.
         const onKey = (event: KeyboardEvent): void => {
-            if (event.key === 'Escape') { event.stopPropagation(); done(false); }
+            if (event.key === 'Escape') { event.stopPropagation(); done(false); return; }
+            if (event.key !== 'Tab') return;
+            const stops = Array.from(wrap.querySelectorAll<HTMLElement>('button, a[href], input, select, textarea'));
+            const first = stops[0];
+            const last = stops[stops.length - 1];
+            if (!first || !last) return;
+            const inside = wrap.contains(document.activeElement);
+            if (event.shiftKey && (!inside || document.activeElement === first)) { event.preventDefault(); last.focus(); }
+            else if (!event.shiftKey && (!inside || document.activeElement === last)) { event.preventDefault(); first.focus(); }
         };
         wrap.addEventListener('click', event => {
             const target = event.target instanceof Element ? event.target : null;
@@ -37,7 +49,8 @@ export function dialog({ title, message, confirmLabel, cancelLabel, danger }: Di
         });
         document.addEventListener('keydown', onKey, true);
         (document.getElementById('JellyfinEnhancedPage') || document.body).appendChild(wrap);
-        wrap.querySelector<HTMLElement>('[data-r="1"]')?.focus();
+        // A confirmation starts on Cancel: every one here changes users, instances or caches, so Enter never confirms by accident.
+        wrap.querySelector<HTMLElement>(cancelLabel ? '[data-r="0"]' : '[data-r="1"]')?.focus();
     });
 }
 

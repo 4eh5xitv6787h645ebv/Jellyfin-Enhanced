@@ -4,63 +4,63 @@ export function defineDisplay(define: DefineSections): void {
 /* Display tab sections. See jeAdmin.js for the field spec. */
 define({
         'ui-preferences': {
-            title: 'UI Preferences',
+            title: 'UI Preferences', icon: 'tune',
             fields: [
                 { id: 'showWatchProgress', prop: 'ShowWatchProgress', type: 'toggle', perUser: true, label: 'Show watch progress',
                   desc: 'Show watch progress for items in item details page.' },
-                { id: 'watchProgressDefaultMode', prop: 'WatchProgressDefaultMode', type: 'select', default: 'percentage', label: 'Watch Progress Default',
-                  options: [['percentage', 'Percentage'], ['time', 'Time Watched'], ['remaining', 'Time Remaining']],
+                { id: 'watchProgressDefaultMode', prop: 'WatchProgressDefaultMode', type: 'select', default: 'percentage', label: 'Watch progress default',
+                  options: [['percentage', 'Percentage'], ['time', 'Time watched'], ['remaining', 'Time remaining']],
                   desc: 'Choose default display for watch progress (percentage, time watched, or time remaining).' },
-                { id: 'watchProgressTimeFormat', prop: 'WatchProgressTimeFormat', type: 'select', default: 'hours', label: 'Watch Progress Time Format',
+                { id: 'watchProgressTimeFormat', prop: 'WatchProgressTimeFormat', type: 'select', default: 'hours', label: 'Watch progress time format',
                   options: [['hours', 'h:m'], ['full', 'y:mo:d:h:m']],
                   desc: 'Select how time-based progress is shown.' },
                 { id: 'showFileSizes', prop: 'ShowFileSizes', type: 'toggle', perUser: true, label: 'Show file sizes',
                   desc: 'Display the file size of each item on item detail pages or collections pages.' },
-                { id: 'showAudioLanguages', prop: 'ShowAudioLanguages', type: 'toggle', perUser: true, label: 'Show available audio languages on item detail page',
+                { id: 'showAudioLanguages', prop: 'ShowAudioLanguages', type: 'toggle', perUser: true, label: 'Show available audio languages on item details',
                   desc: 'List the audio language flags available for each title on its detail page.' },
                 { id: 'removeContinueWatchingEnabled', prop: 'RemoveContinueWatchingEnabled', type: 'toggle', perUser: true, label: 'Enable "Remove from Continue Watching"',
                   desc: 'Adds a "Remove from Continue Watching" option to the right-click / long-press context menu. Hides items non-destructively, so playback position is preserved and entries appear in Hidden Content\'s management page (look for "Add back to Continue Watching" on each entry). Items also unhide automatically when you resume playback.' }
             ]
         },
         'icons-theme': {
-            title: 'Icons & Theme',
+            title: 'Icons & Theme', icon: 'emoji_symbols',
             fields: [
-                { id: 'useIcons', prop: 'UseIcons', type: 'toggle', main: true, default: true, label: 'Use Icons in UI', descClass: 'je-field-desc-lg',
+                { id: 'useIcons', prop: 'UseIcons', type: 'toggle', main: true, default: true, label: 'Use icons in the interface', descClass: 'je-field-desc-lg',
                   desc: 'Display icons throughout the UI (toasts, settings panel headers, etc.)' },
-                { id: 'iconStyle', prop: 'IconStyle', type: 'select', default: 'emoji', label: 'Icon Style',
-                  options: [['emoji', 'Emoji'], ['lucide', 'Lucide Icons'], ['mui', 'Material UI Icons']],
+                { id: 'iconStyle', prop: 'IconStyle', type: 'select', default: 'emoji', label: 'Icon style',
+                  options: [['emoji', 'Emoji'], ['lucide', 'Lucide icons'], ['mui', 'Material UI icons']],
                   desc: 'Choose between emoji characters, Lucide icons, or Material UI icons.' }
             ]
         },
         'content-warnings': {
             title: 'Content Warnings (DoesTheDogDie)', iconImg: 'ddd-static/favicon.ico',
             fields: [
-                { id: 'doesTheDogDieEnabled', prop: 'DoesTheDogDieEnabled', type: 'toggle', main: true, label: 'Show Content Warnings',
+                { id: 'doesTheDogDieEnabled', prop: 'DoesTheDogDieEnabled', type: 'toggle', main: true, label: 'Show content warnings',
                   toConfig: (v) => !!v, fromConfig: (v) => !!v,
                   desc: '<ul class="je-desc-list"><li>Shows community-voted content warnings (a dog dies, gore, flashing lights and more) on movie and show pages</li><li>Each user picks the triggers they care about with the gear icon on the section</li><li>Requires a free API key from doesthedogdie.com. The free tier is for non-commercial use and allows 5,000 requests a month for the whole server. Results are cached for weeks, so only titles nobody has opened yet cost requests</li></ul>' },
-                { id: 'doesTheDogDieApiKey', prop: 'DoesTheDogDieApiKey', type: 'text', label: 'DoesTheDogDie API Key',
+                { id: 'doesTheDogDieApiKey', prop: 'DoesTheDogDieApiKey', type: 'text', label: 'DoesTheDogDie API key',
                   toConfig: (v) => String(v || '').trim(), fromConfig: (v) => (typeof v === 'string' ? v : ''),
                   desc: 'Your API key from your <a class="sectionTitle" href="https://www.doesthedogdie.com/profile" target="_blank">doesthedogdie.com</a> profile page.' }
             ]
         },
         'awards': {
-            title: 'Awards',
+            title: 'Awards', icon: 'emoji_events',
             fields: [
-                { id: 'showAwards', prop: 'ShowAwards', type: 'toggle', main: true, label: 'Show Awards Banner', descClass: 'je-field-desc-sm-font-lg',
+                { id: 'showAwards', prop: 'ShowAwards', type: 'toggle', main: true, label: 'Show the awards banner', descClass: 'je-field-desc-sm-font-lg',
                   desc: 'Shows a wins/nominations banner on item-details pages, sourced from Wikidata by TMDB id. Data is as accurate as what is available in Wikidata.' }
             ]
         },
         'random-button': {
-            title: 'Random Button',
+            title: 'Random Button', icon: 'casino',
             fields: [
-                { id: 'randomButtonEnabled', prop: 'RandomButtonEnabled', type: 'toggle', perUser: true, main: true, label: 'Enable Random Button',
+                { id: 'randomButtonEnabled', prop: 'RandomButtonEnabled', type: 'toggle', perUser: true, main: true, label: 'Enable the Random button',
                   desc: 'Adds a "Play Random" button to the Jellyfin header that opens a random item from the user\'s accessible libraries.' },
                 { id: 'randomUnwatchedOnly', prop: 'RandomUnwatchedOnly', type: 'toggle', perUser: true, label: 'Show unwatched only',
                   desc: 'When enabled, the random picker only chooses items the user has not watched yet.' },
                 { id: 'randomIncludeMovies', prop: 'RandomIncludeMovies', type: 'toggle', perUser: true, label: 'Include movies',
                   desc: 'Include movies in the random pool.' },
                 { id: 'randomIncludeShows', prop: 'RandomIncludeShows', type: 'toggle', perUser: true, label: 'Include shows',
-                  desc: 'Include TV Shows in the random pool.' },
+                  desc: 'Include TV shows in the random pool.' },
                 { id: 'randomScopeCurrentContainer', prop: 'RandomScopeCurrentContainer', type: 'toggle', perUser: true, label: 'Scope to the current playlist or collection',
                   desc: 'On a playlist or collection page, the Random button picks from that container\'s items instead of the whole library. Users can also pin a playlist or collection as their permanent source in the Enhanced panel.' }
             ]
@@ -68,9 +68,9 @@ define({
         'audio-language-tags': {
             title: 'Audio Language Tags', icon: 'translate',
             fields: [
-                { id: 'audioLanguageTagSyncEnabled', prop: 'AudioLanguageTagSyncEnabled', type: 'toggle', main: true, label: 'Enable Audio Language Tags Sync', descClass: 'je-field-desc-xl',
+                { id: 'audioLanguageTagSyncEnabled', prop: 'AudioLanguageTagSyncEnabled', type: 'toggle', main: true, label: 'Sync audio language tags', descClass: 'je-field-desc-xl',
                   desc: 'Adds each movie\'s and series\' audio languages as Jellyfin tags. A regional track such as en-US gets a base tag ("JE Language: English") and a regional tag ("JE Language: English (United States)").<br/><br/>Existing items are tagged by the "Sync Audio Language Tags to Jellyfin" scheduled task. New and changed items are tagged after a library scan when the Server-Side Tag Cache is enabled.' },
-                { id: 'audioLanguageTagPrefix', prop: 'AudioLanguageTagPrefix', type: 'text', label: 'Tag Prefix', placeholder: 'JE Language: ', default: 'JE Language: ',
+                { id: 'audioLanguageTagPrefix', prop: 'AudioLanguageTagPrefix', type: 'text', label: 'Tag prefix', placeholder: 'JE Language: ', default: 'JE Language: ',
                   desc: 'Prefix added before each language, e.g. "JE Language: English".' },
                 { id: 'audioLanguageTagShowAsLinks', prop: 'AudioLanguageTagShowAsLinks', type: 'toggle', default: true, label: 'Link audio languages to their tag page', descClass: 'je-field-desc-xl',
                   desc: 'Links each audio language on item detail pages to Jellyfin\'s list of items with that tag.' }
@@ -117,12 +117,12 @@ define({
         'media-tags': {
             title: 'Media Tags', icon: 'sell', id: 'mediaTagsCard',
             items: [{ type: 'custom', html: '<div class="je-media-tags-card"><div class="je-media-tags-card-text">'
-                + '<div class="fieldDescription">Poster tags (quality, genre, language, rating, age rating, status, people), their default layout, rules and colours, the tag cache and Native Poster Tags have their own tab, Media Tags, which saves each change as you make it.</div>'
+                + '<div class="fieldDescription">Poster tags (quality, genre, language, ratings, status, people and more) have their own tab, which saves each change as you make it.</div>'
                 + '<dl class="je-media-tags-card-facts" id="jeMediaTagsCardFacts" aria-live="polite"></dl></div>'
                 + '<a class="jea-btn jea-btn-primary je-media-tags-open" href="#/configurationpage?name=Jellyfin%20Enhanced&amp;jeSection=media-tags"><i class="material-icons" aria-hidden="true">sell</i><span>Open Media Tags</span></a>'
                 + '<div class="je-media-tags-card-links">'
-                + [['layout', 'Layout defaults'], ['groups', 'Groups'], ['rules', 'Rules'], ['colours', 'Colours and text'], ['badges', 'Status badges'], ['server', 'Tag cache &amp; native posters']]
-                    .map(([section, label]) => '<a class="je-media-tags-card-link" href="#/configurationpage?name=Jellyfin%20Enhanced&amp;jeSection=media-tags&amp;tab=' + section + '">' + label + '</a>').join('')
+                + [['layout', 'Layout defaults'], ['groups', 'Groups'], ['rules', 'Rules'], ['colours', 'Colours and text'], ['badges', 'Status badges'], ['server', 'Server']]
+                    .map(([section, label]) => '<a class="je-media-tags-card-link" href="#/configurationpage?name=Jellyfin%20Enhanced&amp;jeSection=media-tags&amp;tab=' + section + '">' + label + '<i class="material-icons" aria-hidden="true">arrow_forward</i></a>').join('')
                 + '</div></div>' }]
         },
 
@@ -131,8 +131,8 @@ define({
             items: [
                 { type: 'note', html: '<strong>Spoiler Guard</strong> hides episode thumbnails, season posters, movie posters and chapter scenes for unwatched titles each user opts into. It also strips spoiler-bearing metadata: synopses, episode titles, tags, taglines, ratings, air dates, cast on unwatched episodes, chapter names, and TMDB / user reviews on opted-in series.' },
                 tog('spoilerBlurEnabled', 'Enable Spoiler Guard', 'Turns the whole feature on. While it\'s off, the per-show toggle button never appears and nothing is ever hidden. Turn it on to let users protect individual shows, movies, and collections from their own detail pages.', { main: true }),
-                sel('spoilerBlurMode', 'Image replacement mode', [['hide', 'Show stock cards (hide images entirely, default)'], ['blur', 'Blur images']],
-                    'How protected cards look. <strong>Show stock cards</strong> (default) swaps each unwatched image for a safe parent-level placeholder: episodes show their series backdrop, seasons show the series poster, collection-opted movies show the collection art. <strong>Blur images</strong> instead applies a strong blur to the original so silhouettes and dominant colours still hint at "something is here". Pick stock cards for the strictest hide; pick blur if the placeholders feel too aggressive.'),
+                sel('spoilerBlurMode', 'Image replacement mode', [['hide', 'Stock cards (default)'], ['blur', 'Blur images']],
+                    'How protected cards look. <strong>Stock cards</strong> (default) swaps each unwatched image for a safe parent-level placeholder: episodes show their series backdrop, seasons show the series poster, collection-opted movies show the collection art. <strong>Blur images</strong> instead applies a strong blur to the original so silhouettes and dominant colours still hint at "something is here". Pick stock cards for the strictest hide; pick blur if the placeholders feel too aggressive.'),
                 { id: 'spoilerBlurIntensity', type: 'number', manual: true, label: 'Blur intensity', min: 5, max: 100, step: 1,
                   desc: 'How strong the blur is. <strong>5</strong> is barely smudged, <strong>40</strong> is the recommended default (characters become unrecognisable but the colours still come through), <strong>100</strong> is almost a solid colour wash. Applies to "Blur images" mode, and to "Show stock cards" mode when an item has no safe parent art to substitute (e.g. a directly-opted-in movie), where the original is blurred as a fallback.' },
                 tog('spoilerBlurArtwork', 'Also hide the wide backdrop / fanart', 'By default the protection covers posters, episode thumbs, and screenshots, but leaves the wide cinematic backdrop / fanart on detail pages alone (it\'s usually atmosphere, not plot). Turn this on if you want backdrops hidden too for maximum protection.'),
@@ -146,7 +146,7 @@ define({
                     { type: 'custom', html: '<div id="spoilerAutoEnableScopeContainer" class="jea-subbox"><div class="jea-subbox-title">Auto-enable applies to</div><div class="fieldDescription">Shared by all three auto-enable options above.</div>'
                         + '<div class="checkboxContainer"><label><input id="spoilerAutoEnableSeries" type="checkbox"/><span>TV shows</span></label></div>'
                         + '<div class="checkboxContainer"><label><input id="spoilerAutoEnableMovies" type="checkbox"/><span>Movies</span></label></div>'
-                        + '<div class="fieldDescription">Libraries: leave every library unticked to cover all of them. Doesn\'t apply to Seerr requests (the title isn\'t in a library yet).</div>'
+                        + '<div class="fieldDescription">Libraries: leave them all unchecked to cover every library. Doesn\'t apply to Seerr requests (the title isn\'t in a library yet).</div>'
                         + '<div id="spoilerAutoEnableLibraryList"><div class="fieldDescription">Loading libraries…</div></div></div>' },
                     { type: 'custom', html: '<div id="spoilerApplyExistingContainer" class="je-spoiler-apply-existing jea-subbox"><div class="jea-subbox-title">Titles already in the library</div>'
                         + '<div class="fieldDescription">Auto-enable only arms titles as they arrive, and a rescan doesn\'t count (so nobody who switched Spoiler Guard off for a title gets it switched back on). To guard what\'s already there, apply the <em>saved</em> scope above to existing titles, for every user who can see them. Works whether or not "when new titles are added" is on. Titles a user already has, or has fully watched, are skipped. Also available as the "Spoiler Guard: apply to existing titles" scheduled task.</div>'
@@ -167,7 +167,7 @@ define({
                     tog('spoilerStripPremiereDate', 'Hide air date', 'A long gap before a particular episode can give away "this one\'s the season finale" without even reading the title. Hides the date so the schedule itself stays a surprise.'),
                     tog('spoilerReplaceTitle', 'Replace episode titles', 'Swaps episode names like "The Death of X" for "Season 2, Episode 6". Some clients show the title in navigation tooltips and breadcrumbs where the swap can look a bit clinical; turn off if your users prefer to keep the original titles visible.'),
                     tog('spoilerStripCast', 'Hide cast on unwatched episodes', 'An unexpected guest star, or a regular suddenly missing from the cast list, can give away the whole episode. Hides the cast on unwatched episodes; pick what counts as "cast" below.'),
-                    sel('spoilerStripCastMode', 'Cast hiding scope', [['GuestStars', 'Guest stars only (recommended)'], ['All', 'Entire cast (regulars + guest stars)']],
+                    sel('spoilerStripCastMode', 'Cast hiding scope', [['GuestStars', 'Guest stars only (recommended)'], ['All', 'Entire cast']],
                         '<strong>Guest stars only</strong> keeps the regular cast visible, since they\'re in every episode anyway and don\'t give anything away. <strong>Entire cast</strong> is the strict option for shows where the recurring cast appearing or not appearing in a given episode is itself the spoiler.', { showIf: 'spoilerStripCast' }),
                     tog('spoilerStripReviews', 'Hide reviews on Spoiler Guard series', 'Hides the Reviews panel on the detail pages of shows the user has Spoiler Guard on for. Reviews very often spoil plot points from anywhere in the series. Recommended on.')
                 ] },
@@ -187,20 +187,20 @@ define({
 
         'default-language': {
             title: 'Default Language', icon: 'language',
-            items: [sel('DefaultLanguage', 'Default UI Language', [['', 'System Default']], 'Sets the default language for all users. Users can still override this in their own settings.')]
+            items: [sel('DefaultLanguage', 'Default interface language', [['', 'System default']], 'Sets the default language for all users. Users can still override this in their own settings.')]
         },
 
         'mdblist': {
             title: 'MDBList Ratings', iconImg: 'mdblist-static/favicon.ico',
             items: [
-                tog('mdblistRatingsEnabled', 'Enable MDBList Ratings', UL('Shows TMDB, Rotten Tomatoes, IMDb, Trakt and other ratings on item-details pages', 'Can fill in Jellyfin\'s own missing Community/Critic Rating fields', 'Requires a free API key from mdblist.com'), { main: true }),
-                { type: 'custom', html: '<div class="inputContainer jea-row"><label class="inputLabel" for="mdblistApiKey">MDBList API Key</label>'
+                tog('mdblistRatingsEnabled', 'Enable MDBList ratings', UL('Shows TMDB, Rotten Tomatoes, IMDb, Trakt and other ratings on item-details pages', 'Can fill in Jellyfin\'s own missing Community/Critic Rating fields', 'Requires a free API key from mdblist.com'), { main: true }),
+                { type: 'custom', html: '<div class="inputContainer jea-row"><label class="inputLabel" for="mdblistApiKey">MDBList API key</label>'
                     + '<div class="je-api-row"><input id="mdblistApiKey" type="text" autocomplete="off" class="je-api-input jea-input"/><span id="mdblistStatusIndicator" class="material-icons"></span>'
-                    + '<button type="button" id="checkMdblistStatusBtn" class="jea-btn">Check</button></div>'
+                    + '<button type="button" id="checkMdblistStatusBtn" class="jea-btn">Test</button></div>'
                     + '<div id="mdblistStatusLine" class="jea-hint">&nbsp;</div></div>'
                     + '<div class="je-setting-description" data-desc-for="mdblistApiKey"><div class="fieldDescription">Your API key from <a class="sectionTitle" href="https://mdblist.com/preferences/#api" target="_blank">mdblist.com</a>.</div></div>' },
-                tog('mdblistRatingsShowOnItemDetails', 'Show Ratings Row on Item Details', 'Displays the MDBList ratings row on item-details pages.'),
-                tog('mdblistRatingsShowPercentSymbol', 'Show % Symbol', 'Appends "%" after each rating badge\'s number.'),
+                tog('mdblistRatingsShowOnItemDetails', 'Show the ratings row on item details', 'Displays the MDBList ratings row on item-details pages.'),
+                tog('mdblistRatingsShowPercentSymbol', 'Show a % sign after each rating', 'Appends "%" after each rating badge\'s number.'),
                 { type: 'group', title: 'Configure ratings shown', items: [
                     { type: 'note', html: 'Pick which ratings appear on the item-details row, and the order they\'re shown in. Use the '
                         + arrow('up') + ' / ' + arrow('down') + ' buttons to reorder. All checked by default.' },
@@ -208,22 +208,22 @@ define({
                     { type: 'custom', html: '<div id="mdblistRatingsSourcesAdmin"></div>' }
                 ] },
                 { type: 'group', title: 'Fetch ratings (scheduled task)', items: [
-                    tog('mdblistRatingsFetchEnabled', 'Fetch Ratings from MDBList', 'Enables the <strong>Fetch Ratings from MDBList</strong> scheduled task (Dashboard, Scheduled Tasks):' + UL(
+                    tog('mdblistRatingsFetchEnabled', 'Fetch ratings from MDBList', 'Enables the <strong>Fetch Ratings from MDBList</strong> scheduled task (Dashboard, Scheduled Tasks):' + UL(
                         'Looks up MDBList data for any movie/series whose cached ratings are missing or stale, and saves it. Doesn\'t touch Jellyfin\'s own rating fields',
                         'A found title stays cached for 7 days (3 days for a confirmed "no match") before being refetched. Already-fresh titles are skipped on a re-run, so it\'s safe to schedule this frequently, even daily',
                         'Stops once today\'s quota drops to the reserve below')),
-                    { id: 'mdblistFetchReserve', type: 'number', manual: true, label: 'Fetch Task Reserve', min: 1, max: 100000, showIf: 'mdblistRatingsFetchEnabled',
+                    { id: 'mdblistFetchReserve', type: 'number', manual: true, label: 'Fetch task reserve', min: 1, max: 100000, showIf: 'mdblistRatingsFetchEnabled',
                       desc: 'The fetch task stops once today\'s live remaining quota drops to this many, reserving that much for people browsing the library (an item-details page fetches live if nothing\'s cached yet).' }
                 ] },
                 { type: 'group', title: 'Sync ratings into Jellyfin (scheduled task)', items: [
-                    tog('mdblistRatingsAutoSyncEnabled', 'Sync Ratings from MDBList to Jellyfin', 'Enables the <strong>Sync Ratings from MDBList to Jellyfin</strong> scheduled task:' + UL(
+                    tog('mdblistRatingsAutoSyncEnabled', 'Sync ratings from MDBList to Jellyfin', 'Enables the <strong>Sync Ratings from MDBList to Jellyfin</strong> scheduled task:' + UL(
                         'Sets Community / Critic Ratings (source selectable below, default TMDB / Rotten Tomatoes) from whatever\'s already cached (see Fetch above) into Jellyfin\'s own fields',
                         'Requires the <strong>Fetch Ratings from MDBList</strong> task to be enabled and run first')),
-                    sel('mdblistCommunityRatingSource', 'Star Rating Source (Community Rating)', RS, 'The star rating shown by Jellyfin, on a 0-10 scale (e.g. 7.2). Choose which MDBList source fills it. Default TMDB.', { showIf: 'mdblistRatingsAutoSyncEnabled' }),
-                    sel('mdblistCommunityRatingFallbackSource', 'Star Rating Fallback Source', RSN, 'Used when the source above has no score for a title. Default none.', { showIf: 'mdblistRatingsAutoSyncEnabled' }),
-                    sel('mdblistCriticRatingSource', 'Tomato Rating Source (Critic Rating)', RS, 'The tomato rating shown by Jellyfin, on a 0-100% scale (e.g. 85%). Choose which MDBList source fills it. Default RT Critic.', { showIf: 'mdblistRatingsAutoSyncEnabled' }),
-                    sel('mdblistCriticRatingFallbackSource', 'Tomato Rating Fallback Source', RSN, 'Used when the source above has no score for a title. Default none.', { showIf: 'mdblistRatingsAutoSyncEnabled' }),
-                    tog('mdblistRatingsOverwriteExisting', 'Overwrite Existing Jellyfin Ratings', UL('<strong>Off</strong> (default): Only fills an empty rating, never revisits an item once both are set', '<strong>On</strong>: Every run re-sets every item\'s rating to MDBList\'s current cached value. This is also the only way ratings stay current over time'), { showIf: 'mdblistRatingsAutoSyncEnabled' })
+                    sel('mdblistCommunityRatingSource', 'Star rating source (community rating)', RS, 'The star rating shown by Jellyfin, on a 0-10 scale (e.g. 7.2). Choose which MDBList source fills it. Default TMDB.', { showIf: 'mdblistRatingsAutoSyncEnabled' }),
+                    sel('mdblistCommunityRatingFallbackSource', 'Star rating fallback source', RSN, 'Used when the source above has no score for a title. Default none.', { showIf: 'mdblistRatingsAutoSyncEnabled' }),
+                    sel('mdblistCriticRatingSource', 'Tomato rating source (critic rating)', RS, 'The tomato rating shown by Jellyfin, on a 0-100% scale (e.g. 85%). Choose which MDBList source fills it. Default RT Critic.', { showIf: 'mdblistRatingsAutoSyncEnabled' }),
+                    sel('mdblistCriticRatingFallbackSource', 'Tomato rating fallback source', RSN, 'Used when the source above has no score for a title. Default none.', { showIf: 'mdblistRatingsAutoSyncEnabled' }),
+                    tog('mdblistRatingsOverwriteExisting', 'Overwrite existing Jellyfin ratings', UL('<strong>Off</strong> (default): Only fills an empty rating, never revisits an item once both are set', '<strong>On</strong>: Every run re-sets every item\'s rating to MDBList\'s current cached value. This is also the only way ratings stay current over time'), { showIf: 'mdblistRatingsAutoSyncEnabled' })
                 ] }
             ]
         }

@@ -52,6 +52,7 @@
     if (copy.type === "group") copy.items = copy.items.map(mirrorItem);
     if (copy.id) copy.id += MIRROR;
     if (isField(copy) && copy.id) {
+      if (isField(item)) copy.markOf = { prop: propOf(item), perUser: item.perUser };
       copy.manual = true;
       delete copy.prop;
       delete copy.toConfig;
@@ -87,7 +88,13 @@
   function isPerUser(field, perUserProps) {
     return field.perUser === true || field.perUser !== false && perUserProps.has(propOf(field));
   }
-  var BADGE = '<i class="material-icons jea-badge" aria-label="Per-user setting" title="Each user has a personal copy. Existing users keep theirs until you overwrite it.">group</i>';
+  function marksPerUser(field, perUserProps) {
+    const source = field.markOf;
+    if (!source) return isPerUser(field, perUserProps);
+    return source.perUser === true || source.perUser !== false && !!source.prop && perUserProps.has(source.prop);
+  }
+  var BADGE = '<span class="jea-badge" aria-hidden="true" title="Each user has a personal copy. Existing users keep theirs until you overwrite it."></span>';
+  var labelBody = (label, perUser) => `<span class="jea-label-text">${esc(label)}</span><span class="jea-marks">${perUser ? BADGE : ""}</span>`;
   function breakLines(html) {
     if (!html || html.length < 140 || /<(br|ul|li|p)\b/i.test(html)) return html;
     return html.replace(/([.!?])\s+(?=[A-Z])/g, (match, end, offset, text) => /(e\.g|i\.e|etc|vs|cf)\.$/i.test(text.slice(Math.max(0, offset - 5), offset + 1)) ? match : end + "<br>");
@@ -101,15 +108,15 @@
   function fieldHtml(field, perUserProps) {
     const desc = descriptionHtml(field);
     const label = field.label ?? "";
-    const perUser = isPerUser(field, perUserProps);
+    const perUser = marksPerUser(field, perUserProps);
     if (field.type === "toggle") {
-      return `<div class="checkboxContainer jea-row${field.main ? " je-main-feature" : ""}${field.rowClass ? " " + field.rowClass : ""}"${attributes(field.rowAttrs)}><label class="jea-toggle"><input id="${field.id}" type="checkbox" class="jea-switch"${attributes(field.attrs)}/><span>${esc(label)}</span>${perUser ? BADGE : ""}</label></div>${desc}`;
+      return `<div class="checkboxContainer jea-row${field.main ? " je-main-feature" : ""}${field.rowClass ? " " + field.rowClass : ""}"${attributes(field.rowAttrs)}><label class="jea-toggle"><input id="${field.id}" type="checkbox" class="jea-switch"${attributes(field.attrs)}/><span class="jea-label">${labelBody(label, perUser)}</span></label></div>${desc}`;
     }
     if (field.type === "position") {
       const cells = ["top-left", "top-right", "bottom-left", "bottom-right"].map((p) => `<button type="button" class="jea-pos-cell" data-pos="${p}" title="${p.replace("-", " ")}" aria-label="${p.replace("-", " ")}"></button>`).join("");
       return `<div class="checkboxContainer jea-row jea-pos-row${field.rowClass ? " " + field.rowClass : ""}"${attributes(field.rowAttrs)}><label class="jea-pos-label" for="${field.id}">${esc(label || "Position")}</label><div class="jea-pos" role="group" aria-label="${esc(label || "Position")}" data-for="${field.id}">${cells}</div><select id="${field.id}" name="${field.id}" hidden${attributes(field.attrs)}>${optionsHtml(field.options)}</select></div>${desc}`;
     }
-    const labelHtml = `<label class="inputLabel" for="${field.id}">${esc(label)}${perUser ? BADGE : ""}</label>`;
+    const labelHtml = `<label class="inputLabel" for="${field.id}">${labelBody(label, perUser)}</label>`;
     let control;
     if (field.type === "select") {
       control = `<select id="${field.id}" name="${field.id}" class="jea-input"${attributes(field.attrs)}>${optionsHtml(field.options)}</select>`;
@@ -169,12 +176,14 @@
   function safeHtml(text) {
     return esc(text ?? "").replace(/&lt;(\/?(?:br|b|strong|em|i|code|ul|li|p))\s*\/?&gt;/gi, "<$1>").replace(/\r?\n/g, "<br>");
   }
+  var dialogCount = 0;
   function dialog({ title, message, confirmLabel, cancelLabel, danger }) {
     return new Promise((resolve) => {
       const previous = document.activeElement;
+      const id = "jea-dialog-" + ++dialogCount;
       const wrap = document.createElement("div");
       wrap.className = "jea-dialog-backdrop";
-      wrap.innerHTML = `<div class="jea-dialog" role="dialog" aria-modal="true" aria-label="${esc(title || "Message")}"><h3 class="jea-dialog-title">${esc(title || "")}</h3><div class="jea-dialog-body">${safeHtml(message)}</div><div class="jea-dialog-actions">${cancelLabel ? `<button type="button" class="jea-btn" data-r="0">${esc(cancelLabel)}</button>` : ""}<button type="button" class="jea-btn ${danger ? "jea-btn-danger" : "jea-btn-primary"}" data-r="1">${esc(confirmLabel || "OK")}</button></div></div>`;
+      wrap.innerHTML = `<div class="jea-dialog" role="${cancelLabel ? "alertdialog" : "dialog"}" aria-modal="true" aria-labelledby="${id}-title" aria-describedby="${id}-body"><h3 class="jea-dialog-title" id="${id}-title">${esc(title || "Message")}</h3><div class="jea-dialog-body" id="${id}-body">${safeHtml(message)}</div><div class="jea-dialog-actions">${cancelLabel ? `<button type="button" class="jea-btn" data-r="0">${esc(cancelLabel)}</button>` : ""}<button type="button" class="jea-btn ${danger ? "jea-btn-danger" : "jea-btn-primary"}" data-r="1">${esc(confirmLabel || "OK")}</button></div></div>`;
       const done = (value) => {
         document.removeEventListener("keydown", onKey, true);
         wrap.remove();
@@ -185,6 +194,20 @@
         if (event.key === "Escape") {
           event.stopPropagation();
           done(false);
+          return;
+        }
+        if (event.key !== "Tab") return;
+        const stops = Array.from(wrap.querySelectorAll("button, a[href], input, select, textarea"));
+        const first = stops[0];
+        const last = stops[stops.length - 1];
+        if (!first || !last) return;
+        const inside = wrap.contains(document.activeElement);
+        if (event.shiftKey && (!inside || document.activeElement === first)) {
+          event.preventDefault();
+          last.focus();
+        } else if (!event.shiftKey && (!inside || document.activeElement === last)) {
+          event.preventDefault();
+          first.focus();
         }
       };
       wrap.addEventListener("click", (event) => {
@@ -195,7 +218,7 @@
       });
       document.addEventListener("keydown", onKey, true);
       (document.getElementById("JellyfinEnhancedPage") || document.body).appendChild(wrap);
-      wrap.querySelector('[data-r="1"]')?.focus();
+      wrap.querySelector(cancelLabel ? '[data-r="0"]' : '[data-r="1"]')?.focus();
     });
   }
   function alertBox(input) {
@@ -296,7 +319,7 @@
   var htmlChildren = (tab) => Array.from(tab.children).filter((c) => c instanceof HTMLElement);
   function unpack(tab) {
     if (!tab.classList.contains("jea-masonry")) return;
-    tab.classList.remove("jea-masonry");
+    tab.classList.remove("jea-masonry", "jea-one-col");
     tab.style.removeProperty("--jea-cols");
     htmlChildren(tab).forEach((element) => {
       element.style.gridColumn = "";
@@ -316,6 +339,7 @@
       tabColumns.set(tab, columns);
     }
     if (!tab.classList.contains("jea-masonry")) tab.classList.add("jea-masonry");
+    tab.classList.toggle("jea-one-col", columns === 1);
     tab.style.setProperty("--jea-cols", String(columns));
     const items = htmlChildren(tab).filter((element) => getComputedStyle(element).display !== "none");
     if (repack) {
@@ -471,12 +495,40 @@
   function showAll(tab) {
     if (!tab) return;
     const button = document.querySelector('.jellyfin-tab-button[data-tab="' + tab.id + '"]');
-    if (button && button.nextElementSibling) button.nextElementSibling.querySelectorAll(".jea-nav-leaf.on").forEach((leaf) => leaf.classList.remove("on"));
+    if (button && button.nextElementSibling) button.nextElementSibling.querySelectorAll(".jea-nav-leaf.on").forEach((leaf) => {
+      leaf.classList.remove("on");
+      leaf.removeAttribute("aria-current");
+    });
+    tab.querySelectorAll(":scope > .jea-crumb").forEach((crumb) => crumb.remove());
     tab.classList.remove("jea-focused");
     setHash("card", null);
     tab.querySelectorAll(":scope > fieldset.jea-focus").forEach((fieldset) => fieldset.classList.remove("jea-focus"));
   }
+  function crumbFor(tab, card, group) {
+    tab.querySelectorAll(":scope > .jea-crumb").forEach((crumb2) => crumb2.remove());
+    const button = document.querySelector('.jellyfin-tab-button[data-tab="' + tab.id + '"]');
+    const crumb = document.createElement("nav");
+    crumb.className = "jea-crumb";
+    crumb.setAttribute("aria-label", "Shown on this tab");
+    const parts = [button ? textOf(button.querySelector(".je-tab-label") ?? button) : tab.id, sectionTitle(card)];
+    if (group) parts.push((group.querySelector(":scope > summary")?.textContent ?? "").trim());
+    const trail = document.createElement("span");
+    trail.className = "jea-crumb-trail";
+    trail.textContent = parts.filter(Boolean).join(" › ");
+    const all = document.createElement("button");
+    all.type = "button";
+    all.className = "jea-btn jea-crumb-all";
+    all.textContent = "Show all";
+    all.addEventListener("click", () => {
+      if (button instanceof HTMLElement) button.click();
+      else showAll(tab);
+      (button instanceof HTMLElement ? button : null)?.focus();
+    });
+    crumb.append(trail, all);
+    tab.prepend(crumb);
+  }
   function focusCard(tab, card, group) {
+    crumbFor(tab, card, group);
     tab.classList.add("jea-focused");
     tab.querySelectorAll(":scope > fieldset").forEach((fieldset) => fieldset.classList.toggle("jea-focus", fieldset === card));
     if (group) {
@@ -509,7 +561,12 @@
         }
       };
       const mark = (leaf, sub) => {
-        tree.querySelectorAll(".jea-nav-leaf").forEach((other) => other.classList.toggle("on", other === leaf || other === sub));
+        tree.querySelectorAll(".jea-nav-leaf").forEach((other) => {
+          const on = other === leaf || other === sub;
+          other.classList.toggle("on", on);
+          if (on && other === (sub ?? leaf)) other.setAttribute("aria-current", "location");
+          else other.removeAttribute("aria-current");
+        });
       };
       cards.forEach((card) => {
         const link = document.createElement("a");
@@ -577,7 +634,8 @@
     toggle.type = "button";
     toggle.className = "jea-nav-toggle";
     toggle.setAttribute("aria-expanded", "false");
-    toggle.innerHTML = '<i class="material-icons" aria-hidden="true">menu</i><span class="jea-nav-current"></span>';
+    toggle.setAttribute("aria-haspopup", "dialog");
+    toggle.innerHTML = '<span class="jea-nav-kicker">Section</span><span class="jea-nav-current"></span><i class="material-icons jea-nav-chev" aria-hidden="true">unfold_more</i>';
     const main = document.createElement("div");
     main.className = "jea-main";
     const version = document.querySelector('script[plugin="Jellyfin Enhanced"]')?.getAttribute("version");
@@ -614,7 +672,7 @@
     nav.appendChild(backdrop);
     const head = document.createElement("div");
     head.className = "jea-drawer-head";
-    head.innerHTML = '<span>Settings</span><button type="button" class="jea-drawer-close" aria-label="Close menu"><i class="material-icons" aria-hidden="true">close</i></button>';
+    head.innerHTML = '<span>Settings sections</span><button type="button" class="jea-drawer-close" aria-label="Close sections"><i class="material-icons" aria-hidden="true">close</i></button>';
     bar.prepend(head);
     const locked = [];
     const scrollParent = () => {
@@ -636,24 +694,65 @@
         for (let entry = locked.pop(); entry; entry = locked.pop()) entry.element.style.overflow = entry.previous;
       }
     };
-    const setOpen = (open) => {
+    const inertTargets = () => [main, header instanceof HTMLElement ? header : null].filter((el) => !!el);
+    const setOpen = (open, restoreFocus = true) => {
+      const was = nav.classList.contains("jea-open");
       nav.classList.toggle("jea-open", open);
       toggle.setAttribute("aria-expanded", String(open));
+      if (open) bar.setAttribute("role", "dialog");
+      else bar.removeAttribute("role");
+      if (open) bar.setAttribute("aria-modal", "true");
+      else bar.removeAttribute("aria-modal");
+      if (open) bar.setAttribute("aria-label", "Settings sections");
+      else bar.removeAttribute("aria-label");
+      inertTargets().forEach((el) => {
+        el.inert = open;
+      });
       lock(open);
+      if (open && !was) (bar.querySelector(".jellyfin-tab-button.active") ?? head.querySelector(".jea-drawer-close"))?.focus();
+      if (!open && was && restoreFocus) toggle.focus();
     };
-    lifecycle.onDispose(() => lock(false));
+    bar.addEventListener("keydown", (event) => {
+      if (event.key !== "Tab" || !nav.classList.contains("jea-open")) return;
+      const stops = Array.from(bar.querySelectorAll("button, a[href]")).filter((el) => el.getClientRects().length > 0);
+      const first = stops[0];
+      const last = stops[stops.length - 1];
+      if (!first || !last) return;
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      }
+    }, { signal });
+    lifecycle.onDispose(() => {
+      lock(false);
+      inertTargets().forEach((el) => {
+        el.inert = false;
+      });
+    });
     backdrop.addEventListener("click", () => setOpen(false), { signal });
     head.querySelector(".jea-drawer-close")?.addEventListener("click", () => setOpen(false), { signal });
     document.addEventListener("keydown", (event) => {
       if (event.key === "Escape" && nav.classList.contains("jea-open")) setOpen(false);
     }, { signal });
     window.addEventListener("resize", () => {
-      if (window.innerWidth > 900 && nav.classList.contains("jea-open")) setOpen(false);
+      if (nav.classList.contains("jea-open") && getComputedStyle(toggle).display === "none") setOpen(false, false);
     }, { signal });
+    const cue = () => {
+      nav.classList.toggle("jea-more-below", nav.scrollHeight - nav.scrollTop - nav.clientHeight > 2);
+      nav.classList.toggle("jea-more-above", nav.scrollTop > 2);
+    };
+    nav.addEventListener("scroll", cue, { passive: true, signal });
+    window.addEventListener("resize", cue, { signal });
+    if (typeof ResizeObserver !== "undefined") lifecycle.track(new ResizeObserver(cue)).observe(bar);
+    lifecycle.timeout(cue, 0);
     const label = () => {
-      const active = bar.querySelector(".jellyfin-tab-button.active h3");
+      const active = bar.querySelector(".jellyfin-tab-button.active .je-tab-label");
       const current = toggle.querySelector(".jea-nav-current");
       if (current) current.textContent = active ? textOf(active) : "Settings";
+      toggle.setAttribute("aria-label", "Settings sections, showing " + (active ? textOf(active) : "Settings"));
     };
     label();
     lifecycle.track(new MutationObserver(label)).observe(bar, { subtree: true, attributes: true, attributeFilter: ["class"] });
@@ -664,12 +763,13 @@
         label();
         setOpen(false);
         syncMirrors();
+        cue();
       }, 0);
     }, { signal });
   }
 
   // client/src/admin/config/engine/index.ts
-  var ANALYTICS_BADGE = '<a class="material-icons jea-badge jea-analytics" href="#/configurationpage?name=Jellyfin%20Enhanced&tab=admin&card=usage-statistics" aria-label="Shared in Analytics if opted in" title="Shared in Analytics if opted in">insights</a>';
+  var ANALYTICS_BADGE = '<span class="jea-analytics" aria-hidden="true" title="Included in the usage statistics you share"></span>';
   function controlOf(id) {
     const element = document.getElementById(id);
     return element instanceof HTMLInputElement || element instanceof HTMLSelectElement || element instanceof HTMLTextAreaElement ? element : null;
@@ -734,6 +834,8 @@
     }
     function refresh() {
       syncMirrors();
+      const stats = controlOf("analyticsEnabled");
+      document.getElementById("JellyfinEnhancedPage")?.classList.toggle("jea-stats-on", !!stats && isChecked(stats));
       syncCollapse();
       syncPos();
       syncShowIf();
@@ -869,11 +971,13 @@
       // The list comes from the server's own reporting rules, so nothing here names a setting by hand.
       markAnalytics(properties) {
         const reported = new Set(properties);
-        allFields(sections).filter((field) => field.id && reported.has(propOf(field))).forEach((field) => {
+        allFields(sections).filter((field) => field.id && reported.has(field.markOf?.prop ?? propOf(field))).forEach((field) => {
           const control = document.getElementById(field.id);
           const label = control && (control.closest("label") ?? document.querySelector('label[for="' + field.id + '"]'));
-          if (label && !label.querySelector(".jea-analytics")) label.insertAdjacentHTML("beforeend", ANALYTICS_BADGE);
+          const marks = label?.querySelector(".jea-marks") ?? label;
+          if (marks && !marks.querySelector(".jea-analytics")) marks.insertAdjacentHTML("beforeend", ANALYTICS_BADGE);
         });
+        refresh();
       }
     };
     return engine2;

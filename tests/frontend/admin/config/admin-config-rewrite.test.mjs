@@ -1006,8 +1006,8 @@ test('without a TMDB key, Seerr unlocks Elsewhere and the poster icons; per-seas
   assert.deepEqual(depHint(h, 'showElsewhereOnJellyseerr'), { disabled: false, hint: null });
   assert.deepEqual(depHint(h, 'ElsewhereUseSeerrRegion'), { disabled: false, hint: null });
   assert.deepEqual(depHint(h, 'ElsewhereSeasonProviders'), { disabled: true, hint: 'Add a TMDB API Key to enable' });
-  // Under Default Region (the TMDB section and its mirror on the services tab) and at the top of Elsewhere.
-  assert.deepEqual(regionNotes(h), ['flex', 'flex', 'flex'], 'every note says providers come from Seerr');
+  // Under Default Region, in the TMDB section and its mirror on the services tab (the Elsewhere card no longer repeats it).
+  assert.deepEqual(regionNotes(h), ['flex', 'flex'], 'every note says providers come from Seerr');
   assert.doesNotMatch(elsewhereCard(h), /missing|neither/i);
 });
 test('with neither a TMDB key nor Seerr, Elsewhere asks for one of them and the Seerr region asks for Seerr', async t => {
@@ -1016,13 +1016,13 @@ test('with neither a TMDB key nor Seerr, Elsewhere asks for one of them and the 
   assert.deepEqual(depHint(h, 'elsewhereEnabled'), { disabled: true, hint: 'Add a TMDB API Key or enable Seerr to use' });
   assert.deepEqual(depHint(h, 'showElsewhereOnJellyseerr'), { disabled: true, hint: 'Add a TMDB API Key or enable Seerr to use' });
   assert.deepEqual(depHint(h, 'ElsewhereUseSeerrRegion'), { disabled: true, hint: 'Enable Seerr to use' });
-  assert.deepEqual(regionNotes(h), ['none', 'none', 'none']);
+  assert.deepEqual(regionNotes(h), ['none', 'none']);
   assert.match(elsewhereCard(h), /Enabled but neither a TMDB API key nor Seerr is configured/);
   // A TMDB key alone: everything TMDB-backed unlocks and the notes stay hidden.
   const k = boot(t, { saved: { ...SEERR, TMDB_API_KEY: 'key', ElsewhereEnabled: true } });
   await k.ready(); k.show(); await settle(k.window);
   assert.deepEqual(depHint(k, 'ElsewhereSeasonProviders'), { disabled: false, hint: null });
-  assert.deepEqual(regionNotes(k), ['none', 'none', 'none']);
+  assert.deepEqual(regionNotes(k), ['none', 'none']);
 });
 test('the Seerr region switch is off by default, saved with the form, and announced as new', async t => {
   const h = boot(t, { saved: { ...SEERR, TMDB_API_KEY: 'key', ElsewhereEnabled: true } });

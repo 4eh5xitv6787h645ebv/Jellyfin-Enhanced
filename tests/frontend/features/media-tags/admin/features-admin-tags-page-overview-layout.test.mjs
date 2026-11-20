@@ -312,7 +312,9 @@ test('What\'s New on the main page lists new Media Tags settings with a link to 
   page.show();
   await settle(page.window, 100);
   const chips = [...page.document.querySelectorAll('.je-whats-new-chip')];
-  assert.deepEqual(chips.map(chip => chip.textContent).sort(), ['Display > UI Preferences', 'Media Tags > Groups › Rating', 'Media Tags > Layout defaults'].sort());
+  // Grouped under their tab, so a chip shows its own title; its name keeps the tab, with one separator style.
+  assert.deepEqual(chips.map(chip => chip.getAttribute('aria-label')).sort(), ['Display › UI Preferences', 'Media Tags › Groups › Rating', 'Media Tags › Layout defaults'].sort());
+  assert.deepEqual([...page.document.querySelectorAll('.je-whats-new-tab')].map(title => title.textContent), ['Display', 'Media Tags'], 'tabs in sidebar order');
   assert.equal(page.document.querySelector('#media-tags .je-new-badge'), null, 'the tab keeps no badge of the main page');
   assert.ok(page.document.getElementById('showFileSizes').closest('fieldset').querySelector('.je-new-badge'), 'a main-page setting keeps its badge');
   // Following the chip's link would fire hashchange and add a history entry. The page opens the tab in place instead,

@@ -29,6 +29,45 @@ export function createSearch(m: SearchDeps) {
 
             let searchDebounce: ReturnType<typeof setTimeout> | undefined;
 
+            /** What the form's search found (sections, highlighted matches) and what the Media Tags list found. */
+            let formSections = 0;
+            let mediaTagsHits = 0;
+
+            /**
+             * The counter reads as a result count while typing ("8 matches") and as a position once the administrator
+             * steps through with Enter ("3 of 8"); Media Tags hits, listed apart, are counted too.
+             */
+            function showCount() : void {
+                const parts: string[] = [];
+                if (allMatches.length > 0) parts.push(currentMatchIdx >= 0 ? (currentMatchIdx + 1) + ' of ' + allMatches.length : allMatches.length + (allMatches.length === 1 ? ' match' : ' matches'));
+                else if (formSections > 0) parts.push(formSections + (formSections === 1 ? ' section' : ' sections'));
+                if (mediaTagsHits > 0) parts.push(mediaTagsHits + ' in Media Tags');
+                searchCount.textContent = parts.length ? parts.join(' \u00b7 ') : 'No results';
+                showEmpty(!parts.length);
+            }
+
+            /** With nothing found, the content area says so instead of going blank. */
+            function showEmpty(empty: boolean) : void {
+                let box = asHtml(form.querySelector(':scope > .je-search-empty'));
+                if (!empty || !isSearchMode) { if (box) box.remove(); return; }
+                if (!box) {
+                    box = document.createElement('div');
+                    box.className = 'je-search-empty';
+                    box.setAttribute('role', 'status');
+                    form.prepend(box);
+                }
+                box.textContent = '';
+                const icon = document.createElement('i');
+                icon.className = 'material-icons';
+                icon.setAttribute('aria-hidden', 'true');
+                icon.textContent = 'search_off';
+                const line = document.createElement('strong');
+                line.textContent = 'No settings match \u201c' + searchInput.value.trim() + '\u201d';
+                const hint = document.createElement('span');
+                hint.textContent = 'Try a shorter word, or the name of a tab.';
+                box.append(icon, line, hint);
+            }
+
             /**
              * Collects searchable text from an element, including IDs, names, and data attributes.
              * @param {HTMLElement} element - The DOM element to extract text from
@@ -171,7 +210,7 @@ export function createSearch(m: SearchDeps) {
                 const match = allMatches[currentMatchIdx];
                 match?.classList.add('je-search-match-active');
                 match?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                searchCount.textContent = (currentMatchIdx + 1) + ' of ' + allMatches.length;
+                showCount();
             }
 
             /**
@@ -239,6 +278,7 @@ export function createSearch(m: SearchDeps) {
                 m.tabs.activateTab(savedTab);
                 searchCount.style.display = 'none';
                 searchClear.style.display = 'none';
+                showEmpty(false);
                 const mtBox = asHtml(document.getElementById('jeMtSearchResults'));
                 if (mtBox) mtBox.hidden = true;
             }
@@ -325,14 +365,10 @@ export function createSearch(m: SearchDeps) {
 
                 allMatches = Array.from(form.querySelectorAll<HTMLElement>('.je-search-match'));
                 currentMatchIdx = -1;
-
-                if (allMatches.length > 0) {
-                    searchCount.textContent = '0 of ' + allMatches.length;
-                } else {
-                    searchCount.textContent = sectionCount > 0
-                        ? sectionCount + ' section' + (sectionCount !== 1 ? 's' : '') + ' found'
-                        : 'No results';
-                }
+                formSections = sectionCount;
+                // Media Tags results arrive a moment later; until then the count covers the form.
+                mediaTagsHits = 0;
+                showCount();
                 searchCount.style.display = 'block';
                 searchClear.style.display = 'block';
                 searchMediaTags(query);
@@ -374,6 +410,8 @@ export function createSearch(m: SearchDeps) {
                         });
                     });
                     box.textContent = '';
+                    mediaTagsHits = Math.min(hits.length, 40);
+                    showCount();
                     if (!hits.length) { box.hidden = true; return; }
                     const head = document.createElement('div');
                     head.className = 'je-search-tab-label';
@@ -407,7 +445,6 @@ export function createSearch(m: SearchDeps) {
                         box.appendChild(b);
                     });
                     box.hidden = false;
-                    if (searchCount.textContent === 'No results') searchCount.textContent = hits.length + ' in Media Tags';
                 });
             }
 

@@ -9,8 +9,7 @@ export function definePages(define: DefineSections): void {
  * saved by configPage.html's hand-written code (Custom Tabs sync, plugin detection, v12 hints), so they are not schema fields. */
     const PP = 'https://github.com/IAmParadox27/jellyfin-plugin-pages';
     const CT = 'https://github.com/IAmParadox27/jellyfin-plugin-custom-tabs';
-    const ppLink = `<a class="sectionTitle" href="${PP}" target="_blank">Plugin Pages</a>`;
-    const PP_NOTE = '<strong>Note:</strong> Plugin Pages 3.0 or newer applies this without a Jellyfin restart. Older versions need one after enabling this option for the first time.';
+    const ppLink = `<a class="sectionTitle" href="${PP}" target="_blank" rel="noopener noreferrer">Plugin Pages<i class="material-icons je-link-ext" aria-hidden="true">open_in_new</i></a>`;
     const PP_BADGE = '<span class="je-installed-badge" data-plugin="pluginpages"><i class="material-icons" aria-hidden="true">check_circle</i>Plugin Pages detected</span>';
     const CT_BADGE = '<span class="je-installed-badge" data-plugin="customtabs"><i class="material-icons" aria-hidden="true">check_circle</i>Custom Tabs detected</span>';
     const escAttr = (s: string): string => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
@@ -21,46 +20,46 @@ export function definePages(define: DefineSections): void {
         const gate = `${o.p}UseCustomTabs,${o.en}`;
         const guide = `<details class="jea-howto"><summary>Custom Tabs setup guide ${CT_BADGE}</summary>`
             + `<p class="fieldDescription">Display the ${o.noun} in a Custom Tabs tab instead of the sidebar link.</p>`
-            + `<p class="fieldDescription je-needs-customtabs">You need the <a class="sectionTitle" href="${CT}" target="_blank">Custom Tabs</a> plugin.</p>`
+            + `<p class="fieldDescription je-needs-customtabs">You need the <a class="sectionTitle" href="${CT}" target="_blank" rel="noopener noreferrer">Custom Tabs<i class="material-icons je-link-ext" aria-hidden="true">open_in_new</i></a> plugin.</p>`
             + `<ol class="fieldDescription">`
             + `<li class="je-needs-customtabs">Install the <strong>Custom Tabs</strong> plugin and all its prerequisites.</li>`
-            + `<li>Navigate to Dashboard &gt; Plugins &gt; Custom Tabs and add a new tab.</li>`
-            + `<li>Add "Display Text" according to your preference (e.g., "${o.text}").</li>`
-            + `<li>Copy the code below and paste it into the 'HTML Content' field.</li></ol>`
+            + `<li>Open Dashboard &gt; Plugins &gt; Custom Tabs and add a tab.</li>`
+            + `<li>Set its Display Text, for example "${o.text}".</li>`
+            + `<li>Copy the code below into its HTML Content field.</li></ol>`
             + `<div class="je-copy-code-wrapper"><button class="je-copy-html-btn jea-btn" data-copy-text='${escAttr(code)}' type="button">`
-            + `<i class="material-icons je-copy-icon">content_copy</i><span class="copy-btn-text je-copy-btn-text">Copy</span></button>`
+            + `<i class="material-icons je-copy-icon" aria-hidden="true">content_copy</i><span class="copy-btn-text je-copy-btn-text">Copy</span></button>`
             + `<pre class="je-code-pre"><code>${escAttr(code)}</code></pre></div>`
-            + `<div class="fieldDescription">Already have Custom Tabs installed? <a class="sectionTitle je-custom-tabs-link" href="#/configurationpage?name=Custom%20Tabs">Click here to configure it.</a></div>`
+            + `<div class="fieldDescription">Custom Tabs already installed? <a class="sectionTitle je-custom-tabs-link" href="#/configurationpage?name=Custom%20Tabs">Open its settings<i class="material-icons je-link-arrow" aria-hidden="true">arrow_forward</i></a></div>`
             + `</details>`;
         // Placement toggles are rendered here but loaded and saved by configPage.html (Custom Tabs sync, plugin detection, v12 hints).
         return {
-            type: 'group', title: 'Where it appears', open: true, items: [
-                { id: `${o.p}UseNativeTab`, type: 'toggle', manual: true, label: `Add ${o.name} as a native Home tab`,
-                  desc: `Adds ${o.name} as its own tab on the Home page, no external plugin needed.<br/><strong>Recommended on Jellyfin 12's experimental layout</strong> (the default).` },
-                { id: `${o.p}UsePluginPages`, type: 'toggle', manual: true, label: o.ppLabel, desc: `${o.ppIntro}<br/>${PP_NOTE} ${PP_BADGE}` },
+            type: 'group', title: 'Where it appears', items: [
+                { id: `${o.p}UseNativeTab`, type: 'toggle', manual: true, label: 'Use a native Home tab',
+                  desc: `Adds ${o.name} as its own tab on the Home page. No other plugin needed.` },
+                { id: `${o.p}UsePluginPages`, type: 'toggle', manual: true, label: o.ppLabel, desc: `${o.ppIntro} ${PP_BADGE}` },
                 { id: `${o.p}UseCustomTabs`, type: 'toggle', manual: true, label: o.ctLabel, desc: guide },
-                { type: 'html', html: `<div class="je-note-banner je-v12-tab-hint-banner" id="je-v12-hint-${o.hint}" style="display:none;"><i class="material-icons je-note-icon">info</i>`
-                    + `<div>On Jellyfin 12, <strong>"Add ${o.name} as a native Home tab"</strong> is more reliable than Custom Tabs. The two cannot be enabled together.</div></div>` },
+                { type: 'html', html: `<div class="je-note-banner je-v12-tab-hint-banner" id="je-v12-hint-${o.hint}" style="display:none;"><i class="material-icons je-note-icon" aria-hidden="true">info</i>`
+                    + `<div>On Jellyfin 12, <strong>"Use a native Home tab"</strong> is more reliable than Custom Tabs. Only one of the two can be on.</div></div>` },
                 { id: `${o.p}AutoCreateCustomTab`, type: 'toggle', manual: true, label: 'Add the Custom Tabs entry for me',
                   rowClass: 'je-customtabs-automanage', rowAttrs: { 'data-gated-by': gate }, descAttrs: { 'data-gated-by': gate },
-                  desc: `Jellyfin Enhanced will create the matching Custom Tabs entry on save. Turning off "${o.ctLabel}" removes the entry; turning it back on re-creates it. Leave unchecked to manage the Custom Tabs entry yourself.` }
+                  desc: `Jellyfin Enhanced will create the matching Custom Tabs entry on save. Turning off "${o.ctLabel}" removes the entry; turning it back on re-creates it. Leave it off to manage the Custom Tabs entry yourself.` }
             ]
         };
     }
 
-    const note = (html: string, icon?: string): NoteItem => ({ type: 'note', html: icon ? `<i class="material-icons je-info-icon">${icon}</i> ` + html : html });
+    const note = (html: string, icon?: string): NoteItem => ({ type: 'note', html: icon ? `<i class="material-icons je-info-icon" aria-hidden="true">${icon}</i> ` + html : html });
     const T = (id: string, prop: string, label: string, desc?: string, extra?: Partial<ToggleField>): ToggleField => ({ id, prop, type: 'toggle', label, ...(desc === undefined ? {} : { desc }), ...extra });
-    const HC_DEFAULT = (id: string, label: string, desc: string, on?: boolean): ToggleField => T(id, id.charAt(0).toUpperCase() + id.slice(1), label, desc, on ? { default: true } : {});
+    const HC_DEFAULT = (id: string, label: string, desc: string, on?: boolean, descClass?: string): ToggleField => T(id, id.charAt(0).toUpperCase() + id.slice(1), label, desc, { ...(on ? { default: true } : {}), ...(descClass ? { descClass } : {}) });
 
     define({
         'pages-bookmarks': {
             title: 'Bookmarks', icon: 'bookmark',
             items: [
                 note('<strong>How to use:</strong> press <kbd class="je-kbd">B</kbd> or click the bookmark icon during playback to save the current time. Bookmarks show as pins on the progress bar (click one to jump there) and track by TMDB/TVDB ids, so they work across file versions of the same content.'),
-                T('bookmarksEnabled', 'BookmarksEnabled', 'Enable Bookmarks Feature',
-                    'Save custom bookmarks/timestamps while watching videos to quickly jump back to your favorite scenes or moments.', { main: true, default: true }),
-                placement({ p: 'bookmarks', en: 'bookmarksEnabled', name: 'Bookmarks', ppLabel: 'Use Plugin Pages for Bookmarks Library',
-                    ppIntro: `Adds a "Bookmarks" link via ${ppLink}.`, ctLabel: 'Use Custom Tabs for Bookmarks', noun: 'Bookmarks library',
+                T('bookmarksEnabled', 'BookmarksEnabled', 'Enable bookmarks',
+                    'Lets users save timestamps while watching, to jump back to a scene later.', { main: true, default: true }),
+                placement({ p: 'bookmarks', en: 'bookmarksEnabled', name: 'Bookmarks', ppLabel: 'Use Plugin Pages',
+                    ppIntro: `Adds a "Bookmarks" link via ${ppLink}.`, ctLabel: 'Use Custom Tabs', noun: 'Bookmarks library',
                     hint: 'bookmarks', cls: 'sections bookmarks', text: 'Bookmarks' })
             ]
         },
@@ -69,9 +68,9 @@ export function definePages(define: DefineSections): void {
             items: [
                 note('<strong>Hidden Content</strong> lets users hide individual items from Home and Library views and browse them from a dedicated Hidden Content page. Per-user state with a server-wide enable/disable kill switch.'),
                 T('hiddenContentEnabled', 'HiddenContentEnabled', 'Enable Hidden Content',
-                    'Enable or disable the Hidden Content feature server-wide. When disabled, hide buttons, filtering, sidebar navigation, and settings panel options are all removed. User data is preserved and restored when re-enabled.', { main: true }),
-                placement({ p: 'hiddenContent', en: 'hiddenContentEnabled', name: 'Hidden Content', ppLabel: 'Use Plugin Pages for Hidden Content',
-                    ppIntro: `Replaces the default Hidden Content page with a ${ppLink} implementation.`, ctLabel: 'Use Custom Tabs for Hidden Content',
+                    'Turns Hidden Content on or off for the whole server. When disabled, hide buttons, filtering, sidebar navigation, and settings panel options are all removed. User data is preserved and restored when re-enabled.', { main: true }),
+                placement({ p: 'hiddenContent', en: 'hiddenContentEnabled', name: 'Hidden Content', ppLabel: 'Use Plugin Pages',
+                    ppIntro: `Replaces the default Hidden Content page with a ${ppLink} implementation.`, ctLabel: 'Use Custom Tabs',
                     noun: 'Hidden Content page', hint: 'hiddenContent', cls: 'jellyfinenhanced hidden-content', text: 'Hidden Content' }),
                 T('hiddenContentAdmin', 'HiddenContentAdmin', 'Let admins view and manage other users\' hidden content',
                     'Adds a "user filter" dropdown on the Hidden Content page so an admin can see what any user has hidden, with an Edit toggle to unhide items or add new ones from the library or Seerr on that user\'s behalf. Turn this off if you don\'t want to edit/manage other users\' hidden content.', { default: true }),
@@ -98,17 +97,17 @@ export function definePages(define: DefineSections): void {
                         },
                         {
                             type: 'group', title: 'Where hidden items are filtered out', open: true, items: [
-                                HC_DEFAULT('hiddenContentDefaultFilterLibrary', 'Filter Library & details pages',
+                                HC_DEFAULT('hiddenContentDefaultFilterLibrary', 'Filter library and details pages',
                                     'When on, hidden items don\'t appear when users browse a library (Movies, Shows, etc.) or in the suggestion rows on a details page. Turn off if users still want to see hidden items while browsing.', true),
-                                HC_DEFAULT('hiddenContentDefaultFilterSearch', 'Filter Search results',
+                                HC_DEFAULT('hiddenContentDefaultFilterSearch', 'Filter search results',
                                     'When on, hidden items don\'t appear in search results. Off by default because most people still want to be able to search for something they hid in order to bring it back.', false),
                                 HC_DEFAULT('hiddenContentDefaultFilterContinueWatching', 'Filter Continue Watching',
                                     'When on, hidden items don\'t appear in the Continue Watching row on the home page. Required for the "Remove from Continue Watching" button to actually do anything.', true),
                                 HC_DEFAULT('hiddenContentDefaultFilterNextUp', 'Filter Next Up',
                                     'When on, hidden series don\'t appear in the Next Up row on the home page. Recommended on so a show users have hidden doesn\'t keep being suggested as the next thing to watch.', true),
-                                HC_DEFAULT('hiddenContentDefaultFilterUpcoming', 'Filter Upcoming episodes',
+                                HC_DEFAULT('hiddenContentDefaultFilterUpcoming', 'Filter upcoming episodes',
                                     'When on, hidden series don\'t appear on the Upcoming Episodes page.', true),
-                                HC_DEFAULT('hiddenContentDefaultFilterRecommendations', 'Filter Suggestions / recommendations',
+                                HC_DEFAULT('hiddenContentDefaultFilterRecommendations', 'Filter suggestions and recommendations',
                                     'When on, hidden items don\'t appear in the "Because you watched..." and "Suggested for you" rows on the home and details pages.', true),
                                 HC_DEFAULT('hiddenContentDefaultFilterDiscovery', 'Filter Discovery',
                                     'When on, hidden items don\'t appear on the Discovery page (genre, similar, and recommended sections).', true),
@@ -119,7 +118,7 @@ export function definePages(define: DefineSections): void {
                             ]
                         },
                         HC_DEFAULT('hiddenContentDefaultExperimentalHideCollections', 'Allow hiding collections, libraries, and playlists (experimental)',
-                            '<strong>Warning:</strong> Extremely not recommended for average users. Will break things. Only turn this on if you 100% know what you want to use it for. Lets users hide whole collections, libraries, or playlists in addition to individual movies and shows.', false)
+                            '<strong>Warning:</strong> not for general use; it breaks things. Turn it on only if you know exactly why you need it. Lets users hide whole collections, libraries or playlists as well as individual movies and shows.', false, 'je-desc-keep')
                     ]
                 }
             ]
@@ -129,24 +128,24 @@ export function definePages(define: DefineSections): void {
             items: [
                 note('<strong>Requests Page</strong> shows a Requests button in the sidebar with a dedicated view of active downloads from Sonarr/Radarr and requests from Seerr.'
                     + '<div id="requestsPageRequirementsLine" style="display: none; margin-top: 10px;"><strong>Requirements:</strong> <span id="requestsPageRequirementsList">Configure Sonarr and/or Radarr, plus Seerr, URLs and API keys.</span></div>'),
-                T('downloadsPageEnabled', 'DownloadsPageEnabled', 'Enable Requests Page',
+                T('downloadsPageEnabled', 'DownloadsPageEnabled', 'Enable the Requests page',
                     'Adds a "Requests" link to the navigation showing active downloads and requests.', { main: true, default: true }),
-                placement({ p: 'downloads', en: 'downloadsPageEnabled', name: 'Requests', ppLabel: 'Use Plugin Pages for Requests',
-                    ppIntro: `Replaces the default Requests page with a ${ppLink} implementation.`, ctLabel: 'Use Custom Tabs for Requests',
+                placement({ p: 'downloads', en: 'downloadsPageEnabled', name: 'Requests', ppLabel: 'Use Plugin Pages',
+                    ppIntro: `Replaces the default Requests page with a ${ppLink} implementation.`, ctLabel: 'Use Custom Tabs',
                     noun: 'Requests page', hint: 'downloads', cls: 'jellyfinenhanced requests', text: 'Requests' }),
-                T('showDownloadsInRequests', 'ShowDownloadsInRequests', 'Show Downloads in Requests Page',
-                    'Shows active downloads from Sonarr/Radarr on the Requests page. (Requires *arr links and API keys to be configured)', { default: true }),
-                T('downloadsFilterByUserRequests', 'DownloadsFilterByUserRequests', 'Filter Downloads by User Requests',
+                T('showDownloadsInRequests', 'ShowDownloadsInRequests', 'Show downloads on the Requests page',
+                    'Shows active Sonarr and Radarr downloads on the Requests page. Needs Sonarr or Radarr set up on the *arr tab.', { default: true }),
+                T('downloadsFilterByUserRequests', 'DownloadsFilterByUserRequests', 'Show users only their own requests',
                     'When enabled, non-admin users only see downloads and requests they made themselves, regardless of their Seerr permissions. When disabled, all authenticated users can see every item in the download queue, and the request list follows each user\'s Seerr permissions.',
                     { default: true, showIf: 'showDownloadsInRequests' }),
-                T('downloadsPageShowIssues', 'DownloadsPageShowIssues', 'Show Seerr Issues Section', 'Shows open/resolved Seerr issues beneath Requests.'),
-                T('downloadsShowHistory', 'DownloadsShowHistory', 'Show Download History Section',
+                T('downloadsPageShowIssues', 'DownloadsPageShowIssues', 'Show the Seerr issues section', 'Shows open/resolved Seerr issues beneath Requests.'),
+                T('downloadsShowHistory', 'DownloadsShowHistory', 'Show the download history section',
                     'Shows a bounded history of recently imported (or failed-to-import) Sonarr/Radarr downloads beneath Requests, so items that vanish from the active queue after finishing are still visible.', { default: true }),
-                T('downloadsHistoryAdminOnly', 'DownloadsHistoryAdminOnly', 'Restrict Download History to Admins',
+                T('downloadsHistoryAdminOnly', 'DownloadsHistoryAdminOnly', 'Show download history to administrators only',
                     'When enabled, only Jellyfin administrators see the Download History section. Regular users won\'t see it at all.', { showIf: 'downloadsShowHistory' }),
-                T('downloadsPagePollingEnabled', 'DownloadsPagePollingEnabled', 'Enable Auto-Refresh',
+                T('downloadsPagePollingEnabled', 'DownloadsPagePollingEnabled', 'Refresh automatically',
                     'Periodically refresh the Requests page so download progress updates without manual reload.', { default: true }),
-                { id: 'downloadsPollIntervalSeconds', prop: 'DownloadsPollIntervalSeconds', type: 'number', min: 30, max: 300, default: 30, label: 'Poll Interval (seconds)',
+                { id: 'downloadsPollIntervalSeconds', prop: 'DownloadsPollIntervalSeconds', type: 'number', min: 30, max: 300, default: 30, label: 'Refresh every (seconds)',
                   desc: 'How often to refresh download status automatically. Minimum is 30 seconds and applies only when auto-refresh is enabled.',
                   showIf: 'downloadsPagePollingEnabled',
                   toConfig: (v) => { const n = Math.floor(Number(v)); return n >= 30 ? n : 30; } }
@@ -155,25 +154,25 @@ export function definePages(define: DefineSections): void {
         'pages-calendar': {
             title: 'Calendar Page', icon: 'calendar_today',
             items: [
-                note('<strong>Calendar Page</strong> adds a Calendar button in the sidebar with a dedicated view of upcoming releases from Sonarr and Radarr.<br/><strong>Requirements:</strong> Configure Sonarr and/or Radarr URLs and API keys.'),
-                T('calendarPageEnabled', 'CalendarPageEnabled', 'Enable Calendar Page',
-                    'Adds a "Calendar" link to the navigation showing upcoming releases from Sonarr/Radarr.', { main: true, default: true }),
+                note('<strong>Calendar Page</strong> adds a Calendar button in the sidebar with a dedicated view of upcoming releases from Sonarr, Radarr and Shoko.<br/><strong>Requirements:</strong> at least one of them set up on the *arr tab.'),
+                T('calendarPageEnabled', 'CalendarPageEnabled', 'Enable the Calendar page',
+                    'Adds a "Calendar" link to the navigation showing upcoming releases.', { main: true, default: true }),
                 placement({ p: 'calendar', en: 'calendarPageEnabled', name: 'Calendar', ppLabel: 'Use Plugin Pages',
                     ppIntro: `Replaces the default Calendar page with a ${ppLink} implementation.`, ctLabel: 'Use Custom Tabs',
                     noun: 'Calendar page', hint: 'calendar', cls: 'jellyfinenhanced calendar', text: 'Calendar' }),
-                { id: 'calendarFirstDayOfWeek', prop: 'CalendarFirstDayOfWeek', type: 'select', default: 'Monday', label: 'First Day of Week',
+                { id: 'calendarFirstDayOfWeek', prop: 'CalendarFirstDayOfWeek', type: 'select', default: 'Monday', label: 'First day of the week',
                   options: ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'].map((d) => [d, d]),
                   desc: 'Which day appears as the first column of the calendar grid.' },
-                { id: 'calendarTimeFormat', prop: 'CalendarTimeFormat', type: 'select', default: '5pm/5:30pm', label: 'Time Format',
+                { id: 'calendarTimeFormat', prop: 'CalendarTimeFormat', type: 'select', default: '5pm/5:30pm', label: 'Time format',
                   options: [['5pm/5:30pm', '5pm/5:30pm'], ['17:00/17:30', '17:00/17:30']],
                   desc: 'Whether release times display in 12-hour (5pm) or 24-hour (17:00) format.' },
-                T('calendarHighlightFavorites', 'CalendarHighlightFavorites', 'Highlight Favorites/Watchlist', 'Show a golden border on calendar entries for items in your Jellyfin favorites.'),
-                T('calendarHighlightWatchedSeries', 'CalendarHighlightWatchedSeries', 'Highlight Watched Series', 'Show a border on calendar entries for series you have watched episodes from.'),
-                T('calendarFilterByLibraryAccess', 'CalendarFilterByLibraryAccess', 'Filter by Library Access',
+                T('calendarHighlightFavorites', 'CalendarHighlightFavorites', 'Highlight Favorites', 'Shows a gold border on entries the user has marked as a Jellyfin Favorite (the calendar\'s legend calls them Watchlist).'),
+                T('calendarHighlightWatchedSeries', 'CalendarHighlightWatchedSeries', 'Highlight watched series', 'Shows a border on entries for series the user has watched episodes of.'),
+                T('calendarFilterByLibraryAccess', 'CalendarFilterByLibraryAccess', 'Filter by library access',
                     'When enabled, the calendar only shows items from libraries the user has access to. Upcoming items not yet in Jellyfin are filtered based on their Sonarr/Radarr root folder.', { default: true }),
-                T('calendarShowOnlyRequested', 'CalendarShowOnlyRequested', 'Show Requested Only (Default)',
+                T('calendarShowOnlyRequested', 'CalendarShowOnlyRequested', 'Start with requested items only',
                     'When enabled, the calendar will load showing only Requested items by default, but users can still change filters.'),
-                T('calendarForceOnlyRequested', 'CalendarForceOnlyRequested', 'Force Only Requested Items',
+                T('calendarForceOnlyRequested', 'CalendarForceOnlyRequested', 'Always show requested items only',
                     'When enabled, the calendar always shows only your requested items and the Requests filter is hidden.')
             ]
         },
@@ -181,7 +180,7 @@ export function definePages(define: DefineSections): void {
             title: 'Seerr Recommendations Page', icon: 'auto_awesome',
             items: [
                 note('<strong>Seerr Recommendations Page</strong> adds a dedicated view with Seerr-powered rows: Trending, Popular Movies, Popular TV Shows, Upcoming Movies and Upcoming TV Shows.<br/><strong>Requirements:</strong> Seerr integration must be configured and enabled.'),
-                T('recommendationsPageEnabled', 'RecommendationsPageEnabled', 'Enable Recommendations Page',
+                T('recommendationsPageEnabled', 'RecommendationsPageEnabled', 'Enable the Recommendations page',
                     'Adds a "Seerr Recommendations" link to the navigation showing Seerr discover rows.', { main: true }),
                 placement({ p: 'recommendations', en: 'recommendationsPageEnabled', name: 'Recommendations', ppLabel: 'Use Plugin Pages',
                     ppIntro: `Replaces the default Recommendations page with a ${ppLink} implementation.`, ctLabel: 'Use Custom Tabs',
@@ -201,7 +200,7 @@ export function definePages(define: DefineSections): void {
                         T('activityFeedShowWatched', 'ActivityFeedShowWatched', 'Show recently watched', 'Titles users finished watching.', { default: true }),
                         T('activityFeedShowFavorited', 'ActivityFeedShowFavorited', 'Show recently favorited', 'Titles users added to their favorites.', { default: true }),
                         T('activityFeedShowReviewed', 'ActivityFeedShowReviewed', 'Show recently reviewed', 'Titles users reviewed.', { default: true }),
-                        T('activityFeedShowActiveStreams', 'ActivityFeedShowActiveStreams', 'Show Active Streams section',
+                        T('activityFeedShowActiveStreams', 'ActivityFeedShowActiveStreams', 'Show the Active Streams section',
                             'Adds a live "who\'s watching now" section to this page, independent of whether the Active Streams header widget (Extras tab) is shown. Still requires that feature\'s data collection to be enabled there.', { default: true })
                     ]
                 },
@@ -210,13 +209,13 @@ export function definePages(define: DefineSections): void {
             ]
         },
         'pages-leaving-soon': {
-            title: 'Leaving Soon', icon: 'auto_delete',
+            title: 'Leaving soon', icon: 'auto_delete',
             items: [
-                note('<strong>Leaving Soon</strong> lists everything the removal tool that is on (Maintainerr or Reclaimerr) will remove, with the days left, for every user: each one only sees items they can see. Administrators can keep an item or change its date from the page, and with Reclaimerr approve or deny removal requests; other users see their own requests. Set a removal tool up first (the Maintainerr and Reclaimerr cards in the *arr tab).'),
-                T('leavingSoonPageEnabled', 'LeavingSoonPageEnabled', 'Enable the Leaving Soon page', 'Turns the page on. It lists nothing until a removal tool is set up.', { main: true }),
-                placement({ p: 'leavingSoonPage', en: 'leavingSoonPageEnabled', name: 'Leaving Soon', ppLabel: 'Use Plugin Pages',
-                    ppIntro: `Adds a "Leaving Soon" link via ${ppLink}.`, ctLabel: 'Use Custom Tabs',
-                    noun: 'Leaving Soon page', hint: 'leavingSoonPage', cls: 'jellyfinenhanced leavingsoon', text: 'Leaving Soon' })
+                note('<strong>Leaving soon</strong> lists everything the removal tool that is on (Maintainerr or Reclaimerr) will remove, with the days left, for every user: each one only sees items they can see. Administrators can keep an item or change its date from the page, and with Reclaimerr approve or deny removal requests; other users see their own requests. Set a removal tool up first (the Maintainerr and Reclaimerr cards in the *arr tab).'),
+                T('leavingSoonPageEnabled', 'LeavingSoonPageEnabled', 'Enable the Leaving soon page', 'Turns the page on. It lists nothing until a removal tool is set up.', { main: true }),
+                placement({ p: 'leavingSoonPage', en: 'leavingSoonPageEnabled', name: 'Leaving soon', ppLabel: 'Use Plugin Pages',
+                    ppIntro: `Adds a "Leaving soon" link via ${ppLink}.`, ctLabel: 'Use Custom Tabs',
+                    noun: 'Leaving soon page', hint: 'leavingSoonPage', cls: 'jellyfinenhanced leavingsoon', text: 'Leaving soon' })
             ]
         },
         'pages-catchup': {

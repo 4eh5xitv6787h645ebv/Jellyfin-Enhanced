@@ -22,7 +22,7 @@ const htmlChildren = (tab: Element): HTMLElement[] => Array.from(tab.children).f
 
 function unpack(tab: HTMLElement): void {
     if (!tab.classList.contains('jea-masonry')) return;
-    tab.classList.remove('jea-masonry');
+    tab.classList.remove('jea-masonry', 'jea-one-col');
     tab.style.removeProperty('--jea-cols');
     htmlChildren(tab).forEach(element => { element.style.gridColumn = ''; element.style.gridRow = ''; });
 }
@@ -37,6 +37,8 @@ function layoutTab(tab: HTMLElement, repackRequested: boolean): void {
     const columns = Math.max(1, Math.floor((tab.clientWidth + GAP) / (MIN_COL + GAP)));
     if (tabColumns.get(tab) !== columns) { repack = true; tabColumns.set(tab, columns); }
     if (!tab.classList.contains('jea-masonry')) tab.classList.add('jea-masonry');
+    // One column: the CSS stops it at a readable width rather than the full content width.
+    tab.classList.toggle('jea-one-col', columns === 1);
     tab.style.setProperty('--jea-cols', String(columns));
     const items = htmlChildren(tab).filter(element => getComputedStyle(element).display !== 'none');
     if (repack) {

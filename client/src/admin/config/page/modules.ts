@@ -36,6 +36,7 @@ import type { createAudit } from './audit';
 import type { createTiming } from './timing';
 import type { createBanners } from './banners';
 import type { createMisc } from './misc';
+import type { createAffordances } from './affordances';
 
 /** The page's feature modules. Each reads the others only through the members it picks. */
 export interface PageModules {
@@ -77,4 +78,5 @@ export interface PageModules {
     timing: ReturnType<typeof createTiming>;
     banners: ReturnType<typeof createBanners>;
     misc: ReturnType<typeof createMisc>;
+    affordances: ReturnType<typeof createAffordances>;
 }

@@ -30,44 +30,44 @@
                 <div class="sectionTitleContainer">
                     <div class="je-header-title-row">
                         <h2 class="sectionTitle">Jellyfin Enhanced</h2>
-                        <a class="je-help-link" target="_blank" href="https://github.com/n00bcodr/Jellyfin-Enhanced" title="Help" aria-label="Docs and Help">
-                            <span class="je-help-link-label">Help</span>
+                        <div id="settingsSearchContainer" role="search">
+                            <div>
+                                <i class="material-icons je-search-icon" aria-hidden="true">search</i>
+                                <input id="settingsSearchInput" type="text" placeholder="Search settings" aria-label="Search settings" autocomplete="off" />
+                                <span id="settingsSearchCount" role="status" aria-live="polite"></span>
+                                <button id="settingsSearchClear" type="button" title="Clear search" aria-label="Clear search"><i class="material-icons" aria-hidden="true">close</i></button>
+                            </div>
+                        </div>
+                        <a class="je-help-link" target="_blank" rel="noopener noreferrer" href="https://n00bcodr.github.io/Jellyfin-Enhanced/" title="Documentation, opens in a new tab" aria-label="Help: documentation, opens in a new tab">
+                            <span class="je-help-link-label">Help</span><i class="material-icons" aria-hidden="true">open_in_new</i>
                         </a>
                         <button id="toggleDescriptionsBtn" type="button" class="je-desc-toggle" title="Show or hide setting descriptions" aria-label="Show or hide setting descriptions" aria-pressed="true">
                             <span class="je-desc-toggle-label">Descriptions</span>
                             <span class="je-desc-toggle-state" aria-hidden="true">On</span>
                         </button>
                     </div>
-                    <div id="settingsSearchContainer">
-                        <div>
-                            <i class="material-icons je-search-icon">search</i>
-                            <input id="settingsSearchInput" type="text" placeholder="Search settings..." />
-                            <span id="settingsSearchCount"></span>
-                            <button id="settingsSearchClear" type="button" title="Clear search">&#x2715;</button>
-                        </div>
-                    </div>
                 </div>
 
                 <div class="je-tab-bar">
-                <button class="jellyfin-tab-button active" data-tab="overview"><h3><i class="material-icons je-tab-icon" aria-hidden="true">dashboard</i>Overview</h3></button>
-                <button class="jellyfin-tab-button" data-tab="display"><h3><i class="material-icons je-tab-icon" aria-hidden="true">palette</i>Display</h3></button>
-                <button class="jellyfin-tab-button" data-tab="media-tags"><h3><i class="material-icons je-tab-icon" aria-hidden="true">sell</i>Media Tags</h3></button>
-                <button class="jellyfin-tab-button" data-tab="playback"><h3><i class="material-icons je-tab-icon" aria-hidden="true">play_circle</i>Playback</h3></button>
-                <button class="jellyfin-tab-button" data-tab="pages"><h3><i class="material-icons je-tab-icon" aria-hidden="true">view_list</i>Pages</h3></button>
-                <button class="jellyfin-tab-button" data-tab="seerr"><h3><img data-je-cdn="selfhst/svg/seerr.svg" alt="" class="je-tab-icon-img">Seerr</h3></button>
-                <button class="jellyfin-tab-button" data-tab="arr"><h3><i class="material-icons je-tab-icon" aria-hidden="true">dns</i>*arr</h3></button>
-                <button class="jellyfin-tab-button" data-tab="services"><h3><i class="material-icons je-tab-icon" aria-hidden="true">hub</i>Services</h3></button>
-                <button class="jellyfin-tab-button" data-tab="elsewhere"><h3><i class="material-icons je-tab-icon" aria-hidden="true">travel_explore</i>Elsewhere &amp; Reviews</h3></button>
-                <button class="jellyfin-tab-button" data-tab="extras"><h3><i class="material-icons je-tab-icon" aria-hidden="true">auto_awesome</i>Extras</h3></button>
-                    <button class="jellyfin-tab-button" data-tab="keyboard"><h3><i class="material-icons je-tab-icon" aria-hidden="true">keyboard</i>Keyboard</h3></button>
-                    <button class="jellyfin-tab-button" data-tab="admin"><h3><i class="material-icons je-tab-icon" aria-hidden="true">admin_panel_settings</i>Admin</h3></button>
-                    <button class="jellyfin-tab-button" data-tab="about"><h3><i class="material-icons je-tab-icon" aria-hidden="true">favorite</i>Credits</h3></button>
-                <button class="jellyfin-tab-button" data-tab="docs"><h3><i class="material-icons je-tab-icon" aria-hidden="true">menu_book</i>Docs</h3></button>
+                <button class="jellyfin-tab-button active" data-tab="overview" type="button" aria-current="page"><span class="je-tab-label"><i class="material-icons je-tab-icon" aria-hidden="true">dashboard</i>Overview</span></button>
+                <button class="jellyfin-tab-button" data-tab="display" type="button"><span class="je-tab-label"><i class="material-icons je-tab-icon" aria-hidden="true">palette</i>Display</span></button>
+                <button class="jellyfin-tab-button" data-tab="media-tags" type="button"><span class="je-tab-label"><i class="material-icons je-tab-icon" aria-hidden="true">sell</i>Media Tags</span></button>
+                <button class="jellyfin-tab-button" data-tab="playback" type="button"><span class="je-tab-label"><i class="material-icons je-tab-icon" aria-hidden="true">play_circle</i>Playback</span></button>
+                <button class="jellyfin-tab-button" data-tab="pages" type="button"><span class="je-tab-label"><i class="material-icons je-tab-icon" aria-hidden="true">view_list</i>Pages</span></button>
+                <button class="jellyfin-tab-button" data-tab="seerr" type="button"><span class="je-tab-label"><img data-je-cdn="selfhst/svg/seerr.svg" alt="" class="je-tab-icon-img">Seerr</span></button>
+                <button class="jellyfin-tab-button" data-tab="arr" type="button"><span class="je-tab-label"><i class="material-icons je-tab-icon" aria-hidden="true">dns</i>*arr</span></button>
+                <button class="jellyfin-tab-button" data-tab="services" type="button"><span class="je-tab-label"><i class="material-icons je-tab-icon" aria-hidden="true">hub</i>Services</span></button>
+                <button class="jellyfin-tab-button" data-tab="elsewhere" type="button"><span class="je-tab-label"><i class="material-icons je-tab-icon" aria-hidden="true">travel_explore</i>Elsewhere &amp; Reviews</span></button>
+                <button class="jellyfin-tab-button" data-tab="extras" type="button"><span class="je-tab-label"><i class="material-icons je-tab-icon" aria-hidden="true">auto_awesome</i>Extras</span></button>
+                    <button class="jellyfin-tab-button" data-tab="keyboard" type="button"><span class="je-tab-label"><i class="material-icons je-tab-icon" aria-hidden="true">keyboard</i>Keyboard</span></button>
+                    <button class="jellyfin-tab-button" data-tab="admin" type="button"><span class="je-tab-label"><i class="material-icons je-tab-icon" aria-hidden="true">admin_panel_settings</i>Admin</span></button>
+                    <button class="jellyfin-tab-button" data-tab="about" type="button"><span class="je-tab-label"><i class="material-icons je-tab-icon" aria-hidden="true">favorite</i>Credits</span></button>
+                <button class="jellyfin-tab-button" data-tab="docs" type="button"><span class="je-tab-label"><i class="material-icons je-tab-icon" aria-hidden="true">menu_book</i>Docs</span></button>
                 </div>
             </div>
 
             <div id="je-probe-warning" class="je-note-banner" style="display: none;" role="status" aria-live="polite">
-                <i class="material-icons je-note-icon">warning_amber</i>
+                <i class="material-icons je-note-icon" aria-hidden="true">warning_amber</i>
                 <div>
                     <strong>Plugin detection issue</strong>
                     <span id="je-probe-warning-msg"></span>
@@ -78,7 +78,7 @@
             </div>
 
             <div id="je-host-mismatch-warning" class="je-note-banner" style="display: none;" role="alert">
-                <i class="material-icons je-note-icon">warning_amber</i>
+                <i class="material-icons je-note-icon" aria-hidden="true">warning_amber</i>
                 <div>
                     <strong id="je-host-mismatch-title">Wrong plugin build for this Jellyfin version</strong>
                     <span id="je-host-mismatch-msg"></span>
@@ -97,15 +97,10 @@
 
                 <div id="overview" class="jellyfin-tab-content active">
                     <div class="je-info-banner je-fieldset-wide je-overview-intro">
-                        <i class="material-icons je-info-icon">dashboard</i>
+                        <i class="material-icons je-info-icon" aria-hidden="true">dashboard</i>
                         <div>
-                            The essential enhancement suite for Jellyfin, bundling advanced features and customizations into one convenient plugin.<br/><br/>
-                            This <strong>Overview</strong> is a read-only snapshot of:<br/>
-                            &bull; Service connection health<br/>
-                            &bull; Which optional companion plugins are installed<br/>
-                            &bull; Which features are enabled or misconfigured<br/><br/>
-                            <em>To turn features on or off, use the other tabs</em> (Display, Playback, Pages, Seerr, *arr, Extras, ...).<br/>
-                            Clicking any card here jumps straight to the tab that owns it.
+                            Service health, companion plugins and which features are on, at a glance.
+                            Select a card to open the tab that owns it; settings are changed on the other tabs.
                         </div>
                     </div>
 
@@ -117,11 +112,10 @@
 
                 <div id="display" class="jellyfin-tab-content">
                     <div class="je-info-banner je-fieldset-wide je-tab-intro">
-                        <i class="material-icons je-info-icon">person</i>
+                        <i class="material-icons je-info-icon" aria-hidden="true">person</i>
                         <div>
-                            <strong>Many of these are personal settings.</strong><br/>
-                            What you set here is the default every user starts with. Each user can change their own copy in the <strong>Enhanced Panel</strong> (sidebar link, user menu, or press <kbd class="je-kbd">?</kbd> while browsing).<br/>
-                            Changing a setting here does not change existing users. A setting with the small people icon shows a banner in its card when you change it: <strong>Apply the above</strong> copies just the changed settings to every user, and <strong>Apply all plugin settings</strong> copies all of them.
+                            Settings marked <span class="je-legend-chip"><i class="material-icons" aria-hidden="true">group</i>Per user</span> are the default each user starts with; users change their own copy in the <strong>Enhanced Panel</strong> (sidebar link, user menu, or <kbd class="je-kbd">?</kbd>).
+                            Changing one here leaves existing users alone until you use <strong>Apply the above</strong> (just the changed settings) or <strong>Apply all plugin settings</strong> in its card.
                         </div>
                     </div>
 
@@ -147,11 +141,10 @@
 
                 <div id="playback" class="jellyfin-tab-content">
                     <div class="je-info-banner je-fieldset-wide je-tab-intro">
-                        <i class="material-icons je-info-icon">person</i>
+                        <i class="material-icons je-info-icon" aria-hidden="true">person</i>
                         <div>
-                            <strong>Many of these are personal settings.</strong><br/>
-                            What you set here is the default every user starts with. Each user can change their own copy in the <strong>Enhanced Panel</strong> (sidebar link, user menu, or press <kbd class="je-kbd">?</kbd> while browsing).<br/>
-                            Changing a setting here does not change existing users. A setting with the small people icon shows a banner in its card when you change it: <strong>Apply the above</strong> copies just the changed settings to every user, and <strong>Apply all plugin settings</strong> copies all of them.
+                            Settings marked <span class="je-legend-chip"><i class="material-icons" aria-hidden="true">group</i>Per user</span> are the default each user starts with; users change their own copy in the <strong>Enhanced Panel</strong> (sidebar link, user menu, or <kbd class="je-kbd">?</kbd>).
+                            Changing one here leaves existing users alone until you use <strong>Apply the above</strong> (just the changed settings) or <strong>Apply all plugin settings</strong> in its card.
                         </div>
                     </div>
 
@@ -164,10 +157,10 @@
 
                 <div id="pages" class="jellyfin-tab-content">
                     <div class="je-info-banner je-fieldset-wide je-tab-intro">
-                        <i class="material-icons je-info-icon">integration_instructions</i>
+                        <i class="material-icons je-info-icon" aria-hidden="true">integration_instructions</i>
                         <div>
-                            These features add or replace pages in the Jellyfin web UI. Support integration with <a class="sectionTitle" target="_blank" href="https://github.com/IAmParadox27/jellyfin-plugin-pages">Plugin Pages</a> (sidebar) or <a class="sectionTitle" target="_blank" href="https://github.com/IAmParadox27/jellyfin-plugin-custom-tabs">Custom Tabs</a> (home page).<br/>
-                            <strong>On Jellyfin 12's Modern Layout, sidebar links (including Plugin Pages) only appear on mobile</strong>, not desktop, a limitation of that layout's nav drawer. Use the <strong>native Home tab</strong> option below for a desktop-visible entry point on Jellyfin 12.
+                            Each page can appear as a <strong>native Home tab</strong> (no other plugin needed, and the most reliable choice on Jellyfin 12's Modern Layout), as a sidebar link through <a class="sectionTitle" target="_blank" rel="noopener noreferrer" href="https://github.com/IAmParadox27/jellyfin-plugin-pages">Plugin Pages</a>, or as a Home tab through <a class="sectionTitle" target="_blank" rel="noopener noreferrer" href="https://github.com/IAmParadox27/jellyfin-plugin-custom-tabs">Custom Tabs</a>.
+                            On the Modern Layout, sidebar links (Plugin Pages included) show only on phones. Plugin Pages 3.0 or newer applies a change without a Jellyfin restart; older versions need one the first time.
                         </div>
                     </div>
 
@@ -198,9 +191,10 @@
 
                 <div id="arr" class="jellyfin-tab-content">
                     <div class="je-info-banner je-fieldset-wide je-tab-intro">
-                        <i class="material-icons je-info-icon">download_for_offline</i>
+                        <i class="material-icons je-info-icon" aria-hidden="true">download_for_offline</i>
                         <div>
-                            Connect Jellyfin Enhanced to your <strong>Sonarr</strong>, <strong>Radarr</strong>, <strong>Bazarr</strong>, <strong>Shoko</strong>, <strong>Maintainerr</strong> and <strong>Reclaimerr</strong> instances.<br/>Each service gets its own box below; add as many Sonarr/Radarr instances as you want (one per quality profile / library), plus a single Bazarr endpoint and a single Shoko endpoint. Maintainerr and Reclaimerr are alternatives: only one of them feeds Leaving soon at a time. Each instance can be enabled, disabled, or removed independently.
+                            Connect <strong>Sonarr</strong>, <strong>Radarr</strong>, <strong>Bazarr</strong>, <strong>Shoko</strong>, <strong>Maintainerr</strong> and <strong>Reclaimerr</strong>. Add as many Sonarr and Radarr instances as you need (one per quality profile or library) and switch each on or off on its own; Bazarr and Shoko take one address each.
+                            Maintainerr and Reclaimerr are alternatives: only one of them feeds Leaving soon at a time.
                         </div>
                     </div>
 
@@ -229,7 +223,7 @@
 
                 <div id="services" class="jellyfin-tab-content">
                     <div class="je-info-banner je-fieldset-wide je-tab-intro">
-                        <i class="material-icons je-info-icon">hub</i>
+                        <i class="material-icons je-info-icon" aria-hidden="true">hub</i>
                         <div>
                             Third-party services Jellyfin Enhanced can talk to, in one place: keys, connection tests and the features that depend on them. Each card here is a linked copy of the one in its feature tab, so changing it in either place changes both. Seerr and the *arr apps have their own tabs.
                         </div>
@@ -292,7 +286,7 @@
                 </div>
 
                 <div class="je-apply-hint">
-                    Settings require a page refresh to take effect. Clear browser cache if changes persist.
+                    Changes take effect when each user reloads Jellyfin. If a change doesn't show up, clear the browser cache.
                 </div>
 
                 <div class="je-save-dock" role="toolbar" aria-label="Save settings">

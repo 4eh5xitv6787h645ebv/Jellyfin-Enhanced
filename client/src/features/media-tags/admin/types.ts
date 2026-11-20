@@ -135,7 +135,7 @@ export interface PageContext {
     announce(message: string): void;
     dispose(): void;
     pageUrl(tab?: string | null, group?: string | null): string;
-    mainPageUrl(section?: string | null, tab?: string | null): string;
+    mainPageUrl(section?: string | null, tab?: string | null, card?: string | null): string;
     currentTab(): string;
     pending(): boolean;
     readonly disposed: boolean;
@@ -226,7 +226,7 @@ export interface AdminTagsCore {
     pageFields(): Set<string>;
     seedUser(config: Config): Config;
     pageUrl(tab?: string | null, group?: string | null): string;
-    mainPageUrl(section?: string | null, tab?: string | null): string;
+    mainPageUrl(section?: string | null, tab?: string | null, card?: string | null): string;
     fieldHtml(f: FieldDef, config: Config): string;
     fieldsHtml(fields: readonly FieldDef[] | undefined, config: Config): string;
     redrawList(list: Element, html: string, selectorOf: (el: HTMLElement) => string | null): void;

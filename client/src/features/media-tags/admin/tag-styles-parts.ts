@@ -8,8 +8,9 @@ import { fmt } from './format';
 const T = fmt;
 
 export const GROUPS: ReadonlyArray<{ key: string; title: string }> = [
-    { key: 'quality', title: T('Quality') }, { key: 'ageRating', title: T('Age Rating') }, { key: 'rating', title: T('Rating') },
-    { key: 'genre', title: T('Genre') }, { key: 'status', title: T('Status') }, { key: 'language', title: T('Language') }, { key: 'awards', title: T('Awards') },
+    // The groups' one display order (as on the Overview and the Groups list).
+    { key: 'quality', title: T('Quality') }, { key: 'genre', title: T('Genre') }, { key: 'language', title: T('Language') },
+    { key: 'rating', title: T('Rating') }, { key: 'ageRating', title: T('Age Rating') }, { key: 'status', title: T('Status') }, { key: 'awards', title: T('Awards') },
     { key: 'logos', title: T('Logos') },
     { key: 'custom', title: T('Custom') },
 ];

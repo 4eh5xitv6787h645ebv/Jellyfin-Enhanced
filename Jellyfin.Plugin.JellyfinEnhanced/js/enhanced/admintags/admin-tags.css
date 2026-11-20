@@ -204,9 +204,10 @@ body.je-hide-descriptions .je-tag-admin .je-ta-intro { display: none; }
 .je-ta-note { margin: 0 0 20px; }
 .je-ta-note .je-ta-hint { margin: 4px 0 10px; }
 /* The configuration page's per-user marker (.jea-badge): same icon, size and weight as its other sections. */
-.je-ta-peruser { margin-left: .25em; font-size: 16px; font-style: normal; font-weight: 400; line-height: 1; opacity: .45; vertical-align: -3px; cursor: help; }
-.je-ta-peruser:hover { opacity: .9; }
-.je-ta-hint { margin: 0 0 10px; max-width: 80ch; font-size: 13px; line-height: 1.6; color: var(--je-ta-muted); }
+/* The per-user marker is the configuration page's own chip (jeAdmin.css), so both halves of the page mark it the same way. */
+.je-ta-peruser { margin-left: .4em; }
+/* Descriptions: the same size, colour and measure as the form tabs' (jeAdmin.css .fieldDescription). */
+.je-ta-hint { margin: 0 0 10px; max-width: 72ch; font-size: 13px; line-height: 1.55; color: var(--je-ta-muted); }
 .je-ta-docs { color: inherit; text-decoration: underline; white-space: nowrap; }
 .je-ta-label { display: block; margin: 0 0 6px; font-size: 13px; font-weight: 600; }
 .je-ta-off { margin: 4px 0 10px; padding: 8px 10px; border-radius: 6px; background: rgba(255, 183, 77, 0.12); color: #ffd699; font-size: 13px; }
@@ -974,3 +975,15 @@ body.je-hide-descriptions .je-tag-admin .je-ta-intro { display: none; }
 .je-tag-admin .je-ts-hidden-view { display: inline; background: none; border: 0; padding: 0; font: inherit; font-weight: 600; color: var(--je-ta-text); text-decoration: underline; text-underline-offset: 2px; cursor: pointer; }
 @container je-ta (max-width: 640px) { .je-tag-admin .je-ts-hidden-view { display: inline-flex; align-items: center; min-height: 44px; vertical-align: middle; } }
 .je-tag-admin :is(.je-ts-inline-link, .je-ts-hidden-pick) { white-space: nowrap; }
+
+/* Size and opacity per tag, on a phone: one tag per row block (its name, then the two values and Reset), so nothing
+   is pushed past the card's edge. */
+@media (max-width: 600px) {
+    .je-tag-admin .je-kind-looks-table, .je-tag-admin .je-kind-looks-table :is(thead, tbody, tfoot) { display: block; }
+    .je-tag-admin .je-kind-looks-table tr { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) 36px; align-items: center; gap: 2px 8px; padding: 6px 0; }
+    .je-tag-admin .je-kind-looks-table tr > th[scope="row"] { grid-column: 1 / -1; font-weight: 600; }
+    .je-tag-admin .je-kind-looks-table thead th:first-child { display: none; }
+    .je-tag-admin .je-kind-looks-table tfoot tr:last-child { display: block; }
+    .je-tag-admin .je-kind-looks-table td { padding: 0; }
+    .je-tag-admin .je-kind-looks-reset { width: 36px; height: 36px; }
+}

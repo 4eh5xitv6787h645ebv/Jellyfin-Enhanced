@@ -691,7 +691,7 @@ installSection((A, JE) => {
         tab: 'rules',
         order: 30,
         title: 'Server-wide item looks',
-        hint: 'Looks one title gets for every user, set with For everyone in the item\'s Media Tags editor (its ⋮ menu). A user\'s own locked look wins; rules never change these.',
+        hint: 'Looks one title gets for every user, set with "For everyone" in the item\'s Media Tags editor (its ⋮ menu). A user\'s own locked look wins; rules never change these.',
         writes: ['TagLookItemOverrides'],
         render(ctx, body) {
             const heading = find(body.closest('[data-section]'), 'h3');

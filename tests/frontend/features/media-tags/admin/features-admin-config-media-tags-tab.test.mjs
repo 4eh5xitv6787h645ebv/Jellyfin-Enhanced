@@ -290,7 +290,8 @@ test('links to the page itself (the Display card, the tab\'s own links) open in 
   await h.settle();
   notNavigated('the link to a main-page setting');
   assert.ok(h.document.getElementById('services').classList.contains('active'), 'the Services tab opened');
-  assert.deepEqual(address(), { name: 'Jellyfin Enhanced', tab: 'services' });
+  // It lands on the TMDB card itself, not just its tab.
+  assert.deepEqual(address(), { name: 'Jellyfin Enhanced', tab: 'services', card: 'tmdb' });
   // The Enhanced panel's pointer (outside the page, over it): opened in place too.
   const hub = h.document.createElement('a');
   hub.href = 'http://jellyfin.test/web/index.html#/configurationpage?name=Jellyfin%20Enhanced&jeSection=media-tags&tab=server';
@@ -720,7 +721,8 @@ test('the tab is a section of the page: the sidebar navigates it on a desktop, t
   // A card whose settings reach different people marks the per-user ones only, with the page's icon: Hide tags on hover is per user, the search page is shared.
   assert.deepEqual(['tagsHideOnHover', 'disableTagsOnSearchPage'].map((id) => Boolean(h.root.querySelector(`[data-field-row="${id}"] .je-ta-peruser`))), [true, false]);
   const mark = h.root.querySelector('[data-field-row="tagsHideOnHover"] .je-ta-peruser');
-  assert.deepEqual([mark.textContent, mark.getAttribute('role'), mark.getAttribute('aria-label'), mark.title], ['group', 'img', 'Per-user setting', 'Each user has a personal copy. Existing users keep theirs until you overwrite it.']);
+  // The page's own chip (its icon and words come from the stylesheet), kept out of the switch's accessible name.
+  assert.deepEqual([mark.tagName, mark.textContent, mark.getAttribute('aria-hidden'), mark.title], ['SPAN', '', 'true', 'Each user has a personal copy. Existing users keep theirs until you overwrite it.']);
   assert.equal(h.root.querySelector('.je-ta-scope'), null, 'the older New users / Everyone badges are gone');
   // Collapsed groups summarise their current choice, not their whole description (which stays inside the group).
   for (const g of ['awards', 'logos', 'custom']) assert.match(h.root.querySelector(`#jeTaSum-group-${g}`).textContent, /\S/, `${g} has a summary line`);

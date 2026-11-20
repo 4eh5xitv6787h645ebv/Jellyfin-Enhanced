@@ -47,13 +47,17 @@ export function createSpoiler(m: SpoilerDeps) {
                     var label = document.createElement('label');
                     var input = document.createElement('input');
                     input.type = 'checkbox';
-                    input.className = 'spoilerAutoEnableLibrary jea-switch';
-                    label.className = 'jea-toggle';
+                    // Checkboxes, like TV shows and Movies above: these are scope choices, not features turned on.
+                    input.className = 'spoilerAutoEnableLibrary';
                     input.setAttribute('data-library-id', shown(f.ItemId));
                     input.checked = selected.indexOf(id) !== -1;
                     var span = document.createElement('span');
                     var type = text(f.CollectionType).toLowerCase();
-                    span.textContent = f.Name + (type === 'tvshows' ? ' (TV shows)' : type === 'movies' ? ' (Movies)' : ' (Mixed)');
+                    var kind = type === 'tvshows' ? 'TV shows' : type === 'movies' ? 'Movies' : 'Mixed';
+                    // The type only when the name does not already say it ("Movies (Movies)").
+                    var plain = ['tv shows', 'shows', 'tv', 'series', 'movies', 'films'];
+                    var name = text(f.Name);
+                    span.textContent = plain.indexOf(name.trim().toLowerCase()) !== -1 && kind !== 'Mixed' ? name : name + ' (' + kind + ')';
                     label.appendChild(input);
                     label.appendChild(span);
                     wrap.appendChild(label);

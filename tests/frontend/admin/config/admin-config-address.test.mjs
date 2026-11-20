@@ -5,8 +5,6 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { bootGenerated, settle } from '../../helpers/admin-config-page.mjs';
 
-const ICON_HREF = '#/configurationpage?name=Jellyfin%20Enhanced&tab=admin&card=usage-statistics';
-
 const params = window => new URLSearchParams(window.location.hash.split('?')[1] || '');
 const labelOf = (document, id) => document.getElementById(id).closest('label') || document.querySelector(`label[for="${id}"]`);
 const tabButton = (document, id) => document.querySelector(`.jea-nav .jellyfin-tab-button[data-tab="${id}"]`);
@@ -20,7 +18,7 @@ function reporting(names) {
   return request => (/\/JellyfinEnhanced\/usage\/fields$/.test(request.url) ? names : undefined);
 }
 
-test('settings the usage report carries get an icon that opens the Usage Statistics card, without changing the setting', async t => {
+test('settings the usage report carries get a quiet marker after their label, shown only while Usage Statistics is on', async t => {
   const h = bootGenerated({ ajax: reporting(['ShowWatchProgress', 'IconStyle', 'NotASettingOnThisPage']) });
   t.after(h.close);
   await h.ready();
@@ -32,25 +30,31 @@ test('settings the usage report carries get an icon that opens the Usage Statist
   assert.deepEqual(badges.map(b => b.closest('label')).sort((a, b) => a.compareDocumentPosition(b) & 2 ? 1 : -1),
     [labelOf(document, 'showWatchProgress'), labelOf(document, 'iconStyle')], 'a toggle and a select, each once');
   for (const badge of badges) {
-    assert.equal(badge.tagName, 'A');
-    assert.equal(badge.getAttribute('href'), ICON_HREF);
-    assert.equal(badge.textContent, 'insights');
-    assert.equal(badge.getAttribute('title'), 'Shared in Analytics if opted in');
-    assert.equal(badge.getAttribute('aria-label'), 'Shared in Analytics if opted in');
+    // Not a link and not a tab stop: it sits with the row's other markers and stays out of the control's name.
+    assert.equal(badge.tagName, 'SPAN');
+    assert.equal(badge.getAttribute('href'), null);
+    assert.equal(badge.getAttribute('aria-hidden'), 'true');
+    assert.ok(badge.parentElement.classList.contains('jea-marks'));
+    assert.equal(badge.textContent, '');
   }
   assert.equal(labelOf(document, 'showFileSizes').querySelector('.jea-analytics'), null, 'a setting the report does not carry has none');
 
+  // The page says whether statistics are shared, which is what shows the markers (CSS keys off the class).
+  const page = document.getElementById('JellyfinEnhancedPage');
+  const stats = document.getElementById('analyticsEnabled');
+  stats.checked = false;
+  stats.dispatchEvent(new window.Event('change', { bubbles: true }));
+  assert.equal(page.classList.contains('jea-stats-on'), false);
+  stats.checked = true;
+  stats.dispatchEvent(new window.Event('change', { bubbles: true }));
+  assert.equal(page.classList.contains('jea-stats-on'), true);
+
   tabButton(document, 'display').click();
   await settle(window);
-  const toggle = document.getElementById('showWatchProgress');
-  const was = toggle.checked;
   labelOf(document, 'showWatchProgress').querySelector('.jea-analytics').click();
   await settle(window);
-  assert.equal(toggle.checked, was, 'the setting beside the icon is not changed');
-  assert.equal(activeTab(document), 'admin');
-  assert.deepEqual(focusedCards(document), ['Usage Statistics']);
-  assert.equal(params(window).get('tab'), 'admin');
-  assert.equal(params(window).get('card'), 'usage-statistics');
+  assert.equal(activeTab(document), 'display', 'the marker does not navigate');
+  assert.equal(params(window).get('card'), null);
 });
 
 test('no icon, and no error, when the list cannot be read or is not a list', async t => {

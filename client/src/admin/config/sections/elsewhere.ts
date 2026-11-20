@@ -10,47 +10,46 @@ define({
         title: 'TMDB', iconImg: 'selfhst/svg/tmdb.svg',
         items: [
             { type: 'custom', html:
-                '<div class="inputContainer jea-row"><label class="inputLabel" for="TMDB_API_KEY">TMDB API Key</label>'
+                '<div class="inputContainer jea-row"><label class="inputLabel" for="TMDB_API_KEY">TMDB API key</label>'
                 + '<div class="je-api-row"><input id="TMDB_API_KEY" name="TMDB_API_KEY" type="text" autocomplete="off" class="je-api-input jea-input"/>'
                 + '<span id="tmdbStatusIndicator" class="material-icons"></span>'
                 + '<button type="button" class="testTmdbBtn jea-btn">Test</button></div></div>'
-                + '<div class="je-setting-description" data-desc-for="TMDB_API_KEY"><div class="fieldDescription">Your API key from The Movie DB (TMDB). <a class="sectionTitle" href="https://www.themoviedb.org/settings/api" target="_blank">How to?</a> Shared with Seerr Settings. Needed by TMDB Reviews and Release Dates.</div></div>' },
-            { id: 'DEFAULT_REGION', prop: 'DEFAULT_REGION', manual: true, type: 'select', options: [], label: 'Default Region',
-                           desc: 'The default region for streaming provider lookup and release dates. Empty defaults to US. <a class="sectionTitle" href="https://cdn.jsdelivr.net/gh/n00bcodr/Jellyfin-Elsewhere/resources/regions.txt" target="_blank">Full List</a>' },
-            { type: 'custom', html: '<div class="jea-note je-region-source-note" style="display:none;align-items:flex-start;gap:12px;"><i class="material-icons je-info-icon">info</i><span><strong>Seerr is enabled and no TMDB key is set:</strong> streaming providers come from Seerr. Per-season providers still need a TMDB key.</span></div>' }
+                + '<div class="je-setting-description" data-desc-for="TMDB_API_KEY"><div class="fieldDescription">Your API key from The Movie Database (TMDB): <a class="sectionTitle" href="https://www.themoviedb.org/settings/api" target="_blank" rel="noopener noreferrer">get one here<i class="material-icons je-link-ext" aria-hidden="true">open_in_new</i></a>. The Services tab shows the same field. TMDB Reviews, Release Dates and per-season providers need it.</div></div>' },
+            { id: 'DEFAULT_REGION', prop: 'DEFAULT_REGION', manual: true, type: 'select', options: [], label: 'Default region', rowClass: 'jea-stack',
+                           desc: 'The default region for streaming provider lookup and release dates. Empty means US. <a class="sectionTitle" href="https://cdn.jsdelivr.net/gh/n00bcodr/Jellyfin-Elsewhere/resources/regions.txt" target="_blank" rel="noopener noreferrer">Full list<i class="material-icons je-link-ext" aria-hidden="true">open_in_new</i></a>' },
+            { type: 'custom', html: '<div class="jea-note je-region-source-note" style="display:none;align-items:flex-start;gap:12px;"><i class="material-icons je-info-icon" aria-hidden="true">info</i><span><strong>Seerr is enabled and no TMDB key is set:</strong> streaming providers come from Seerr. Per-season providers still need a TMDB key.</span></div>' }
         ]
     },
     'elsewhere': {
         title: 'Elsewhere (Streaming Providers)', icon: 'live_tv',
         items: [
             { id: 'elsewhereEnabled', prop: 'ElsewhereEnabled', type: 'toggle', main: true, label: 'Enable Elsewhere',
-              desc: 'Adds an "Elsewhere" panel to item detail pages showing where the title is available on streaming services in the user\'s region (powered by TMDB watch-provider data).' },
-            { type: 'custom', html: '<div class="jea-note je-region-source-note" style="display:none;align-items:flex-start;gap:12px;"><i class="material-icons je-info-icon">info</i><span><strong>Seerr is enabled and no TMDB key is set:</strong> streaming providers come from Seerr. Per-season providers still need a TMDB key.</span></div>' },
-            { id: 'DEFAULT_PROVIDERS', prop: 'DEFAULT_PROVIDERS', type: 'text', label: 'Default Providers', placeholder: 'e.g., Netflix,Hulu',
-              desc: 'A list of default streaming providers to show. Leave blank to show all. <a class="sectionTitle" href="https://cdn.jsdelivr.net/gh/n00bcodr/Jellyfin-Elsewhere/resources/providers.txt" target="_blank">Full List</a>' },
-            { id: 'IGNORE_PROVIDERS', prop: 'IGNORE_PROVIDERS', type: 'text', label: 'Ignore Providers', placeholder: 'e.g., .*with Ads, Hulu',
-              desc: 'A list of providers to ignore from the default region (supports regex). <a class="sectionTitle" href="https://cdn.jsdelivr.net/gh/n00bcodr/Jellyfin-Elsewhere/resources/providers.txt" target="_blank">Full List</a>' },
+              desc: 'Adds an "Elsewhere" panel to item detail pages showing where the title is available on streaming services in the user\'s region. The data comes from TMDB, or from Seerr when no TMDB key is set.' },
+            { id: 'DEFAULT_PROVIDERS', prop: 'DEFAULT_PROVIDERS', type: 'text', label: 'Default providers', placeholder: 'e.g. Netflix, Hulu',
+              desc: 'A list of default streaming providers to show. Leave blank to show all. <a class="sectionTitle" href="https://cdn.jsdelivr.net/gh/n00bcodr/Jellyfin-Elsewhere/resources/providers.txt" target="_blank" rel="noopener noreferrer">Full list<i class="material-icons je-link-ext" aria-hidden="true">open_in_new</i></a>' },
+            { id: 'IGNORE_PROVIDERS', prop: 'IGNORE_PROVIDERS', type: 'text', label: 'Ignored providers', placeholder: 'e.g. .*with Ads, Hulu',
+              desc: 'A list of providers to ignore from the default region (regular expressions work). <a class="sectionTitle" href="https://cdn.jsdelivr.net/gh/n00bcodr/Jellyfin-Elsewhere/resources/providers.txt" target="_blank" rel="noopener noreferrer">Full list<i class="material-icons je-link-ext" aria-hidden="true">open_in_new</i></a>' },
             { id: 'ElsewhereUseSeerrRegion', prop: 'ElsewhereUseSeerrRegion', type: 'toggle', default: false, label: 'Use each user\'s Seerr streaming region',
               desc: 'Look up streaming providers in the Seerr "Streaming Region" of each user (their own Seerr setting, else Seerr\'s global one, else US as Seerr does) and ignore the Default Region and users\' own Elsewhere country for providers. Needs the Seerr integration. If Seerr gives no region, the Default Region is used.' },
             { id: 'ElsewhereSeasonProviders', prop: 'ElsewhereSeasonProviders', type: 'toggle', default: true, label: 'Per-season providers',
               desc: 'On Series and Season pages, look up streaming providers per season from TMDB. Requires a TMDB API key (not available when Elsewhere runs on Seerr data). A season is labelled only when seasons differ; seasons TMDB has no data for fall back to the series providers. Only applies when the series uses the default (aired) season order. Users can turn this off for themselves in the Elsewhere search settings.' },
-            { type: 'group', title: 'Custom Branding', items: [
-                { id: 'ElsewhereCustomBrandingText', prop: 'ElsewhereCustomBrandingText', type: 'text', label: 'Custom Branding Message', placeholder: 'e.g., Only available on My Server',
+            { type: 'group', title: 'Custom branding', items: [
+                { id: 'ElsewhereCustomBrandingText', prop: 'ElsewhereCustomBrandingText', type: 'text', label: 'Custom branding message', placeholder: 'e.g. Only available on My Server',
                   desc: 'Custom message to display when content is not available on any streaming providers. Leave blank to disable custom branding.' },
-                { id: 'ElsewhereCustomBrandingImageUrl', prop: 'ElsewhereCustomBrandingImageUrl', type: 'text', label: 'Custom Branding Icon URL', placeholder: 'e.g., https://example.com/logo.png',
+                { id: 'ElsewhereCustomBrandingImageUrl', prop: 'ElsewhereCustomBrandingImageUrl', type: 'text', label: 'Custom branding icon URL', placeholder: 'e.g. https://example.com/logo.png',
                   desc: 'Optional icon shown next to the custom message, at 24 × 24. Each viewer\'s browser loads it, so use a web address such as <code>https://example.com/logo.png</code> or a path Jellyfin serves such as <code>/web/favicons/touchicon.png</code>, not a file path on the server. Any image type browsers show works (PNG, SVG, WebP). To use an image from your computer, upload it below instead; an uploaded icon is used in place of this URL. Leave both blank for no icon.' },
                 { type: 'custom', html: '<div class="jea-note jea-note-warn" id="je-elsewhere-icon-warning" style="display:none;"></div>' },
                 { type: 'custom', html: '<div class="je-branding-grid"><div class="je-branding-card">'
-                    + '<label class="je-branding-label-bold">Upload Icon</label>'
-                    + '<label class="je-branding-label">Stored on the server and used instead of the URL above. Takes effect on the next page load.</label>'
+                    + '<label class="je-branding-label-bold" for="elsewhereIconInput">Upload an icon</label>'
+                    + '<div class="je-branding-label">Stored on the server and used instead of the URL above. Takes effect on the next page load.</div>'
                     + '<div class="je-branding-size-hint">Shown at 24×24px &nbsp;·&nbsp; PNG, JPG, GIF, WebP or SVG</div>'
                     + '<div class="je-branding-dropzone" id="elsewhereIconDropZone">'
                     + '<input type="file" id="elsewhereIconInput" accept="image/png,image/jpeg,image/gif,image/webp,image/svg+xml" class="je-branding-file-input" />'
-                    + '<div id="elsewhereIconPlaceholder" class="je-branding-placeholder"><i class="material-icons je-branding-placeholder-icon">image</i></div>'
+                    + '<div id="elsewhereIconPlaceholder" class="je-branding-placeholder"><i class="material-icons je-branding-placeholder-icon" aria-hidden="true">upload</i><span class="je-branding-choose">Choose file</span><span class="je-branding-formats">or drop it here</span></div>'
                     + '<img id="elsewhereIconPreview" class="je-branding-preview" style="display:none;" />'
                     + '<div id="elsewhereIconDimensions" class="je-branding-dimensions" style="display:none;"></div>'
                     + '<div id="elsewhereIconStatus" class="je-branding-status"></div>'
-                    + '<button type="button" class="je-branding-delete" id="elsewhereIconDelete" style="display:none;"><i class="material-icons">delete</i></button>'
+                    + '<button type="button" class="je-branding-delete" id="elsewhereIconDelete" style="display:none;" aria-label="Remove the uploaded icon" title="Remove"><i class="material-icons" aria-hidden="true">delete</i></button>'
                     + '</div></div></div>' }
             ] }
         ]
@@ -59,32 +58,32 @@ define({
         title: 'Reviews Panel', icon: 'rate_review',
         items: [
             { id: 'reviewsExpandedByDefault', prop: 'ReviewsExpandedByDefault', type: 'toggle', label: 'Expand reviews by default',
-              desc: 'When enabled, the reviews section opens expanded by default for all users (unless they override in their session).' }
+              desc: 'When enabled, the reviews section opens expanded by default for all users (each user can change this in their own settings).' }
         ]
     },
     'reviews-tmdb': {
         title: 'TMDB Reviews', icon: 'reviews',
         items: [
-            { id: 'showReviews', prop: 'ShowReviews', type: 'toggle', main: true, label: 'Show TMDB Reviews',
-              desc: 'Requires TMDB API Key to be set.' }
+            { id: 'showReviews', prop: 'ShowReviews', type: 'toggle', main: true, label: 'Show TMDB reviews',
+              desc: 'Shows reviews written by TMDB users in the reviews section of item pages.' }
         ]
     },
     'reviews-anilist': {
         title: 'AniList', iconImg: 'anilist-static/icon.svg',
         items: [
-            { id: 'showAnilistReviews', prop: 'ShowAnilistReviews', type: 'toggle', main: true, label: 'Show AniList Reviews',
+            { id: 'showAnilistReviews', prop: 'ShowAnilistReviews', type: 'toggle', main: true, label: 'Show AniList reviews',
               desc: 'Shows the top AniList user reviews for anime in the reviews section.<br>Will only work if AniList is a metadata provider, since items are matched by their AniList ID.<br>No API key needed.<br>Spoiler sections of reviews are hidden.' }
         ]
     },
     'reviews-translation': {
         title: 'Review Translation', icon: 'translate',
         items: [
-            { id: 'reviewTranslationEnabled', prop: 'ReviewTranslationEnabled', type: 'toggle', main: true, label: 'Enable Review Translation',
+            { id: 'reviewTranslationEnabled', prop: 'ReviewTranslationEnabled', type: 'toggle', main: true, label: 'Enable review translation',
               desc: 'Adds a Translate button to English TMDB and AniList reviews, translating them into the user\'s Jellyfin language.<br>Desktop Chrome and Edge translate on the device, with nothing sent anywhere, but only over HTTPS or localhost. Firefox, Safari, mobile browsers and the Jellyfin apps do not have a built-in translator.<br>Everyone else uses your own <a class="sectionTitle" href="https://libretranslate.com" target="_blank">LibreTranslate</a> instance, if you set one below. Only the review text is sent to it.<br>Translations are done live and are not stored. The button only shows for languages the browser or your instance offers.' },
             { id: 'reviewTranslationUrl', prop: 'ReviewTranslationUrl', type: 'text', label: 'LibreTranslate URL (optional)', placeholder: 'http://localhost:5000',
               toConfig: (v) => (v || '').trim(),
               desc: 'Fallback for browsers without a built-in translator. Base address of the instance, without a trailing path.' },
-            { id: 'reviewTranslationApiKey', prop: 'ReviewTranslationApiKey', type: 'password', label: 'LibreTranslate API Key (optional)',
+            { id: 'reviewTranslationApiKey', prop: 'ReviewTranslationApiKey', type: 'password', label: 'LibreTranslate API key (optional)',
               toConfig: (v) => (v || '').trim(),
               desc: 'Only needed when your instance requires a key.' }
         ]
@@ -93,7 +92,7 @@ define({
         title: 'User Reviews', icon: 'rate_review',
         items: [
             { type: 'note', html: 'Completely independent of Elsewhere being enabled and TMDB Reviews being enabled.' },
-            { id: 'showUserReviews', prop: 'ShowUserReviews', type: 'toggle', main: true, label: 'Enable User Written Reviews',
+            { id: 'showUserReviews', prop: 'ShowUserReviews', type: 'toggle', main: true, label: 'Enable user-written reviews',
               desc: 'Allows users to write reviews and rate items in the library.' },
             { id: 'hideReviewsFromHiddenUsers', prop: 'HideReviewsFromHiddenUsers', type: 'toggle', default: true, label: 'Hide reviews from hidden users',
               desc: 'When enabled, reviews written by Jellyfin users marked as "Hide this user from login screens" are hidden from non-admin viewers. Admins always see all reviews.' },
@@ -112,8 +111,8 @@ define({
     'release-dates': {
         title: 'Release Dates', icon: 'event',
         items: [
-            { id: 'showReleaseDate', prop: 'ShowReleaseDates', type: 'toggle', main: true, label: 'Show Release/Air Date',
-              desc: 'Requires TMDB API Key to be set. Shows a chip on Movie, Series, Season and Episode detail pages with the cinema/digital/physical release date or next/last air date, sourced from TMDB. Uses the Default Region set under TMDB Connection above to pick which country\'s dates to prefer.' }
+            { id: 'showReleaseDate', prop: 'ShowReleaseDates', type: 'toggle', main: true, label: 'Show release and air dates',
+              desc: 'Shows a chip on Movie, Series, Season and Episode detail pages with the cinema/digital/physical release date or next/last air date, sourced from TMDB. Uses the default region set in the TMDB card above to pick which country\'s dates to prefer.' }
         ]
     }
 });

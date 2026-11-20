@@ -107,7 +107,7 @@ test('when the language list arrives after the settings, the stored default lang
   await settle(h.window, 40);
   const select = h.document.getElementById('DefaultLanguage');
   assert.equal(select.value, 'de');
-  assert.deepEqual([...select.options].map(o => o.textContent), ['System Default', 'English', 'French', 'German'], 'each language once, by name');
+  assert.deepEqual([...select.options].map(o => o.textContent), ['System default', 'English', 'French', 'German'], 'each language once, by name');
   await h.submit();
   assert.equal(h.lastPut().DefaultLanguage, 'de');
 });

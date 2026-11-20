@@ -23,6 +23,8 @@ interface FieldBase {
     descAttrs?: Attributes;
     rowClass?: string;
     placeholder?: string;
+    /** On a linked copy: the source's setting, so the copy carries the same markers (render only, never loaded or saved). */
+    markOf?: { prop?: string | undefined; perUser?: boolean | undefined };
     fromConfig?(value: JsonValue | undefined, config: AdminConfig): UiValue;
 }
 export interface ToggleField extends FieldBase { type: 'toggle'; default?: boolean; toConfig?(value: boolean, config: AdminConfig): JsonValue }

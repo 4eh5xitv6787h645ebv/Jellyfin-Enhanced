@@ -119,7 +119,7 @@ export function createWhatsNew(m: WhatsNewDeps) {
                 var distinctVersions = new Set(versions);
                 var singleVersion = distinctVersions.size === 1 ? versions[0] ?? null : null;
 
-                renderWhatsNewBanner((perSetting.length ? groupWhatsNewByFieldset(perSetting) : []).concat(movedEntries), pluginVersion, singleVersion);
+                renderWhatsNewBanner((perSetting.length ? groupWhatsNewByFieldset(perSetting) : []).concat(movedEntries), pluginVersion, singleVersion, perSetting.length + moved.length);
                 renderWhatsNewBadges(perSetting);
                 jeWatchMediaTagsBadges(new Map(Object.keys(newSettings).map(function(id) { return [id, shown(newSettings[id])]; })));
             }).catch(function(err) {
@@ -131,7 +131,7 @@ export function createWhatsNew(m: WhatsNewDeps) {
 
         /** Tab content id (e.g. "seerr") -> its visible nav label (e.g. "Seerr"), read straight off the tab button so it never drifts from what's on screen. */
         function jeTabLabel(tabId: string) : string {
-            var btn = asHtml(document.querySelector('.jellyfin-tab-button[data-tab="' + tabId + '"] h3'));
+            var btn = asHtml(document.querySelector('.jellyfin-tab-button[data-tab="' + tabId + '"] .je-tab-label'));
             if (!btn) return tabId;
             return plainLabel(btn) || tabId;
         }
@@ -190,7 +190,30 @@ export function createWhatsNew(m: WhatsNewDeps) {
             renderWhatsNewBadges([]);
         }
 
-        function renderWhatsNewBanner(unseen: readonly WhatsNewEntry[], pluginVersion: string, singleVersion: string | null) : void {
+        /** Tab ids in the order the sidebar lists them, so the expanded list reads like the page. */
+        function jeNavOrder() : string[] {
+            return Array.from(document.querySelectorAll<HTMLElement>('.jellyfin-tab-button')).map(function(b) { return b.dataset.tab ?? ''; });
+        }
+
+        /** Where an entry sits on its tab: document order of its target there, the Media Tags tab's own section order for its entries. */
+        function jeEntryRank(f: WhatsNewEntry) : number {
+            if (f.mediaTags) {
+                var sections = m.mediaTagsTab.JE_MT_SECTIONS.map(function(s) { return s[0]; });
+                var groups = ['quality', 'genre', 'language', 'rating', 'ageRating', 'status', 'awards', 'logos', 'custom', 'people'];
+                var section = sections.indexOf(f.mediaTags.section);
+                var group = f.mediaTags.group ? groups.indexOf(f.mediaTags.group) : -1;
+                return (section < 0 ? 99 : section) * 100 + (group < 0 ? 0 : group + 1);
+            }
+            var target = f.selector ? asHtml(document.querySelector(f.selector)) : null;
+            if (!target) return Number.MAX_SAFE_INTEGER;
+            return Array.prototype.indexOf.call(document.querySelectorAll('fieldset, [id]'), target.closest('fieldset') || target);
+        }
+
+        /**
+         * One line under Service Status: how many settings are new, Show (the list grouped by tab in sidebar order),
+         * the release notes and Dismiss. The page opens on status; the list is there when the administrator asks.
+         */
+        function renderWhatsNewBanner(unseen: readonly WhatsNewEntry[], pluginVersion: string, singleVersion: string | null, settingCount?: number) : void {
             var existing = asHtml(document.getElementById('je-whats-new-banner'));
             if (existing) existing.remove();
             if (!pluginVersion) return;
@@ -198,15 +221,8 @@ export function createWhatsNew(m: WhatsNewDeps) {
             var banner = document.createElement('div');
             banner.id = 'je-whats-new-banner';
             banner.className = 'je-info-banner je-fieldset-wide je-whats-new-banner';
-
-            var closeBtn = document.createElement('button');
-            closeBtn.type = 'button';
-            closeBtn.className = 'je-whats-new-close';
-            closeBtn.title = 'Dismiss';
-            closeBtn.setAttribute('aria-label', 'Dismiss');
-            closeBtn.innerHTML = '&#x2715;';
-            closeBtn.addEventListener('click', dismissWhatsNew);
-            banner.appendChild(closeBtn);
+            banner.setAttribute('role', 'region');
+            banner.setAttribute('aria-label', "What's new");
 
             var icon = document.createElement('i');
             icon.className = 'material-icons je-info-icon';
@@ -215,60 +231,101 @@ export function createWhatsNew(m: WhatsNewDeps) {
             banner.appendChild(icon);
 
             var body = document.createElement('div');
-
+            body.className = 'je-whats-new-body';
             var headingRow = document.createElement('div');
             headingRow.className = 'je-whats-new-heading-row';
-            // Every pending setting comes from the same version (the common
-            // case, and always true for the first release with this feature)
-            // -> name it and deep-link that tag. Spanning several undismissed
-            // releases falls back to a version-neutral heading and the full
-            // release list, since each badge states its own version anyway.
+            var count = settingCount ?? unseen.length;
             var heading = document.createElement('strong');
+            heading.className = 'je-whats-new-heading';
             heading.textContent = unseen.length === 0
-                ? ("No new settings in v" + pluginVersion + '.')
-                : (singleVersion ? ("What's new in v" + singleVersion + ':') : "What's new since you last checked:");
+                ? 'No new settings in v' + pluginVersion
+                : count + ' new setting' + (count === 1 ? '' : 's') + (singleVersion ? ' in v' + singleVersion : ' since you last checked');
             headingRow.appendChild(heading);
-            if (pluginVersion) {
-                var releaseLink = document.createElement('a');
-                releaseLink.href = unseen.length === 0
-                    ? 'https://github.com/n00bcodr/Jellyfin-Enhanced/releases/tag/' + encodeURIComponent(pluginVersion)
-                    : (singleVersion
-                        ? 'https://github.com/n00bcodr/Jellyfin-Enhanced/releases/tag/' + encodeURIComponent(singleVersion)
-                        : 'https://github.com/n00bcodr/Jellyfin-Enhanced/releases');
-                releaseLink.target = '_blank';
-                releaseLink.rel = 'noopener noreferrer';
-                releaseLink.className = 'je-whats-new-release-link';
-                var releaseLinkIcon = document.createElement('i');
-                releaseLinkIcon.className = 'material-icons';
-                releaseLinkIcon.setAttribute('aria-hidden', 'true');
-                releaseLinkIcon.textContent = 'open_in_new';
-                releaseLink.appendChild(releaseLinkIcon);
-                releaseLink.appendChild(document.createTextNode('Read the release notes for entire changelog'));
-                headingRow.appendChild(releaseLink);
-            }
-            body.appendChild(headingRow);
 
+            var list: HTMLElement | null = null;
             if (unseen.length > 0) {
-                var list = document.createElement('div');
+                list = document.createElement('div');
                 list.className = 'je-whats-new-list';
-                unseen.forEach(function(f) {
-                    var chip = document.createElement('button');
-                    chip.type = 'button';
-                    chip.className = 'je-whats-new-chip';
-                    chip.textContent = f.tabLabel + ' > ' + f.title;
-                    chip.addEventListener('click', function() {
-                        // Settings on the Media Tags tab: open it at their section, in place.
-                        if (f.mediaTags) m.mediaTagsTab.jeOpenMediaTags(f.mediaTags.section, f.mediaTags.group, true);
-                        else m.tabs.jeJumpToTab(f.tab, f.selector, f.flashSelectors);
+                list.hidden = true;
+                var order = jeNavOrder();
+                var byTab = new Map<string, WhatsNewEntry[]>();
+                unseen.forEach(function(f) { const entries = byTab.get(f.tab) ?? []; entries.push(f); byTab.set(f.tab, entries); });
+                Array.from(byTab.keys()).sort(function(a, b) {
+                    var ia = order.indexOf(a), ib = order.indexOf(b);
+                    return (ia < 0 ? 999 : ia) - (ib < 0 ? 999 : ib);
+                }).forEach(function(tabId) {
+                    var entries = (byTab.get(tabId) ?? []).slice().sort(function(a, b) { return jeEntryRank(a) - jeEntryRank(b); });
+                    var group = document.createElement('div');
+                    group.className = 'je-whats-new-group';
+                    var title = document.createElement('div');
+                    title.className = 'je-whats-new-tab';
+                    title.textContent = entries[0]?.tabLabel ?? jeTabLabel(tabId);
+                    group.appendChild(title);
+                    var chips = document.createElement('div');
+                    chips.className = 'je-whats-new-chips';
+                    entries.forEach(function(f) {
+                        var chip = document.createElement('button');
+                        chip.type = 'button';
+                        chip.className = 'je-whats-new-chip';
+                        chip.textContent = f.title;
+                        chip.setAttribute('aria-label', f.tabLabel + ' › ' + f.title);
+                        chip.addEventListener('click', function() {
+                            // Settings on the Media Tags tab: open it at their section, in place.
+                            if (f.mediaTags) m.mediaTagsTab.jeOpenMediaTags(f.mediaTags.section, f.mediaTags.group, true);
+                            else m.tabs.jeJumpToTab(f.tab, f.selector, f.flashSelectors);
+                        });
+                        chips.appendChild(chip);
                     });
-                    list.appendChild(chip);
+                    group.appendChild(chips);
+                    list?.appendChild(group);
                 });
-                body.appendChild(list);
+                var toggle = document.createElement('button');
+                toggle.type = 'button';
+                toggle.className = 'jea-btn je-whats-new-toggle';
+                toggle.setAttribute('aria-expanded', 'false');
+                toggle.textContent = 'Show';
+                toggle.addEventListener('click', function() {
+                    if (!list) return;
+                    list.hidden = !list.hidden;
+                    toggle.setAttribute('aria-expanded', String(!list.hidden));
+                    toggle.textContent = list.hidden ? 'Show' : 'Hide';
+                });
+                headingRow.appendChild(toggle);
             }
 
+            var releaseLink = document.createElement('a');
+            releaseLink.href = unseen.length === 0
+                ? 'https://github.com/n00bcodr/Jellyfin-Enhanced/releases/tag/' + encodeURIComponent(pluginVersion)
+                : (singleVersion
+                    ? 'https://github.com/n00bcodr/Jellyfin-Enhanced/releases/tag/' + encodeURIComponent(singleVersion)
+                    : 'https://github.com/n00bcodr/Jellyfin-Enhanced/releases');
+            releaseLink.target = '_blank';
+            releaseLink.rel = 'noopener noreferrer';
+            releaseLink.className = 'je-whats-new-release-link';
+            releaseLink.appendChild(document.createTextNode('Release notes'));
+            var releaseLinkIcon = document.createElement('i');
+            releaseLinkIcon.className = 'material-icons';
+            releaseLinkIcon.setAttribute('aria-hidden', 'true');
+            releaseLinkIcon.textContent = 'open_in_new';
+            releaseLink.appendChild(releaseLinkIcon);
+            headingRow.appendChild(releaseLink);
+
+            var closeBtn = document.createElement('button');
+            closeBtn.type = 'button';
+            closeBtn.className = 'jea-btn je-whats-new-close';
+            closeBtn.textContent = 'Dismiss';
+            closeBtn.setAttribute('aria-label', "Dismiss what's new");
+            closeBtn.addEventListener('click', dismissWhatsNew);
+            headingRow.appendChild(closeBtn);
+
+            body.appendChild(headingRow);
+            if (list) body.appendChild(list);
             banner.appendChild(body);
             var overview = asHtml(document.getElementById('overview'));
-            if (overview) overview.insertBefore(banner, overview.firstChild);
+            if (!overview) return;
+            // Below Service Status, so the tab opens on the state of the server.
+            var status = overview.querySelector(':scope > fieldset');
+            if (status) status.after(banner); else overview.insertBefore(banner, overview.firstChild);
         }
 
         /** New settings (id -> the version they arrived in); the ones drawn on the Media Tags tab are badged from it. */
@@ -281,6 +338,14 @@ export function createWhatsNew(m: WhatsNewDeps) {
             var tab = asHtml(document.getElementById('media-tags'));
             if (!tab || _jeMtNewSettings.size === 0) return;
             var badged = new Set<string>();
+            // A card whose settings are all new gets one badge on its title, as a wholly new card on the form does.
+            tab.querySelectorAll<HTMLElement>('.je-ta-card').forEach(function(card) {
+                var rows = Array.from(card.querySelectorAll<HTMLElement>('[data-field-row]'));
+                if (rows.length < 2 || !rows.every(function(row) { return _jeMtNewSettings.has(row.dataset.fieldRow ?? ''); })) return;
+                rows.forEach(function(row) { badged.add(row.dataset.fieldRow ?? ''); });
+                var title = asHtml(card.querySelector('.je-ta-card-title'));
+                if (title && !title.querySelector(':scope > .je-new-badge')) jeAppendNewBadge(title, _jeMtNewSettings.get(rows[0]?.dataset.fieldRow ?? '') ?? '');
+            });
             tab.querySelectorAll<HTMLElement>('[data-field-row]').forEach(function(row) {
                 var id = row.dataset.fieldRow ?? '';
                 var version = _jeMtNewSettings.get(id);
@@ -324,9 +389,20 @@ export function createWhatsNew(m: WhatsNewDeps) {
         }
 
         /** When a whole fieldset (or expander) is new, badge just its legend (or summary) instead of every control inside it. Each badge uses its own setting's first-detected version. */
-        function renderWhatsNewBadges(perSetting: readonly WhatsNewSetting[]) : void {
+        /** Where a setting's badge goes: after its label text, beside its other markers (one placement everywhere). */
+        function jeBadgeHost(el: HTMLElement) : HTMLElement | null {
+            var label = el.closest('label') || (el.id ? document.querySelector('label[for="' + el.id + '"]') : null);
+            var marks = label ? asHtml(label.querySelector('.jea-marks')) : null;
+            return marks || asHtml(label) || el.parentElement;
+        }
+
+        function renderWhatsNewBadges(settings: readonly WhatsNewSetting[]) : void {
             document.querySelectorAll<HTMLElement>('.je-new-badge').forEach(function(b) { b.remove(); });
             jeBadgeMediaTags();
+            // A linked copy (Services) of a new setting is new too, and carries the same badge.
+            var perSetting = settings.concat(settings.flatMap(function(f): WhatsNewSetting[] {
+                return document.getElementById(f.id + '--mirror') ? [{ ...f, id: f.id + '--mirror', selector: '#' + f.id + '--mirror' }] : [];
+            }));
             var newIdSet = new Set(perSetting.map(function(f) { return f.id; }));
             var versionById = new Map(perSetting.map(function(f) { return [f.id, f.version]; }));
 
@@ -343,7 +419,7 @@ export function createWhatsNew(m: WhatsNewDeps) {
             });
 
             noFieldset.forEach(function(el) {
-                const host = el.closest('label') || el.parentElement;
+                const host = jeBadgeHost(el);
                 if (host) jeAppendNewBadge(host, versionById.get(el.id) ?? '');
             });
 
@@ -359,7 +435,7 @@ export function createWhatsNew(m: WhatsNewDeps) {
                         var details = el.closest('details');
                         var host = (details && jeAllControlsNew(details, newIdSet))
                             ? asHtml(details.querySelector(':scope > summary'))
-                            : (el.closest('.je-tag-row') ? asHtml(el.closest('.je-tag-row')?.querySelector('label') ?? null) : (el.closest('label') || el.parentElement));
+                            : (el.closest('.je-tag-row') ? asHtml(el.closest('.je-tag-row')?.querySelector('label') ?? null) : jeBadgeHost(el));
                         if (!host || asHtml(host.querySelector(':scope > .je-new-badge'))) return;
                         jeAppendNewBadge(host, versionById.get(el.id) ?? '');
                     });
