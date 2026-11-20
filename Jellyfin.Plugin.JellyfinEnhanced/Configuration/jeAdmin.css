@@ -2295,7 +2295,7 @@ div#bazarrMappingsValidationResult {
 #JellyfinEnhancedForm .jea-section .jea-toggle > .jea-switch { order: 2; }
 /* Field labels read like switch labels: one label style per card. */
 #JellyfinEnhancedForm .jea-row > .inputLabel, #JellyfinEnhancedForm .inputContainer .inputLabel {
-    display: block; margin: 0 0 6px; font-size: .95em; font-weight: 500; color: var(--je-text-strong); line-height: 1.4;
+    display: block; margin: 0 0 6px; font-size: .95em; font-weight: 500; color: var(--je-text-strong); line-height: 1.4; text-align: start;
 }
 /* Dropdowns and numbers sit beside their label while both fit; below that the control moves under the label. */
 #JellyfinEnhancedForm .jea-row.jea-inline { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 16px; }
@@ -2339,7 +2339,7 @@ div#bazarrMappingsValidationResult {
 #JellyfinEnhancedPage .sectionTitleContainer { flex-wrap: nowrap; gap: 16px; padding: 14px 0; border-bottom: 1px solid var(--je-border); }
 #JellyfinEnhancedPage .sectionTitleContainer .je-header-title-row { display: contents; }
 #JellyfinEnhancedPage .sectionTitleContainer h2 { order: 1; font-size: 1.35em; font-weight: 600; letter-spacing: .2px; white-space: nowrap; margin: 0; }
-#JellyfinEnhancedPage #settingsSearchContainer { order: 2; flex: 1 1 auto; max-width: 520px; min-width: 0; margin: 0 auto 0 12px; }
+#JellyfinEnhancedPage #settingsSearchContainer { order: 2; flex: 1 1 auto; max-width: 520px; min-width: 240px; margin: 0 auto 0 12px; }
 #JellyfinEnhancedPage #settingsSearchInput { border-radius: 10px; background: var(--je-surface-2); }
 #JellyfinEnhancedPage .je-help-link,
 #JellyfinEnhancedPage .je-desc-toggle {
