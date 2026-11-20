@@ -4,7 +4,7 @@
 
 What the rewrite has taken from [upstream](https://github.com/n00bcodr/Jellyfin-Enhanced) (`main`) since it branched at `2e0f9251bf`. The source of truth is [`upstream-sync.json`](upstream-sync.json); the procedure is [upstream-sync-procedure.md](upstream-sync-procedure.md).
 
-102 upstream commits: 1 pending, 97 ported, 3 already-present, 1 deferred.
+102 upstream commits: 98 ported, 3 already-present, 1 deferred.
 
 | # | Upstream | Date | Class | Features | Subject | Status | Rewrite commit | Note |
 |---|---|---|---|---|---|---|---|---|
@@ -108,5 +108,5 @@ What the rewrite has taken from [upstream](https://github.com/n00bcodr/Jellyfin-
 | 98 | [`1952fa31`](https://github.com/n00bcodr/Jellyfin-Enhanced/commit/1952fa31e9767d334b57c2a64b17eb92299457de) | 2026-11-20 | fix | admin | fix(admin): analytics icons reapply on refresh, hide sidebar links for hidden groups, search-mode card gaps, wrap New badge on small widths | ported | `d2612110` | artifacts/restructure-plan/step-logs/upstream-sync-evidence/p98-* |
 | 99 | [`fc9b58ea`](https://github.com/n00bcodr/Jellyfin-Enhanced/commit/fc9b58eab1a20bd95db01fbfaf76ebe638b217f8) | 2026-11-20 | fix | media-tags, platform | fix(leavingsoon): drop Cancel and Reset timer from the removal date dialog, remove unused locale key | ported | `ff36d925` | artifacts/restructure-plan/step-logs/upstream-sync-evidence/p99-* |
 | 100 | [`65161c52`](https://github.com/n00bcodr/Jellyfin-Enhanced/commit/65161c5299a33cd211f4dd12583b86c35f382340) | 2026-11-20 | translation | platform | fix(i18n): add the 72 missing leavingsoon and discovery filter strings to every locale | ported | `ca2aa651` | artifacts/restructure-plan/step-logs/upstream-sync-evidence/p100-* |
-| 101 | [`961b67bd`](https://github.com/n00bcodr/Jellyfin-Enhanced/commit/961b67bd186a87fd97b85844e61390e328fec3fc) | 2026-11-20 | translation | platform | chore(i18n): drop four obsolete discovery filter keys from every locale (Weblate sync) | ported |  | artifacts/restructure-plan/step-logs/upstream-sync-evidence/p101-* |
-| 102 | [`26b62383`](https://github.com/n00bcodr/Jellyfin-Enhanced/commit/26b6238368d60bbe02b167893c742cccc654d270) | 2026-11-20 | test | media-tags | test(leavingsoon): the removal date dialog no longer has Reset timer or Cancel | pending |  |  |
+| 101 | [`961b67bd`](https://github.com/n00bcodr/Jellyfin-Enhanced/commit/961b67bd186a87fd97b85844e61390e328fec3fc) | 2026-11-20 | translation | platform | chore(i18n): drop four obsolete discovery filter keys from every locale (Weblate sync) | ported | `f80746d2` | artifacts/restructure-plan/step-logs/upstream-sync-evidence/p101-* |
+| 102 | [`26b62383`](https://github.com/n00bcodr/Jellyfin-Enhanced/commit/26b6238368d60bbe02b167893c742cccc654d270) | 2026-11-20 | test | media-tags | test(leavingsoon): the removal date dialog no longer has Reset timer or Cancel | ported | `ff36d925` | With `fc9b58ea`. artifacts/restructure-plan/step-logs/upstream-sync-evidence/p99-* |

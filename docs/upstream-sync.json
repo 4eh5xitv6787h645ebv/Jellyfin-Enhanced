@@ -3417,7 +3417,9 @@
         "Jellyfin.Plugin.JellyfinEnhanced/js/locales/ (32 files)"
       ],
       "status": "ported",
-      "rewriteCommits": [],
+      "rewriteCommits": [
+        "f80746d2887846bbae09a7f0072ecbb9be489c8e"
+      ],
       "evidence": "artifacts/restructure-plan/step-logs/upstream-sync-evidence/p101-*",
       "notes": "Applied as is (git show 961b67bd | git apply --3way, clean): the 32 locale files under Jellyfin.Plugin.JellyfinEnhanced/js/locales other than en.json are byte for byte upstream's at 961b67bd. Each loses four keys, discovery_filter_rule_none, discovery_filter_rule_all, discovery_filter_rule_any and discovery_filter_score_hint: none is in en.json here or upstream, and nothing in client/src or tests reads them, so nothing a user reads changes. No key is added or changed; the server reads no discovery_* key."
     },
@@ -3439,8 +3441,13 @@
       "paths": [
         "tests/frontend/features/features-maintainerr-menu.test.mjs"
       ],
-      "status": "pending",
-      "rewriteCommits": []
+      "status": "ported",
+      "rewriteCommits": [
+        "ff36d925f4a9e17826d5d669c32709f34317f9a4"
+      ],
+      "with": "fc9b58eab1a20bd95db01fbfaf76ebe638b217f8",
+      "evidence": "artifacts/restructure-plan/step-logs/upstream-sync-evidence/p99-*",
+      "notes": "Upstream's own test update for fc9b58ea (row 99), published 17 minutes after it. The same test changes were made here in the rewrite commit of fc9b58ea, before this commit existed, in tests/frontend/features/media-tags/features-maintainerr-menu.test.mjs: the Postpone test no longer presses Reset timer or Cancel and closes the dialog with Escape and the close button, sending nothing (upstream's name for it, '... day buttons, custom count post accordingly', is '... day buttons and custom count post accordingly' here), and the Reclaimerr Postpone test expects no timer reset. In addition, a new test pins the absence of Reset timer, Cancel and the footer for Maintainerr and Reclaimerr in both Postpone and Mark. That commit carries only fc9b58ea's Upstream: trailer, because it predates this entry, so rewriteCommits names it by hand."
     }
   ]
 }
