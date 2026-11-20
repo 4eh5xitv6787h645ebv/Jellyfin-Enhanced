@@ -181,6 +181,9 @@ test.describe('admin configuration page', () => {
     await open(page, { failRead: true });
     await expect(page.locator('#je-probe-warning')).toBeVisible();
     await expect(page.locator('#je-probe-warning-msg')).toContainText('saving is disabled');
+    // Overview, the tab the page opens on, is read-only and has no Save dock: save from a tab with settings.
+    await expect(page.locator('.je-save-dock')).toBeHidden();
+    await clickTab(page, 'display');
     await page.locator('.je-save-dock-btn').click();
     await expect(page.locator('.jea-dialog')).toContainText('nothing was saved');
     await page.locator('.jea-dialog [data-r="1"]').click();
