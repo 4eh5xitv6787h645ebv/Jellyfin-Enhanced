@@ -18,6 +18,12 @@
   function publishEngine(value) {
     window.JEAdmin = value;
   }
+  function writeAddressQuietly(state, url, push = false) {
+    const quiet = globals().JellyfinEnhanced?.core?.navigation?.setAddressQuietly;
+    if (quiet) quiet(state, url, push);
+    else if (push) window.history.pushState(state, "", url);
+    else window.history.replaceState(state, "", url);
+  }
 
   // client/src/admin/config/engine/address.ts
   var PAGE_NAME = "Jellyfin Enhanced";
@@ -32,7 +38,7 @@
     if ((params.get(key) ?? "") === (value ?? "")) return;
     if (value) params.set(key, value);
     else params.delete(key);
-    window.history.replaceState(window.history.state, "", path + "?" + params.toString().replace(/\+/g, "%20"));
+    writeAddressQuietly(window.history.state, path + "?" + params.toString().replace(/\+/g, "%20"));
   }
 
   // client/src/admin/config/engine/schema.ts

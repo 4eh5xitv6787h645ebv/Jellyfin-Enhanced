@@ -42,7 +42,7 @@ async function insertView(page, html) {
   }, html);
 }
 
-async function open(page, { engine = () => served('.js'), hash = '#/configurationpage?name=Jellyfin%20Enhanced', saved = SAVED, status = 200, failRead = false } = {}) {
+async function open(page, { engine = () => served('.js'), hash = '#/configurationpage?name=Jellyfin%20Enhanced', saved = SAVED, status = 200, failRead = false, start, before } = {}) {
   const errors = [];
   page.on('pageerror', error => errors.push(String(error)));
   await page.route('**/JellyfinEnhanced/Configuration/jeAdmin.js*', route => (typeof status === 'function' ? status() : status) === 200
@@ -50,9 +50,11 @@ async function open(page, { engine = () => served('.js'), hash = '#/configuratio
     : route.fulfill({ status: 404, body: 'gone' }));
   await page.route('**/JellyfinEnhanced/Configuration/jeAdmin.css*', route => route.fulfill({ status: 200, contentType: 'text/css', body: served('.css') }));
   await page.route('**/JellyfinEnhanced/{cdn,fonts}/**', route => route.fulfill({ status: 204, body: '' }));
-  await page.goto('/' + hash);
+  // `start`: how the browser got to the page (default: opened at its address); `before`: runs in the page just before the view is inserted.
+  if (start) await start(page); else await page.goto('/' + hash);
   await page.evaluate(hostScript, saved);
   if (failRead) await page.evaluate(() => { window.__failConfig = true; });
+  if (before) await page.evaluate(before);
   await insertView(page, read('configPage.html'));
   return errors;
 }
@@ -226,6 +228,36 @@ test.describe('admin configuration page', () => {
       document.head.appendChild(script).remove();
     }, read('mediaTagsPage.html'));
     await expect.poll(() => page.evaluate(() => location.hash)).toBe('#/configurationpage?name=Jellyfin%20Enhanced&jeSection=media-tags&tab=groups&group=rating');
+  });
+
+  // ── Fix round 2: the live bug hunt and the round 2 reviews ──────────────────────────────────────────────────────
+
+  test('Back with unsaved changes asks first, in every browser, and the router sees only the move that is let through', async ({ page }) => {
+    // Jellyfin's router listens for popstate on the window, registered long before the page.
+    const start = async p => {
+      await p.goto('/#/home');
+      await p.evaluate(() => { window.__routed = []; window.addEventListener('popstate', () => window.__routed.push(location.hash)); });
+      await p.evaluate(() => { location.hash = '#/configurationpage?name=Jellyfin%20Enhanced&tab=display'; });
+    };
+    await open(page, { start });
+    await settled(page);
+    await page.waitForTimeout(400);
+    await page.locator('#showFileSizes').evaluate(input => input.click());
+    await expect(page.locator('.je-save-dock')).toHaveClass(/je-dirty/);
+    const before = await page.evaluate(() => window.__routed.length);
+    const dialog = page.locator('.jea-dialog');
+    await page.goBack({ timeout: 1500 }).catch(() => {});
+    await expect(dialog).toContainText('Unsaved changes');
+    await dialog.locator('[data-r="0"]').click(); // Stay
+    await expect(dialog).toHaveCount(0);
+    await expect.poll(() => page.evaluate(() => location.hash)).toMatch(/configurationpage/);
+    await expect(page.locator('#display')).toHaveClass(/active/);
+    expect(await page.evaluate(() => window.__routed.length)).toBe(before);
+    await page.goBack({ timeout: 1500 }).catch(() => {});
+    await expect(dialog).toContainText('Unsaved changes');
+    await dialog.locator('[data-r="2"]').click(); // Discard
+    await expect.poll(() => page.evaluate(() => location.hash)).toBe('#/home');
+    await expect.poll(() => page.evaluate(() => window.__routed.slice(-1)[0])).toBe('#/home');
   });
 
   test('the phone menu opens, moves between tabs and closes', async ({ page }, info) => {

@@ -87,7 +87,7 @@ export interface AdminTagsSurface {
 }
 export interface MediaTagsHostSurface {
     t?: unknown;
-    core?: { tagLayout?: unknown };
+    core?: { tagLayout?: unknown; navigation?: { setAddressQuietly?(state: unknown, url: string, push?: boolean): void } };
     /** media-tags' facade (features/media-tags/public-api.ts `MediaTagsSettingsUiFacade`, step C4), typed structurally here. */
     mediaTagsSettingsUi?: { readonly registry?: unknown };
     adminTags?: AdminTagsSurface;
@@ -185,6 +185,17 @@ export function kefinTweaksConfig(): unknown {
 
 export function mediaTagsSurface(): MediaTagsHostSurface | undefined {
     return globals().JellyfinEnhanced;
+}
+
+/**
+ * Change the address without it counting as a navigation for the plugin (its features keep what they show and make no
+ * new requests): the plugin's own quiet writer when it is loaded, else the browser's (upstream setAddressQuietly).
+ */
+export function writeAddressQuietly(state: unknown, url: string, push = false): void {
+    const quiet = globals().JellyfinEnhanced?.core?.navigation?.setAddressQuietly;
+    if (quiet) quiet(state, url, push);
+    else if (push) window.history.pushState(state, '', url);
+    else window.history.replaceState(state, '', url);
 }
 
 export function publishTestedPluginLinks(links: readonly CustomPluginLink[]): void {
