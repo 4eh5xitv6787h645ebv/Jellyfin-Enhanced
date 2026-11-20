@@ -69,9 +69,24 @@ function topGroups(card: Element): HTMLDetailsElement[] {
     return Array.from(card.querySelectorAll<HTMLDetailsElement>('.jea-group')).filter(group => !group.parentElement?.closest('.jea-group'));
 }
 
+/** Each sidebar entry for a group inside a card, with its group. */
+let navGroups: Array<readonly [HTMLElement, HTMLElement]> = [];
+
+/**
+ * A group that is not on screen (its card's main switch is off, or a setting it depends on hides it) has no sidebar
+ * entry: picking one would highlight it and show nothing. Run whenever the form's state changes.
+ */
+export function syncNavTree(): void {
+    navGroups.forEach(([link, group]) => { link.hidden = !!group.closest('.jea-section.jea-off .jea-sub, .jea-dep-hidden'); });
+    document.querySelectorAll<HTMLElement>('.jea-nav-subtree').forEach(sub => {
+        sub.hidden = !sub.querySelector(':scope > .jea-nav-sub:not([hidden])');
+    });
+}
+
 /** Sidebar tree: under the active tab, one link per card on that tab. Clicking jumps to the card; the one in view is highlighted. */
 function buildTree(bar: Element, lifecycle: MountLifecycle): void {
     const { signal } = lifecycle;
+    navGroups = [];
     bar.querySelectorAll<HTMLElement>('.jellyfin-tab-button').forEach(button => {
         const tab = document.getElementById(button.dataset.tab ?? '');
         if (!tab) return;
@@ -115,12 +130,14 @@ function buildTree(bar: Element, lifecycle: MountLifecycle): void {
                         open(() => { focusCard(tab, card, group); mark(link, subLink); setHash('card', slugOf(link.textContent)); });
                     }, { signal });
                     sub.appendChild(subLink);
+                    navGroups.push([subLink, group]);
                 });
                 tree.appendChild(sub);
             }
         });
         button.after(tree);
     });
+    syncNavTree();
     const search = document.getElementById('settingsSearchInput');
     if (search instanceof HTMLInputElement) {
         search.addEventListener('input', () => {

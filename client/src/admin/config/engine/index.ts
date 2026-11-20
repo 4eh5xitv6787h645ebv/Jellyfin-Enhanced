@@ -7,7 +7,7 @@ import { initMasonry } from './masonry';
 import { wireMirrors, syncMirrors } from './mirrors';
 import { allFields, boundFields, esc, fieldsOf, isPerUser, propOf, sectionHtml, type RenderState } from './render';
 import type { FieldSpec, SectionSpec, ShowIf, UiValue } from './schema';
-import { mountShell, openCard } from './shell';
+import { mountShell, openCard, syncNavTree } from './shell';
 
 type ChangedField = { props: string[]; labels: string[] };
 
@@ -105,6 +105,7 @@ export function createEngine(): AdminEngine {
         syncCollapse();
         syncPos();
         syncShowIf();
+        syncNavTree();
         Object.values(sections).forEach(section => {
             const fields = fieldsOf(section, sections);
             const first = fields[0] && document.getElementById(fields[0].id);

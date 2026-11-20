@@ -552,8 +552,18 @@
   function topGroups(card) {
     return Array.from(card.querySelectorAll(".jea-group")).filter((group) => !group.parentElement?.closest(".jea-group"));
   }
+  var navGroups = [];
+  function syncNavTree() {
+    navGroups.forEach(([link, group]) => {
+      link.hidden = !!group.closest(".jea-section.jea-off .jea-sub, .jea-dep-hidden");
+    });
+    document.querySelectorAll(".jea-nav-subtree").forEach((sub) => {
+      sub.hidden = !sub.querySelector(":scope > .jea-nav-sub:not([hidden])");
+    });
+  }
   function buildTree(bar, lifecycle) {
     const { signal } = lifecycle;
+    navGroups = [];
     bar.querySelectorAll(".jellyfin-tab-button").forEach((button) => {
       const tab = document.getElementById(button.dataset.tab ?? "");
       if (!tab) return;
@@ -609,12 +619,14 @@
               });
             }, { signal });
             sub.appendChild(subLink);
+            navGroups.push([subLink, group]);
           });
           tree.appendChild(sub);
         }
       });
       button.after(tree);
     });
+    syncNavTree();
     const search = document.getElementById("settingsSearchInput");
     if (search instanceof HTMLInputElement) {
       search.addEventListener("input", () => {
@@ -850,6 +862,7 @@
       syncCollapse();
       syncPos();
       syncShowIf();
+      syncNavTree();
       Object.values(sections).forEach((section) => {
         const fields = fieldsOf(section, sections);
         const first = fields[0] && document.getElementById(fields[0].id);
