@@ -3367,7 +3367,9 @@
         "Jellyfin.Plugin.JellyfinEnhanced/js/tags/maintainerr-item-menu.js"
       ],
       "status": "ported",
-      "rewriteCommits": [],
+      "rewriteCommits": [
+        "ff36d925f4a9e17826d5d669c32709f34317f9a4"
+      ],
       "evidence": "artifacts/restructure-plan/step-logs/upstream-sync-evidence/p99-*",
       "notes": "Re-implemented in client/src/features/media-tags/editor/maintainerr-item-menu.ts (the removal date dialog, shipped in tags/tag-item-menu.js here): the footer row with Reset timer (count from today) and Cancel is gone for every mode and tool (Maintainerr postpone, Reclaimerr change date and schedule), so the dialog ends with the preview line and is closed by its close button (x), Escape or a click on the backdrop, as upstream. The footer, reset and ghost rules leave maintainerr-item-menu.css, and upstream's locale hunks applied as is (maintainerr_reset_timer removed from all 33 locales; maintainerr_cancel stays, the Leaving soon page uses it). Same as upstream, the dialog's internal run() keeps its no-days branch (postpone without days, toast maintainerr_reset), which nothing in the dialog reaches any more; the server's postpone-without-days answer is unchanged. Differences: none in behaviour. docs/enhanced/tags-status.md drops Reset timer from the item-menu table and the Reclaimerr item-menu line (upstream's copy of that page still names it); docs/images/tags/maintainerr-postpone.webp, the same file as upstream's and already older than the dialog's logo and close button, still shows the removed row and was not re-shot. Tests: a new test in tests/frontend/features/media-tags/features-maintainerr-menu.test.mjs (no Reset timer, Cancel or footer for Maintainerr and Reclaimerr, the preview ends the dialog, the close button and Escape close it with no request; failed first), and the two tests that pressed Reset and Cancel now close with the close button and expect no reset. Lab: the Postpone dialog of a listed movie on the pre-port build, upstream's build of fc9b58ea and the port."
     }
