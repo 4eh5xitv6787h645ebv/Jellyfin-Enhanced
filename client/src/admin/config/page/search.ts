@@ -5,8 +5,31 @@ import { asHtml, needControl, needHtml, needInput, plainLabel } from './dom';
 /** Dependencies this module calls; members are resolved lazily, after every module exists. */
 export type SearchDeps = Pick<PageModules, 'context' | 'links' | 'mediaTagsTab' | 'tabs'>;
 
+/**
+ * British and American spellings of words the settings use: a search for either finds both (the page is written in
+ * British English since the copy pass; administrators type both). Stems, so -ise/-ize forms match in every ending.
+ */
+const SPELLINGS: ReadonlyArray<readonly [string, string]> = [
+    ['colour', 'color'], ['favourite', 'favorite'], ['behaviour', 'behavior'], ['centre', 'center'], ['grey', 'gray'],
+    ['honour', 'honor'], ['theatre', 'theater'], ['licence', 'license'], ['cancelled', 'canceled'], ['labelled', 'labeled'],
+    ['customis', 'customiz'], ['organis', 'organiz'], ['prioritis', 'prioritiz'], ['recognis', 'recogniz'],
+    ['synchronis', 'synchroniz'], ['optimis', 'optimiz'], ['personalis', 'personaliz'], ['authoris', 'authoriz'],
+    ['initialis', 'initializ'], ['normalis', 'normaliz'], ['minimis', 'minimiz'], ['maximis', 'maximiz'],
+    ['summaris', 'summariz'], ['visualis', 'visualiz'], ['categoris', 'categoriz'], ['finalis', 'finaliz'],
+];
+
+/** The query and its other spellings (lower case). */
+export function spellingsOf(query: string): string[] {
+    let forms = [query];
+    SPELLINGS.forEach(([british, american]) => {
+        forms = forms.flatMap(form => [form, form.split(british).join(american), form.split(american).join(british)]);
+        forms = forms.filter((form, i) => forms.indexOf(form) === i);
+    });
+    return forms;
+}
+
 export function createSearch(m: SearchDeps) {
-    const { form, lifecycle } = m.context;
+    const { form, lifecycle, JEAdmin } = m.context;
 
             // === Settings Search ===
             const searchInput = needInput(document.getElementById('settingsSearchInput'));
@@ -14,8 +37,6 @@ export function createSearch(m: SearchDeps) {
             const searchClear = needHtml(document.getElementById('settingsSearchClear'));
 
             const searchCount = needHtml(document.getElementById('settingsSearchCount'));
-
-            const tabButtonsContainer = m.tabs.tabs[0] ? m.tabs.tabs[0].parentElement : null;
 
             let isSearchMode = false;
 
@@ -28,6 +49,10 @@ export function createSearch(m: SearchDeps) {
             let allMatches: HTMLElement[] = [];
 
             let searchDebounce: ReturnType<typeof setTimeout> | undefined;
+
+            /** The forms of the current query, and a text test that accepts any of them. */
+            let forms: string[] = [];
+            const found = (text: string): boolean => forms.some(f => text.includes(f));
 
             /** What the form's search found (sections, highlighted matches) and what the Media Tags list found. */
             let formSections = 0;
@@ -117,13 +142,17 @@ export function createSearch(m: SearchDeps) {
              * @param {HTMLElement} element - The container to search within
              * @param {string} query - Lowercase search term to highlight
              */
-            function highlightTextIn(element: Element, query: string) : void {
+            function highlightTextIn(element: Element, query: RegExp) : void {
                 const walker = document.createTreeWalker(element, NodeFilter.SHOW_TEXT, {
                     acceptNode: function(node) {
                         const owner = node.parentElement;
                         if (!owner || SKIP_TAGS.has(owner.tagName)) return NodeFilter.FILTER_REJECT;
                         if (owner.closest('.je-search-match, .je-search-tab-label, .dep-hint-text, .dep-required-icon, .je-dep-banner, [class*="parent-hint-"]'))
                             return NodeFilter.FILTER_REJECT;
+                        // Text that stays hidden in search mode too (a requirement or warning shown only when it applies)
+                        // is no match the administrator could see or step to.
+                        const hidden = owner.closest('[hidden], [style*="display: none"], [style*="display:none"]');
+                        if (hidden && element.contains(hidden)) return NodeFilter.FILTER_REJECT;
                         return NodeFilter.FILTER_ACCEPT;
                     }
                 });
@@ -150,18 +179,21 @@ export function createSearch(m: SearchDeps) {
                 textNodes.forEach(function(node) {
                     var text = node.textContent ?? '';
                     var lower = text.toLowerCase();
-                    if (!lower.includes(query)) return;
+                    query.lastIndex = 0;
+                    if (!query.test(lower)) return;
 
                     var frag = document.createDocumentFragment();
                     var last = 0;
-                    var idx;
-                    while ((idx = lower.indexOf(query, last)) !== -1) {
+                    var hit: RegExpExecArray | null;
+                    query.lastIndex = 0;
+                    while ((hit = query.exec(lower)) !== null) {
+                        var idx = hit.index;
                         if (idx > last) frag.appendChild(document.createTextNode(text.substring(last, idx)));
                         var mark = document.createElement('mark');
                         mark.className = 'je-search-match';
-                        mark.textContent = text.substring(idx, idx + query.length);
+                        mark.textContent = text.substring(idx, idx + hit[0].length);
                         frag.appendChild(mark);
-                        last = idx + query.length;
+                        last = idx + hit[0].length;
                     }
                     if (last < text.length) frag.appendChild(document.createTextNode(text.substring(last)));
 
@@ -223,7 +255,6 @@ export function createSearch(m: SearchDeps) {
                 form.querySelectorAll<HTMLDetailsElement>('details').forEach(d => {
                     savedDetailsStates.set(d, d.open);
                 });
-                if (tabButtonsContainer) tabButtonsContainer.style.display = 'none';
                 m.tabs.tabContents.forEach(tc => {
                     const btn = asHtml(document.querySelector('.jellyfin-tab-button[data-tab="' + tc.id + '"]'));
                     // btn.textContent would include Material Icons font
@@ -253,7 +284,6 @@ export function createSearch(m: SearchDeps) {
                 clearHighlights();
                 // tabContents, not the form: the Media Tags tab sits after the form and gets a label and inline display too.
                 m.tabs.tabContents.forEach(tc => tc.querySelectorAll<HTMLElement>(':scope > .je-search-tab-label').forEach(el => el.remove()));
-                if (tabButtonsContainer) tabButtonsContainer.style.display = '';
                 // Clear inline display from every tab content. performSearch sets
                 // `style.display = 'block'|'none'` per tab; without this reset the
                 // inline value wins over `.jellyfin-tab-content.active { display: grid }`,
@@ -275,7 +305,12 @@ export function createSearch(m: SearchDeps) {
                 } catch (e) {
                     // Ignore if sessionStorage is not available
                 }
+                // The card that was shown on its own before the search (the sidebar's focus mode) is shown again.
+                const tabContent = document.getElementById(savedTab);
+                const card = tabContent?.getAttribute('data-jea-return-card') ?? null;
+                m.tabs.tabContents.forEach(tc => tc.removeAttribute('data-jea-return-card'));
                 m.tabs.activateTab(savedTab);
+                if (card) JEAdmin.openCard(document.querySelector('.jellyfin-tab-button[data-tab="' + savedTab + '"]'), card);
                 searchCount.style.display = 'none';
                 searchClear.style.display = 'none';
                 showEmpty(false);
@@ -315,6 +350,8 @@ export function createSearch(m: SearchDeps) {
                 if (!isSearchMode) enterSearchMode();
 
                 clearHighlights();
+                forms = spellingsOf(query);
+                const pattern = new RegExp(forms.slice().sort((a, b) => b.length - a.length).map(f => f.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|'), 'g');
                 let sectionCount = 0;
 
                 m.tabs.tabContents.forEach(tabContent => {
@@ -324,7 +361,7 @@ export function createSearch(m: SearchDeps) {
                     fieldsets.forEach(fieldset => {
                         const fullText = getSearchableText(fieldset);
 
-                        if (!fullText.includes(query)) {
+                        if (!found(fullText)) {
                             fieldset.classList.add('je-search-hidden');
                             return;
                         }
@@ -335,7 +372,7 @@ export function createSearch(m: SearchDeps) {
 
                         const detailsEls = fieldset.querySelectorAll<HTMLDetailsElement>('details');
                         detailsEls.forEach(detail => {
-                            if (getSearchableText(detail).includes(query)) {
+                            if (found(getSearchableText(detail))) {
                                 detail.classList.remove('je-search-hidden');
                                 detail.open = true;
                             } else {
@@ -343,7 +380,7 @@ export function createSearch(m: SearchDeps) {
                             }
                         });
 
-                        highlightTextIn(fieldset, query);
+                        highlightTextIn(fieldset, pattern);
                     });
 
                     tabContent.style.display = tabHasMatch ? 'block' : 'none';
@@ -360,7 +397,7 @@ export function createSearch(m: SearchDeps) {
                     if (btn) {
                         tabLabel = plainLabel(btn).toLowerCase();
                     }
-                    tabContent.classList.toggle('je-tab-name-match', tabHasMatch && tabLabel.includes(query));
+                    tabContent.classList.toggle('je-tab-name-match', tabHasMatch && found(tabLabel));
                 });
 
                 allMatches = Array.from(form.querySelectorAll<HTMLElement>('.je-search-match'));
@@ -399,12 +436,12 @@ export function createSearch(m: SearchDeps) {
                     sections.forEach(function (sec) {
                         const secTitle = t(sec.title);
                         const where = (tabName.get(sec.tab) ?? sec.tab) + (secTitle ? ' \u203a ' + secTitle : '');
-                        const sectionHit = (secTitle + ' ' + t(sec.hint)).toLowerCase().includes(query);
+                        const sectionHit = found((secTitle + ' ' + t(sec.hint)).toLowerCase());
                         (sec.fields ?? []).forEach(function (f) {
                             if (!f.label) return;
                             const label = t(f.label);
                             const desc = f.desc ? t(f.desc, f.descParams) : '';
-                            if (sectionHit || (label + ' ' + desc + ' ' + f.id).toLowerCase().includes(query)) {
+                            if (sectionHit || found((label + ' ' + desc + ' ' + f.id).toLowerCase())) {
                                 hits.push({ tab: sec.tab, group: sec.group?.id ?? null, where: where, label: label, id: f.id });
                             }
                         });
@@ -460,7 +497,7 @@ export function createSearch(m: SearchDeps) {
                     clearTimeout(searchDebounce);  // kill the debounce so a stale non-empty query can't re-enter search mode after we exit
                     searchInput.value = '';
                     performSearch('');
-                    searchInput.blur();
+                    // Focus stays in the search box, where the administrator was.
                 } else if (e.key === 'Enter') {
                     e.preventDefault();
                     if (allMatches.length > 0) {
@@ -475,6 +512,14 @@ export function createSearch(m: SearchDeps) {
                 performSearch('');
                 searchInput.focus();
             });
+
+            // Picking a tab in the sidebar while searching ends the search on that tab (the sidebar stays in place).
+            m.tabs.tabs.forEach(tab => tab.addEventListener('click', () => {
+                if (!isSearchMode) return;
+                clearTimeout(searchDebounce);
+                searchInput.value = '';
+                performSearch('');
+            }));
     }
 
     return {

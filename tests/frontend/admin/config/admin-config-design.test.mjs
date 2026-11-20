@@ -6,7 +6,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { bootGenerated, config, settle } from '../../helpers/admin-config-page.mjs';
+import { bootGenerated, closeAfter, config, settle } from '../../helpers/admin-config-page.mjs';
 
 const WHATS_NEW = {
   pluginVersion: '12.16.0.0',
@@ -21,7 +21,7 @@ async function page(t, options = {}) {
     ajax: r => (/\/whats-new$/.test(r.url) && r.type === 'GET' ? WHATS_NEW : /\/Plugins$/.test(r.url) ? [] : undefined),
     ...options,
   });
-  t.after(() => h.close());
+  closeAfter(t, h);
   await h.ready();
   h.show();
   await settle(h.window, 100);
@@ -56,7 +56,8 @@ test('What\'s new is one line under Service Status, and Show lists the new setti
   assert.ok(banner);
   const status = doc.querySelector('#overview > fieldset');
   assert.equal(banner.previousElementSibling, status, 'directly below Service Status');
-  assert.match(banner.querySelector('.je-whats-new-heading').textContent, /^3 new settings in v12\.16\.0\.0$/);
+  // It counts what Show lists (fix round 2): one entry per card with new settings.
+  assert.match(banner.querySelector('.je-whats-new-heading').textContent, /^3 sections have new settings in v12\.16\.0\.0$/);
   const list = banner.querySelector('.je-whats-new-list');
   assert.equal(list.hidden, true, 'the list starts closed');
   const show = banner.querySelector('.je-whats-new-toggle');
@@ -181,22 +182,5 @@ test('every secret has a Show button and stays masked until it is pressed', asyn
   assert.doesNotMatch(css, /:hover[^{]*\{[^}]*text-security: none/, 'nothing is revealed by hovering');
 });
 
-test('the sidebar lists a card\'s groups only while they are on screen', async t => {
-  const h = await page(t, { saved: { TMDB_API_KEY: 'key', MdblistRatingsEnabled: false } });
-  const main = h.document.getElementById('mdblistRatingsEnabled');
-  const card = main.closest('fieldset');
-  assert.ok(card.classList.contains('jea-off'), 'MDBList ratings is off, so its groups are collapsed');
-  const title = [...card.querySelector('legend').childNodes].filter(n => n.nodeType === 3).map(n => n.textContent).join('').trim();
-  const leaf = [...h.document.querySelectorAll('.jea-nav-tree > .jea-nav-leaf')].find(a => a.textContent === title);
-  const sub = leaf.nextElementSibling;
-  assert.ok(sub?.classList.contains('jea-nav-subtree'), 'the card has sidebar entries for its groups');
-  const entries = () => [...sub.querySelectorAll('.jea-nav-sub')];
-  assert.ok(entries().length >= 2);
-  assert.ok(entries().every(a => a.hidden) && sub.hidden, 'no entry leads to a group that is not shown');
-  main.checked = true;
-  main.dispatchEvent(new h.window.Event('change', { bubbles: true }));
-  await settle(h.window);
-  assert.ok(entries().every(a => !a.hidden) && !sub.hidden, 'turning the card on lists its groups');
-  const css = readFileSync(join(config, 'jeAdmin.css'), 'utf8');
-  assert.match(css, /\.jea-nav-leaf\[hidden\][^{]*\{\s*display:\s*none/, 'a hidden entry is not drawn');
-});
+// (Whether the sidebar lists a card's groups depends on the stylesheet, so that check runs in a browser:
+// tests/browser/admin-config-rewrite.spec.cjs.)

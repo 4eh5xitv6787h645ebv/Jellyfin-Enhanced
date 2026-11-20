@@ -6,8 +6,10 @@ export const esc = (value: unknown): string => String(value).replace(/[&<>"]/g, 
 
 const mirrorCondition = (c: ShowIf): ShowIf => (typeof c === 'string' ? c + MIRROR : { ...c, id: c.id + MIRROR });
 
+/** A linked copy's markup: its own ids, and without notes that only make sense on the original card (data-je-original-only). */
 const mirrorMarkup = (html: string): string =>
-    html.replace(/\b(id|for)="([^"]+)"/g, (_match: string, key: string, value: string) => key + '="' + value + MIRROR + '"');
+    html.replace(/<span data-je-original-only>[^<]*<\/span>/g, '')
+        .replace(/\b(id|for)="([^"]+)"/g, (_match: string, key: string, value: string) => key + '="' + value + MIRROR + '"');
 
 function mirrorItem(item: SectionItem): SectionItem {
     const copy = { ...item };
@@ -177,5 +179,5 @@ export function sectionHtml(input: SectionSpec, sections: SectionMap, state: Ren
     const body = top.map(item => itemHtml(item, state)).join('') + (rest.length ? `<div class="jea-sub">${rest.map(item => itemHtml(item, state)).join('')}</div>` : '');
     const banner = fieldsOf(section, sections).some(field => isPerUser(field, state.perUserProps))
         ? '<div class="jea-apply" hidden><div class="jea-apply-text"></div><span class="jea-apply-actions"><button type="button" class="jea-btn jea-btn-primary jea-apply-sel" title="Copies only the settings listed here into the personal settings of every user">Apply the above</button><button type="button" class="jea-btn jea-apply-btn" title="Copies every plugin setting that users also hold personally into every user, replacing their own values">Apply all plugin settings</button></span></div>' : '';
-    return `<fieldset class="jea-section${section.class ? ' ' + section.class : ''}"${section.id ? ` id="${section.id}"` : ''}${attributes(section.attrs)}><legend class="sectionTitle">${icon}${esc(section.title ?? '')}</legend><div class="configSection">${body}</div>${banner}</fieldset>`;
+    return `<fieldset class="jea-section${section.class ? ' ' + section.class : ''}"${section.id ? ` id="${section.id}"` : ''}${attributes(section.attrs)}><legend class="sectionTitle">${icon}<span class="jea-legend-title" role="heading" aria-level="3">${esc(section.title ?? '')}</span></legend><div class="configSection">${body}</div>${banner}</fieldset>`;
 }

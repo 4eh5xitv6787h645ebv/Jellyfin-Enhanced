@@ -73,13 +73,10 @@
 #JellyfinEnhancedForm #seerr .jea-section .je-details-section { margin-top: 12px; }
 #JellyfinEnhancedForm #seerr .jea-section .jea-note { margin-top: 10px; }
 #JellyfinEnhancedForm #seerr .jea-section select { max-width: 100%; }
-#JellyfinEnhancedForm #seerr .jea-section input[type="number"].jea-input { max-width: 12em; }
 #JellyfinEnhancedForm #seerr .jea-section .je-installed-badge { margin-left: .4em; }
 /* Connection Setup (legacy markup): keep the URL/key rows tidy inside the card. */
 #JellyfinEnhancedForm #seerr fieldset[data-dep-setup] .je-api-row { display: flex; align-items: center; gap: 10px; }
 #JellyfinEnhancedForm #seerr fieldset[data-dep-setup] .je-api-input { flex: 1 1 auto; min-width: 0; }
-#JellyfinEnhancedForm #seerr .jea-inline { display: flex; align-items: center; gap: 10px; }
-#JellyfinEnhancedForm #seerr .jea-inline .jea-input { flex: 1 1 auto; min-width: 0; }
 
 /* ===== arr ===== */
 /* *arr tab styles. */

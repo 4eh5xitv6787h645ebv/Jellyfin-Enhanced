@@ -17,6 +17,20 @@ export const clone = value => JSON.parse(JSON.stringify(value));
 export const settle = async (window, rounds = 40) => { for (let i = 0; i < rounds; i++) await new Promise(r => window.setTimeout(r, 0)); };
 
 /**
+ * Close a booted page when the test ends. node:test keeps every test's after hooks until the file ends, and a hook that
+ * still holds its harness keeps the whole closed page (tens of MB) with it: a file with many tests then exceeds the
+ * default heap. The hook is made here, outside the test's own scope, and lets go of the harness before closing it.
+ */
+export function closeAfter(t, harness) {
+  let h = harness;
+  t.after(() => {
+    const closing = h;
+    h = null;
+    closing.close();
+  });
+}
+
+/**
  * The generated page in a real parse: its startup and page scripts run as the host runs them, and
  * the page's jeAdmin.js script element is answered by the harness, so a test decides when and whether it loads.
  * @param {object} options

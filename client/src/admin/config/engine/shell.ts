@@ -15,7 +15,8 @@ const textOf = (element: Element): string => Array.from(element.childNodes).filt
 
 function sectionTitle(fieldset: Element): string {
     const legend = fieldset.querySelector(':scope > legend');
-    return legend ? textOf(legend) : '';
+    const title = legend?.querySelector(':scope > .jea-legend-title');
+    return title ? textOf(title) : legend ? textOf(legend) : '';
 }
 
 /** Focus mode: picking a card (or a group inside it) in the sidebar shows only that on screen; picking the tab itself shows everything. */
@@ -53,13 +54,68 @@ function crumbFor(tab: Element, card: Element, group?: HTMLDetailsElement): void
     tab.prepend(crumb);
 }
 
-function focusCard(tab: Element, card: Element, group?: HTMLDetailsElement): void {
+/** The bottom of Jellyfin's own top bar, fixed at the top of the window (Jellyfin 12's app bar, 10.11's skin header). */
+function barBottom(): number {
+    let bottom = 0;
+    document.querySelectorAll<HTMLElement>('.MuiAppBar-root, .skinHeader').forEach(bar => {
+        if (getComputedStyle(bar).position === 'fixed' && bar.getClientRects().length) bottom = Math.max(bottom, bar.getBoundingClientRect().bottom);
+    });
+    return bottom;
+}
+
+/**
+ * How far down the window the bars pinned at its top reach: Jellyfin's own bar, this page's sticky header, and the
+ * phone's Section bar. Something scrolled to sits below them, not under them.
+ */
+export function pinnedTop(): number {
+    let bottom = barBottom();
+    const own = document.querySelector<HTMLElement>('.je-sticky-header');
+    if (own && getComputedStyle(own).position === 'sticky') bottom = Math.max(bottom, (parseFloat(getComputedStyle(own).top) || 0) + own.offsetHeight);
+    const toggle = document.querySelector<HTMLElement>('.jea-nav-toggle');
+    const nav = toggle?.parentElement;
+    if (toggle && nav && toggle.getClientRects().length && getComputedStyle(nav).position === 'sticky') bottom = Math.max(bottom, (parseFloat(getComputedStyle(nav).top) || 0) + toggle.offsetHeight);
+    return Math.max(0, bottom);
+}
+
+/**
+ * The page's sticky header sits below Jellyfin's bar, and the phone's Section bar below both: their heights, measured,
+ * as --jea-bar-h and --jea-head-h (the header's only while it is sticky; it is not on phones).
+ */
+function measurePins(page: HTMLElement, header: HTMLElement): void {
+    page.style.setProperty('--jea-bar-h', Math.round(barBottom()) + 'px');
+    page.style.setProperty('--jea-head-h', (getComputedStyle(header).position === 'sticky' ? header.offsetHeight : 0) + 'px');
+}
+
+/** "Skip to settings": the first stop on the page, past the search, the header buttons and the sidebar, to the first setting shown. */
+function skipLink(header: HTMLElement, lifecycle: MountLifecycle): void {
+    const link = document.createElement('a');
+    link.href = '#';
+    link.className = 'jea-skip';
+    link.textContent = 'Skip to settings';
+    link.addEventListener('click', event => {
+        event.preventDefault();
+        const tab = document.querySelector<HTMLElement>('#JellyfinEnhancedForm > .jellyfin-tab-content.active, .jellyfin-tab-content.active');
+        if (!tab) return;
+        const first = Array.from(tab.querySelectorAll<HTMLElement>('fieldset :is(input, select, textarea, button, a[href])'))
+            .find(element => element.getClientRects().length > 0 && !element.matches(':disabled'));
+        if (first) { first.focus(); return; }
+        tab.tabIndex = -1;
+        tab.focus();
+    }, { signal: lifecycle.signal });
+    header.prepend(link);
+}
+
+function focusCard(tab: Element, card: Element, lifecycle: MountLifecycle, group?: HTMLDetailsElement): void {
     crumbFor(tab, card, group);
     tab.classList.add('jea-focused');
     tab.querySelectorAll(':scope > fieldset').forEach(fieldset => fieldset.classList.toggle('jea-focus', fieldset === card));
     if (group) {
         card.querySelectorAll<HTMLDetailsElement>('.jea-group').forEach(other => { other.open = other === group; });
-        group.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        // After the phone drawer has closed (it locks the page's scrolling while open, in a timeout after this click)
+        // and laid out, and below the bars pinned at the top.
+        lifecycle.timeout(() => lifecycle.frame(() => {
+            window.scrollTo({ top: Math.max(0, window.scrollY + group.getBoundingClientRect().top - pinnedTop() - 12), behavior: 'smooth' });
+        }), 0);
     } else {
         window.scrollTo({ top: 0, behavior: 'smooth' });
     }
@@ -73,11 +129,23 @@ function topGroups(card: Element): HTMLDetailsElement[] {
 let navGroups: Array<readonly [HTMLElement, HTMLElement]> = [];
 
 /**
- * A group that is not on screen (its card's main switch is off, or a setting it depends on hides it) has no sidebar
- * entry: picking one would highlight it and show nothing. Run whenever the form's state changes.
+ * Whether a group is drawn whenever its card is: nothing between the two is hidden, whatever hides it (the card's main
+ * switch is off, the card is locked for a missing service, a setting it depends on is off).
+ */
+function displayable(group: HTMLElement): boolean {
+    const card = group.closest('fieldset');
+    for (let element: HTMLElement | null = group; element && element !== card; element = element.parentElement) {
+        if (element.hidden || getComputedStyle(element).display === 'none') return false;
+    }
+    return true;
+}
+
+/**
+ * A group that is not on screen has no sidebar entry: picking one would highlight it and show nothing. Kept in step
+ * with the form by an observer (buildTree), so every way a group can be hidden or shown again is covered.
  */
 export function syncNavTree(): void {
-    navGroups.forEach(([link, group]) => { link.hidden = !!group.closest('.jea-section.jea-off .jea-sub, .jea-dep-hidden'); });
+    navGroups.forEach(([link, group]) => { link.hidden = !displayable(group); });
     document.querySelectorAll<HTMLElement>('.jea-nav-subtree').forEach(sub => {
         sub.hidden = !sub.querySelector(':scope > .jea-nav-sub:not([hidden])');
     });
@@ -87,17 +155,21 @@ export function syncNavTree(): void {
 function buildTree(bar: Element, lifecycle: MountLifecycle): void {
     const { signal } = lifecycle;
     navGroups = [];
+    /** A card picked on another tab, shown once that tab has opened. */
+    let pendingCard = 0;
     bar.querySelectorAll<HTMLElement>('.jellyfin-tab-button').forEach(button => {
         const tab = document.getElementById(button.dataset.tab ?? '');
         if (!tab) return;
-        button.addEventListener('click', () => showAll(tab), { signal });
+        // Another tab picked before a card's tab has opened: that card is no longer wanted.
+        button.addEventListener('click', () => { window.clearTimeout(pendingCard); showAll(tab); }, { signal });
         const cards = Array.from(tab.querySelectorAll(':scope > fieldset')).filter(card => sectionTitle(card));
         if (cards.length < 2) return;
         const tree = document.createElement('div');
         tree.className = 'jea-nav-tree';
         const open = (action: () => void): void => {
+            window.clearTimeout(pendingCard);
             if (button.classList.contains('active')) action();
-            else { button.click(); lifecycle.timeout(action, 350); }
+            else { button.click(); pendingCard = lifecycle.timeout(action, 350); }
         };
         const mark = (leaf: Element, sub?: Element): void => {
             tree.querySelectorAll('.jea-nav-leaf').forEach(other => {
@@ -113,7 +185,7 @@ function buildTree(bar: Element, lifecycle: MountLifecycle): void {
             link.textContent = sectionTitle(card);
             link.addEventListener('click', event => {
                 event.preventDefault();
-                open(() => { focusCard(tab, card); mark(link); setHash('card', slugOf(link.textContent)); });
+                open(() => { focusCard(tab, card, lifecycle); mark(link); setHash('card', slugOf(link.textContent)); });
             }, { signal });
             tree.appendChild(link);
             const groups = topGroups(card);
@@ -127,7 +199,7 @@ function buildTree(bar: Element, lifecycle: MountLifecycle): void {
                     subLink.textContent = (group.querySelector(':scope > summary')?.textContent ?? '').trim();
                     subLink.addEventListener('click', event => {
                         event.preventDefault();
-                        open(() => { focusCard(tab, card, group); mark(link, subLink); setHash('card', slugOf(link.textContent)); });
+                        open(() => { focusCard(tab, card, lifecycle, group); mark(link, subLink); setHash('card', slugOf(link.textContent)); });
                     }, { signal });
                     sub.appendChild(subLink);
                     navGroups.push([subLink, group]);
@@ -138,10 +210,23 @@ function buildTree(bar: Element, lifecycle: MountLifecycle): void {
         button.after(tree);
     });
     syncNavTree();
+    const form = document.getElementById('JellyfinEnhancedForm');
+    let queued = false;
+    if (form) lifecycle.track(new MutationObserver(() => {
+        if (queued) return;
+        queued = true;
+        lifecycle.frame(() => { queued = false; syncNavTree(); });
+    })).observe(form, { subtree: true, attributes: true, attributeFilter: ['class', 'hidden', 'style'] });
     const search = document.getElementById('settingsSearchInput');
     if (search instanceof HTMLInputElement) {
         search.addEventListener('input', () => {
-            if (search.value) document.querySelectorAll('.jellyfin-tab-content.jea-focused').forEach(showAll);
+            if (!search.value) return;
+            // The card shown on its own is shown again when the search ends (page/search.ts).
+            const card = new URLSearchParams(window.location.hash.split('?')[1] ?? '').get('card');
+            document.querySelectorAll('.jellyfin-tab-content.jea-focused').forEach(tab => {
+                if (card) tab.setAttribute('data-jea-return-card', card);
+                showAll(tab);
+            });
         }, { signal });
     }
 }
@@ -189,6 +274,7 @@ export function mountShell(lifecycle: MountLifecycle): void {
         chip.textContent = 'v' + version.split('-')[0];
         title.appendChild(chip);
     }
+    if (header instanceof HTMLElement) skipLink(header, lifecycle);
     parent.insertBefore(layout, header.nextSibling);
     layout.append(nav, main);
     nav.append(toggle, bar);
@@ -291,6 +377,16 @@ export function mountShell(lifecycle: MountLifecycle): void {
     window.addEventListener('resize', cue, { signal });
     if (typeof ResizeObserver !== 'undefined') lifecycle.track(new ResizeObserver(cue)).observe(bar);
     lifecycle.timeout(cue, 0);
+
+    const pageElement = document.getElementById('JellyfinEnhancedPage');
+    if (pageElement && header instanceof HTMLElement) {
+        const pins = (): void => measurePins(pageElement, header);
+        pins();
+        window.addEventListener('resize', pins, { signal });
+        if (typeof ResizeObserver !== 'undefined') lifecycle.track(new ResizeObserver(pins)).observe(header);
+        // Jellyfin draws its bar after the page in some views.
+        lifecycle.timeout(pins, 300);
+    }
 
     const label = (): void => {
         const active = bar.querySelector('.jellyfin-tab-button.active .je-tab-label');

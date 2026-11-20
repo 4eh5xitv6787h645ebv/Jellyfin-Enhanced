@@ -18,6 +18,12 @@
   function publishEngine(value) {
     window.JEAdmin = value;
   }
+  function writeAddressQuietly(state, url, push = false) {
+    const quiet = globals().JellyfinEnhanced?.core?.navigation?.setAddressQuietly;
+    if (quiet) quiet(state, url, push);
+    else if (push) window.history.pushState(state, "", url);
+    else window.history.replaceState(state, "", url);
+  }
 
   // client/src/admin/config/engine/address.ts
   var PAGE_NAME = "Jellyfin Enhanced";
@@ -32,7 +38,7 @@
     if ((params.get(key) ?? "") === (value ?? "")) return;
     if (value) params.set(key, value);
     else params.delete(key);
-    window.history.replaceState(window.history.state, "", path + "?" + params.toString().replace(/\+/g, "%20"));
+    writeAddressQuietly(window.history.state, path + "?" + params.toString().replace(/\+/g, "%20"));
   }
 
   // client/src/admin/config/engine/schema.ts
@@ -46,7 +52,7 @@
   var ENTITIES = { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" };
   var esc = (value) => String(value).replace(/[&<>"]/g, (c) => ENTITIES[c] ?? c);
   var mirrorCondition = (c) => typeof c === "string" ? c + MIRROR : { ...c, id: c.id + MIRROR };
-  var mirrorMarkup = (html) => html.replace(/\b(id|for)="([^"]+)"/g, (_match, key, value) => key + '="' + value + MIRROR + '"');
+  var mirrorMarkup = (html) => html.replace(/<span data-je-original-only>[^<]*<\/span>/g, "").replace(/\b(id|for)="([^"]+)"/g, (_match, key, value) => key + '="' + value + MIRROR + '"');
   function mirrorItem(item) {
     const copy = { ...item };
     if (copy.type === "group") copy.items = copy.items.map(mirrorItem);
@@ -169,7 +175,7 @@
     const rest = mainIndex < 0 ? items : items.slice(mainIndex + 1);
     const body = top.map((item) => itemHtml(item, state)).join("") + (rest.length ? `<div class="jea-sub">${rest.map((item) => itemHtml(item, state)).join("")}</div>` : "");
     const banner = fieldsOf(section, sections).some((field) => isPerUser(field, state.perUserProps)) ? '<div class="jea-apply" hidden><div class="jea-apply-text"></div><span class="jea-apply-actions"><button type="button" class="jea-btn jea-btn-primary jea-apply-sel" title="Copies only the settings listed here into the personal settings of every user">Apply the above</button><button type="button" class="jea-btn jea-apply-btn" title="Copies every plugin setting that users also hold personally into every user, replacing their own values">Apply all plugin settings</button></span></div>' : "";
-    return `<fieldset class="jea-section${section.class ? " " + section.class : ""}"${section.id ? ` id="${section.id}"` : ""}${attributes(section.attrs)}><legend class="sectionTitle">${icon}${esc(section.title ?? "")}</legend><div class="configSection">${body}</div>${banner}</fieldset>`;
+    return `<fieldset class="jea-section${section.class ? " " + section.class : ""}"${section.id ? ` id="${section.id}"` : ""}${attributes(section.attrs)}><legend class="sectionTitle">${icon}<span class="jea-legend-title" role="heading" aria-level="3">${esc(section.title ?? "")}</span></legend><div class="configSection">${body}</div>${banner}</fieldset>`;
   }
 
   // client/src/admin/config/engine/dialogs.ts
@@ -499,7 +505,8 @@
   var textOf = (element) => Array.from(element.childNodes).filter((node) => node.nodeType === 3).map((node) => node.textContent).join("").trim();
   function sectionTitle(fieldset) {
     const legend = fieldset.querySelector(":scope > legend");
-    return legend ? textOf(legend) : "";
+    const title = legend?.querySelector(":scope > .jea-legend-title");
+    return title ? textOf(title) : legend ? textOf(legend) : "";
   }
   function showAll(tab) {
     if (!tab) return;
@@ -536,7 +543,46 @@
     crumb.append(trail, all);
     tab.prepend(crumb);
   }
-  function focusCard(tab, card, group) {
+  function barBottom() {
+    let bottom = 0;
+    document.querySelectorAll(".MuiAppBar-root, .skinHeader").forEach((bar) => {
+      if (getComputedStyle(bar).position === "fixed" && bar.getClientRects().length) bottom = Math.max(bottom, bar.getBoundingClientRect().bottom);
+    });
+    return bottom;
+  }
+  function pinnedTop() {
+    let bottom = barBottom();
+    const own = document.querySelector(".je-sticky-header");
+    if (own && getComputedStyle(own).position === "sticky") bottom = Math.max(bottom, (parseFloat(getComputedStyle(own).top) || 0) + own.offsetHeight);
+    const toggle = document.querySelector(".jea-nav-toggle");
+    const nav = toggle?.parentElement;
+    if (toggle && nav && toggle.getClientRects().length && getComputedStyle(nav).position === "sticky") bottom = Math.max(bottom, (parseFloat(getComputedStyle(nav).top) || 0) + toggle.offsetHeight);
+    return Math.max(0, bottom);
+  }
+  function measurePins(page, header) {
+    page.style.setProperty("--jea-bar-h", Math.round(barBottom()) + "px");
+    page.style.setProperty("--jea-head-h", (getComputedStyle(header).position === "sticky" ? header.offsetHeight : 0) + "px");
+  }
+  function skipLink(header, lifecycle) {
+    const link = document.createElement("a");
+    link.href = "#";
+    link.className = "jea-skip";
+    link.textContent = "Skip to settings";
+    link.addEventListener("click", (event) => {
+      event.preventDefault();
+      const tab = document.querySelector("#JellyfinEnhancedForm > .jellyfin-tab-content.active, .jellyfin-tab-content.active");
+      if (!tab) return;
+      const first = Array.from(tab.querySelectorAll("fieldset :is(input, select, textarea, button, a[href])")).find((element) => element.getClientRects().length > 0 && !element.matches(":disabled"));
+      if (first) {
+        first.focus();
+        return;
+      }
+      tab.tabIndex = -1;
+      tab.focus();
+    }, { signal: lifecycle.signal });
+    header.prepend(link);
+  }
+  function focusCard(tab, card, lifecycle, group) {
     crumbFor(tab, card, group);
     tab.classList.add("jea-focused");
     tab.querySelectorAll(":scope > fieldset").forEach((fieldset) => fieldset.classList.toggle("jea-focus", fieldset === card));
@@ -544,7 +590,9 @@
       card.querySelectorAll(".jea-group").forEach((other) => {
         other.open = other === group;
       });
-      group.scrollIntoView({ behavior: "smooth", block: "start" });
+      lifecycle.timeout(() => lifecycle.frame(() => {
+        window.scrollTo({ top: Math.max(0, window.scrollY + group.getBoundingClientRect().top - pinnedTop() - 12), behavior: "smooth" });
+      }), 0);
     } else {
       window.scrollTo({ top: 0, behavior: "smooth" });
     }
@@ -553,9 +601,16 @@
     return Array.from(card.querySelectorAll(".jea-group")).filter((group) => !group.parentElement?.closest(".jea-group"));
   }
   var navGroups = [];
+  function displayable(group) {
+    const card = group.closest("fieldset");
+    for (let element = group; element && element !== card; element = element.parentElement) {
+      if (element.hidden || getComputedStyle(element).display === "none") return false;
+    }
+    return true;
+  }
   function syncNavTree() {
     navGroups.forEach(([link, group]) => {
-      link.hidden = !!group.closest(".jea-section.jea-off .jea-sub, .jea-dep-hidden");
+      link.hidden = !displayable(group);
     });
     document.querySelectorAll(".jea-nav-subtree").forEach((sub) => {
       sub.hidden = !sub.querySelector(":scope > .jea-nav-sub:not([hidden])");
@@ -564,19 +619,24 @@
   function buildTree(bar, lifecycle) {
     const { signal } = lifecycle;
     navGroups = [];
+    let pendingCard = 0;
     bar.querySelectorAll(".jellyfin-tab-button").forEach((button) => {
       const tab = document.getElementById(button.dataset.tab ?? "");
       if (!tab) return;
-      button.addEventListener("click", () => showAll(tab), { signal });
+      button.addEventListener("click", () => {
+        window.clearTimeout(pendingCard);
+        showAll(tab);
+      }, { signal });
       const cards = Array.from(tab.querySelectorAll(":scope > fieldset")).filter((card) => sectionTitle(card));
       if (cards.length < 2) return;
       const tree = document.createElement("div");
       tree.className = "jea-nav-tree";
       const open = (action) => {
+        window.clearTimeout(pendingCard);
         if (button.classList.contains("active")) action();
         else {
           button.click();
-          lifecycle.timeout(action, 350);
+          pendingCard = lifecycle.timeout(action, 350);
         }
       };
       const mark = (leaf, sub) => {
@@ -595,7 +655,7 @@
         link.addEventListener("click", (event) => {
           event.preventDefault();
           open(() => {
-            focusCard(tab, card);
+            focusCard(tab, card, lifecycle);
             mark(link);
             setHash("card", slugOf(link.textContent));
           });
@@ -613,7 +673,7 @@
             subLink.addEventListener("click", (event) => {
               event.preventDefault();
               open(() => {
-                focusCard(tab, card, group);
+                focusCard(tab, card, lifecycle, group);
                 mark(link, subLink);
                 setHash("card", slugOf(link.textContent));
               });
@@ -627,10 +687,25 @@
       button.after(tree);
     });
     syncNavTree();
+    const form = document.getElementById("JellyfinEnhancedForm");
+    let queued = false;
+    if (form) lifecycle.track(new MutationObserver(() => {
+      if (queued) return;
+      queued = true;
+      lifecycle.frame(() => {
+        queued = false;
+        syncNavTree();
+      });
+    })).observe(form, { subtree: true, attributes: true, attributeFilter: ["class", "hidden", "style"] });
     const search = document.getElementById("settingsSearchInput");
     if (search instanceof HTMLInputElement) {
       search.addEventListener("input", () => {
-        if (search.value) document.querySelectorAll(".jellyfin-tab-content.jea-focused").forEach(showAll);
+        if (!search.value) return;
+        const card = new URLSearchParams(window.location.hash.split("?")[1] ?? "").get("card");
+        document.querySelectorAll(".jellyfin-tab-content.jea-focused").forEach((tab) => {
+          if (card) tab.setAttribute("data-jea-return-card", card);
+          showAll(tab);
+        });
       }, { signal });
     }
   }
@@ -667,6 +742,7 @@
       chip.textContent = "v" + version.split("-")[0];
       title.appendChild(chip);
     }
+    if (header instanceof HTMLElement) skipLink(header, lifecycle);
     parent.insertBefore(layout, header.nextSibling);
     layout.append(nav, main);
     nav.append(toggle, bar);
@@ -771,6 +847,14 @@
     window.addEventListener("resize", cue, { signal });
     if (typeof ResizeObserver !== "undefined") lifecycle.track(new ResizeObserver(cue)).observe(bar);
     lifecycle.timeout(cue, 0);
+    const pageElement = document.getElementById("JellyfinEnhancedPage");
+    if (pageElement && header instanceof HTMLElement) {
+      const pins = () => measurePins(pageElement, header);
+      pins();
+      window.addEventListener("resize", pins, { signal });
+      if (typeof ResizeObserver !== "undefined") lifecycle.track(new ResizeObserver(pins)).observe(header);
+      lifecycle.timeout(pins, 300);
+    }
     const label = () => {
       const active = bar.querySelector(".jellyfin-tab-button.active .je-tab-label");
       const current = toggle.querySelector(".jea-nav-current");

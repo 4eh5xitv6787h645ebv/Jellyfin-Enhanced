@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { createRequire } from 'node:module';
-import { bootGenerated, config, pageHtml, repo, servedEngine, settle } from '../../helpers/admin-config-page.mjs';
+import { bootGenerated, closeAfter, config, pageHtml, repo, servedEngine, settle } from '../../helpers/admin-config-page.mjs';
 
 const require = createRequire(import.meta.url);
 const baseline = JSON.parse(readFileSync(join(repo, 'tests/fixtures/admin-config-baseline.json'), 'utf8'));
@@ -14,7 +14,7 @@ async function domain(path) {
   return import('data:text/javascript;base64,' + Buffer.from(outputFiles[0].text).toString('base64'));
 }
 
-const boot = (t, options) => { const h = bootGenerated(options); t.after(() => h.close()); return h; };
+const boot = (t, options) => { const h = bootGenerated(options); closeAfter(t, h); return h; };
 
 test('ADMIN-CONFIG-01: the page never blocks on a synchronous request and starts when the engine arrives', async t => {
   const h = boot(t, { engine: 'hold', saved: { ShowFileSizes: true } });
@@ -299,7 +299,7 @@ test('every schema default is the server\'s default, so a page with nothing stor
 test('the Requests and Calendar Plugin Pages switches read an unset value as the server\'s default (off)', async t => {
   const server = serverDefaults();
   const h = bootGenerated({ saved: {} });
-  t.after(() => h.close());
+  closeAfter(t, h);
   await h.ready();
   h.show();
   await settle(h.window, 60);

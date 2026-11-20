@@ -1,3 +1,5 @@
+import { writeAddressQuietly } from '../../../host/admin-config-host';
+
 /**
  * The configuration page's address keeps the tab and card shown (#/configurationpage?name=Jellyfin%20Enhanced&tab=seerr&card=requests;
  * jeSection=media-tags&tab=<its section> for the Media Tags tab), so a reload or a shared link returns there (upstream b0a8a963).
@@ -22,5 +24,7 @@ export function setHash(key: string, value: string | null | undefined): void {
     if (value) params.set(key, value); else params.delete(key);
     // The router's own history entry state stays as it is; only the address changes. A space is written %20, as
     // Jellyfin's own links write the page name (URLSearchParams writes `+`; a `+` in a value is %2B) (upstream 5201d47b).
-    window.history.replaceState(window.history.state, '', path + '?' + params.toString().replace(/\+/g, '%20'));
+    // Quietly: a tab or card shown is not a navigation, so the plugin's features (Active Streams, Seerr discovery) do
+    // not start over and request again on every click.
+    writeAddressQuietly(window.history.state, path + '?' + params.toString().replace(/\+/g, '%20'));
 }

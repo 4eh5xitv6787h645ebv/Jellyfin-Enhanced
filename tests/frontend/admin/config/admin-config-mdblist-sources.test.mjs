@@ -3,14 +3,14 @@
 // Driven through the generated page, as the dashboard runs it.
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { bootGenerated, settle } from '../../helpers/admin-config-page.mjs';
+import { bootGenerated, closeAfter, settle } from '../../helpers/admin-config-page.mjs';
 
 const MAIN = 'mdblistRatingsSourcesAdmin';
 const COPY = 'mdblistRatingsSourcesAdmin--mirror';
 
 async function boot(t, saved) {
   const h = bootGenerated({ saved });
-  t.after(() => h.close());
+  closeAfter(t, h);
   await h.ready();
   h.show();
   await settle(h.window);

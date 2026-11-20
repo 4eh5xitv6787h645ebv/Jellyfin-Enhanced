@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { bootGenerated, config, repo, settle } from '../../helpers/admin-config-page.mjs';
+import { bootGenerated, closeAfter, config, repo, settle } from '../../helpers/admin-config-page.mjs';
 
 // Behaviour of the settings page's actions and status views, driven through the generated page.
 
@@ -14,7 +14,7 @@ const SEERR = { JellyseerrEnabled: true, JellyseerrUrls: 'http://seerr.test', Je
 /** The generated page, loaded from `saved`; `answers` reply to the requests whose URL they match (a thrown error is a failed request). */
 async function page(t, { saved = {}, answers = [], ...options } = {}) {
   const h = bootGenerated({ saved, ajax: r => answers.find(([pattern]) => pattern.test(r.url))?.[1](r), ...options });
-  t.after(() => h.close());
+  closeAfter(t, h);
   await h.ready();
   h.show();
   await settle(h.window, 60);

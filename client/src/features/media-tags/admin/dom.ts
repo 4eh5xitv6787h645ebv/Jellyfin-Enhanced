@@ -36,6 +36,13 @@ export function find(scope: ParentNode | null | undefined, selector: string): HT
     return el instanceof HTMLElement ? el : null;
 }
 
+/** Bring a row into view and focus its first control (a Groups row with no panel to open, such as People). */
+export function showRow(row: HTMLElement, focus: boolean): void {
+    if (!focus) return;
+    row.scrollIntoView?.({ block: 'start' });
+    find(row, 'input, select, button')?.focus({ preventScroll: true });
+}
+
 /**
  * The first element of a type matching a selector, or null.
  * @param scope

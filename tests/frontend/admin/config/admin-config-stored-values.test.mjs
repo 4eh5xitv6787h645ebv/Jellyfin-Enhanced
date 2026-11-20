@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { bootGenerated, settle } from '../../helpers/admin-config-page.mjs';
+import { bootGenerated, closeAfter, settle } from '../../helpers/admin-config-page.mjs';
 
 // Saves of the settings page against what is stored: a list that did not load is unknown, not empty.
 
@@ -12,7 +12,7 @@ const pending = () => new Promise(() => {});
 /** The generated page, loaded from `saved`, with `answers` replying to the requests whose URL they match. */
 async function page(t, { saved = {}, answers = [] } = {}) {
   const h = bootGenerated({ saved, ajax: r => answers.find(([pattern]) => pattern.test(r.url))?.[1](r) });
-  t.after(() => h.close());
+  closeAfter(t, h);
   await h.ready();
   h.show();
   await settle(h.window, 60);
@@ -205,7 +205,7 @@ test('switching automatic requests to Custom shows the stored server, profile an
 
 test('a region picked before the full region list arrives stays picked, and a save stores it', async t => {
   const h = bootGenerated({ saved: { DEFAULT_REGION: 'US' } });
-  t.after(() => h.close());
+  closeAfter(t, h);
   await h.ready();
   let release;
   const empty = { ok: true, status: 200, json: async () => ({}), text: async () => '' };

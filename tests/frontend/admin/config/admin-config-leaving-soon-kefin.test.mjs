@@ -4,7 +4,7 @@
 // through the generated page, as the dashboard runs it.
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { bootGenerated, settle } from '../../helpers/admin-config-page.mjs';
+import { bootGenerated, closeAfter, settle } from '../../helpers/admin-config-page.mjs';
 
 const CARD = 'leavingSoonCopyKefinBtn';
 const COPY = 'leavingSoonCopyKefinBtn--mirror';
@@ -15,7 +15,7 @@ const SECTION = {
 
 async function boot(t, clipboard) {
   const h = bootGenerated({ saved: {} });
-  t.after(() => h.close());
+  closeAfter(t, h);
   await h.ready();
   h.show();
   await settle(h.window);

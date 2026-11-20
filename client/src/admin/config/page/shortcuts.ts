@@ -63,6 +63,8 @@ export function createShortcuts(m: ShortcutsDeps) {
 
                 defaultShortcuts.filter(d => d.Category === category && d.Name !== 'JumpToPercentage').forEach(def => {
                     const key = effectiveShortcutKey(def);
+                    // The space bar has no visible character of its own.
+                    const keyName = key === ' ' ? 'Space' : key;
                     const isDisabled = key === '';
                     const isModified = shortcutOverrides.some(x => x.Name === def.Name);
                     const action = def.Label ?? def.Name;
@@ -88,15 +90,16 @@ export function createShortcuts(m: ShortcutsDeps) {
                     const chip = document.createElement('button');
                     chip.type = 'button';
                     chip.className = 'je-sc-key';
-                    chip.textContent = isDisabled ? 'Off' : key;
-                    const idleName = action + ': ' + (isDisabled ? 'disabled' : key) + '. Press to record a new key';
+                    chip.textContent = isDisabled ? 'Off' : keyName;
+                    const idleName = action + ': ' + (isDisabled ? 'disabled' : keyName) + '. Press to record a new key';
                     chip.setAttribute('aria-label', idleName);
                     let recording = false;
                     const stop = () => {
                         recording = false;
+                        chip.removeAttribute('data-je-key-recorder');
                         chip.classList.remove('je-sc-recording');
                         chip.setAttribute('aria-pressed', 'false');
-                        chip.textContent = isDisabled ? 'Off' : key;
+                        chip.textContent = isDisabled ? 'Off' : keyName;
                         chip.setAttribute('aria-label', idleName);
                     };
                     chip.setAttribute('aria-pressed', 'false');
@@ -104,6 +107,9 @@ export function createShortcuts(m: ShortcutsDeps) {
                     chip.addEventListener('click', () => {
                         if (recording) return;
                         recording = true;
+                        // While it listens, no shortcut runs: the plugin's listener stands aside for a key recorder,
+                        // and the press does not travel on to Jellyfin's own (below).
+                        chip.setAttribute('data-je-key-recorder', '');
                         chip.classList.add('je-sc-recording');
                         chip.setAttribute('aria-pressed', 'true');
                         chip.textContent = 'Press a key…';

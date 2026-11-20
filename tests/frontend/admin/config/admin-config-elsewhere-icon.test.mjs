@@ -3,7 +3,7 @@
 // cannot be loaded by a browser. Driven through the generated page, as the dashboard runs it.
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { bootGenerated, settle } from '../../helpers/admin-config-page.mjs';
+import { bootGenerated, closeAfter, settle } from '../../helpers/admin-config-page.mjs';
 
 const ICON_TYPES = 'image/png,image/jpeg,image/gif,image/webp,image/svg+xml';
 const SLOTS = ['icon-transparent.png', 'banner-light.png', 'banner-dark.png', 'favicon.ico', 'apple-touch-icon.png', 'elsewhere-icon.png'];
@@ -15,7 +15,7 @@ const debounce = () => new Promise(resolve => setTimeout(resolve, 600));
  */
 async function boot(t, { saved = {}, stored = [], loads = () => false, upload } = {}) {
   const h = bootGenerated({ engine: 'hold', saved });
-  t.after(() => h.close());
+  closeAfter(t, h);
   const requests = [];
   const images = [];
   const answer = (status, body = '') => ({ ok: status >= 200 && status < 300, status, json: async () => JSON.parse(body), text: async () => body, blob: async () => new h.window.Blob(['x']) });

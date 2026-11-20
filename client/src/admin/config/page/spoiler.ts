@@ -54,10 +54,11 @@ export function createSpoiler(m: SpoilerDeps) {
                     var span = document.createElement('span');
                     var type = text(f.CollectionType).toLowerCase();
                     var kind = type === 'tvshows' ? 'TV shows' : type === 'movies' ? 'Movies' : 'Mixed';
-                    // The type only when the name does not already say it ("Movies (Movies)").
+                    // The type only when the name does not already say it ("Movies (Movies)"); a library named like a
+                    // content type above says it is the library, so no two boxes read the same ("Movies library").
                     var plain = ['tv shows', 'shows', 'tv', 'series', 'movies', 'films'];
                     var name = text(f.Name);
-                    span.textContent = plain.indexOf(name.trim().toLowerCase()) !== -1 && kind !== 'Mixed' ? name : name + ' (' + kind + ')';
+                    span.textContent = plain.indexOf(name.trim().toLowerCase()) !== -1 && kind !== 'Mixed' ? name + ' library' : name + ' (' + kind + ')';
                     label.appendChild(input);
                     label.appendChild(span);
                     wrap.appendChild(label);
