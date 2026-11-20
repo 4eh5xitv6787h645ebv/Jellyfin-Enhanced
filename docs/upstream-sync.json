@@ -3448,6 +3448,53 @@
       "with": "fc9b58eab1a20bd95db01fbfaf76ebe638b217f8",
       "evidence": "artifacts/restructure-plan/step-logs/upstream-sync-evidence/p99-*",
       "notes": "Upstream's own test update for fc9b58ea (row 99), published 17 minutes after it. The same test changes were made here in the rewrite commit of fc9b58ea, before this commit existed, in tests/frontend/features/media-tags/features-maintainerr-menu.test.mjs: the Postpone test no longer presses Reset timer or Cancel and closes the dialog with Escape and the close button, sending nothing (upstream's name for it, '... day buttons, custom count post accordingly', is '... day buttons and custom count post accordingly' here), and the Reclaimerr Postpone test expects no timer reset. In addition, a new test pins the absence of Reset timer, Cancel and the footer for Maintainerr and Reclaimerr in both Postpone and Mark. That commit carries only fc9b58ea's Upstream: trailer, because it predates this entry, so rewriteCommits names it by hand."
+    },
+    {
+      "sha": "728bba151c644129ee080a54011b94f1ffe5c416",
+      "date": "2026-11-20T21:34:44Z",
+      "subject": "test(admin): wait for the search debounce instead of a fixed 250 ms",
+      "class": "test",
+      "features": [
+        "admin",
+        "media-tags"
+      ],
+      "issues": [],
+      "release": null,
+      "size": {
+        "files": 1,
+        "insertions": 1,
+        "deletions": 2
+      },
+      "paths": [
+        "tests/frontend/features/features-admin-config-media-tags-tab.test.mjs"
+      ],
+      "status": "ported",
+      "rewriteCommits": [],
+      "with": "1952fa31e9767d334b57c2a64b17eb92299457de",
+      "evidence": "artifacts/restructure-plan/step-logs/upstream-sync-evidence/p103.tests.txt",
+      "notes": "Upstream's follow-up to 1952fa31 (row 98, its settings search now waits 300 ms): the Media Tags tab test 'searching and clearing the search leaves the Media Tags tab as it was' (here tests/frontend/features/media-tags/admin/features-admin-config-media-tags-tab.test.mjs) no longer sleeps a fixed time before it checks for search mode; it waits until the form is in search mode with the file's own until helper (polls every 5 ms, about one second at most), as upstream. Row 98's port had already raised this wait to SEARCH_DEBOUNCE + 100 ms, so the test passed before too; the change takes the fixed delay out, which a loaded machine could outrun. The file's other fixed waits after typing are left as they are, as upstream leaves its own. The test and its file (25 tests) pass."
+    },
+    {
+      "sha": "3e83f00994af7ece49fd94e1974b7a16d1a3f6bf",
+      "date": "2026-11-20T21:37:30Z",
+      "subject": "fix(reclaimerr): drop a redundant string cast flagged by CodeQL",
+      "class": "fix",
+      "features": [
+        "media-tags"
+      ],
+      "issues": [],
+      "release": null,
+      "size": {
+        "files": 1,
+        "insertions": 1,
+        "deletions": 1
+      },
+      "paths": [
+        "Jellyfin.Plugin.JellyfinEnhanced/Services/ReclaimerrActions.cs"
+      ],
+      "status": "already-present",
+      "rewriteCommits": [],
+      "evidence": "Features/MediaTags/Services/ReclaimerrActions.cs, ApproveRequestAsync: the approval body's scheduled_at is `day`, a string? assigned from Iso(CheckedDate(...)) with no cast, and the Now timing leaves it null; git grep 'scheduled_at = (string?)' finds nothing in this tree. The line upstream changed is in its token-API version of the approval (TokenAsync, /api/v1/delete-requests), which arrives with the deferred row 97 (da3d9ee9): that port should take upstream's line as it is after 3e83f009, without the cast."
     }
   ]
 }
