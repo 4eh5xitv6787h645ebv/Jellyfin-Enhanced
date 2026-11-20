@@ -114,7 +114,9 @@
     "SubtitleSyncButtonEnabled",
     "TagsHideOnHover",
     "VersionsTagOrder",
-    "VideoCodecTagOrder"
+    "VideoCodecTagOrder",
+    "WatchProgressDefaultMode",
+    "WatchProgressTimeFormat"
   ];
 
   // client/src/admin/config/per-user-entry.ts

@@ -656,7 +656,9 @@
   "showAudioLanguages",
   "showFileSizes",
   "showWatchProgress",
-  "subtitleSyncButtonEnabled"
+  "subtitleSyncButtonEnabled",
+  "watchProgressDefaultMode",
+  "watchProgressTimeFormat"
  ],
  "mainToggles": [
   "activeStreamsEnabled",
