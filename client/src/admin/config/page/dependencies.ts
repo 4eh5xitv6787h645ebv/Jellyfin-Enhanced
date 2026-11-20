@@ -115,33 +115,33 @@ export function createDependencies(m: DependenciesDeps) {
         ];
 
         var INDIVIDUAL_DEPS: readonly IndividualDep[] = [
-            { id: 'elsewhereEnabled',         checkFn: hasTmdbOrSeerr, hint: 'Add a TMDB API Key or enable Seerr to use', icon: 'key' },
-            { id: 'ElsewhereUseSeerrRegion',  checkFn: hasJellyseerrConfigured, hint: 'Enable Seerr to use', icon: 'link' },
-            { id: 'ElsewhereSeasonProviders', checkFn: hasTmdbKey, hint: 'Add a TMDB API Key to enable', icon: 'key' },
-            { id: 'showReviews',              checkFn: hasTmdbKey, hint: 'Add a TMDB API Key to enable', icon: 'key' },
-            { id: 'showReleaseDate',          checkFn: hasTmdbKey, hint: 'Add a TMDB API Key to enable', icon: 'key' },
-            { id: 'showElsewhereOnJellyseerr', checkFn: hasTmdbOrSeerr, hint: 'Add a TMDB API Key or enable Seerr to use', icon: 'key' },
-            { id: 'autoMovieRequestEnabled',   checkFn: hasTmdbKey, hint: 'Add a TMDB API Key to enable', icon: 'key' },
-            { id: 'autoSkipIntro',                 checkFn: function() { return m.plugins.hasIntroSkipper !== false; }, hint: 'Install Intro Skipper plugin to enable', icon: 'extension' },
-            { id: 'autoSkipOutro',                 checkFn: function() { return m.plugins.hasIntroSkipper !== false; }, hint: 'Install Intro Skipper plugin to enable', icon: 'extension' },
-            { id: 'bookmarksUsePluginPages',       checkFn: function() { return m.plugins.hasPluginPages !== false; }, hint: 'Install Plugin Pages plugin to enable', icon: 'extension' },
-            { id: 'hiddenContentUsePluginPages',   checkFn: function() { return m.plugins.hasPluginPages !== false; }, hint: 'Install Plugin Pages plugin to enable', icon: 'extension' },
-            { id: 'downloadsUsePluginPages',       checkFn: function() { return m.plugins.hasPluginPages !== false; }, hint: 'Install Plugin Pages plugin to enable', icon: 'extension' },
-            { id: 'calendarUsePluginPages',        checkFn: function() { return m.plugins.hasPluginPages !== false; }, hint: 'Install Plugin Pages plugin to enable', icon: 'extension' },
-            { id: 'recommendationsUsePluginPages', checkFn: function() { return m.plugins.hasPluginPages !== false; }, hint: 'Install Plugin Pages plugin to enable', icon: 'extension' },
-            { id: 'activityFeedUsePluginPages',    checkFn: function() { return m.plugins.hasPluginPages !== false; }, hint: 'Install Plugin Pages plugin to enable', icon: 'extension' },
-            { id: 'leavingSoonPageUsePluginPages',    checkFn: function() { return m.plugins.hasPluginPages !== false; }, hint: 'Install Plugin Pages plugin to enable', icon: 'extension' },
-            { id: 'catchUpUsePluginPages',           checkFn: function() { return m.plugins.hasPluginPages !== false; }, hint: 'Install Plugin Pages plugin to enable', icon: 'extension' },
-            { id: 'bookmarksUseCustomTabs',        checkFn: function() { return m.plugins.hasCustomTabs !== false; }, hint: 'Install Custom Tabs plugin to enable', icon: 'extension' },
-            { id: 'hiddenContentUseCustomTabs',    checkFn: function() { return m.plugins.hasCustomTabs !== false; }, hint: 'Install Custom Tabs plugin to enable', icon: 'extension' },
-            { id: 'downloadsUseCustomTabs',        checkFn: function() { return m.plugins.hasCustomTabs !== false; }, hint: 'Install Custom Tabs plugin to enable', icon: 'extension' },
-            { id: 'calendarUseCustomTabs',         checkFn: function() { return m.plugins.hasCustomTabs !== false; }, hint: 'Install Custom Tabs plugin to enable', icon: 'extension' },
-            { id: 'recommendationsUseCustomTabs',  checkFn: function() { return m.plugins.hasCustomTabs !== false; }, hint: 'Install Custom Tabs plugin to enable', icon: 'extension' },
-            { id: 'activityFeedUseCustomTabs',     checkFn: function() { return m.plugins.hasCustomTabs !== false; }, hint: 'Install Custom Tabs plugin to enable', icon: 'extension' },
-            { id: 'leavingSoonPageUseCustomTabs',     checkFn: function() { return m.plugins.hasCustomTabs !== false; }, hint: 'Install Custom Tabs plugin to enable', icon: 'extension' },
-            { id: 'catchUpUseCustomTabs',          checkFn: function() { return m.plugins.hasCustomTabs !== false; }, hint: 'Install Custom Tabs plugin to enable', icon: 'extension' },
-            { id: 'showLetterboxdLinkAsText', checkFn: function() { return !isMetadataIconsEnabled(); }, hint: 'Forced to icon mode while Metadata Icons (Druidblack) is enabled', icon: 'block' },
-            { id: 'showArrLinksAsText',       checkFn: function() { return !isMetadataIconsEnabled(); }, hint: 'Forced to icon mode while Metadata Icons (Druidblack) is enabled', icon: 'block' }
+            { id: 'elsewhereEnabled',         checkFn: hasTmdbOrSeerr, hint: 'Add a TMDB API Key or enable Seerr to use', missing: 'no TMDB API key is set and Seerr is not set up', icon: 'key' },
+            { id: 'ElsewhereUseSeerrRegion',  checkFn: hasJellyseerrConfigured, hint: 'Enable Seerr to use', missing: 'Seerr is not set up', icon: 'link' },
+            { id: 'ElsewhereSeasonProviders', checkFn: hasTmdbKey, hint: 'Add a TMDB API Key to enable', missing: 'no TMDB API key is set', icon: 'key' },
+            { id: 'showReviews',              checkFn: hasTmdbKey, hint: 'Add a TMDB API Key to enable', missing: 'no TMDB API key is set', icon: 'key' },
+            { id: 'showReleaseDate',          checkFn: hasTmdbKey, hint: 'Add a TMDB API Key to enable', missing: 'no TMDB API key is set', icon: 'key' },
+            { id: 'showElsewhereOnJellyseerr', checkFn: hasTmdbOrSeerr, hint: 'Add a TMDB API Key or enable Seerr to use', missing: 'no TMDB API key is set and Seerr is not set up', icon: 'key' },
+            { id: 'autoMovieRequestEnabled',   checkFn: hasTmdbKey, hint: 'Add a TMDB API Key to enable', missing: 'no TMDB API key is set', icon: 'key' },
+            { id: 'autoSkipIntro',                 checkFn: function() { return m.plugins.hasIntroSkipper !== false; }, hint: 'Install Intro Skipper plugin to enable', missing: 'the Intro Skipper plugin is not installed', icon: 'extension' },
+            { id: 'autoSkipOutro',                 checkFn: function() { return m.plugins.hasIntroSkipper !== false; }, hint: 'Install Intro Skipper plugin to enable', missing: 'the Intro Skipper plugin is not installed', icon: 'extension' },
+            { id: 'bookmarksUsePluginPages',       checkFn: function() { return m.plugins.hasPluginPages !== false; }, hint: 'Install Plugin Pages plugin to enable', missing: 'the Plugin Pages plugin is not installed', icon: 'extension' },
+            { id: 'hiddenContentUsePluginPages',   checkFn: function() { return m.plugins.hasPluginPages !== false; }, hint: 'Install Plugin Pages plugin to enable', missing: 'the Plugin Pages plugin is not installed', icon: 'extension' },
+            { id: 'downloadsUsePluginPages',       checkFn: function() { return m.plugins.hasPluginPages !== false; }, hint: 'Install Plugin Pages plugin to enable', missing: 'the Plugin Pages plugin is not installed', icon: 'extension' },
+            { id: 'calendarUsePluginPages',        checkFn: function() { return m.plugins.hasPluginPages !== false; }, hint: 'Install Plugin Pages plugin to enable', missing: 'the Plugin Pages plugin is not installed', icon: 'extension' },
+            { id: 'recommendationsUsePluginPages', checkFn: function() { return m.plugins.hasPluginPages !== false; }, hint: 'Install Plugin Pages plugin to enable', missing: 'the Plugin Pages plugin is not installed', icon: 'extension' },
+            { id: 'activityFeedUsePluginPages',    checkFn: function() { return m.plugins.hasPluginPages !== false; }, hint: 'Install Plugin Pages plugin to enable', missing: 'the Plugin Pages plugin is not installed', icon: 'extension' },
+            { id: 'leavingSoonPageUsePluginPages',    checkFn: function() { return m.plugins.hasPluginPages !== false; }, hint: 'Install Plugin Pages plugin to enable', missing: 'the Plugin Pages plugin is not installed', icon: 'extension' },
+            { id: 'catchUpUsePluginPages',           checkFn: function() { return m.plugins.hasPluginPages !== false; }, hint: 'Install Plugin Pages plugin to enable', missing: 'the Plugin Pages plugin is not installed', icon: 'extension' },
+            { id: 'bookmarksUseCustomTabs',        checkFn: function() { return m.plugins.hasCustomTabs !== false; }, hint: 'Install Custom Tabs plugin to enable', missing: 'the Custom Tabs plugin is not installed', icon: 'extension' },
+            { id: 'hiddenContentUseCustomTabs',    checkFn: function() { return m.plugins.hasCustomTabs !== false; }, hint: 'Install Custom Tabs plugin to enable', missing: 'the Custom Tabs plugin is not installed', icon: 'extension' },
+            { id: 'downloadsUseCustomTabs',        checkFn: function() { return m.plugins.hasCustomTabs !== false; }, hint: 'Install Custom Tabs plugin to enable', missing: 'the Custom Tabs plugin is not installed', icon: 'extension' },
+            { id: 'calendarUseCustomTabs',         checkFn: function() { return m.plugins.hasCustomTabs !== false; }, hint: 'Install Custom Tabs plugin to enable', missing: 'the Custom Tabs plugin is not installed', icon: 'extension' },
+            { id: 'recommendationsUseCustomTabs',  checkFn: function() { return m.plugins.hasCustomTabs !== false; }, hint: 'Install Custom Tabs plugin to enable', missing: 'the Custom Tabs plugin is not installed', icon: 'extension' },
+            { id: 'activityFeedUseCustomTabs',     checkFn: function() { return m.plugins.hasCustomTabs !== false; }, hint: 'Install Custom Tabs plugin to enable', missing: 'the Custom Tabs plugin is not installed', icon: 'extension' },
+            { id: 'leavingSoonPageUseCustomTabs',     checkFn: function() { return m.plugins.hasCustomTabs !== false; }, hint: 'Install Custom Tabs plugin to enable', missing: 'the Custom Tabs plugin is not installed', icon: 'extension' },
+            { id: 'catchUpUseCustomTabs',          checkFn: function() { return m.plugins.hasCustomTabs !== false; }, hint: 'Install Custom Tabs plugin to enable', missing: 'the Custom Tabs plugin is not installed', icon: 'extension' },
+            { id: 'showLetterboxdLinkAsText', checkFn: function() { return !isMetadataIconsEnabled(); }, hint: 'Forced to icon mode while Metadata Icons (Druidblack) is enabled', missing: 'Metadata Icons (Druidblack) is on, which forces icon mode', icon: 'block' },
+            { id: 'showArrLinksAsText',       checkFn: function() { return !isMetadataIconsEnabled(); }, hint: 'Forced to icon mode while Metadata Icons (Druidblack) is enabled', missing: 'Metadata Icons (Druidblack) is on, which forces icon mode', icon: 'block' }
         ];
 
         // Informational only (unlike INDIVIDUAL_DEPS) — Native Tab is more
@@ -211,6 +211,14 @@ export function createDependencies(m: DependenciesDeps) {
         }
 
         /**
+         * A switch that is on stays operable while what it needs is missing, so it can be turned off (#867); one that
+         * is off cannot be turned on. Its stored value is kept until the administrator changes it.
+         */
+        function isOn(el: Element) : boolean {
+            return el instanceof HTMLInputElement && el.type === 'checkbox' && el.checked;
+        }
+
+        /**
          * Creates an orange warning banner DOM element for a missing section dependency.
          * @param {Object} dep - Dependency rule with bannerIcon, bannerTitle, and bannerHint
          * @returns {HTMLElement} The constructed banner element
@@ -273,7 +281,7 @@ export function createDependencies(m: DependenciesDeps) {
                 }
                 if (!isMet) {
                     fieldset.querySelectorAll<FormControl>('input, select, textarea, button').forEach(function(el) {
-                        el.disabled = true;
+                        el.disabled = !isOn(el);
                         addDepTag(el, dep.bannerId);
                     });
                 } else {
@@ -301,11 +309,13 @@ export function createDependencies(m: DependenciesDeps) {
             var tag = 'ind-' + dep.id;
 
             if (!isMet) {
-                checkbox.disabled = true;
+                var on = isOn(checkbox);
+                var why = on ? 'On, but not working: ' + dep.missing + '.' : dep.hint;
+                checkbox.disabled = !on;
                 addDepTag(checkbox, tag);
-                label.style.opacity = '0.5';
-                label.style.cursor = 'not-allowed';
-                label.title = dep.hint;
+                label.style.opacity = on ? '' : '0.5';
+                label.style.cursor = on ? '' : 'not-allowed';
+                label.title = why;
                 addDepTag(label, tag);
                 var span = asHtml(label.querySelector('span'));
                 if (span && !asHtml(label.querySelector('.dep-required-icon'))) {
@@ -313,15 +323,16 @@ export function createDependencies(m: DependenciesDeps) {
                     icon.className = 'material-icons dep-required-icon';
                     icon.textContent = dep.icon || 'key';
                     icon.style.cssText = 'font-size: 16px; vertical-align: middle; margin-left: 8px; color: #ff9800;';
-                    icon.title = dep.hint;
+                    icon.title = why;
                     span.appendChild(icon);
                 }
-                if (span && !asHtml(label.querySelector('.dep-hint-text'))) {
-                    var hintEl = document.createElement('span');
+                var hintEl = asHtml(label.querySelector('.dep-hint-text'));
+                if (span && !hintEl) {
+                    hintEl = document.createElement('span');
                     hintEl.className = 'dep-hint-text';
-                    hintEl.textContent = dep.hint;
                     span.appendChild(hintEl);
                 }
+                if (hintEl) hintEl.textContent = why;
             } else {
                 var allClear = removeDepTag(checkbox, tag);
                 if (allClear) checkbox.disabled = false;
@@ -442,22 +453,24 @@ export function createDependencies(m: DependenciesDeps) {
                              || child.closest('label');
 
                 if (!isEnabled) {
-                    child.disabled = true;
+                    var on = isOn(child);
+                    child.disabled = !on;
                     addDepTag(child, tag);
                     if (container) {
-                        container.style.opacity = '0.5';
-                        container.style.cursor = 'not-allowed';
+                        container.style.opacity = on ? '' : '0.5';
+                        container.style.cursor = on ? '' : 'not-allowed';
                         addDepTag(container, tag);
                         jeaSetDepHidden(container, childId, true);
                         // Add hint unless the dependency opted out (e.g. tag-position
                         // dropdowns, where the disabled styling next to the parent
                         // checkbox already makes the relationship obvious).
-                        if (!dep.noHint && !asHtml(container.querySelector('.' + hintClass))) {
-                            var hint = document.createElement('div');
+                        var hint = asHtml(container.querySelector('.' + hintClass));
+                        if (!dep.noHint && !hint) {
+                            hint = document.createElement('div');
                             hint.className = 'dep-hint-text ' + hintClass;
-                            hint.textContent = 'Needs ' + parentNames(dep) + ' on';
                             container.appendChild(hint);
                         }
+                        if (hint) hint.textContent = on ? 'On, but needs ' + parentNames(dep) + ' on to work' : 'Needs ' + parentNames(dep) + ' on';
                     }
                 } else {
                     var allClear = removeDepTag(child, tag);

@@ -57,7 +57,8 @@ export interface SectionDep {
     lockHint?: string;
     bannerId: string;
 }
-export interface IndividualDep { id: string; checkFn: () => boolean; hint: string; icon: string; label?: string; noHint?: boolean }
+/** `hint` says how to make a setting available; `missing` says, for one that is on, what keeps it from working. */
+export interface IndividualDep { id: string; checkFn: () => boolean; hint: string; missing: string; icon: string; label?: string; noHint?: boolean }
 export interface ParentDep { parent: string; children: readonly string[]; anyOf?: readonly string[]; noHint?: boolean }
 export interface MappingDef { id: string; service: string }
 export interface BannerGroup { banners: readonly HTMLElement[]; trigger: HTMLElement; parentCheckbox: HTMLInputElement | null }

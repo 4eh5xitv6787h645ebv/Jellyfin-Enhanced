@@ -79,6 +79,12 @@ export function createDepWiring(m: DepWiringDeps) {
         });
 
         if (searchExcludeLibraryCheckbox) searchExcludeLibraryCheckbox.addEventListener('change', m.dependencies.updateSearchExcludeLibraryWarning);
+
+        // A switch left operable while what it needs is missing (it was on) locks, with its hint, once it is turned off.
+        m.context.form.addEventListener('change', function(e) {
+            var el = e.target;
+            if (el instanceof HTMLInputElement && el.type === 'checkbox' && el.hasAttribute('data-dep-disabled')) m.gatedHelp.updateAllDependencies();
+        });
     }
 
     return {

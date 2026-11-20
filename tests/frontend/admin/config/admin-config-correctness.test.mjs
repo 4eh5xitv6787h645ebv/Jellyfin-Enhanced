@@ -495,3 +495,53 @@ test('every number has an upper bound a whole-number setting can hold, so no val
   assert.equal(h.calls.puts.length, 0, 'an overflowing value is refused before the write');
   assert.match(h.dialogs().join(' '), /Toast notification duration|Toast Notification Duration/i);
 });
+
+// ── A setting that is on while what it needs is missing (#867) ────────────────
+
+const hintOf = el => [...(el.closest('.checkboxContainer, .inputContainer') ?? el.closest('label')).querySelectorAll('.dep-hint-text')].map(n => n.textContent).join(' | ');
+
+test('a switch that is on without the TMDB key it needs can be turned off, says it is not working, and keeps its value until touched', async t => {
+  const h = await page(t, { saved: { ShowReviews: true, ShowReleaseDates: false } });
+  const reviews = h.document.getElementById('showReviews');
+  assert.equal(reviews.checked, true);
+  assert.equal(reviews.disabled, false, 'it can be turned off');
+  assert.match(hintOf(reviews), /On, but not working: no TMDB API key is set/);
+  assert.equal(h.document.getElementById('showReleaseDate').disabled, true, 'one that is off still cannot be turned on');
+  await h.submit();
+  assert.equal(h.calls.puts.at(-1).ShowReviews, true, 'not touched: the stored value is kept');
+  reviews.click();
+  await settle(h.window);
+  assert.equal(reviews.checked, false);
+  assert.equal(reviews.disabled, true, 'turned off, it cannot be turned back on without a key');
+  assert.doesNotMatch(hintOf(reviews), /On, but/);
+  await h.submit();
+  assert.equal(h.calls.puts.at(-1).ShowReviews, false);
+});
+
+test('Custom Tabs ticked without the Custom Tabs plugin can be turned off; an unknown plugin list is not a missing plugin', async t => {
+  const saved = { DownloadsPageEnabled: true, DownloadsUseCustomTabs: true };
+  const absent = await page(t, { saved, answers: [[/\/Plugins$/, () => []]] });
+  const box = absent.document.getElementById('downloadsUseCustomTabs');
+  assert.equal(box.checked, true);
+  assert.equal(box.disabled, false);
+  assert.match(hintOf(box), /On, but not working: the Custom Tabs plugin is not installed/);
+  const unknown = await page(t, { saved, answers: [[/\/Plugins$/, () => { throw Object.assign(new Error('offline'), { status: 0 }); }]] });
+  const same = unknown.document.getElementById('downloadsUseCustomTabs');
+  assert.equal(same.checked, true);
+  assert.equal(same.disabled, false);
+  assert.equal(hintOf(same), '', 'no claim that the plugin is missing');
+  await unknown.submit();
+  assert.equal(unknown.calls.puts.at(-1).DownloadsUseCustomTabs, true, 'kept');
+});
+
+test('a sub-setting that is on while its parent is off can be turned off and says what it needs', async t => {
+  const h = await page(t, { saved: { AudioLanguageTagSyncEnabled: false, AudioLanguageTagShowAsLinks: true } });
+  const links = h.document.getElementById('audioLanguageTagShowAsLinks');
+  assert.equal(links.checked, true);
+  assert.equal(links.disabled, false);
+  assert.match(hintOf(links), /On, but needs “[^”]+” on to work/);
+  links.click();
+  await settle(h.window);
+  assert.equal(links.disabled, true);
+  assert.match(hintOf(links), /^Needs “[^”]+” on$/);
+});

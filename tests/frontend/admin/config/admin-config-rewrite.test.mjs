@@ -1005,7 +1005,8 @@ test('without a TMDB key, Seerr unlocks Elsewhere and the poster icons; per-seas
   assert.deepEqual(depHint(h, 'elsewhereEnabled'), { disabled: false, hint: null });
   assert.deepEqual(depHint(h, 'showElsewhereOnJellyseerr'), { disabled: false, hint: null });
   assert.deepEqual(depHint(h, 'ElsewhereUseSeerrRegion'), { disabled: false, hint: null });
-  assert.deepEqual(depHint(h, 'ElsewhereSeasonProviders'), { disabled: true, hint: 'Add a TMDB API Key to enable' });
+  // On (its default) without the key it needs: it can still be turned off, and says why it does nothing (#867).
+  assert.deepEqual(depHint(h, 'ElsewhereSeasonProviders'), { disabled: false, hint: 'On, but not working: no TMDB API key is set.' });
   // Under Default Region, in the TMDB section and its mirror on the services tab (the Elsewhere card no longer repeats it).
   assert.deepEqual(regionNotes(h), ['flex', 'flex'], 'every note says providers come from Seerr');
   assert.doesNotMatch(elsewhereCard(h), /missing|neither/i);
@@ -1013,7 +1014,7 @@ test('without a TMDB key, Seerr unlocks Elsewhere and the poster icons; per-seas
 test('with neither a TMDB key nor Seerr, Elsewhere asks for one of them and the Seerr region asks for Seerr', async t => {
   const h = boot(t, { saved: { TMDB_API_KEY: '', ElsewhereEnabled: true } });
   await h.ready(); h.show(); await settle(h.window);
-  assert.deepEqual(depHint(h, 'elsewhereEnabled'), { disabled: true, hint: 'Add a TMDB API Key or enable Seerr to use' });
+  assert.deepEqual(depHint(h, 'elsewhereEnabled'), { disabled: false, hint: 'On, but not working: no TMDB API key is set and Seerr is not set up.' });
   assert.deepEqual(depHint(h, 'showElsewhereOnJellyseerr'), { disabled: true, hint: 'Add a TMDB API Key or enable Seerr to use' });
   assert.deepEqual(depHint(h, 'ElsewhereUseSeerrRegion'), { disabled: true, hint: 'Enable Seerr to use' });
   assert.deepEqual(regionNotes(h), ['none', 'none']);
