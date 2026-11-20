@@ -1,14 +1,16 @@
 import type { PageModules } from './modules';
 import { asList, asObjects, text } from '../domain/config';
+import type { AdminConfig } from '../domain/config';
+import { httpUrls, lines } from '../domain/config-values';
 import { importPayload } from '../domain/seerr-import';
 import { requestFailureWithBody } from '../domain/http';
-import { asHtml, needControl, needHtml } from './dom';
+import { asHtml, needControl, needHtml, needInput } from './dom';
 
 /** Dependencies this module calls; members are resolved lazily, after every module exists. */
-export type BlockedUsersDeps = Pick<PageModules, 'context' | 'save' | 'mediaTagsTab'>;
+export type BlockedUsersDeps = Pick<PageModules, 'context' | 'mediaTagsTab'>;
 
 export function createBlockedUsers(m: BlockedUsersDeps) {
-    const { ApiClient } = m.context;
+    const { ApiClient, pluginId } = m.context;
 
         /**
          * Updates the blocked users count badge in the collapsible summary.
@@ -101,33 +103,67 @@ export function createBlockedUsers(m: BlockedUsersDeps) {
             needControl(document.querySelector('#jellyseerrImportBlockedUsers')).value = ids.join(',');
         }
 
+        /** Blocked user ids, compared without dashes or case. */
+        function idSet(ids: string): Set<string> {
+            return new Set((ids || '').split(/[,\r\n]+/).map(id => id.trim().replace(/-/g, '').toLowerCase()).filter(Boolean));
+        }
+
+        /**
+         * The settings the import reads on the server (Seerr on, its URLs and API key, the blocked users) that differ
+         * on this page from what is saved, by name, compared the way Save would write them.
+         */
+        function unsavedImportSettings(saved: AdminConfig): string[] {
+            const unsaved: string[] = [];
+            if (needInput(document.getElementById('jellyseerrEnabled')).checked !== (saved.JellyseerrEnabled === true)) unsaved.push('"Enable Seerr integration"');
+            const urls = (value: string) => httpUrls(lines(value)).valid.join('\n');
+            if (urls(needControl(document.getElementById('jellyseerrUrls')).value) !== urls(text(saved.JellyseerrUrls))) unsaved.push('the Seerr URLs');
+            const key = (value: string) => value.replace(/\s/g, '');
+            if (key(needControl(document.getElementById('JellyseerrApiKey')).value) !== key(text(saved.JellyseerrApiKey))) unsaved.push('the Seerr API key');
+            if (_blockedUsersLoaded) {
+                const onPage = new Set(Array.from(document.querySelectorAll<HTMLElement>('.blockedUserCheckbox:checked')).map(cb => cb.dataset.userid || ''));
+                const stored = idSet(text(saved.JellyseerrImportBlockedUsers));
+                if (onPage.size !== stored.size || Array.from(onPage).some(id => !stored.has(id))) unsaved.push('the blocked users');
+            }
+            return unsaved;
+        }
+
     /** Runs this module's start-up work, in the page's original order. */
     function wire(): void {
         needHtml(document.getElementById('btnImportJellyseerrUsers')).addEventListener('click', async () => {
             const btn = needControl(document.getElementById('btnImportJellyseerrUsers'));
             const resultDiv = needHtml(document.getElementById('importUsersResult'));
-            // The import follows a finished save, outside its queue, so it holds its own scope.
+            // The import runs outside the save queue, so it holds its own scope.
             const scope = m.mediaTagsTab.jeWriteOrigin();
             btn.disabled = true;
-            btn.textContent = 'Saving config...';
+            btn.textContent = 'Checking...';
             resultDiv.style.display = 'none';
+            const refuse = (message: string) => {
+                resultDiv.style.display = 'block';
+                resultDiv.textContent = message;
+                resultDiv.style.color = '#f44336';
+                btn.disabled = false;
+                btn.textContent = 'Import Users Now';
+            };
 
+            // The server imports with the saved settings, and the import saves nothing: it runs only when the settings
+            // it uses are saved as they are on this page. Other unsaved changes stay unsaved.
+            let unsaved: string[];
             try {
-                // Save config first so the server uses the current blocklist. A save that wrote nothing (it failed,
-                // was refused or the settings were never read) leaves the server on the old list: no import then.
-                if (!await m.save.saveConfig(new Event('submit'))) throw new Error('the settings were not saved');
+                unsaved = unsavedImportSettings(await ApiClient.getPluginConfiguration(pluginId));
+                scope.throwIfStale();
             } catch (e) {
                 if (!scope.isCurrent()) {
                     btn.disabled = false;
                     btn.textContent = 'Import Users Now';
                     return;
                 }
-                resultDiv.style.display = 'block';
-                resultDiv.textContent = 'Could not save config. Import was not attempted.';
-                resultDiv.style.color = '#f44336';
-                console.error('Config save failed before import:', e);
-                btn.disabled = false;
-                btn.textContent = 'Import Users Now';
+                console.error('Could not read the saved settings before import:', e);
+                refuse('Could not read the saved settings. Import was not attempted.');
+                return;
+            }
+            if (unsaved.length > 0) {
+                refuse('Save first: the import uses the saved settings, and ' + unsaved.join(', ').replace(/, ([^,]*)$/, ' and $1')
+                    + (unsaved.length > 1 ? ' have' : ' has') + ' changes on this page that are not saved. Nothing was imported.');
                 return;
             }
 

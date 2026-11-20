@@ -653,31 +653,22 @@ test('ATB-R2-001: clearing client caches resumed after an account change writes 
   assert.deepEqual(h.dialogs(), []);
 });
 
-test('ATB-R2-001: the Seerr import after a save does not run as the next account, and shows it nothing', async t => {
-  let h;
-  h = await loadedPage(t, { onPut: () => { h.identity.token = 'token-b'; } });
+test('ATB-R2-001: the Seerr import does not run as the next account when the account changes while it reads the saved settings', async t => {
+  let release;
+  const h = await loadedPage(t, { getConfig: async n => { if (n === 2) await new Promise(r => { release = r; }); return { JellyseerrEnabled: true, JellyseerrUrls: 'http://seerr.test', JellyseerrApiKey: 'k', TMDB_API_KEY: 'stored' }; } });
   let imports = 0;
   h.window.ApiClient.fetch = async () => { imports++; return {}; };
   const result = h.document.getElementById('importUsersResult');
   const button = h.document.getElementById('btnImportJellyseerrUsers');
   button.click();
+  await settle(h.window);
+  h.identity.token = 'token-b';
+  release();
   await settle(h.window, 100);
   assert.equal(imports, 0);
   assert.equal(result.textContent, '');
   assert.equal(button.textContent, 'Import Users Now', 'the button is usable again');
   assert.equal(button.disabled, false);
-});
-
-test('ATB-R2-001: the Seerr import stops when the account changes as its save finishes', async t => {
-  const h = await loadedPage(t);
-  let imports = 0;
-  h.window.ApiClient.fetch = async () => { imports++; return {}; };
-  h.window.Dashboard.processPluginConfigurationUpdateResult = () => { h.identity.token = 'token-b'; };
-  h.document.getElementById('btnImportJellyseerrUsers').click();
-  await settle(h.window, 100);
-  assert.equal(imports, 0);
-  assert.equal(h.document.getElementById('importUsersResult').textContent, '');
-  assert.equal(h.document.getElementById('btnImportJellyseerrUsers').textContent, 'Import Users Now');
 });
 
 for (const [name, answer] of [['answer', async h => { h.identity.token = 'token-b'; return { usersImported: 3, totalUsers: 3 }; }], ['failure', async h => { h.identity.token = 'token-b'; throw { status: 502 }; }]]) {

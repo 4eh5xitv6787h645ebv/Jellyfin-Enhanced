@@ -2047,7 +2047,13 @@
             desc: 'Automatically import Jellyfin users into Seerr so they can use Seerr Search without needing to visit Seerr directly. New users are imported the first time they use Seerr Search; a scheduled task also bulk-imports periodically. Already-imported users are skipped.<br/>Configure the bulk import frequency in Jellyfin Dashboard &gt; Scheduled Tasks &gt; "Import Jellyfin Users to Seerr".'
           },
           { type: "custom", html: '<details id="blockedUsersDetails" class="jea-group"><summary>Blocked users <span id="blockedUsersCount" class="jea-group-value">(none)</span></summary><div class="jea-group-body"><div class="fieldDescription">Select users to exclude from Seerr import. Blocked users will never be looked up or imported. No API calls are made for them.</div><div id="blockedUsersContainer" style="max-height: 200px; overflow-y: auto;"><span class="je-loading-text">Loading users...</span></div><div id="blockedUsersScrollHint" style="display: none;">▼ scroll for more</div></div></details><input id="jellyseerrImportBlockedUsers" type="hidden" value=""/>' },
-          { type: "button", id: "btnImportJellyseerrUsers", label: "Import Users Now", variant: "primary" },
+          {
+            type: "button",
+            id: "btnImportJellyseerrUsers",
+            label: "Import Users Now",
+            variant: "primary",
+            hint: "Uses the saved Seerr URLs, API key and blocked users. Saves nothing on this page."
+          },
           { type: "custom", html: '<div id="importUsersResult" style="display: none; margin-top:10px;"></div>' }
         ]
       },

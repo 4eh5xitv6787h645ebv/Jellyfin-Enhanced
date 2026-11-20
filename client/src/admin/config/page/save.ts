@@ -707,25 +707,21 @@ export function createSave(m: SaveDeps) {
             return m.mediaTagsTab.jeRunHeldWrite(resetAllUserSettingsNow);
         }
 
+        /**
+         * "Apply all plugin settings": Save, exactly as the Save button does (its refusals, Custom Tabs sync, maintenance
+         * switch and messages), then the copy into every user's settings. The copy reads the saved configuration, so
+         * it runs only once the save wrote it.
+         */
         async function resetAllUserSettingsNow(scope: WriteScope) : Promise<void> {
             if (refuseEmptyMaintenanceSelection() || refuseInvalidField()) return;
-            if (await JEAdmin.confirm("Are you sure?\n\nThis saves the current configuration, then copies these Display/Playback/etc. values into every user's Enhanced Panel settings, replacing anything they've customized for themselves. This cannot be undone per-user; each user would have to re-apply their own preferences afterward.")) {
+            if (await JEAdmin.confirm("Are you sure?\n\nThis saves the page as Save does, then copies these Display/Playback/etc. values into every user's Enhanced Panel settings, replacing anything they've customized for themselves. This cannot be undone per-user; each user would have to re-apply their own preferences afterward.")) {
+                scope.throwIfStale();
+                // First, save the page (Save reports its own failure).
+                if (!await saveConfigNow(new Event('submit'), scope)) return;
                 scope.throwIfStale();
                 Dashboard.showLoadingMsg();
                 try {
-                    // First, save the current configuration
-                    const config = await buildConfigFromForm(scope);
-                    scope.throwIfStale();
-                    await writeFormConfig(config);
-                    scope.throwIfStale();
-                    m.dirty.jeMarkSaved();
-
-                    // Sync managed Custom Tabs entries — same flow as a normal save,
-                    // so "Apply to all users" doesn't silently skip the side-effect.
-                    const syncResult = await runCustomTabsSync(config, scope);
-
                     // Then reset all user settings to match the saved config
-                    scope.throwIfStale();
                     await ApiClient.ajax({
                         type: 'POST',
                         url: ApiClient.getUrl('/JellyfinEnhanced/reset-all-users-settings'),
@@ -735,18 +731,14 @@ export function createSave(m: SaveDeps) {
                     scope.throwIfStale();
                     JEAdmin.markApplied();
                     Dashboard.hideLoadingMsg();
-                    let msg = 'Configuration saved and applied to all users successfully!\n\nSettings will take effect after users refresh their browsers.';
-                    if (syncResult && syncResult.ok === false) {
-                        msg += '\n\n(Custom Tabs sync did not complete: ' + (syncResult.detail || 'see console') + ')';
-                    }
-                    Dashboard.alert({ title: 'Success', message: msg });
+                    Dashboard.alert({ title: 'Success', message: 'Configuration saved and applied to all users successfully!\n\nSettings will take effect after users refresh their browsers.' });
                 } catch (e) {
                     Dashboard.hideLoadingMsg();
                     if (isAbortError(e)) throw e;
                     console.error('Failed to save and apply settings:', e);
                     Dashboard.alert({
                         title: 'Error',
-                        message: 'Failed to save and apply settings to all users. Check server logs for details.'
+                        message: 'Your settings were saved, but they could not be applied to all users. Check server logs for details.'
                     });
                 }
             }
@@ -760,18 +752,14 @@ export function createSave(m: SaveDeps) {
             const props = stringList(detail.props);
             const labels = stringList(detail.labels);
             if (!props.length || refuseEmptyMaintenanceSelection() || refuseInvalidField()) return;
-            const ok = await JEAdmin.confirm('Apply these settings to every user?\n\n<ul>' + labels.map((l) => '<li>' + l.replace(/</g, '&lt;') + '</li>').join('') + '</ul>\nThis saves your configuration first. Only these settings change; every other personal setting stays as it is.', 'Apply to all users');
+            const ok = await JEAdmin.confirm('Apply these settings to every user?\n\n<ul>' + labels.map((l) => '<li>' + l.replace(/</g, '&lt;') + '</li>').join('') + '</ul>\nThis saves the page first, as Save does. Only these settings change; every other personal setting stays as it is.', 'Apply to all users');
             scope.throwIfStale();
             if (!ok) return;
+            // The copy reads the saved configuration: Save first, exactly as the Save button does (it reports its own failure).
+            if (!await saveConfigNow(new Event('submit'), scope)) return;
+            scope.throwIfStale();
             Dashboard.showLoadingMsg();
             try {
-                const config = await buildConfigFromForm(scope);
-                scope.throwIfStale();
-                await writeFormConfig(config);
-                scope.throwIfStale();
-                m.dirty.jeMarkSaved();
-                await runCustomTabsSync(config, scope);
-                scope.throwIfStale();
                 const r = asObject(await ApiClient.ajax({
                     type: 'POST',
                     url: ApiClient.getUrl('/JellyfinEnhanced/apply-user-settings'),

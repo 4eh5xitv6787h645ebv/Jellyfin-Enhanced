@@ -449,7 +449,8 @@ test('Apply all plugin settings and Apply the above save a pending Media Tags ch
   const kinds = h.calls.map((c) => c.kind);
   assert.ok(kinds.indexOf('patch') < kinds.indexOf('put'), `the field save went first: ${kinds}`);
   assert.equal(h.calls.find((c) => c.kind === 'put').body.DisableTagsOnSearchPage, true);
-  assert.deepEqual(h.calls.find((c) => c.kind === 'post').body.properties, ['ShowFileSizes']);
+  // Its save is Save, maintenance switch included, so the copy is found by its path.
+  assert.deepEqual(h.calls.find((c) => c.kind === 'post' && c.path.endsWith('/apply-user-settings')).body.properties, ['ShowFileSizes']);
 });
 
 test('the sidebar marks a Media Tags change that is not saved, and a saved change updates the Display card', async (t) => {

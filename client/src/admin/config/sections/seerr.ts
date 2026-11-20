@@ -244,7 +244,8 @@ define({
                 '</div>' +
               '</details>' +
               '<input id="jellyseerrImportBlockedUsers" type="hidden" value=""/>' },
-            { type: 'button', id: 'btnImportJellyseerrUsers', label: 'Import Users Now', variant: 'primary' },
+            { type: 'button', id: 'btnImportJellyseerrUsers', label: 'Import Users Now', variant: 'primary',
+              hint: 'Uses the saved Seerr URLs, API key and blocked users. Saves nothing on this page.' },
             { type: 'custom', html: '<div id="importUsersResult" style="display: none; margin-top:10px;"></div>' }
         ]
     },

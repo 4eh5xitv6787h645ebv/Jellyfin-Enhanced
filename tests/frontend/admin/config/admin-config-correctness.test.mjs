@@ -189,32 +189,70 @@ test('switching the affected users to "All" and back keeps the boxes the adminis
 
 // ── Seerr: Import Users Now ─────────────────────────────────────────────────────
 
-test('Import Users Now does not import when the save before it failed', async t => {
-  const h = await page(t, { saved: SEERR });
+test('Import Users Now writes no settings: an unrelated change stays unsaved, and no maintenance or Custom Tabs write runs', async t => {
+  const h = await page(t, { saved: { ...SEERR, RandomButtonEnabled: true, MaintenanceModeAffectedUsers: JSON.stringify([USER_A]) }, answers: [[/MaintenanceMode\/Users/, () => USERS]] });
   let imports = 0;
-  h.window.ApiClient.fetch = async () => { imports++; return { usersImported: 0, totalUsers: 0 }; };
-  h.window.ApiClient.updatePluginConfiguration = async () => { throw Object.assign(new Error('Bad Request'), { status: 400 }); };
+  h.window.ApiClient.fetch = async () => { imports++; return { usersImported: 1, totalUsers: 2, errors: [] }; };
+  h.document.getElementById('randomButtonEnabled').click();
+  h.document.getElementById('je-mm-deselect-all').click();
+  assert.match(h.document.getElementById('btnImportJellyseerrUsers').closest('.jea-actions').textContent, /saved Seerr URLs, API key and blocked users/, 'says what the import uses');
   h.document.getElementById('btnImportJellyseerrUsers').click();
   await settle(h.window, 120);
-  assert.equal(imports, 0, 'no import with the old settings');
-  assert.match(h.document.getElementById('importUsersResult').textContent, /Import was not attempted/);
-  assert.equal(h.document.getElementById('btnImportJellyseerrUsers').disabled, false);
+  assert.equal(imports, 1);
+  assert.equal(h.calls.puts.length, 0, 'no configuration write');
+  assert.deepEqual(h.calls.ajax.filter(r => r.type === 'POST').map(r => new URL(r.url).pathname), [], 'no maintenance switch, no Custom Tabs write');
+  assert.match(h.document.getElementById('importUsersResult').textContent, /Imported 1 new user/);
 });
 
-test('Import Users Now does not import when the save before it was refused', async t => {
-  const h = await page(t, {
-    saved: { ...SEERR, MaintenanceModeAffectedUsers: JSON.stringify([USER_A]) },
-    answers: [[/MaintenanceMode\/Users/, () => USERS]],
+for (const [what, change, named] of [
+  ['the Seerr URLs', h => { h.document.getElementById('jellyseerrUrls').value = 'http://other.test'; }, /Seerr URLs/],
+  ['the Seerr API key', h => { h.document.getElementById('JellyseerrApiKey').value = 'other'; }, /Seerr API key/],
+]) {
+  test(`Import Users Now with an unsaved change to ${what} imports nothing and asks for a save first`, async t => {
+    const h = await page(t, { saved: SEERR });
+    let imports = 0;
+    h.window.ApiClient.fetch = async () => { imports++; return {}; };
+    change(h);
+    h.document.getElementById('btnImportJellyseerrUsers').click();
+    await settle(h.window, 120);
+    assert.equal(imports, 0, 'no import with settings that are not the ones on screen');
+    assert.equal(h.calls.puts.length, 0, 'nothing was saved');
+    const result = h.document.getElementById('importUsersResult').textContent;
+    assert.match(result, named);
+    assert.match(result, /Save first/);
+    assert.equal(h.document.getElementById('btnImportJellyseerrUsers').disabled, false);
   });
-  h.document.getElementById('je-mm-deselect-all').click();
+}
+
+test('Import Users Now does not import when the saved settings cannot be read', async t => {
+  const h = await page(t, { saved: SEERR, getConfig: n => { if (n > 1) throw Object.assign(new Error('Bad Gateway'), { status: 502 }); return SEERR; } });
   let imports = 0;
   h.window.ApiClient.fetch = async () => { imports++; return {}; };
   h.document.getElementById('btnImportJellyseerrUsers').click();
   await settle(h.window, 120);
-  assert.equal(h.calls.puts.length, 0, 'nothing was saved');
-  assert.equal(imports, 0, 'no import with the old settings');
+  assert.equal(imports, 0);
   assert.match(h.document.getElementById('importUsersResult').textContent, /Import was not attempted/);
+  assert.equal(h.document.getElementById('btnImportJellyseerrUsers').disabled, false);
 });
+
+// ── Apply to all users: the save they start is Save ─────────────────────────────
+
+for (const [action, start, copy] of [
+  ['Apply all plugin settings', h => h.document.getElementById('resetAllUserSettingsBtn').click(), '/JellyfinEnhanced/reset-all-users-settings'],
+  ['Apply the above', h => h.document.dispatchEvent(new h.window.CustomEvent('jea-apply-selected', { detail: { props: ['ShowFileSizes'], labels: ['Show file sizes'] } })), '/JellyfinEnhanced/apply-user-settings'],
+]) {
+  test(`${action} saves as Save does: maintenance mode turned on in the form is turned on, then the settings are copied`, async t => {
+    const h = await page(t, { saved: { MaintenanceModeAffectedUsers: 'all' }, answers: [[/apply-user-settings/, () => ({ applied: 1, userCount: 2 })]] });
+    h.window.JEAdmin.confirm = async () => true;
+    h.document.getElementById('maintenanceModeEnabled').checked = true;
+    start(h);
+    await settle(h.window, 160);
+    assert.equal(h.calls.puts.length, 1);
+    assert.deepEqual(h.posted(ENABLE).map(b => b.affectedUserIds), [null], 'the saved switch is in effect, as after Save');
+    const posts = h.calls.ajax.filter(r => r.type === 'POST').map(r => new URL(r.url).pathname);
+    assert.ok(posts.indexOf(copy) > posts.indexOf(ENABLE), 'copied after the save');
+  });
+}
 
 // ── Overview: Re-test all service connections ───────────────────────────────────
 
@@ -544,13 +582,6 @@ for (const [path, save] of [
     await settle(h.window);
     await choose(h, 'Save');
     assert.equal(h.routed, 0, 'the page stays');
-  }],
-  ['Import Users Now', async h => {
-    let imports = 0;
-    h.window.ApiClient.fetch = async () => { imports++; return {}; };
-    h.document.getElementById('btnImportJellyseerrUsers').click();
-    await settle(h.window, 120);
-    assert.equal(imports, 0, 'no import');
   }],
 ]) {
   test(`a number out of range on a tab that is not shown: ${path} writes nothing, opens the field and says what is wrong`, async t => {
