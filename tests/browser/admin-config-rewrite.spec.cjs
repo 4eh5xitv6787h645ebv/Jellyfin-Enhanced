@@ -141,11 +141,12 @@ test.describe('admin configuration page', () => {
     await open(page);
     await clickTab(page, 'keyboard');
     const row = page.locator('#shortcut-grid .je-sc-row', { hasText: 'Show Playback Info' });
-    // Recording starts on purpose (a click), not when the key is merely focused.
-    await row.locator('.je-sc-key').click();
+    // Recording starts on purpose (Enter on the key, or a click), not when the key is merely focused.
+    await row.locator('.je-sc-key').focus();
+    await page.keyboard.press('Enter');
     await page.keyboard.press('k');
     await expect(page.locator('#shortcut-error-comment')).toContainText('already used by the Jellyfin player');
-    await row.locator('.je-sc-key').click();
+    // A refused key leaves the recorder listening for another.
     await page.keyboard.press('y');
     await expect(page.locator('#shortcut-grid .je-sc-row', { hasText: 'Show Playback Info' }).locator('.je-sc-key')).toHaveText('Y');
   });
