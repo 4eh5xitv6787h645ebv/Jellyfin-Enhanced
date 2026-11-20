@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { bootGenerated, repo, settle } from '../../helpers/admin-config-page.mjs';
+import { bootGenerated, config, repo, settle } from '../../helpers/admin-config-page.mjs';
 
 // Behaviour of the settings page's actions and status views, driven through the generated page.
 
@@ -579,4 +579,22 @@ test('the Enhanced Panel note names only ways the client offers to open it (the 
   const named = [...note.matchAll(/"([^"]+)"/g)].map(m => m[1]);
   assert.ok(named.length >= 2, note);
   for (const name of named) assert.ok(client.includes(name), `the client has no "${name}" entry point`);
+});
+
+// ── Documentation tab ──────────────────────────────────────────────────────────
+
+test('the Documentation tab leads with opening the documentation in a new tab and says the embedded view needs internet access', async t => {
+  const h = await page(t);
+  const tab = h.document.getElementById('docs');
+  const first = tab.querySelector('a[href], button');
+  assert.equal(first.getAttribute('href'), 'https://n00bcodr.github.io/Jellyfin-Enhanced/');
+  assert.equal(first.getAttribute('target'), '_blank');
+  assert.match(first.textContent, /Open the documentation in a new tab/);
+  assert.ok(first.compareDocumentPosition(h.document.getElementById('docsFrame')) & h.window.Node.DOCUMENT_POSITION_FOLLOWING, 'above the frame');
+  assert.match(tab.textContent, /needs internet access/);
+  const css = readFileSync(join(config, 'jeAdmin.css'), 'utf8');
+  const rule = [...css.matchAll(/#docs \.je-docs-iframe\s*\{([^}]*)\}/g)].map(m => m[1]).join(';');
+  assert.match(rule, /background:\s*#[0-9a-f]{3,6}\b/i, 'a fixed dark backing, not the theme panel colour');
+  const [r, g, b] = rule.match(/background:\s*#([0-9a-f]{6})/i)[1].match(/../g).map(x => parseInt(x, 16));
+  assert.ok(r + g + b < 120, 'dark');
 });

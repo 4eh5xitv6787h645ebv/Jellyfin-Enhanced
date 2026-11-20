@@ -2605,10 +2605,15 @@ div#bazarrMappingsValidationResult {
 }
 #JellyfinEnhancedForm.je-search-mode fieldset.jea-locked > .configSection { display: block; }
 
-/* ===== Documentation: the page fills the whole content area, on a dark backing until the site has drawn ===== */
+/* ===== Documentation: opening it in a new tab is the tab's main action, since the embedded page needs the browser to
+   reach the site (the page cannot tell when it can't). The page fills the rest of the content area, on a dark backing in
+   either theme until the site has drawn. ===== */
 #JellyfinEnhancedPage .jea-main #docs.jellyfin-tab-content.active { display: flex; flex-direction: column; gap: 12px; grid-template-columns: none; }
-#docs .je-docs-header { flex: none; width: 100%; box-sizing: border-box; }
-#docs .je-docs-iframe { flex: 1 1 auto; width: 100%; max-width: none; height: calc(100vh - 190px); min-height: 560px; border: 0; border-radius: 12px; background: var(--jea-panel); }
+#docs .je-docs-header { flex: none; width: 100%; box-sizing: border-box; flex-wrap: wrap; justify-content: flex-start; gap: 8px 16px; }
+#docs .je-docs-title { flex: 1 1 auto; }
+#JellyfinEnhancedPage #docs .je-docs-open-link { font-size: .92em; text-decoration: none; white-space: normal; }
+#docs .je-docs-note { flex: 1 1 100%; margin: 0; font-size: .85em; color: var(--jea-text-muted); }
+#docs .je-docs-iframe { flex: 1 1 auto; width: 100%; max-width: none; height: calc(100vh - 230px); min-height: 520px; border: 0; border-radius: 12px; background: #141416; }
 
 /* ===== Media Tags tab (#media-tags, after the form: js/enhanced/admintags/ draws it and saves one field at a time) ===== */
 /* Its own layout (admin-tags.css), not the card grid of the form's tabs. Fade only: a transform left on the tab
