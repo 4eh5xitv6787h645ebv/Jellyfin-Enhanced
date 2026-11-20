@@ -1074,7 +1074,8 @@ test('with neither a TMDB key nor Seerr, Elsewhere asks for one of them and the 
   assert.deepEqual(depHint(h, 'showElsewhereOnJellyseerr'), { disabled: true, hint: 'Add a TMDB API Key or enable Seerr to use' });
   assert.deepEqual(depHint(h, 'ElsewhereUseSeerrRegion'), { disabled: true, hint: 'Enable Seerr to use' });
   assert.deepEqual(regionNotes(h), ['none', 'none']);
-  assert.match(elsewhereCard(h), /Enabled but neither a TMDB API key nor Seerr is configured/);
+  // Overview's Features card says what the row says.
+  assert.match(elsewhereCard(h), /On, but not working: no TMDB API key is set and Seerr is not set up\./);
   // A TMDB key alone: everything TMDB-backed unlocks and the notes stay hidden.
   const k = boot(t, { saved: { ...SEERR, TMDB_API_KEY: 'key', ElsewhereEnabled: true } });
   await k.ready(); k.show(); await settle(k.window);

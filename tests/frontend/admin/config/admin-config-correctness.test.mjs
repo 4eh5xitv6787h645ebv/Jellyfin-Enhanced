@@ -559,6 +559,32 @@ test('a sub-setting that is on while its parent is off can be turned off and say
   assert.match(hintOf(links), /^Needs “[^”]+” on$/);
 });
 
+test('the hint of a switch that is on but not working describes the switch, and Overview\'s Features card says the same words', async t => {
+  const h = await page(t, { saved: { ...SEERR, ShowReviews: true, ShowReleaseDates: true, AutoMovieRequestEnabled: true } });
+  for (const id of ['showReviews', 'showReleaseDate', 'autoMovieRequestEnabled']) {
+    const el = h.document.getElementById(id);
+    const hint = el.closest('label').querySelector('.dep-hint-text');
+    assert.ok(hint?.id && (el.getAttribute('aria-describedby') || '').split(' ').includes(hint.id), id + ' is described by its hint');
+    assert.equal(hint.getAttribute('aria-hidden'), 'true', id + ': read once, as the description, not inside the name too');
+  }
+  const says = 'On, but not working: no TMDB API key is set.';
+  for (const name of ['TMDB Reviews', 'Release dates', 'Automatic movie requests']) {
+    assert.equal(h.feature(name).querySelector('.je-feature-detail').textContent, says, name);
+    assert.match(h.feature(name).className, /je-state-warn/);
+  }
+});
+
+test('a "needs this switch" hint is tied to its control, and the tie goes with the hint', async t => {
+  const h = await page(t, { saved: { AudioLanguageTagSyncEnabled: false, AudioLanguageTagShowAsLinks: true } });
+  const links = h.document.getElementById('audioLanguageTagShowAsLinks');
+  const hint = links.closest('.checkboxContainer').querySelector('.dep-hint-text');
+  assert.ok(hint.id && links.getAttribute('aria-describedby')?.split(' ').includes(hint.id));
+  h.document.getElementById('audioLanguageTagSyncEnabled').click();
+  await settle(h.window);
+  assert.equal(links.closest('.checkboxContainer').querySelector('.dep-hint-text'), null);
+  assert.ok(!(links.getAttribute('aria-describedby') || '').split(' ').includes(hint.id), 'no reference to a hint that is gone');
+});
+
 // ── Seerr connection test ──────────────────────────────────────────────────────
 
 test('testing a Seerr URL without http:// says the address needs it, and asks the server nothing', async t => {

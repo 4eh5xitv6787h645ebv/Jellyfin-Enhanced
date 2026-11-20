@@ -135,9 +135,11 @@ export function createOverviewCards(m: OverviewCardsDeps) {
             var tmdbNeeded = function(id: string): boolean { return bool(id) && !val('TMDB_API_KEY'); };
 
             var features: OverviewFeature[] = [];
-            function feat(name: string, enabled: boolean, tab: string, detail: string, warn?: boolean): void {
+            /** `rowId`: the feature's switch; while its row says "On, but not working: …", the card says the same. */
+            function feat(name: string, enabled: boolean, tab: string, detail: string, warn?: boolean, rowId?: string): void {
                 if (!enabled) { features.push({ name: name, state: 'off', tab: tab, detail: 'Disabled' }); return; }
-                features.push({ name: name, state: warn ? 'warn' : 'on', tab: tab, detail: detail });
+                var rowSays = rowId ? m.dependencies.notWorkingText(rowId) : null;
+                features.push({ name: name, state: warn || rowSays ? 'warn' : 'on', tab: tab, detail: rowSays ?? detail });
             }
 
             // Display
@@ -162,7 +164,7 @@ export function createOverviewCards(m: OverviewCardsDeps) {
             var autoSkipWarn = autoSkip && m.plugins.hasIntroSkipper !== true;
             feat('Auto-skip Intro/Outro', autoSkip, 'playback',
                 autoSkipWarn ? 'Enabled but Intro Skipper plugin is missing' : 'Enabled',
-                autoSkipWarn);
+                autoSkipWarn, bool('autoSkipIntro') ? 'autoSkipIntro' : 'autoSkipOutro');
             var tabSwitchOn = [['autoPauseEnabled', 'Auto-pause'], ['autoResumeEnabled', 'Auto-resume'], ['autoPipEnabled', 'Auto-PiP']]
                 .filter(function(a) { return bool(a[0] ?? ''); }).map(function(a) { return a[1]; });
             feat('Tab-switch actions', tabSwitchOn.length > 0, 'playback', tabSwitchOn.join(' / '));
@@ -208,15 +210,15 @@ export function createOverviewCards(m: OverviewCardsDeps) {
             var elsewhereWarn = bool('elsewhereEnabled') && !val('TMDB_API_KEY') && !m.dependencies.hasJellyseerrConfigured();
             feat('Elsewhere (streaming providers)', bool('elsewhereEnabled'), 'elsewhere',
                 elsewhereWarn ? 'Enabled but neither a TMDB API key nor Seerr is configured' : 'Enabled',
-                elsewhereWarn);
+                elsewhereWarn, 'elsewhereEnabled');
             var reviewsWarn = tmdbNeeded('showReviews');
-            feat('TMDB Reviews', bool('showReviews'), 'elsewhere', reviewsWarn ? 'Enabled but TMDB API key missing' : 'Enabled', reviewsWarn);
+            feat('TMDB Reviews', bool('showReviews'), 'elsewhere', reviewsWarn ? 'Enabled but TMDB API key missing' : 'Enabled', reviewsWarn, 'showReviews');
             feat('AniList Reviews', bool('showAnilistReviews'), 'elsewhere', 'Enabled');
             feat('User Reviews', bool('showUserReviews'), 'elsewhere', 'Enabled');
             var translateWarn = bool('reviewTranslationEnabled') && !val('reviewTranslationUrl');
             feat('Review translation', bool('reviewTranslationEnabled'), 'elsewhere', translateWarn ? 'Enabled but server URL missing' : 'Enabled', translateWarn);
             var releaseWarn = tmdbNeeded('showReleaseDate');
-            feat('Release dates', bool('showReleaseDate'), 'elsewhere', releaseWarn ? 'Enabled but TMDB API key missing' : 'Enabled', releaseWarn);
+            feat('Release dates', bool('showReleaseDate'), 'elsewhere', releaseWarn ? 'Enabled but TMDB API key missing' : 'Enabled', releaseWarn, 'showReleaseDate');
             feat('Active Streams', bool('activeStreamsEnabled'), 'extras', 'Enabled');
             feat('Letterboxd links', bool('letterboxdEnabled'), 'extras', 'Enabled');
 
@@ -245,7 +247,7 @@ export function createOverviewCards(m: OverviewCardsDeps) {
             [['autoSeasonRequestEnabled', 'Automatic season requests'], ['autoMovieRequestEnabled', 'Automatic movie requests'],
              ['autoRequestRemovalEnabled', 'Remove watched requests'], ['triggerSeerrScanOnItemAdded', 'Seerr scan on new items']].forEach(function(f) {
                 var id = f[0] ?? '', warn = seerrNeeded(id);
-                feat(f[1] ?? '', bool(id), 'seerr', warn ? 'Enabled but Seerr is not configured' : 'Enabled', warn);
+                feat(f[1] ?? '', bool(id), 'seerr', warn ? 'Enabled but Seerr is not configured' : 'Enabled', warn, id);
             });
 
             // *arr

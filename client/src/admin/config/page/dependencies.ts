@@ -218,6 +218,20 @@ export function createDependencies(m: DependenciesDeps) {
             return el instanceof HTMLInputElement && el.type === 'checkbox' && el.checked;
         }
 
+        /** Adds or removes `hintId` in the control's aria-describedby, keeping any other description it has. */
+        function describeBy(control: Element, hintId: string, on: boolean) : void {
+            const ids = (control.getAttribute('aria-describedby') || '').split(/\s+/).filter(function(id) { return id && id !== hintId; });
+            if (on) ids.push(hintId);
+            if (ids.length) control.setAttribute('aria-describedby', ids.join(' ')); else control.removeAttribute('aria-describedby');
+        }
+
+        /** What a switch's row says while it is on and what it needs is missing ("On, but not working: …"), else null. */
+        function notWorkingText(id: string) : string | null {
+            const dep = INDIVIDUAL_DEPS.find(function(d) { return d.id === id; });
+            const control = document.getElementById(id);
+            return dep && control && isOn(control) && !dep.checkFn() ? 'On, but not working: ' + dep.missing + '.' : null;
+        }
+
         /**
          * Creates an orange warning banner DOM element for a missing section dependency.
          * @param {Object} dep - Dependency rule with bannerIcon, bannerTitle, and bannerHint
@@ -330,9 +344,15 @@ export function createDependencies(m: DependenciesDeps) {
                 if (span && !hintEl) {
                     hintEl = document.createElement('span');
                     hintEl.className = 'dep-hint-text';
+                    // Inside the label, so hidden from its name: it is read once, as the switch's description.
+                    hintEl.id = dep.id + '-dep-hint';
+                    hintEl.setAttribute('aria-hidden', 'true');
                     span.appendChild(hintEl);
                 }
-                if (hintEl) hintEl.textContent = why;
+                if (hintEl) {
+                    hintEl.textContent = why;
+                    describeBy(checkbox, hintEl.id, true);
+                }
             } else {
                 var allClear = removeDepTag(checkbox, tag);
                 if (allClear) checkbox.disabled = false;
@@ -345,7 +365,10 @@ export function createDependencies(m: DependenciesDeps) {
                 var reqIcon = asHtml(label.querySelector('.dep-required-icon'));
                 if (reqIcon) reqIcon.remove();
                 var hintText = asHtml(label.querySelector('.dep-hint-text'));
-                if (hintText) hintText.remove();
+                if (hintText) {
+                    describeBy(checkbox, hintText.id, false);
+                    hintText.remove();
+                }
             }
         }
 
@@ -468,9 +491,13 @@ export function createDependencies(m: DependenciesDeps) {
                         if (!dep.noHint && !hint) {
                             hint = document.createElement('div');
                             hint.className = 'dep-hint-text ' + hintClass;
+                            hint.id = childId + '-' + hintClass;
                             container.appendChild(hint);
                         }
-                        if (hint) hint.textContent = on ? 'On, but needs ' + parentNames(dep) + ' on to work' : 'Needs ' + parentNames(dep) + ' on';
+                        if (hint) {
+                            hint.textContent = on ? 'On, but needs ' + parentNames(dep) + ' on to work' : 'Needs ' + parentNames(dep) + ' on';
+                            describeBy(child, hint.id, true);
+                        }
                     }
                 } else {
                     var allClear = removeDepTag(child, tag);
@@ -480,7 +507,10 @@ export function createDependencies(m: DependenciesDeps) {
                         if (cc) { container.style.opacity = ''; container.style.cursor = ''; jeaSetDepHidden(container, childId, false); }
                         // Remove hint
                         var hintEl = asHtml(container.querySelector('.' + hintClass));
-                        if (hintEl) hintEl.remove();
+                        if (hintEl) {
+                            describeBy(child, hintEl.id, false);
+                            hintEl.remove();
+                        }
                     }
                 }
             });
@@ -508,6 +538,7 @@ export function createDependencies(m: DependenciesDeps) {
         SECTION_DEPS,
         hasAnyArrService,
         hasJellyseerrConfigured,
+        notWorkingText,
         updateCustomTabsV12Hint,
         updateIndividualDep,
         updateParentDep,
