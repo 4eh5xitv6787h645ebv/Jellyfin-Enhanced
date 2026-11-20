@@ -21,6 +21,22 @@ const clone = (v) => structuredClone(v);
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
 /**
+ * Close the realm when the test ends. node:test keeps every test's after hooks until the file ends, and a hook that
+ * still holds its harness keeps the whole closed page (about 80 MB) with it: 25 of them exceed the default heap. The
+ * hook is made outside boot (whose scope holds the window and document) and lets go of the harness before closing it.
+ */
+function closeAfter(t, harness) {
+  let h = harness;
+  t.after(() => {
+    const closing = h;
+    h = null;
+    const ctx = closing.JE.adminTags?.current?.();
+    if (ctx) ctx.dispose();
+    closing.close();
+  });
+}
+
+/**
  * Boot the configuration page with the Media Tags tab available.
  * @param {import('node:test').TestContext} t
  * @param {{url?: string, config?: object, patch?: Function, put?: Function, lazy?: boolean, session?: Object<string, string>, whatsNew?: object}} [options]
@@ -85,7 +101,7 @@ function boot(t, { url = PAGE_URL, config: extra = {}, patch, put, lazy = false,
       Dashboard: { showLoadingMsg() {}, hideLoadingMsg() {}, processPluginConfigurationUpdateResult() {}, alert() {}, confirm() {}, navigate() {} },
     },
   });
-  t.after(() => { const ctx = h.JE.adminTags?.current?.(); if (ctx) ctx.dispose(); h.close(); });
+  closeAfter(t, h);
   const { window, document } = h;
   window.ResizeObserver = class { observe() {} unobserve() {} disconnect() {} };
   window.scrollTo = () => {};
