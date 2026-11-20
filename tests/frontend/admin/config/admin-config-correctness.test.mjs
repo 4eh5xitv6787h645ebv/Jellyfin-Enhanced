@@ -467,6 +467,17 @@ for (const [path, save] of [
   });
 }
 
+test('the refusal names the setting by its label alone, without the markers after it (New, per user)', async t => {
+  const whatsNew = { pluginVersion: '12.16.0.0', newSettings: { LeavingSoonRefreshHours: '12.16.0.0' }, mediaTags: {} };
+  const h = await page(t, { answers: [[/\/whats-new$/, r => (r.type === 'GET' || !r.type ? whatsNew : undefined)]] });
+  assert.ok(h.document.getElementById('LeavingSoonRefreshHours').closest('label, .inputContainer').querySelector('.je-new-badge'), 'the field carries a New badge');
+  typeBadRefresh(h);
+  await h.submit();
+  assert.equal(h.calls.puts.length, 0);
+  assert.match(h.dialogs().join(' | '), /"Refresh every \(hours\)" \(/);
+  assert.doesNotMatch(h.dialogs().join(' | '), /New in/);
+});
+
 test('a number held by a setting that is off is shown as well, and the message says how to change it', async t => {
   const h = await page(t, { saved: { DownloadsPageEnabled: true, DownloadsPagePollingEnabled: true } });
   const polling = h.document.getElementById('downloadsPagePollingEnabled');

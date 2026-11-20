@@ -441,7 +441,8 @@ export function createSave(m: SaveDeps) {
                 field.removeEventListener('change', settled);
                 revealed.forEach(function(el) { el.classList.remove('jea-reveal'); });
             });
-            const label = (field.id && asHtml(document.querySelector('label[for="' + field.id + '"] .jea-label-text, label[for="' + field.id + '"]'))) || field.closest('label');
+            // The label's own text: the markers after it (New, per user) are not part of the setting's name.
+            const label = (field.id && (asHtml(document.querySelector('label[for="' + field.id + '"] .jea-label-text')) ?? asHtml(document.querySelector('label[for="' + field.id + '"]')))) || field.closest('label');
             const name = (label ? plainLabel(label) : '') || field.id;
             const place = [tabButton ? plainLabel(tabButton.querySelector('.je-tab-label') ?? tabButton) : '', card ? plainLabel(card.querySelector(':scope > legend') ?? card) : ''].filter(Boolean).join(' \u203a ');
             field.focus({ preventScroll: true });
