@@ -1072,7 +1072,7 @@
   "DefaultSubtitleFont": 0,
   "DefaultSubtitleTextEffect": 0,
   "HelpPanelAutocloseDelay": 15000,
-  "ToastDuration": 3000,
+  "ToastDuration": 1500,
   "BookmarksEnabled": true,
   "HiddenContentEnabled": false,
   "HiddenContentAdmin": true,

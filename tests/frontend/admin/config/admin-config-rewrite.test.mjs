@@ -722,9 +722,9 @@ test('the toast preview uses the typed duration, and says toasts are off at 0', 
   assert.equal(preview('0'), 'Toasts are turned off (0 ms). Nothing will pop up.');
   assert.equal(preview('50'), 'Example toast, disappears in 0.1s');
   assert.equal(preview('4000'), 'Example toast, disappears in 4.0s');
-  assert.equal(preview(''), 'Example toast, disappears in 3.0s');
-  assert.equal(preview('-20'), 'Example toast, disappears in 3.0s');
-  assert.equal(preview('999999'), 'Example toast, disappears in 120.0s');
+  assert.equal(preview(''), 'Example toast, disappears in 1.5s');
+  assert.equal(preview('-20'), 'Example toast, disappears in 1.5s');
+  assert.equal(preview('999999'), 'Example toast, disappears in 1000.0s');
   assert.match(h.document.querySelector('[data-desc-for="ToastDuration"]').textContent, /Set to 0 to turn toasts off\./);
 });
 
