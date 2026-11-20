@@ -181,22 +181,5 @@ test('every secret has a Show button and stays masked until it is pressed', asyn
   assert.doesNotMatch(css, /:hover[^{]*\{[^}]*text-security: none/, 'nothing is revealed by hovering');
 });
 
-test('the sidebar lists a card\'s groups only while they are on screen', async t => {
-  const h = await page(t, { saved: { TMDB_API_KEY: 'key', MdblistRatingsEnabled: false } });
-  const main = h.document.getElementById('mdblistRatingsEnabled');
-  const card = main.closest('fieldset');
-  assert.ok(card.classList.contains('jea-off'), 'MDBList ratings is off, so its groups are collapsed');
-  const title = [...card.querySelector('legend').childNodes].filter(n => n.nodeType === 3).map(n => n.textContent).join('').trim();
-  const leaf = [...h.document.querySelectorAll('.jea-nav-tree > .jea-nav-leaf')].find(a => a.textContent === title);
-  const sub = leaf.nextElementSibling;
-  assert.ok(sub?.classList.contains('jea-nav-subtree'), 'the card has sidebar entries for its groups');
-  const entries = () => [...sub.querySelectorAll('.jea-nav-sub')];
-  assert.ok(entries().length >= 2);
-  assert.ok(entries().every(a => a.hidden) && sub.hidden, 'no entry leads to a group that is not shown');
-  main.checked = true;
-  main.dispatchEvent(new h.window.Event('change', { bubbles: true }));
-  await settle(h.window);
-  assert.ok(entries().every(a => !a.hidden) && !sub.hidden, 'turning the card on lists its groups');
-  const css = readFileSync(join(config, 'jeAdmin.css'), 'utf8');
-  assert.match(css, /\.jea-nav-leaf\[hidden\][^{]*\{\s*display:\s*none/, 'a hidden entry is not drawn');
-});
+// (Whether the sidebar lists a card's groups depends on the stylesheet, so that check runs in a browser:
+// tests/browser/admin-config-rewrite.spec.cjs.)

@@ -1,3 +1,4 @@
+import { pinnedTop } from '../engine/shell';
 import type { PageModules } from './modules';
 import { asHtml, closestTo, needHtml, plainLabel } from './dom';
 
@@ -135,10 +136,9 @@ export function createTabs(m: TabsDeps) {
                 }
             }
 
-            /** Scrolls a fieldset's top just below .je-sticky-header (sticky title/search/tab bar). */
+            /** Scrolls a fieldset's top just below the bars pinned at the top (Jellyfin's, the page header, the phone's Section bar). */
             function jeScrollFieldsetIntoView(fieldset: HTMLElement) : void {
-                const headerEl = asHtml(document.querySelector('.je-sticky-header'));
-                const offset = (headerEl ? headerEl.offsetHeight : 0) + 12;
+                const offset = pinnedTop() + 12;
                 const targetY = window.scrollY + fieldset.getBoundingClientRect().top - offset;
                 window.scrollTo({ top: Math.max(0, targetY), behavior: 'smooth' });
             }
@@ -167,9 +167,30 @@ export function createTabs(m: TabsDeps) {
                         const openAncestors = (el: Element | null): void => {
                             for (let d = el && el.closest('details'); d; d = d.parentElement ? d.parentElement.closest('details') : null) d.open = true;
                         };
-                        const rawTarget = asHtml(document.querySelector(selector));
-                        openAncestors(rawTarget);
-                        const target = jeResolveFlashTarget(rawTarget);
+                        // The control on this tab: a setting shown on another tab too is reached through its linked copy here.
+                        const onTab = (sel: string): HTMLElement | null => {
+                            const el = asHtml(document.querySelector(sel));
+                            if (!el || el.closest('.jellyfin-tab-content')?.id === tabId || !/^#[\w-]+$/.test(sel)) return el;
+                            return asHtml(document.querySelector(sel + '--mirror')) ?? el;
+                        };
+                        const rendered = (el: HTMLElement | null): boolean => !!el && el.getClientRects().length > 0;
+                        const resolve = (sel: string): HTMLElement | null => {
+                            const raw = onTab(sel);
+                            openAncestors(raw);
+                            return jeResolveFlashTarget(raw);
+                        };
+                        const all = [selector].concat(extraSelectors || []).filter((sel, i, list) => list.indexOf(sel) === i);
+                        const targets = all.map(resolve);
+                        // Land on the first one that is drawn; one hidden by a switch that is off lands on the nearest
+                        // thing on screen that holds it (the switch's row, else its card).
+                        let target = targets.find(el => rendered(el)) ?? null;
+                        if (!target) {
+                            let holder: HTMLElement | null = targets[0]?.parentElement ?? null;
+                            while (holder && !rendered(holder)) holder = holder.parentElement;
+                            const card = holder?.closest('fieldset');
+                            const main = card ? asHtml(card.querySelector('.jea-row.je-main-feature')) : null;
+                            target = card && (holder === card || holder?.classList.contains('configSection')) ? main ?? card : holder;
+                        }
                         if (target) {
                             if (target.tagName === 'FIELDSET') {
                                 jeScrollFieldsetIntoView(target);
@@ -180,13 +201,7 @@ export function createTabs(m: TabsDeps) {
                         } else {
                             console.warn('[JE] jeJumpToTab: target not found:', selector);
                         }
-                        (extraSelectors || []).forEach((extraSelector) => {
-                            if (extraSelector === selector) return;
-                            const rawExtra = asHtml(document.querySelector(extraSelector));
-                            openAncestors(rawExtra);
-                            const extraTarget = jeResolveFlashTarget(rawExtra);
-                            if (extraTarget && extraTarget !== target) jeFlashElement(extraTarget);
-                        });
+                        targets.forEach((extra) => { if (extra && rendered(extra) && extra !== target) jeFlashElement(extra); });
                     });
                 });
             }

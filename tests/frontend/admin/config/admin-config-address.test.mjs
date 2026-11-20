@@ -10,8 +10,8 @@ const labelOf = (document, id) => document.getElementById(id).closest('label') |
 const tabButton = (document, id) => document.querySelector(`.jea-nav .jellyfin-tab-button[data-tab="${id}"]`);
 const activeTab = document => document.querySelector('.jellyfin-tab-content.active')?.id ?? null;
 /** The card(s) shown alone, by their legend. */
-const focusedCards = document => [...document.querySelectorAll('.jellyfin-tab-content.active.jea-focused > fieldset.jea-focus > legend')]
-  .map(legend => [...legend.childNodes].filter(n => n.nodeType === 3).map(n => n.textContent).join('').trim());
+const focusedCards = document => [...document.querySelectorAll('.jellyfin-tab-content.active.jea-focused > fieldset.jea-focus > legend > .jea-legend-title')]
+  .map(title => title.textContent.trim());
 const slug = text => text.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
 
 function reporting(names) {

@@ -120,6 +120,67 @@ test('a tab or card shown writes the address quietly, through the plugin\'s writ
   assert.equal(replaced, 0, 'nothing written past the plugin');
 });
 
+test('clearing a search shows the card that was shown on its own before it again, and Escape keeps focus in the search box', async t => {
+  const h = await page(t);
+  const input = h.document.getElementById('settingsSearchInput');
+  tabButton(h, 'display').click();
+  leaf(h, 'Spoiler Guard').click();
+  await settle(h.window, 60);
+  assert.equal(cardParam(h), 'spoiler-guard');
+  await type(h, 'seerr');
+  assert.ok(h.document.getElementById('JellyfinEnhancedForm').classList.contains('je-search-mode'));
+  h.document.getElementById('settingsSearchClear').click();
+  await settle(h.window, 60);
+  assert.equal(cardParam(h), 'spoiler-guard', 'the clear button brings the card back');
+  assert.ok(card(h, 'Spoiler Guard').classList.contains('jea-focus'));
+
+  input.focus();
+  await type(h, 'seerr');
+  input.dispatchEvent(new h.window.KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true }));
+  await settle(h.window, 60);
+  assert.equal(cardParam(h), 'spoiler-guard', 'so does Escape');
+  assert.equal(h.document.activeElement, input, 'and focus stays in the search box');
+
+  await type(h, 'seerr');
+  await type(h, '');
+  assert.equal(cardParam(h), 'spoiler-guard', 'and emptying the box');
+});
+
+test('search finds both spellings of a word, in either direction', async t => {
+  const h = await page(t);
+  const marks = () => h.document.querySelectorAll('#JellyfinEnhancedForm mark.je-search-match').length;
+  for (const [british, american] of [['colour', 'color'], ['favourite', 'favorite'], ['customis', 'customiz'], ['behaviour', 'behavior']]) {
+    await type(h, british);
+    const fromBritish = [found(h), marks()];
+    await type(h, american);
+    const fromAmerican = [found(h), marks()];
+    assert.ok(fromBritish[0].length > 0 && fromBritish[1] > 0, british + ' finds and highlights something');
+    assert.deepEqual(fromAmerican, fromBritish, american + ' finds and highlights what ' + british + ' does');
+    // One after another, as typed: a tab the previous search hid is searched again.
+    await type(h, american === 'color' ? 'favourite' : 'color');
+  }
+});
+
+test('"Skip to settings" is the page\'s first stop, card titles are headings, and no two boxes are both named "Movies"', async t => {
+  const h = await page(t, { getJSON: async url => (/VirtualFolders/.test(url) ? [{ ItemId: 'a1', Name: 'Movies', CollectionType: 'movies' }] : []) });
+  const doc = h.document;
+  const stops = doc.querySelectorAll('#JellyfinEnhancedPage :is(a[href], button, input, select, textarea)');
+  assert.ok(stops[0].classList.contains('jea-skip'), 'the first stop');
+  assert.equal(stops[0].textContent, 'Skip to settings');
+  tabButton(h, 'display').click();
+  stops[0].click();
+  assert.ok(doc.getElementById('display').contains(doc.activeElement), 'it moves focus into the tab shown');
+  const legends = [...doc.querySelectorAll('#JellyfinEnhancedForm fieldset > legend.sectionTitle')];
+  assert.ok(legends.length > 20);
+  for (const legend of legends) {
+    const heading = legend.querySelector('[role="heading"]');
+    assert.ok(heading, 'a heading in ' + legend.textContent.trim());
+    assert.equal(heading.getAttribute('aria-level'), '3');
+  }
+  const names = [...doc.querySelectorAll('#spoilerAutoEnableScopeContainer label')].map(label => label.textContent.trim());
+  assert.equal(new Set(names).size, names.length, 'every box says what it is: ' + names.join(', '));
+});
+
 test('the Media Tags Overview\'s People button shows the People row and its switch instead of failing', async t => {
   const h = setup(t);
   await h.settle();
@@ -127,6 +188,18 @@ test('the Media Tags Overview\'s People button shows the People row and its swit
   const row = h.$('.je-ta-grow[data-group="people"]');
   assert.equal(h.root.dataset.tab, 'groups');
   assert.ok(row.contains(h.document.activeElement), 'its switch has focus');
+});
+
+test('a card picked on another tab is dropped when a different tab is picked before it opens', async t => {
+  const h = await page(t);
+  tabButton(h, 'overview').click();
+  leaf(h, 'Random Button').click(); // on Display, which opens first
+  tabButton(h, 'admin').click();
+  await wait(450);
+  await settle(h.window);
+  assert.equal(h.document.querySelector('.jellyfin-tab-content.active').id, 'admin');
+  assert.equal(cardParam(h), null, 'no card from the other tab in the address');
+  assert.equal(h.document.querySelector('.jellyfin-tab-content.jea-focused'), null, 'and no tab is showing one card');
 });
 
 test('a shortcut on the space bar is shown as "Space", not as a blank key', async t => {

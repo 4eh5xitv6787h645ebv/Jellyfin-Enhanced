@@ -133,6 +133,8 @@ export function createMediaTagsTab(m: MediaTagsTabDeps) {
                 return jeMountMediaTags().then(function (ctx) {
                     var known = JE_MT_SECTIONS.some(function (x) { return x[0] === section; });
                     if (ctx && known && section) ctx.openTab(section, { group: group || null, focus: !!focus });
+                    // No section named: focus goes to the section shown, not back to the top of the document.
+                    else if (ctx && focus) asHtml(page.querySelector('#' + JE_MT_TAB + ' [role="tab"][aria-selected="true"]'))?.focus();
                     return ctx;
                 });
             }

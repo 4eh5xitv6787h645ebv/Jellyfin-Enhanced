@@ -152,7 +152,8 @@
 }
 .je-sticky-header {
     position: sticky;
-    top: 0;
+    /* Below Jellyfin's own fixed top bar (its height is measured by the page, engine/shell.ts). */
+    top: var(--jea-bar-h, 0px);
     z-index: 1010;
     padding: 8px 8px 0 8px;
     margin: -8px -8px 20px -8px;
@@ -2046,6 +2047,8 @@ div#bazarrMappingsValidationResult {
     appearance: none; -webkit-appearance: none; flex: none; position: relative;
     width: 2.7em; height: 1.5em; margin: 0; border-radius: 1em; cursor: pointer;
     background: var(--jea-track); transition: background .18s ease;
+    /* The track's edge, at least 3:1 against the card in either theme (the fill alone is too faint when off). */
+    box-shadow: inset 0 0 0 1px var(--jea-control-border);
 }
 .jea-section .jea-switch::after {
     content: ""; position: absolute; top: .2em; left: .2em; width: 1.1em; height: 1.1em;
@@ -2055,7 +2058,9 @@ div#bazarrMappingsValidationResult {
 .jea-section .jea-switch:checked::after { transform: translateX(1.2em); }
 .jea-section .jea-switch:focus-visible, .jea-section .jea-input:focus-visible { outline: 2px solid var(--jea-accent); outline-offset: 2px; }
 /* A switch locked by an unmet requirement reads as off (it has no effect until the requirement is met); the hint says why. */
-.jea-section .jea-switch:disabled { cursor: not-allowed; opacity: .6; }
+.jea-section .jea-switch:disabled { cursor: not-allowed; }
+/* Locked: the knob is dimmed, not the track, so the track keeps its contrast. */
+.jea-section .jea-switch:disabled::after { background: color-mix(in srgb, var(--jea-knob) 55%, transparent); box-shadow: none; }
 .jea-section .jea-switch:disabled:checked { background: var(--jea-track); }
 .jea-section .jea-switch:disabled:checked::after { transform: none; }
 #JellyfinEnhancedForm .jea-toggle[data-dep-disabled] { opacity: 1 !important; }
@@ -2065,6 +2070,8 @@ div#bazarrMappingsValidationResult {
    and are aria-hidden (the tab intros and the Usage Statistics card say what they mean). */
 #JellyfinEnhancedPage .jea-marks { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 4px 6px; margin-left: 8px; vertical-align: 1px; }
 #JellyfinEnhancedPage .jea-marks:empty { display: none; }
+/* Holding only the usage marker, which shows only while statistics are on: no empty line under the label. */
+#JellyfinEnhancedPage:not(.jea-stats-on) .jea-marks:not(:has(> :not(.jea-analytics))) { display: none; }
 #JellyfinEnhancedPage :is(.jea-badge, .jea-analytics, .je-ta-peruser, .je-legend-chip) {
     display: inline-flex; align-items: center; gap: 3px; padding: 0 7px 0 5px; margin: 0; vertical-align: 1px;
     font-family: inherit; font-size: 11px; font-weight: 600; line-height: 18px; letter-spacing: .1px; white-space: nowrap; font-style: normal;
@@ -2121,16 +2128,22 @@ div#bazarrMappingsValidationResult {
 
 @container jea-page (max-width: 880px) {
     .jea-layout { grid-template-columns: minmax(0, 1fr); gap: 12px; }
-    .jea-nav { position: sticky; top: 56px; z-index: 1005; max-height: none; overflow: visible; border-radius: 12px; -webkit-mask-image: none !important; mask-image: none !important; }
+    .jea-nav { position: sticky; top: calc(var(--jea-bar-h, 48px) + var(--jea-head-h, 0px)); z-index: 1005; max-height: none; overflow: visible; border-radius: 12px; -webkit-mask-image: none !important; mask-image: none !important; }
     /* The bar that opens the drawer: "Section: Display", not a second hamburger. */
     .jea-nav-toggle {
         display: flex; align-items: center; gap: .6em; width: 100%; padding: 10px 14px; font: inherit; font-size: 1em; font-weight: 500;
-        color: inherit; background: var(--je-surface-2); border: 1px solid var(--je-border); border-radius: 12px; cursor: pointer;
+        color: inherit; border: 1px solid var(--je-border); border-radius: 12px; cursor: pointer;
+        /* Opaque: settings scroll behind it. */
+        background: linear-gradient(var(--je-surface-2), var(--je-surface-2)), var(--jea-panel);
     }
     .jea-nav-kicker { font-size: 11px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--jea-text-muted); }
     .jea-nav .jea-nav-current { flex: 1; text-align: left; font-weight: 600; }
     .jea-nav .jea-nav-chev { color: var(--jea-text-muted); font-size: 20px; }
     #JellyfinEnhancedPage .jea-nav .je-tab-bar { display: none; padding: 6px 0; }
+    /* The card chips are one line that scrolls sideways, so the first setting is not pushed below the first screen. */
+    #JellyfinEnhancedForm .je-section-nav { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; margin-bottom: 14px; }
+    #JellyfinEnhancedForm .je-section-nav::-webkit-scrollbar { display: none; }
+    #JellyfinEnhancedForm .je-section-nav-chip { flex: none; }
     #JellyfinEnhancedPage .jea-main .jellyfin-tab-content.active { grid-template-columns: minmax(0, 1fr); }
     #JellyfinEnhancedPage .jea-nav .jellyfin-tab-button { padding: 12px; }
     .jea-nav-leaf { padding: 9px 10px; }
@@ -2255,6 +2268,7 @@ div#bazarrMappingsValidationResult {
 #JellyfinEnhancedForm legend.sectionTitle::before {
     content: ""; position: absolute; left: 0; top: 10px; bottom: 10px; width: 4px; border-radius: 0 4px 4px 0; background: var(--jea-accent);
 }
+#JellyfinEnhancedForm legend.sectionTitle .jea-legend-title { flex: 1 1 0; min-width: 0; }
 #JellyfinEnhancedForm legend.sectionTitle .je-legend-icon { display: inline-flex; align-items: center; justify-content: center; flex: none; width: 32px; height: 32px; margin: 0; border-radius: 9px; font-size: 19px !important; opacity: 1; color: var(--jea-accent); background: color-mix(in srgb, var(--jea-accent) 16%, transparent); }
 #JellyfinEnhancedForm legend.sectionTitle .je-legend-icon-img { flex: none; width: 32px; height: 32px; margin: 0; padding: 5px; box-sizing: border-box; border-radius: 9px; background: color-mix(in srgb, currentColor 8%, transparent); object-fit: contain; }
 #JellyfinEnhancedPage .configSection { padding: 18px 24px 20px; gap: 12px; }
@@ -2263,7 +2277,8 @@ div#bazarrMappingsValidationResult {
 .jea-note { padding: .75em 1em; border-radius: 10px; font-size: .88em; line-height: 1.45; background: color-mix(in srgb, var(--primary-accent-color, #00a4dc) 12%, transparent); border: 1px solid color-mix(in srgb, var(--primary-accent-color, #00a4dc) 30%, transparent); }
 .jea-note-warn { background: rgba(255, 193, 7, .1); border-color: rgba(255, 193, 7, .45); }
 .jea-group { border: 1px solid var(--je-border); border-radius: 10px; margin-top: 12px; }
-.jea-group > summary { cursor: pointer; padding: 10px 14px; font-weight: 600; list-style: none; display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; }
+.jea-group > summary { cursor: pointer; padding: 10px 14px; font-weight: 600; list-style: none; display: flex; flex-wrap: nowrap; align-items: center; gap: 4px 8px; }
+.jea-group > summary::after { flex: none; }
 .jea-group > summary::-webkit-details-marker { display: none; }
 .jea-group > summary::after { content: "expand_more"; margin-left: auto; font-family: "Material Icons", "Material Symbols Rounded"; font-size: 20px; font-weight: normal; opacity: .6; transition: transform .15s; }
 .jea-group > summary:has(> .jea-group-value)::after { margin-left: 0; }
@@ -2327,7 +2342,7 @@ div#bazarrMappingsValidationResult {
 /* Numbers: one width and alignment everywhere (left, like every other field). */
 #JellyfinEnhancedPage .jea-section input[type="number"] { width: 140px; text-align: left; }
 #JellyfinEnhancedPage .jea-section input[type="time"] { width: 140px; }
-#JellyfinEnhancedPage .jea-section input:disabled, #JellyfinEnhancedPage .jea-section select:disabled { opacity: .5; cursor: not-allowed; }
+#JellyfinEnhancedPage .jea-section input:disabled:not(.jea-switch), #JellyfinEnhancedPage .jea-section select:disabled { opacity: .5; cursor: not-allowed; }
 
 /* ---- Buttons ---- */
 #JellyfinEnhancedPage .jea-btn.je-cat-up, #JellyfinEnhancedPage .jea-btn.je-cat-down { min-height: 28px; padding: 2px 8px; }
@@ -2366,7 +2381,8 @@ div#bazarrMappingsValidationResult {
 #JellyfinEnhancedPage {
     --jea-panel: #1c1c1f;
     --jea-panel-text: #ececec;
-    --jea-track: color-mix(in srgb, currentColor 24%, transparent);
+    /* A fixed tint, not currentColor: on an <input> that is the browser's default black, which vanished on a dark card. */
+    --jea-track: rgba(255, 255, 255, .16);
     --jea-knob: #fff;
     --jea-on-accent: #04222e;
     --jea-text-muted: rgba(255, 255, 255, .7);
@@ -2377,7 +2393,7 @@ div#bazarrMappingsValidationResult {
     font-size: 15px; line-height: 1.5; -webkit-font-smoothing: antialiased;
 }
 #JellyfinEnhancedPage.je-light-theme {
-    --jea-panel: #ffffff; --jea-panel-text: #1b1b1d; --jea-track: color-mix(in srgb, currentColor 28%, transparent);
+    --jea-panel: #ffffff; --jea-panel-text: #1b1b1d; --jea-track: rgba(0, 0, 0, .12);
     --jea-text-muted: rgba(0, 0, 0, .68); --jea-accent-text: color-mix(in srgb, var(--jea-accent) 48%, #000); --jea-warn-text: #8a4f00;
     --jea-control-border: rgba(0, 0, 0, .45);
 }
@@ -2389,9 +2405,10 @@ div#bazarrMappingsValidationResult {
 #JellyfinEnhancedPage :is(input, select, textarea, button:not(.material-icons)) { font-family: inherit; }
 .jea-drawer-close, .jea-nav .jea-nav-toggle { color: inherit; }
 
-/* Search mode hides the nav, so the content takes the full width; an empty search says so in the content area. */
-.jea-layout:has(#JellyfinEnhancedForm.je-search-mode) { grid-template-columns: minmax(0, 1fr); }
-.jea-layout:has(#JellyfinEnhancedForm.je-search-mode) .jea-nav { display: none; }
+/* Search mode keeps the sidebar and the cards' width, so nothing moves when a search starts or ends; only the matching
+   cards are listed (a tab's intro and other banners hold no settings to find). An empty search says so in the content area. */
+#JellyfinEnhancedForm.je-search-mode > .jellyfin-tab-content > :not(fieldset, .je-search-tab-label) { display: none !important; }
+#JellyfinEnhancedForm.je-search-mode > .jellyfin-tab-content > fieldset { max-width: 820px; box-sizing: border-box; }
 .je-search-empty { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 48px 16px; text-align: center; color: var(--jea-text-muted); border: 1px dashed var(--je-border-strong); border-radius: 16px; }
 .je-search-empty .material-icons { font-size: 36px; }
 .je-search-empty strong { color: var(--je-text-strong); font-size: 1.05em; }
@@ -2659,3 +2676,7 @@ div#bazarrMappingsValidationResult {
     #JellyfinEnhancedForm .arr-instance-summary-name { flex: 1 1 8em; min-width: 0; }
     #JellyfinEnhancedForm .arr-instance-summary-url { flex: 1 1 100%; max-width: none; padding-left: 70px; }
 }
+
+/* "Skip to settings": the page's first stop, shown only while it has keyboard focus. */
+#JellyfinEnhancedPage .jea-skip { position: absolute; left: 8px; top: 8px; z-index: 1020; padding: 8px 14px; border-radius: 10px; background: var(--jea-panel); color: var(--jea-panel-text); font-weight: 600; text-decoration: none; transform: translateY(-200%); }
+#JellyfinEnhancedPage .jea-skip:focus { transform: none; outline: 2px solid var(--jea-accent); outline-offset: 2px; }
