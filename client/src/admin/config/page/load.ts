@@ -76,6 +76,7 @@ export function createLoad(m: LoadDeps) {
                 if (savedUsers === 'all') {
                     needInput(document.querySelector('#mmUsers_all')).checked = true;
                     needHtml(document.getElementById('je-mm-user-list')).style.display = 'none';
+                    delete needHtml(document.getElementById('je-mm-user-list')).dataset.preselect;
                 } else {
                     needInput(document.querySelector('#mmUsers_select')).checked = true;
                     needHtml(document.getElementById('je-mm-user-list')).style.display = '';

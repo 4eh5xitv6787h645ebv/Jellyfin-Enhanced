@@ -460,21 +460,37 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Shared.Maintenance
         }
 
         /// <summary>
-        /// Parses the stored MaintenanceModeAffectedUsers setting ("all" or a JSON array of user id
-        /// strings) into the shape EnableAsync expects (null = all non-admin users).
+        /// The stored MaintenanceModeAffectedUsers setting as EnableAsync takes it: null for every non-admin user
+        /// ("all", blank, and the "[]" older versions stored), else the selected ids. False when it names specific
+        /// users of whom none is a non-admin user now, or cannot be read: such a selection is never widened to every
+        /// user, and nothing is applied for it.
         /// </summary>
-        public static List<string>? ParseAffectedUsersSetting(string? value)
+        public bool TryResolveAffectedUsersSetting(string? value, out List<string>? ids)
         {
-            if (string.IsNullOrWhiteSpace(value) || value == "all") return null;
+            ids = null;
+            if (string.IsNullOrWhiteSpace(value) || value == "all") return true;
+            List<string>? parsed;
             try
             {
-                var ids = JsonConvert.DeserializeObject<List<string>>(value);
-                return ids == null || ids.Count == 0 ? null : ids;
+                parsed = JsonConvert.DeserializeObject<List<string>>(value);
             }
-            catch
+            catch (JsonException)
             {
-                return null;
+                return false;
             }
+            if (parsed == null || parsed.Count == 0) return true;
+            ids = parsed;
+            return SelectsAnyNonAdmin(parsed);
+        }
+
+        /// <summary>True when at least one of <paramref name="ids"/> is a non-admin user on this server now.</summary>
+        public bool SelectsAnyNonAdmin(IEnumerable<string> ids)
+        {
+            var nonAdmin = _userManager.GetAllUsers()
+                .Where(u => !u.HasPermission(PermissionKind.IsAdministrator))
+                .Select(u => u.Id)
+                .ToHashSet();
+            return ids.Any(s => Guid.TryParse(s, out var g) && nonAdmin.Contains(g));
         }
 
         // ── Message formatting (countdown tokens) ──────────────────────────────

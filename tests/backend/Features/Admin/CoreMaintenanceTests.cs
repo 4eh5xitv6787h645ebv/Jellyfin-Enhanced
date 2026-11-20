@@ -672,4 +672,63 @@ public class CoreMaintenanceTests
         Assert.True(f.Policies[f.Alice.Id].IsDisabled);
         Assert.False(f.Policies[f.Admin.Id].IsDisabled);
     }
+
+    /// <summary>
+    /// "Select specific users" naming nobody who is a non-admin user now (deleted users, administrators, ids that
+    /// cannot be read) is refused by Enable: nobody's account or remote access changes and maintenance stays off.
+    /// </summary>
+    [Fact]
+    public async Task EnableEndpointRefusesASelectionWithNoCurrentNonAdminUser()
+    {
+        using var f = new Fixture();
+        var controller = (Jellyfin.Plugin.JellyfinEnhanced.Features.Admin.JeAdminController)ApiAssetTests.Controller(
+            typeof(Jellyfin.Plugin.JellyfinEnhanced.Features.Admin.JeAdminController), f.Core, f.Users.Object, f.Service, f.Sessions.Object);
+        controller.ControllerContext.HttpContext.User = global::JE.Tests.Features.SpoilerGuard.PrivacyPolicyTests.Principal(f.Admin.Id, admin: true);
+
+        foreach (var ids in new List<string>[] { [f.Admin.Id.ToString()], ["not-a-guid"], [Guid.NewGuid().ToString()] })
+        {
+            var refused = await controller.EnableMaintenanceMode(new Jellyfin.Plugin.JellyfinEnhanced.Features.Admin.MaintenanceModeRequest { Action = "both", AffectedUserIds = ids });
+            Assert.IsType<Microsoft.AspNetCore.Mvc.BadRequestObjectResult>(refused);
+            Assert.False(f.Service.GetStatus().IsActive);
+            Assert.False(f.Policies[f.Alice.Id].IsDisabled);
+            Assert.True(f.Policies[f.Alice.Id].EnableRemoteAccess);
+        }
+
+        var alice = await controller.EnableMaintenanceMode(new Jellyfin.Plugin.JellyfinEnhanced.Features.Admin.MaintenanceModeRequest { Action = "both", AffectedUserIds = [f.Admin.Id.ToString(), f.Alice.Id.ToString()] });
+        Assert.IsType<Microsoft.AspNetCore.Mvc.OkObjectResult>(alice);
+        Assert.True(f.Policies[f.Alice.Id].IsDisabled);
+        Assert.False(f.Policies[f.Admin.Id].IsDisabled);
+    }
+
+    /// <summary>
+    /// The daily window starts only for a selection it can resolve: "all", blank and the stored "[]" of older
+    /// versions are every non-admin user, a list is those users, and a list naming no current non-admin user, or a
+    /// value that cannot be read, starts nothing (it is never widened to everyone).
+    /// </summary>
+    [Theory]
+    [InlineData("all", true)][InlineData("", true)][InlineData("[]", true)][InlineData("alice", true)]
+    [InlineData("admin", false)][InlineData("deleted", false)][InlineData("[\"not-a-guid\"]", false)][InlineData("not json", false)]
+    public async Task DailyWindowStartsOnlyForAResolvedSelection(string stored, bool starts)
+    {
+        using var plugin = new ApiPluginFixture();
+        using var f = new Fixture();
+        var cfg = plugin.Plugin.Configuration;
+        cfg.MaintenanceScheduleEnabled = true;
+        cfg.MaintenanceScheduleStart = DateTime.Now.AddHours(-1).ToString("HH:mm", System.Globalization.CultureInfo.InvariantCulture);
+        cfg.MaintenanceScheduleEnd = DateTime.Now.AddHours(1).ToString("HH:mm", System.Globalization.CultureInfo.InvariantCulture);
+        cfg.MaintenanceScheduleAction = "disable_accounts";
+        cfg.MaintenanceModeAffectedUsers = stored switch
+        {
+            "alice" => JsonConvert.SerializeObject(new[] { f.Alice.Id.ToString() }),
+            "admin" => JsonConvert.SerializeObject(new[] { f.Admin.Id.ToString() }),
+            "deleted" => JsonConvert.SerializeObject(new[] { Guid.NewGuid().ToString() }),
+            _ => stored,
+        };
+
+        await new MaintenanceScheduleService(f.Service, f.Core.Logger).TickAsync();
+
+        Assert.Equal(starts, f.Service.GetStatus().IsActive);
+        Assert.Equal(starts, f.Policies[f.Alice.Id].IsDisabled);
+        Assert.False(f.Policies[f.Admin.Id].IsDisabled);
+    }
 }

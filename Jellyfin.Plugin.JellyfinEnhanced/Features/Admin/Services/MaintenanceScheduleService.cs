@@ -30,6 +30,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Features.Admin.Services
         private Timer? _timer;
         private int _ticking;
         private string? _lastInvalidWindowWarned;
+        private string? _lastUnresolvedUsersWarned;
 
         public MaintenanceScheduleService(MaintenanceModeService maintenance, Logger logger)
         {
@@ -51,7 +52,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Features.Admin.Services
 
         public void Dispose() => _timer?.Dispose();
 
-        private async Task TickAsync()
+        internal async Task TickAsync()
         {
             // Skip a tick that overlaps a slow one (user policy updates can take a moment).
             if (Interlocked.Exchange(ref _ticking, 1) == 1) return;
@@ -95,12 +96,24 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Features.Admin.Services
                 // A manual window (toggle or API) takes precedence over the schedule.
                 if (state.IsActive && state.Source != "schedule") return;
 
+                // "Select specific users" naming no current non-admin user, or a value that cannot be read, starts
+                // nothing: it is never widened to every user.
+                if (!_maintenance.TryResolveAffectedUsersSetting(cfg.MaintenanceModeAffectedUsers, out var affectedUsers))
+                {
+                    if (_lastUnresolvedUsersWarned != cfg.MaintenanceModeAffectedUsers)
+                    {
+                        _lastUnresolvedUsersWarned = cfg.MaintenanceModeAffectedUsers;
+                        _logger.Warning("[Maintenance] Scheduled window not started: \"Affected users\" names no user who is a non-admin user now. Select the users again on the settings page.");
+                    }
+                    return;
+                }
+
                 var windowEndUtc = window.Value.End.ToUniversalTime();
                 var started = await _maintenance.EnableScheduledAsync(
                     cfg.MaintenanceScheduleMessage,
                     cfg.MaintenanceScheduleNotificationMessage,
                     string.IsNullOrWhiteSpace(cfg.MaintenanceScheduleAction) ? "none" : cfg.MaintenanceScheduleAction,
-                    MaintenanceModeService.ParseAffectedUsersSetting(cfg.MaintenanceModeAffectedUsers),
+                    affectedUsers,
                     windowEndUtc).ConfigureAwait(false);
 
                 if (started)

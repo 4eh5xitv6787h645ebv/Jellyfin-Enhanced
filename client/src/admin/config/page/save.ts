@@ -1,5 +1,5 @@
 import type { PageModules } from './modules';
-import { isAbortError } from '../domain/http';
+import { isAbortError, requestFailureWithBody } from '../domain/http';
 import type { WriteScope } from '../domain/write-scope';
 import { autoMovieTrigger, clampedInt, httpUrls, lines, maintenanceAction } from '../domain/config-values';
 import { asObject, stringList, text } from '../domain/config';
@@ -70,6 +70,9 @@ export function createSave(m: SaveDeps) {
             } else if (m.maintenance.usersLoaded) {
                 const checked = Array.from(document.querySelectorAll<HTMLInputElement>('.je-mm-user-cb:checked')).map(cb => cb.value);
                 config.MaintenanceModeAffectedUsers = JSON.stringify(checked);
+            } else if (!specificUsers(config.MaintenanceModeAffectedUsers)) {
+                // Stored as everyone (changed since the page loaded): never applied as "Select specific users".
+                throw new Error('"Select specific users" has no users to keep');
             }
             config.TMDB_API_KEY = needControl(document.querySelector('#TMDB_API_KEY')).value;
             config.DEFAULT_REGION = needControl(document.querySelector('#DEFAULT_REGION')).value;
@@ -385,14 +388,33 @@ export function createSave(m: SaveDeps) {
             }
         }
 
+        /** Whether a stored "Affected users" value names specific users ("all", blank and "[]" are every non-admin user). */
+        function specificUsers(value: unknown): boolean {
+            try {
+                const ids: unknown = JSON.parse(text(value) || '[]');
+                return Array.isArray(ids) && ids.length > 0;
+            } catch (e) { return false; }
+        }
+
         /**
          * "Select specific users" with nobody ticked is refused: the stored "[]" reads as every non-admin user
-         * (MaintenanceModeService.ParseAffectedUsersSetting), so saving it would widen the selection. Says why;
+         * (MaintenanceModeService.TryResolveAffectedUsersSetting), so saving it would widen the selection. So is the
+         * choice while the user list is loading, failed or has nobody in it, unless a list of specific users is stored
+         * (that list is kept): saving would keep the stored "all users" and apply maintenance to everyone. Says why;
          * the form stays as it is.
          */
         function refuseEmptyMaintenanceSelection(): boolean {
             const mode = asControl(document.querySelector('input[name="maintenanceModeUsers"]:checked'));
-            if (!mode || mode.value !== 'select' || !m.maintenance.usersLoaded) return false;
+            if (!mode || mode.value !== 'select') return false;
+            if (!m.maintenance.usersLoaded) {
+                if (m.maintenance.hasStoredSelection()) return false;
+                const state = m.maintenance.usersState;
+                const list = state === 'empty' ? 'has no non-admin users in it' : state === 'failed' ? 'could not be loaded' : 'is still loading';
+                Dashboard.alert({ title: 'No users selected', message: 'Maintenance mode is set to "Select specific users", but the user list ' + list + ', so no user is selected. '
+                    + (state === 'empty' ? 'Choose "All non-admin users".' : state === 'failed' ? 'Press Retry under the list, or choose "All non-admin users".' : 'Wait for the list, or choose "All non-admin users".')
+                    + ' Nothing was saved.' });
+                return true;
+            }
             if (document.querySelector('.je-mm-user-cb:checked')) return false;
             Dashboard.alert({ title: 'No users selected', message: 'Maintenance mode is set to "Select specific users", but no user is ticked. Tick at least one user, or choose "All non-admin users". Nothing was saved.' });
             return true;
@@ -458,6 +480,134 @@ export function createSave(m: SaveDeps) {
             return true;
         }
 
+        /** What a save asked of maintenance mode: the saved settings, and whether it was on before that save. */
+        interface MaintenanceRequest { config: AdminConfig; wasOn: boolean }
+
+        /**
+         * Turns maintenance mode on or off on the server to match the saved settings. False when the server refused or
+         * could not be reached: the settings are saved, so the line under the switch then says what the server has now
+         * and offers Retry, which sends this request again (not the settings).
+         */
+        async function applyMaintenance(request: MaintenanceRequest, scope: WriteScope): Promise<boolean> {
+            const { config, wasOn } = request;
+            try {
+                if (config.MaintenanceModeEnabled) {
+                    // null is every non-admin user; the server refuses an empty list. A stored "[]" (only left
+                    // when the user list has not loaded) keeps the meaning the server gives it: every non-admin.
+                    const selected: unknown = config.MaintenanceModeAffectedUsers === 'all'
+                        ? null
+                        : JSON.parse(text(config.MaintenanceModeAffectedUsers) || '[]');
+                    const affectedIds = Array.isArray(selected) && selected.length > 0 ? selected : null;
+                    await ApiClient.ajax({
+                        type: 'POST',
+                        url: ApiClient.getUrl('/JellyfinEnhanced/MaintenanceMode/Enable'),
+                        contentType: 'application/json',
+                        data: JSON.stringify({
+                            message: config.MaintenanceModeMessage || '',
+                            notificationMessage: config.MaintenanceModeNotificationMessage || '',
+                            durationMinutes: config.MaintenanceModeDurationMinutes || 0,
+                            action: config.MaintenanceModeAction || 'disable_accounts',
+                            affectedUserIds: affectedIds
+                        })
+                    });
+                    // Broadcast a native Jellyfin message to all active sessions
+                    // (reaches non-web clients like TV apps too — works regardless of Active Streams setting).
+                    // Only when this save turns maintenance on: Enable above is re-sent on every save, and a
+                    // window already running was announced when it started.
+                    const mmMsg = text(config.MaintenanceModeNotificationMessage).trim()
+                        || text(config.MaintenanceModeMessage).trim()
+                        || 'Server maintenance is starting. Please finish up and try again later.';
+                    scope.throwIfStale();
+                    if (!wasOn) {
+                        try {
+                            await ApiClient.ajax({
+                                type: 'POST',
+                                url: ApiClient.getUrl('/JellyfinEnhanced/MaintenanceMode/Broadcast'),
+                                contentType: 'application/json',
+                                data: JSON.stringify({
+                                    header: 'Server Maintenance',
+                                    text: mmMsg,
+                                    timeoutMs: 30000
+                                })
+                            });
+                        } catch (bcErr) {
+                            console.warn('[JE] Maintenance broadcast failed (no active sessions?):', bcErr);
+                        }
+                    }
+                } else {
+                    // With the daily schedule on, "manual off" must leave a scheduled window running;
+                    // with it off, nothing should be active, so end a scheduled window right away too.
+                    await ApiClient.ajax({
+                        type: 'POST',
+                        url: ApiClient.getUrl('/JellyfinEnhanced/MaintenanceMode/Disable', {
+                            includeScheduled: !config.MaintenanceScheduleEnabled
+                        })
+                    });
+                }
+            } catch (mmErr) {
+                if (isAbortError(mmErr)) throw mmErr;
+                console.warn('[JE] Maintenance mode apply failed:', mmErr);
+                const reason = text((await requestFailureWithBody(mmErr)).body?.error);
+                scope.throwIfStale();
+                await showMaintenanceStatus(request, reason, scope);
+                return false;
+            }
+            scope.throwIfStale();
+            const status = asHtml(document.querySelector('#admin .jea-mm-status'));
+            if (status && !status.hidden) await showMaintenanceStatus(null, '', scope);
+            return true;
+        }
+
+        /**
+         * The line under the maintenance switch. After a failure (`failed` set): what could not be done, the server's
+         * reason, what the server has now (MaintenanceMode/Status) and Retry. After a Retry that worked: what the server
+         * has now. It stays until a later save or Retry replaces it.
+         */
+        async function showMaintenanceStatus(failed: MaintenanceRequest | null, reason: string, scope: WriteScope): Promise<void> {
+            const status = asHtml(document.querySelector('#admin .jea-mm-status'));
+            if (!status) return;
+            let now = 'Its state on the server could not be read.';
+            try {
+                const state = asObject(await ApiClient.ajax({ type: 'GET', url: ApiClient.getUrl('/JellyfinEnhanced/MaintenanceMode/Status'), dataType: 'json' }));
+                if (typeof state.IsActive === 'boolean') {
+                    now = state.IsActive
+                        ? 'Maintenance mode is on on the server' + (state.Source === 'schedule' ? ', started by the daily window.' : '.')
+                        : 'Maintenance mode is off on the server.';
+                }
+            } catch (e) {
+                if (isAbortError(e)) throw e;
+            }
+            scope.throwIfStale();
+            status.textContent = '';
+            status.hidden = false;
+            status.classList.toggle('jea-warn-text', !!failed);
+            const line = document.createElement('div');
+            line.textContent = failed
+                ? 'Not applied: maintenance mode could not be turned ' + (failed.config.MaintenanceModeEnabled ? 'on' : 'off') + ' on the server; your other settings were saved.'
+                    + (reason ? ' The server said: ' + reason : '') + ' ' + now
+                : now;
+            status.appendChild(line);
+            if (!failed) return;
+            const retry = document.createElement('button');
+            retry.type = 'button';
+            retry.className = 'jea-btn';
+            retry.textContent = 'Retry';
+            retry.addEventListener('click', function() {
+                void m.mediaTagsTab.jeRunHeldWrite(async (retryScope) => {
+                    if (_jeSaveInFlight) return;
+                    _jeSaveInFlight = true;
+                    retry.disabled = true;
+                    try {
+                        await applyMaintenance(failed, retryScope);
+                    } finally {
+                        _jeSaveInFlight = false;
+                        retry.disabled = false;
+                    }
+                });
+            });
+            status.appendChild(retry);
+        }
+
         // Re-entrancy guard. `Dashboard.showLoadingMsg()` provides only a visual
         // overlay, not an input block, so two rapid Enter presses or a second
         // click on the save dock can still fire saveConfig in parallel — the
@@ -508,66 +658,7 @@ export function createSave(m: SaveDeps) {
                 scope.throwIfStale();
 
                 // Apply maintenance mode: enable/disable users to match the toggle
-                let maintenanceFailed = false;
-                try {
-                    if (config.MaintenanceModeEnabled) {
-                        // null is every non-admin user; the server refuses an empty list. A stored "[]" (only left
-                        // when the user list has not loaded) keeps the meaning the server gives it: every non-admin.
-                        const selected: unknown = config.MaintenanceModeAffectedUsers === 'all'
-                            ? null
-                            : JSON.parse(text(config.MaintenanceModeAffectedUsers) || '[]');
-                        const affectedIds = Array.isArray(selected) && selected.length > 0 ? selected : null;
-                        await ApiClient.ajax({
-                            type: 'POST',
-                            url: ApiClient.getUrl('/JellyfinEnhanced/MaintenanceMode/Enable'),
-                            contentType: 'application/json',
-                            data: JSON.stringify({
-                                message: config.MaintenanceModeMessage || '',
-                                notificationMessage: config.MaintenanceModeNotificationMessage || '',
-                                durationMinutes: config.MaintenanceModeDurationMinutes || 0,
-                                action: config.MaintenanceModeAction || 'disable_accounts',
-                                affectedUserIds: affectedIds
-                            })
-                        });
-                        // Broadcast a native Jellyfin message to all active sessions
-                        // (reaches non-web clients like TV apps too — works regardless of Active Streams setting).
-                        // Only when this save turns maintenance on: Enable above is re-sent on every save, and a
-                        // window already running was announced when it started.
-                        const mmMsg = text(config.MaintenanceModeNotificationMessage).trim()
-                            || text(config.MaintenanceModeMessage).trim()
-                            || 'Server maintenance is starting. Please finish up and try again later.';
-                        scope.throwIfStale();
-                        if (!wasOn) {
-                            try {
-                                await ApiClient.ajax({
-                                    type: 'POST',
-                                    url: ApiClient.getUrl('/JellyfinEnhanced/MaintenanceMode/Broadcast'),
-                                    contentType: 'application/json',
-                                    data: JSON.stringify({
-                                        header: 'Server Maintenance',
-                                        text: mmMsg,
-                                        timeoutMs: 30000
-                                    })
-                                });
-                            } catch (bcErr) {
-                                console.warn('[JE] Maintenance broadcast failed (no active sessions?):', bcErr);
-                            }
-                        }
-                    } else {
-                        // With the daily schedule on, "manual off" must leave a scheduled window running;
-                        // with it off, nothing should be active, so end a scheduled window right away too.
-                        await ApiClient.ajax({
-                            type: 'POST',
-                            url: ApiClient.getUrl('/JellyfinEnhanced/MaintenanceMode/Disable', {
-                                includeScheduled: !config.MaintenanceScheduleEnabled
-                            })
-                        });
-                    }
-                } catch (mmErr) {
-                    if (isAbortError(mmErr)) throw mmErr;
-                    console.warn('[JE] Maintenance mode apply failed:', mmErr);
-                    maintenanceFailed = true;
-                }
+                const maintenanceFailed = !await applyMaintenance({ config, wasOn }, scope);
 
                 scope.throwIfStale();
                 Dashboard.processPluginConfigurationUpdateResult(result);
@@ -576,7 +667,7 @@ export function createSave(m: SaveDeps) {
                 if (maintenanceFailed) {
                     Dashboard.alert({
                         title: 'Maintenance mode not changed',
-                        message: 'Your settings were saved, but maintenance mode could not be turned ' + (config.MaintenanceModeEnabled ? 'on' : 'off') + ' on the server. Check the server log, then save again to retry.'
+                        message: 'Your settings were saved, but maintenance mode could not be turned ' + (config.MaintenanceModeEnabled ? 'on' : 'off') + ' on the server. What the server has now is shown under the switch, with Retry.'
                     });
                 }
                 if (syncResult && syncResult.ok === false) {

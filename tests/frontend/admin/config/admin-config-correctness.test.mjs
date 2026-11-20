@@ -72,6 +72,106 @@ test('a maintenance switch the server refused is reported, apart from the settin
   assert.match(h.dialogs().join(' '), /saved, but maintenance mode could not be turned on/);
 });
 
+const ENABLE = '/JellyfinEnhanced/MaintenanceMode/Enable';
+const failed = () => { throw Object.assign(new Error('Internal Server Error'), { status: 500 }); };
+
+for (const [state, answer, shows] of [
+  ['is still loading', () => new Promise(() => {}), /Loading users/],
+  ['failed to load', failed, /could not be loaded/],
+  ['came back empty', () => [], /No non-admin users found/],
+]) {
+  for (const [what, saved] of [
+    ['maintenance mode on', { MaintenanceModeEnabled: true }],
+    ['the daily schedule on', { MaintenanceScheduleEnabled: true }],
+  ]) {
+    test(`with ${what} and "All non-admin users" saved, "Select specific users" while the user list ${state} is refused, not applied to everyone`, async t => {
+      const h = await page(t, {
+        saved: { ...saved, MaintenanceModeAction: 'disable_accounts', MaintenanceModeAffectedUsers: 'all' },
+        answers: [[/MaintenanceMode\/Users/, answer]],
+      });
+      h.radio('mmUsers_select');
+      await settle(h.window, 60);
+      assert.match(h.document.getElementById('je-mm-users-inner').textContent, shows, 'the list says where it is');
+      await h.submit();
+      assert.equal(h.calls.puts.length, 0, 'nothing was saved');
+      assert.deepEqual(h.posted(ENABLE), [], 'nobody was locked out');
+      assert.match(h.dialogs().join(' '), /the user list .*, so no user is selected/, 'the administrator is told why');
+      assert.equal(h.document.getElementById('mmUsers_select').checked, true, 'the choice stays');
+    });
+  }
+}
+
+test('with a list of specific users stored, a user list that failed to load keeps that list (no refusal, nothing widened)', async t => {
+  const h = await page(t, {
+    saved: { MaintenanceModeEnabled: true, MaintenanceModeAffectedUsers: JSON.stringify([USER_A]) },
+    answers: [[/MaintenanceMode\/Users/, failed]],
+  });
+  await h.submit();
+  assert.equal(h.calls.puts.at(-1).MaintenanceModeAffectedUsers, JSON.stringify([USER_A]));
+  assert.deepEqual(h.posted(ENABLE).map(b => b.affectedUserIds), [[USER_A]]);
+});
+
+test('a user list that failed to load offers Retry; the users it then lists show whole names, a count, and can be saved', async t => {
+  let failing = true;
+  const h = await page(t, {
+    saved: { MaintenanceModeEnabled: true, MaintenanceModeAffectedUsers: 'all' },
+    answers: [[/MaintenanceMode\/Users/, () => { if (failing) failed(); return USERS; }]],
+  });
+  h.radio('mmUsers_select');
+  await settle(h.window, 60);
+  const retry = [...h.document.querySelectorAll('#je-mm-users-inner button')].find(b => b.textContent === 'Retry');
+  assert.ok(retry, 'Retry is offered');
+  assert.equal(h.document.getElementById('je-mm-select-all').closest('.jea-actions').hidden, true, 'no Select All without users');
+  failing = false;
+  retry.click();
+  await settle(h.window, 60);
+  assert.deepEqual(h.boxes(), [[USER_A, true], [USER_B, true]]);
+  const count = h.document.querySelector('#je-mm-user-list .jea-mm-count');
+  assert.equal(count.textContent, '2 of 2 selected');
+  assert.equal(count.closest('.jea-actions').hidden, false);
+  h.document.querySelector(`.je-mm-user-cb[value="${USER_B}"]`).click();
+  assert.equal(count.textContent, '1 of 2 selected');
+  const grid = h.document.querySelector('#je-mm-users-inner .jea-userlist-grid');
+  assert.equal(grid.style.gridTemplateColumns, '', 'columns come from the stylesheet (one on a narrow card)');
+  assert.ok([...grid.querySelectorAll('label span')].every(n => n.style.whiteSpace !== 'nowrap' && n.style.textOverflow !== 'ellipsis'), 'names are not cut off');
+  await h.submit();
+  assert.equal(h.calls.puts.at(-1).MaintenanceModeAffectedUsers, JSON.stringify([USER_A]));
+  assert.deepEqual(h.posted(ENABLE).map(b => b.affectedUserIds), [[USER_A]]);
+});
+
+test('the users list is one column on a narrow card', () => {
+  const css = readFileSync(join(repo, 'Jellyfin.Plugin.JellyfinEnhanced/Configuration/admin/sections.css'), 'utf8');
+  assert.match(css, /@container \(max-width: 480px\) \{ #JellyfinEnhancedPage #admin \.jea-userlist-grid \{ grid-template-columns: minmax\(0, 1fr\); \} \}/);
+});
+
+test('a maintenance switch the server refused stays shown beside the switch, with the server\'s state and a Retry that applies it', async t => {
+  let fail = true;
+  const h = await page(t, {
+    saved: { MaintenanceModeAffectedUsers: 'all' },
+    answers: [
+      [/MaintenanceMode\/Enable/, () => (fail ? failed() : { success: true })],
+      [/MaintenanceMode\/Status/, () => ({ IsActive: !fail, Source: 'manual' })],
+    ],
+  });
+  h.document.getElementById('maintenanceModeEnabled').checked = true;
+  await h.submit();
+  assert.equal(h.calls.puts.length, 1, 'the settings were saved');
+  const status = h.document.querySelector('#admin .jea-mm-status');
+  assert.ok(status && !status.hidden, 'shown beside the switch');
+  assert.ok(status.closest('#maintenance, fieldset') === h.document.getElementById('maintenanceModeEnabled').closest('#maintenance, fieldset'), 'in the switch\'s card');
+  assert.match(status.textContent, /could not be turned on/);
+  assert.match(status.textContent, /off on the server/);
+  const retry = [...status.querySelectorAll('button')].find(b => b.textContent === 'Retry');
+  assert.ok(retry, 'Retry is offered');
+  fail = false;
+  retry.click();
+  await settle(h.window, 120);
+  assert.equal(h.posted(ENABLE).length, 2, 'Retry sent the switch again');
+  assert.equal(h.calls.puts.length, 1, 'and did not write the settings again');
+  assert.match(status.textContent, /on on the server/);
+  assert.doesNotMatch(status.textContent, /could not/);
+});
+
 test('switching the affected users to "All" and back keeps the boxes the administrator ticked', async t => {
   const h = await page(t, {
     saved: { MaintenanceModeAffectedUsers: JSON.stringify([USER_A]) },

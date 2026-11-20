@@ -2574,6 +2574,8 @@
             rowClass: "jea-master",
             desc: "Turn this on to choose an action, a message and the users it affects; they take effect when you save. A banner shows on the Jellyfin login page. Administrators are <strong>never</strong> affected, and turning it off restores every user."
           },
+          // Filled when the server did not take a saved switch: what it has now, and Retry (save.ts).
+          { type: "custom", html: '<div class="fieldDescription jea-mm-status" role="status" hidden></div>' },
           {
             id: "maintenanceModeDurationMinutes",
             type: "number",
@@ -2630,7 +2632,7 @@
             }
           ] },
           { type: "group", title: "Affected users", open: true, items: [
-            { type: "custom", html: '<div class="jea-radio-list"><label class="jea-radio"><input type="radio" name="maintenanceModeUsers" id="mmUsers_all" value="all" checked/><span>All non-admin users</span></label><label class="jea-radio"><input type="radio" name="maintenanceModeUsers" id="mmUsers_select" value="select"/><span>Select specific users</span></label></div><div id="je-mm-user-list" class="jea-userlist" style="display:none"><div class="jea-actions"><button type="button" id="je-mm-select-all" class="jea-btn">Select All</button><button type="button" id="je-mm-deselect-all" class="jea-btn">Deselect All</button></div><div id="je-mm-users-inner"><div id="je-mm-users-loading" class="fieldDescription">Loading users...</div></div></div>' }
+            { type: "custom", html: '<div class="jea-radio-list"><label class="jea-radio"><input type="radio" name="maintenanceModeUsers" id="mmUsers_all" value="all" checked/><span>All non-admin users</span></label><label class="jea-radio"><input type="radio" name="maintenanceModeUsers" id="mmUsers_select" value="select"/><span>Select specific users</span></label></div><div id="je-mm-user-list" class="jea-userlist" style="display:none"><div class="jea-actions" hidden><span class="jea-hint jea-mm-count" aria-live="polite"></span><button type="button" id="je-mm-select-all" class="jea-btn">Select All</button><button type="button" id="je-mm-deselect-all" class="jea-btn">Deselect All</button></div><div id="je-mm-users-inner"><div id="je-mm-users-loading" class="fieldDescription">Loading users...</div></div></div>' }
           ] },
           { type: "group", title: "Daily schedule", open: true, items: [
             {

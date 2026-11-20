@@ -10,28 +10,73 @@ export function createMaintenance(m: MaintenanceDeps) {
 
         // ── Maintenance mode: user checklist ─────────────────────────────────────
 
-        /** True while the boxes show the stored selection; until the list answers, a save keeps the stored value. */
-        let usersLoaded = false;
+        /**
+         * Where the user list is. Only 'loaded' has boxes to read; until then a save keeps the stored selection, and
+         * "Select specific users" with no stored list of users is refused (save.ts), never saved as everyone.
+         */
+        let usersState: 'loading' | 'loaded' | 'empty' | 'failed' = 'loading';
+        /** Counts requests, so an answer to one the Retry button replaced is dropped. */
+        let usersRequest = 0;
+
+        /** "2 of 5 selected" beside Select All, while there are boxes; Select All and Deselect All only then. */
+        function updateSelectedCount() : void {
+            const boxes = Array.from(document.querySelectorAll<HTMLInputElement>('.je-mm-user-cb'));
+            const count = asHtml(document.querySelector('#je-mm-user-list .jea-mm-count'));
+            if (count) count.textContent = usersState === 'loaded' ? boxes.filter(cb => cb.checked).length + ' of ' + boxes.length + ' selected' : '';
+            const actions = asHtml(document.getElementById('je-mm-select-all'))?.closest('.jea-actions');
+            if (actions instanceof HTMLElement) actions.hidden = usersState !== 'loaded';
+        }
+
+        /** The list's place shows one line: loading, failed (with Retry) or empty. */
+        function showUsersMessage(message: string, retry: boolean) : void {
+            const inner = asHtml(document.getElementById('je-mm-users-inner'));
+            if (!inner) return;
+            inner.textContent = '';
+            const msg = document.createElement('div');
+            msg.className = 'fieldDescription' + (retry ? ' jea-warn-text' : '');
+            msg.setAttribute('role', 'status');
+            msg.textContent = message;
+            inner.appendChild(msg);
+            if (retry) {
+                const button = document.createElement('button');
+                button.type = 'button';
+                button.className = 'jea-btn';
+                button.textContent = 'Retry';
+                button.addEventListener('click', loadMaintenanceUsers);
+                inner.appendChild(button);
+            }
+            updateSelectedCount();
+        }
+
+        /** Whether the stored selection is a list of specific users (the boxes, once loaded, start from it). */
+        function hasStoredSelection() : boolean {
+            const listEl = asHtml(document.getElementById('je-mm-user-list'));
+            try {
+                const stored: unknown = JSON.parse(listEl?.dataset.preselect || '[]');
+                return Array.isArray(stored) && stored.length > 0;
+            } catch (e) { return false; }
+        }
 
         function loadMaintenanceUsers() : void {
-            usersLoaded = false;
+            usersState = 'loading';
+            const request = ++usersRequest;
+            showUsersMessage('Loading users...', false);
             ApiClient.ajax({
                 type: 'GET',
                 url: ApiClient.getUrl('/JellyfinEnhanced/MaintenanceMode/Users'),
                 dataType: 'json'
             }).then(function(users) {
+                if (request !== usersRequest) return;
                 const inner = asHtml(document.getElementById('je-mm-users-inner'));
                 if (!inner) return;
-                inner.innerHTML = '';
 
                 const list = asObjects(users);
                 if (list.length === 0) {
-                    const msg = document.createElement('div');
-                    msg.style.cssText = 'opacity:0.55;font-size:0.875em;';
-                    msg.textContent = 'No non-admin users found.';
-                    inner.appendChild(msg);
+                    usersState = 'empty';
+                    showUsersMessage('No non-admin users found. Maintenance mode never affects administrators, so there is nobody to select.', false);
                     return;
                 }
+                inner.innerHTML = '';
 
                 // Collect any pre-selected IDs stored on the container by loadConfig
                 const listEl = needHtml(document.getElementById('je-mm-user-list'));
@@ -39,9 +84,9 @@ export function createMaintenance(m: MaintenanceDeps) {
                 try { preselect = JSON.parse(listEl.dataset.preselect || '[]'); } catch (e) {}
                 const preselectAll = preselect.length === 0;
 
-                // 3-column grid
+                // Three columns on a wide card, one on a narrow one (sections.css).
                 const grid = document.createElement('div');
-                grid.style.cssText = 'display:grid;grid-template-columns:repeat(3,1fr);gap:0.2em 0.75em;';
+                grid.className = 'jea-userlist-grid';
 
                 list.forEach(function(u) {
                     // Handle both camelCase and PascalCase from the API
@@ -84,8 +129,9 @@ export function createMaintenance(m: MaintenanceDeps) {
                         avatar.appendChild(img);
                     }
 
+                    // The whole name, wrapped when it is long: similar names must stay distinguishable.
                     const name = document.createElement('span');
-                    name.style.cssText = 'font-size:0.875em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;';
+                    name.style.cssText = 'font-size:0.875em;min-width:0;';
                     name.textContent = uname;
 
                     label.appendChild(cb);
@@ -95,16 +141,12 @@ export function createMaintenance(m: MaintenanceDeps) {
                 });
 
                 inner.appendChild(grid);
-                usersLoaded = true;
+                usersState = 'loaded';
+                updateSelectedCount();
             }).catch(function() {
-                usersLoaded = false;
-                const inner = asHtml(document.getElementById('je-mm-users-inner'));
-                if (!inner) return;
-                inner.innerHTML = '';
-                const msg = document.createElement('div');
-                msg.style.cssText = 'opacity:0.55;font-size:0.875em;';
-                msg.textContent = 'Failed to load users.';
-                inner.appendChild(msg);
+                if (request !== usersRequest) return;
+                usersState = 'failed';
+                showUsersMessage('The user list could not be loaded, so no user can be selected.', true);
             });
         }
 
@@ -144,7 +186,7 @@ export function createMaintenance(m: MaintenanceDeps) {
                     if (radio.value === 'select') {
                         listEl.style.display = '';
                         // Boxes already on screen hold the administrator's draft: keep them.
-                        if (!usersLoaded) loadMaintenanceUsers();
+                        if (usersState !== 'loaded') loadMaintenanceUsers();
                     } else {
                         listEl.style.display = 'none';
                     }
@@ -154,10 +196,13 @@ export function createMaintenance(m: MaintenanceDeps) {
             // Select All / Deselect All buttons
             needHtml(document.getElementById('je-mm-select-all')).addEventListener('click', function() {
                 document.querySelectorAll<HTMLInputElement>('.je-mm-user-cb').forEach(function(cb) { cb.checked = true; });
+                updateSelectedCount();
             });
             needHtml(document.getElementById('je-mm-deselect-all')).addEventListener('click', function() {
                 document.querySelectorAll<HTMLInputElement>('.je-mm-user-cb').forEach(function(cb) { cb.checked = false; });
+                updateSelectedCount();
             });
+            needHtml(document.getElementById('je-mm-users-inner')).addEventListener('change', updateSelectedCount);
         }
 
     /** Runs this module's start-up work, in the page's original order. */
@@ -168,7 +213,9 @@ export function createMaintenance(m: MaintenanceDeps) {
     return {
         wire,
         loadMaintenanceUsers,
-        get usersLoaded() { return usersLoaded; },
+        get usersLoaded() { return usersState === 'loaded'; },
+        get usersState() { return usersState; },
+        hasStoredSelection,
         refreshMaintenanceServerTime,
         updateMaintenanceScheduleWarning,
     };

@@ -314,6 +314,9 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Features.Admin
             // No selection (null) is every non-admin user; an explicit empty selection is nobody, never widened to everyone.
             if (request.AffectedUserIds is { Count: 0 })
                 return BadRequest(new { error = "No users selected. Select at least one user, or send no selection for every non-admin user." });
+            // Specific users of whom none is a non-admin user now (deleted, made administrators, unreadable ids): refused too.
+            if (request.AffectedUserIds is { Count: > 0 } ids && !_maintenanceModeService.SelectsAnyNonAdmin(ids))
+                return BadRequest(new { error = "None of the selected users is a non-admin user on this server now. Select the users again, or choose all non-admin users." });
             await _maintenanceModeService.EnableAsync(
                 request.Message ?? string.Empty,
                 request.DurationMinutes,
