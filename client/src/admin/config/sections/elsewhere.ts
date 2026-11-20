@@ -23,7 +23,7 @@ define({
     'elsewhere': {
         title: 'Elsewhere (Streaming Providers)', icon: 'live_tv',
         items: [
-            { id: 'elsewhereEnabled', prop: 'ElsewhereEnabled', type: 'toggle', main: true, label: 'Enable Elsewhere',
+            { id: 'elsewhereEnabled', prop: 'ElsewhereEnabled', type: 'toggle', default: true, main: true, label: 'Enable Elsewhere',
               desc: 'Adds an "Elsewhere" panel to item detail pages showing where the title is available on streaming services in the user\'s region. The data comes from TMDB, or from Seerr when no TMDB key is set.' },
             { id: 'DEFAULT_PROVIDERS', prop: 'DEFAULT_PROVIDERS', type: 'text', label: 'Default providers', placeholder: 'e.g. Netflix, Hulu',
               desc: 'A list of default streaming providers to show. Leave blank to show all. <a class="sectionTitle" href="https://cdn.jsdelivr.net/gh/n00bcodr/Jellyfin-Elsewhere/resources/providers.txt" target="_blank" rel="noopener noreferrer">Full list<i class="material-icons je-link-ext" aria-hidden="true">open_in_new</i></a>' },

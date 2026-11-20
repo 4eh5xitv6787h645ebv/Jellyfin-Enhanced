@@ -59,6 +59,7 @@
             id: "showAudioLanguages",
             prop: "ShowAudioLanguages",
             type: "toggle",
+            default: true,
             perUser: true,
             label: "Show available audio languages on item details",
             desc: "List the audio language flags available for each title on its detail page."
@@ -146,6 +147,7 @@
             id: "randomButtonEnabled",
             prop: "RandomButtonEnabled",
             type: "toggle",
+            default: true,
             perUser: true,
             main: true,
             label: "Enable the Random button",
@@ -163,6 +165,7 @@
             id: "randomIncludeMovies",
             prop: "RandomIncludeMovies",
             type: "toggle",
+            default: true,
             perUser: true,
             label: "Include movies",
             desc: "Include movies in the random pool."
@@ -171,6 +174,7 @@
             id: "randomIncludeShows",
             prop: "RandomIncludeShows",
             type: "toggle",
+            default: true,
             perUser: true,
             label: "Include shows",
             desc: "Include TV shows in the random pool."
@@ -428,6 +432,7 @@
             id: "elsewhereEnabled",
             prop: "ElsewhereEnabled",
             type: "toggle",
+            default: true,
             main: true,
             label: "Enable Elsewhere",
             desc: `Adds an "Elsewhere" panel to item detail pages showing where the title is available on streaming services in the user's region. The data comes from TMDB, or from Seerr when no TMDB key is set.`
@@ -641,6 +646,7 @@
             id: "autoPauseEnabled",
             prop: "AutoPauseEnabled",
             type: "toggle",
+            default: true,
             perUser: true,
             label: "Auto-pause on tab switch",
             desc: "Pause playback automatically when you switch to another browser tab."
@@ -681,6 +687,7 @@
             id: "pauseScreenEnabled",
             prop: "PauseScreenEnabled",
             type: "toggle",
+            default: true,
             perUser: true,
             label: "Enable the custom pause screen",
             desc: "Shows an overlay with details about what is playing while playback is paused."
@@ -746,7 +753,7 @@
               prop: "DefaultSubtitleSize",
               type: "select",
               perUser: true,
-              default: 0,
+              default: 2,
               label: "Subtitle size",
               options: [["0", "Tiny"], ["1", "Small"], ["2", "Normal"], ["3", "Large"], ["4", "Extra large"], ["5", "Gigantic"]],
               toConfig: (v) => parseInt(String(v), 10),
@@ -1046,7 +1053,7 @@
             "DownloadsPageEnabled",
             "Enable the Requests page",
             'Adds a "Requests" link to the navigation showing active downloads and requests.',
-            { main: true, default: true }
+            { main: true }
           ),
           placement({
             p: "downloads",
@@ -1123,7 +1130,7 @@
             "CalendarPageEnabled",
             "Enable the Calendar page",
             'Adds a "Calendar" link to the navigation showing upcoming releases.',
-            { main: true, default: true }
+            { main: true }
           ),
           placement({
             p: "calendar",
@@ -1426,6 +1433,7 @@
             id: "splashScreenImageUrl",
             prop: "SplashScreenImageUrl",
             type: "text",
+            default: "/web/assets/img/banner-light.png",
             placeholder: "/web/assets/banner.png",
             label: "Splash screen image URL",
             desc: "URL for the splash screen image. Defaults to Jellyfin banner."
@@ -1601,6 +1609,7 @@
             id: "jellyseerrUseMoreInfoModal",
             prop: "JellyseerrUseMoreInfoModal",
             type: "toggle",
+            default: true,
             label: 'Open results in "More Info" modal',
             desc: "When enabled, clicking a Seerr result title or poster opens an in-app More Info modal.<br/>When disabled, clicking will open the item in Seerr."
           },

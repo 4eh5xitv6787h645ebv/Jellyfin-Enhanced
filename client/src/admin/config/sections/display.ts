@@ -16,7 +16,7 @@ define({
                   desc: 'Select how time-based progress is shown.' },
                 { id: 'showFileSizes', prop: 'ShowFileSizes', type: 'toggle', perUser: true, label: 'Show file sizes',
                   desc: 'Display the file size of each item on item detail pages or collections pages.' },
-                { id: 'showAudioLanguages', prop: 'ShowAudioLanguages', type: 'toggle', perUser: true, label: 'Show available audio languages on item details',
+                { id: 'showAudioLanguages', prop: 'ShowAudioLanguages', type: 'toggle', default: true, perUser: true, label: 'Show available audio languages on item details',
                   desc: 'List the audio language flags available for each title on its detail page.' },
                 { id: 'removeContinueWatchingEnabled', prop: 'RemoveContinueWatchingEnabled', type: 'toggle', perUser: true, label: 'Enable "Remove from Continue Watching"',
                   desc: 'Adds a "Remove from Continue Watching" option to the right-click / long-press context menu. Hides items non-destructively, so playback position is preserved and entries appear in Hidden Content\'s management page (look for "Add back to Continue Watching" on each entry). Items also unhide automatically when you resume playback.' }
@@ -53,13 +53,13 @@ define({
         'random-button': {
             title: 'Random Button', icon: 'casino',
             fields: [
-                { id: 'randomButtonEnabled', prop: 'RandomButtonEnabled', type: 'toggle', perUser: true, main: true, label: 'Enable the Random button',
+                { id: 'randomButtonEnabled', prop: 'RandomButtonEnabled', type: 'toggle', default: true, perUser: true, main: true, label: 'Enable the Random button',
                   desc: 'Adds a "Play Random" button to the Jellyfin header that opens a random item from the user\'s accessible libraries.' },
                 { id: 'randomUnwatchedOnly', prop: 'RandomUnwatchedOnly', type: 'toggle', perUser: true, label: 'Show unwatched only',
                   desc: 'When enabled, the random picker only chooses items the user has not watched yet.' },
-                { id: 'randomIncludeMovies', prop: 'RandomIncludeMovies', type: 'toggle', perUser: true, label: 'Include movies',
+                { id: 'randomIncludeMovies', prop: 'RandomIncludeMovies', type: 'toggle', default: true, perUser: true, label: 'Include movies',
                   desc: 'Include movies in the random pool.' },
-                { id: 'randomIncludeShows', prop: 'RandomIncludeShows', type: 'toggle', perUser: true, label: 'Include shows',
+                { id: 'randomIncludeShows', prop: 'RandomIncludeShows', type: 'toggle', default: true, perUser: true, label: 'Include shows',
                   desc: 'Include TV shows in the random pool.' },
                 { id: 'randomScopeCurrentContainer', prop: 'RandomScopeCurrentContainer', type: 'toggle', perUser: true, label: 'Scope to the current playlist or collection',
                   desc: 'On a playlist or collection page, the Random button picks from that container\'s items instead of the whole library. Users can also pin a playlist or collection as their permanent source in the Enhanced panel.' }

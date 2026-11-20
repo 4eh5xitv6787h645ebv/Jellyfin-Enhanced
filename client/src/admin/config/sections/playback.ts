@@ -6,7 +6,7 @@ define({
     'pb-tabswitch': {
         title: 'Player Behaviour', icon: 'play_circle',
         items: [
-            { id: 'autoPauseEnabled', prop: 'AutoPauseEnabled', type: 'toggle', perUser: true, label: 'Auto-pause on tab switch',
+            { id: 'autoPauseEnabled', prop: 'AutoPauseEnabled', type: 'toggle', default: true, perUser: true, label: 'Auto-pause on tab switch',
               desc: 'Pause playback automatically when you switch to another browser tab.' },
             { id: 'autoResumeEnabled', prop: 'AutoResumeEnabled', type: 'toggle', perUser: true, label: 'Auto-resume on tab switch',
               desc: 'Resume playback automatically when you switch back to the player tab.' },
@@ -16,7 +16,7 @@ define({
               desc: 'Long-press anywhere on the player to temporarily play at 2x speed; release to return to normal speed. Touch devices only.' },
             { id: 'showPlaybackRatingBadge', prop: 'ShowPlaybackRatingBadge', type: 'toggle', label: 'Show the age rating when playback starts',
               desc: 'Briefly shows the age rating in a corner of the player when a video starts, followed by a line of any content-advisory tags (such as violence or strong language) and a line of its genres.' },
-            { id: 'pauseScreenEnabled', prop: 'PauseScreenEnabled', type: 'toggle', perUser: true, label: 'Enable the custom pause screen',
+            { id: 'pauseScreenEnabled', prop: 'PauseScreenEnabled', type: 'toggle', default: true, perUser: true, label: 'Enable the custom pause screen',
               desc: 'Shows an overlay with details about what is playing while playback is paused.' }
         ]
     },
@@ -41,7 +41,7 @@ define({
                   options: [['0', 'Clean White'], ['1', 'Classic black box'], ['2', 'Netflix style'], ['3', 'Cinema yellow'], ['4', 'Soft grey'], ['5', 'High contrast']],
                   toConfig: (v) => parseInt(String(v), 10),
                   desc: 'Default subtitle style preset applied to new users; users can override in their personal settings.' },
-                { id: 'DefaultSubtitleSize', prop: 'DefaultSubtitleSize', type: 'select', perUser: true, default: 0, label: 'Subtitle size',
+                { id: 'DefaultSubtitleSize', prop: 'DefaultSubtitleSize', type: 'select', perUser: true, default: 2, label: 'Subtitle size',
                   options: [['0', 'Tiny'], ['1', 'Small'], ['2', 'Normal'], ['3', 'Large'], ['4', 'Extra large'], ['5', 'Gigantic']],
                   toConfig: (v) => parseInt(String(v), 10),
                   desc: 'Default subtitle size applied to new users; users can override in their personal settings.' },

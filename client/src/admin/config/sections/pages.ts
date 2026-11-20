@@ -129,7 +129,7 @@ export function definePages(define: DefineSections): void {
                 note('<strong>Requests Page</strong> shows a Requests button in the sidebar with a dedicated view of active downloads from Sonarr/Radarr and requests from Seerr.'
                     + '<div id="requestsPageRequirementsLine" style="display: none; margin-top: 10px;"><strong>Requirements:</strong> <span id="requestsPageRequirementsList">Configure Sonarr and/or Radarr, plus Seerr, URLs and API keys.</span></div>'),
                 T('downloadsPageEnabled', 'DownloadsPageEnabled', 'Enable the Requests page',
-                    'Adds a "Requests" link to the navigation showing active downloads and requests.', { main: true, default: true }),
+                    'Adds a "Requests" link to the navigation showing active downloads and requests.', { main: true }),
                 placement({ p: 'downloads', en: 'downloadsPageEnabled', name: 'Requests', ppLabel: 'Use Plugin Pages',
                     ppIntro: `Replaces the default Requests page with a ${ppLink} implementation.`, ctLabel: 'Use Custom Tabs',
                     noun: 'Requests page', hint: 'downloads', cls: 'jellyfinenhanced requests', text: 'Requests' }),
@@ -156,7 +156,7 @@ export function definePages(define: DefineSections): void {
             items: [
                 note('<strong>Calendar Page</strong> adds a Calendar button in the sidebar with a dedicated view of upcoming releases from Sonarr, Radarr and Shoko.<br/><strong>Requirements:</strong> at least one of them set up on the *arr tab.'),
                 T('calendarPageEnabled', 'CalendarPageEnabled', 'Enable the Calendar page',
-                    'Adds a "Calendar" link to the navigation showing upcoming releases.', { main: true, default: true }),
+                    'Adds a "Calendar" link to the navigation showing upcoming releases.', { main: true }),
                 placement({ p: 'calendar', en: 'calendarPageEnabled', name: 'Calendar', ppLabel: 'Use Plugin Pages',
                     ppIntro: `Replaces the default Calendar page with a ${ppLink} implementation.`, ctLabel: 'Use Custom Tabs',
                     noun: 'Calendar page', hint: 'calendar', cls: 'jellyfinenhanced calendar', text: 'Calendar' }),

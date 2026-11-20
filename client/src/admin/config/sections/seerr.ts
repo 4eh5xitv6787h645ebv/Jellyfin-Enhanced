@@ -65,7 +65,7 @@ define({
     'seerr-discovery': {
         title: 'Discovery & UI Extras', icon: 'explore',
         items: [
-            { id: 'jellyseerrUseMoreInfoModal', prop: 'JellyseerrUseMoreInfoModal', type: 'toggle', label: 'Open results in "More Info" modal',
+            { id: 'jellyseerrUseMoreInfoModal', prop: 'JellyseerrUseMoreInfoModal', type: 'toggle', default: true, label: 'Open results in "More Info" modal',
               desc: 'When enabled, clicking a Seerr result title or poster opens an in-app More Info modal.<br/>When disabled, clicking will open the item in Seerr.' },
             { id: 'jellyseerrAvailablePosterLinksToJellyfin', prop: 'JellyseerrAvailablePosterLinksToJellyfin', type: 'toggle', label: 'Link available items\' posters straight to Jellyfin',
               desc: 'For a Seerr result that\'s already available in your library, clicking the poster goes straight to the Jellyfin item, just like the title link already does. If "Open results in More Info modal" above is enabled, the modal can no longer be opened by clicking the poster of an available item.' },

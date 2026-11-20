@@ -61,7 +61,7 @@ export function defineExtras(define: DefineSections): void {
             items: [
                 { id: 'enableCustomSplashScreen', prop: 'EnableCustomSplashScreen', type: 'toggle', main: true, label: 'Enable the splash screen override',
                   desc: 'Replace Jellyfin\'s login splash background with a custom image URL specified below.' },
-                { id: 'splashScreenImageUrl', prop: 'SplashScreenImageUrl', type: 'text', placeholder: '/web/assets/banner.png', label: 'Splash screen image URL',
+                { id: 'splashScreenImageUrl', prop: 'SplashScreenImageUrl', type: 'text', default: '/web/assets/img/banner-light.png', placeholder: '/web/assets/banner.png', label: 'Splash screen image URL',
                   desc: 'URL for the splash screen image. Defaults to Jellyfin banner.' },
                 { type: 'note', tone: 'warn', html: 'May misbehave when <a class="sectionTitle" href="https://github.com/IAmParadox27/jellyfin-plugin-media-bar" target="_blank" rel="noopener noreferrer">jellyfin-plugin-media-bar</a> is installed. Changes show after a page refresh; if the old image stays, clear the browser cache.' }
             ]

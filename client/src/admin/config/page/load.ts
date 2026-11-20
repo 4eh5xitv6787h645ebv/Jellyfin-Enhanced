@@ -276,7 +276,7 @@ export function createLoad(m: LoadDeps) {
                 if (__aAuto) __aAuto.checked = config.ActivityFeedAutoCreateCustomTab === true;
 
                 // Requests Page settings
-                needInput(document.querySelector('#downloadsUsePluginPages')).checked = config.DownloadsUsePluginPages !== false;
+                needInput(document.querySelector('#downloadsUsePluginPages')).checked = config.DownloadsUsePluginPages === true;
                 needInput(document.querySelector('#downloadsUseNativeTab')).checked = config.DownloadsUseNativeTab === true;
                 needInput(document.querySelector('#downloadsUseCustomTabs')).checked = config.DownloadsUseCustomTabs === true;
                 var __dAuto = asInput(document.querySelector('#downloadsAutoCreateCustomTab'));
@@ -287,7 +287,7 @@ export function createLoad(m: LoadDeps) {
                 needInput(document.querySelector('#calendarUseNativeTab')).checked = config.CalendarUseNativeTab === true;
                 var __cAuto = asInput(document.querySelector('#calendarAutoCreateCustomTab'));
                 if (__cAuto) __cAuto.checked = config.CalendarAutoCreateCustomTab === true;
-                needInput(document.querySelector('#calendarUsePluginPages')).checked = config.CalendarUsePluginPages !== false;
+                needInput(document.querySelector('#calendarUsePluginPages')).checked = config.CalendarUsePluginPages === true;
 
                 // Recommendations Page settings
                 needInput(document.querySelector('#recommendationsUseNativeTab')).checked = config.RecommendationsUseNativeTab === true;

@@ -252,6 +252,62 @@ test('preservation: defaults, conversions and field order survive collect', () =
   } finally { dom.window.close(); }
 });
 
+/**
+ * What `new PluginConfiguration()` holds for each simple property (bool, int, string): the constructor's assignment,
+ * else the property's initializer, else the type's default (a string without one is null, written as '').
+ */
+function serverDefaults() {
+  const src = readFileSync(join(repo, 'Jellyfin.Plugin.JellyfinEnhanced/Configuration/PluginConfiguration.cs'), 'utf8');
+  const literal = raw => {
+    const v = raw.trim();
+    if (v === 'true' || v === 'false') return v === 'true';
+    if (/^-?\d+$/.test(v)) return Number(v);
+    if (v === 'string.Empty') return '';
+    const quoted = /^"((?:[^"\\]|\\.)*)"$/.exec(v);
+    return quoted ? JSON.parse(`"${quoted[1]}"`) : undefined;
+  };
+  const defaults = {};
+  for (const [, type, name, init] of src.matchAll(/public\s+(bool|int|string)\??\s+(\w+)\s*\{\s*get;\s*set;\s*\}(?:\s*=\s*([^;]+);)?/g)) {
+    const value = init === undefined ? { bool: false, int: 0, string: '' }[type] : literal(init);
+    if (value !== undefined) defaults[name] = value;
+  }
+  const start = src.indexOf('public PluginConfiguration()');
+  const body = src.slice(start, src.indexOf('\n        }\n', start));
+  for (const [, name, raw] of body.matchAll(/^\s+(\w+)\s*=\s*([^;]+);/gm)) {
+    const value = literal(raw);
+    if (value !== undefined && name in defaults) defaults[name] = value;
+  }
+  return defaults;
+}
+
+test('every schema default is the server\'s default, so a page with nothing stored writes what the server would hold', () => {
+  const server = serverDefaults();
+  assert.ok(Object.keys(server).length > 300, 'the server defaults were read');
+  const { JSDOM } = require('jsdom');
+  const dom = new JSDOM(pageHtml(), { runScripts: 'outside-only' });
+  try {
+    dom.window.eval(servedEngine());
+    dom.window.JEAdmin.mount(dom.window.document, { shell: false });
+    dom.window.JEAdmin.load({});
+    const page = JSON.parse(JSON.stringify(dom.window.JEAdmin.collect({})));
+    const compared = Object.keys(page).filter(prop => prop in server);
+    assert.ok(compared.length > 190, `${compared.length} schema settings compared`);
+    assert.deepEqual(Object.fromEntries(compared.map(prop => [prop, page[prop]])), Object.fromEntries(compared.map(prop => [prop, server[prop]])));
+  } finally { dom.window.close(); }
+});
+
+test('the Requests and Calendar Plugin Pages switches read an unset value as the server\'s default (off)', async t => {
+  const server = serverDefaults();
+  const h = bootGenerated({ saved: {} });
+  t.after(() => h.close());
+  await h.ready();
+  h.show();
+  await settle(h.window, 60);
+  for (const [id, prop] of [['downloadsUsePluginPages', 'DownloadsUsePluginPages'], ['calendarUsePluginPages', 'CalendarUsePluginPages']]) {
+    assert.equal(h.document.getElementById(id).checked, server[prop], prop);
+  }
+});
+
 test('an emptied arr Tag Prefix stores the prefix the field suggests, which is the server default', () => {
   const serverDefault = /ArrTagsPrefix = "([^"]*)";/.exec(readFileSync(join(repo, 'Jellyfin.Plugin.JellyfinEnhanced/Configuration/PluginConfiguration.cs'), 'utf8'))[1];
   const { JSDOM } = require('jsdom');
