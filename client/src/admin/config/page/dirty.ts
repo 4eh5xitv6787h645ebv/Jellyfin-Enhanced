@@ -2,6 +2,10 @@ import type { PageModules } from './modules';
 import { formControls, isCheckable } from './dom';
 import { asHtml } from './dom';
 
+/** The parts of the Navigation API (window.navigation) this module uses; absent in some browsers. */
+interface NavigationLike extends EventTarget { traverseTo(key: string): unknown }
+interface NavigateEventLike extends Event { navigationType: string; hashChange: boolean; destination: { url: string; key: string } }
+
 /** Dependencies this module calls; members are resolved lazily, after every module exists. */
 export type DirtyDeps = Pick<PageModules, 'context' | 'save' | 'shortcuts'>;
 
@@ -37,7 +41,6 @@ export function createDirty(m: DirtyDeps) {
             function jeUpdateDirtyIndicator() : void {
                 const dirty = _jeSavedSnapshot !== null && jeSnapshotFormState() !== _jeSavedSnapshot;
                 if (saveDock) saveDock.classList.toggle('je-dirty', dirty);
-                if (!leavesInApp(location.href)) { hereUrl = location.href; hereState = history.state; }
             }
 
             function isDirty() : boolean {
@@ -47,12 +50,11 @@ export function createDirty(m: DirtyDeps) {
 
             // ── Leaving inside Jellyfin with unsaved changes ──────────────────────────
             // Jellyfin cannot be asked to wait (its viewbeforehide comes after the route changed), so a link out of
-            // this page is held at the click, and Back/Forward at the popstate, before Jellyfin's router sees either.
+            // this page is held at the click, before Jellyfin's router sees it. Back, Forward and a changed address
+            // reach the router by popstate, whose listener on window runs before any the page can add; where the
+            // browser has the Navigation API they are held at its cancelable navigate event, which comes first.
             /** The page's route (hash path and its name parameter), read when the page started. */
             let pageRoute: { path: string; name: string | null } | null = null;
-            /** This page's address and history state, to put back when a Back/Forward away is held. */
-            let hereUrl = '';
-            let hereState: unknown = null;
             /** The administrator chose to leave: the navigation that follows is let through. */
             let leaving = false;
 
@@ -95,8 +97,6 @@ export function createDirty(m: DirtyDeps) {
             }, { signal: lifecycle.signal });
 
             pageRoute = routeOf(new URL(location.href));
-            hereUrl = location.href;
-            hereState = history.state;
             // Links (Jellyfin's drawer and header, the What's new links): capture runs before the router's own handler.
             document.addEventListener('click', (e) => {
                 if (leaving || e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
@@ -106,14 +106,19 @@ export function createDirty(m: DirtyDeps) {
                 e.stopImmediatePropagation();
                 void askToLeave().then((go) => { if (go) { leaving = true; link.click(); } });
             }, { capture: true, signal: lifecycle.signal });
-            // Back, Forward and a typed address: the address has already changed, so it is put back (as a new entry
-            // after the one asked for) and, once the administrator chooses to leave, Back goes to that entry again.
-            window.addEventListener('popstate', (e) => {
-                if (leaving || !leavesInApp(location.href) || !isDirty()) return;
-                e.stopImmediatePropagation();
-                history.pushState(hereState, '', hereUrl);
-                void askToLeave().then((go) => { if (go) { leaving = true; history.back(); } });
-            }, { capture: true, signal: lifecycle.signal });
+            // Back, Forward and a changed address (not the router's own pushState: its state has moved on by then).
+            const navigation = (window as { navigation?: NavigationLike }).navigation;
+            navigation?.addEventListener('navigate', (event) => {
+                const e = event as NavigateEventLike;
+                if (leaving || !e.cancelable || !(e.navigationType === 'traverse' || e.hashChange) || !leavesInApp(e.destination.url) || !isDirty()) return;
+                e.preventDefault();
+                void askToLeave().then((go) => {
+                    if (!go) return;
+                    leaving = true;
+                    if (e.navigationType === 'traverse') navigation.traverseTo(e.destination.key);
+                    else location.href = e.destination.url;
+                });
+            }, { signal: lifecycle.signal });
     }
 
     return {

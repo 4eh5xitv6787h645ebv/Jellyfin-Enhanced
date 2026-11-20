@@ -369,27 +369,28 @@ test('a failed Save in the leave question keeps the page and does not trap the a
   assert.equal(h.routed, 1);
 });
 
-test('the browser\'s Back with unsaved changes asks first, and the router only sees the navigation that is confirmed', async t => {
-  const h = await page(t);
-  const here = h.window.location.href;
-  h.window.history.replaceState(null, '', '#/dashboard');
-  h.window.history.pushState(null, '', here);
-  let routed = 0;
-  h.window.addEventListener('popstate', () => { routed++; });
+test('Back or a changed address with unsaved changes asks first, where the browser can hold it (Navigation API)', async t => {
+  const traversed = [];
+  const navigation = { listeners: [], addEventListener(type, fn) { if (type === 'navigate') this.listeners.push(fn); }, traverseTo(key) { traversed.push(key); } };
+  const h = await page(t, { globals: { navigation } });
+  const navigate = (navigationType, url, hashChange) => {
+    const e = { cancelable: true, navigationType, hashChange, destination: { url, key: 'key ' + url }, prevented: false, preventDefault() { this.prevented = true; } };
+    navigation.listeners.forEach(fn => fn(e));
+    return e.prevented;
+  };
+  const away = 'http://jf.test/web/#/dashboard';
+  assert.equal(navigate('traverse', away, true), false, 'nothing unsaved: not held');
   await makeDirty(h);
-  h.window.history.back();
-  await settle(h.window, 60);
-  assert.equal(routed, 0, 'held from the router');
-  assert.equal(h.window.location.href, here, 'the page\'s address is back');
+  assert.equal(navigate('push', 'http://jf.test/web/#/configurationpage?name=Jellyfin%20Enhanced&tab=admin', true), false, 'within the page: not held');
+  assert.equal(navigate('push', away, false), false, 'the router\'s own pushState is left to the link guard');
+  assert.equal(navigate('traverse', away, true), true, 'Back is held');
+  await settle(h.window);
   await choose(h, 'Stay');
-  assert.equal(routed, 0);
-  assert.equal(h.window.location.href, here);
-  h.window.history.back();
-  await settle(h.window, 60);
+  assert.deepEqual(traversed, []);
+  assert.equal(navigate('traverse', away, true), true);
+  await settle(h.window);
   await choose(h, 'Discard');
-  await settle(h.window, 60);
-  assert.equal(routed, 1);
-  assert.match(h.window.location.hash, /^#\/dashboard/);
+  assert.deepEqual(traversed, ['key ' + away], 'Back is made again');
 });
 
 // ── Dependency hints ───────────────────────────────────────────────────────────
