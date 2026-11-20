@@ -706,7 +706,7 @@
       if (open) bar.setAttribute("aria-label", "Settings sections");
       else bar.removeAttribute("aria-label");
       inertTargets().forEach((el) => {
-        el.inert = open;
+        el.toggleAttribute("inert", open);
       });
       lock(open);
       if (open && !was) (bar.querySelector(".jellyfin-tab-button.active") ?? head.querySelector(".jea-drawer-close"))?.focus();
@@ -714,7 +714,9 @@
     };
     bar.addEventListener("keydown", (event) => {
       if (event.key !== "Tab" || !nav.classList.contains("jea-open")) return;
-      const stops = Array.from(bar.querySelectorAll("button, a[href]")).filter((el) => el.getClientRects().length > 0);
+      const all = Array.from(bar.querySelectorAll("button, a[href]"));
+      const shown = all.filter((el) => el.getClientRects().length > 0);
+      const stops = shown.length ? shown : all;
       const first = stops[0];
       const last = stops[stops.length - 1];
       if (!first || !last) return;
@@ -729,7 +731,7 @@
     lifecycle.onDispose(() => {
       lock(false);
       inertTargets().forEach((el) => {
-        el.inert = false;
+        el.removeAttribute("inert");
       });
     });
     backdrop.addEventListener("click", () => setOpen(false), { signal });

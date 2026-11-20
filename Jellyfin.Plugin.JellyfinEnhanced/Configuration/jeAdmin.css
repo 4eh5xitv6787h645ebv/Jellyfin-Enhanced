@@ -2571,7 +2571,7 @@ div#bazarrMappingsValidationResult {
 #JellyfinEnhancedForm input[id$="ApiKey"], #JellyfinEnhancedForm input[id$="API_KEY"], #JellyfinEnhancedForm input[id$="ApiKey--mirror"], #JellyfinEnhancedForm input[id$="API_KEY--mirror"],
 #JellyfinEnhancedForm input[id^="ReclaimerrPassword"], .je-api-input, .arr-instance-apikey, #JellyfinEnhancedForm input.je-secret-input { -webkit-text-security: disc; text-security: disc; }
 #JellyfinEnhancedForm input.je-secret-shown { -webkit-text-security: none !important; text-security: none !important; }
-.je-secret { position: relative; display: block; min-width: 0; }
+.je-secret { position: relative; display: block; flex: 1 1 auto; min-width: 0; }
 #JellyfinEnhancedPage .je-secret > input { padding-right: 44px; width: 100%; }
 #JellyfinEnhancedPage .je-secret-toggle {
     position: absolute; top: 50%; right: 4px; transform: translateY(-50%); display: inline-flex; align-items: center; justify-content: center;
@@ -2780,3 +2780,9 @@ div#bazarrMappingsValidationResult {
 #JellyfinEnhancedForm .jea-excl-note { margin: 0 0 10px; }
 /* Upload cards: their drop zones line up along the bottom of the row. */
 .je-branding-card .je-branding-dropzone { margin-top: auto; }
+/* A collapsed Sonarr/Radarr instance on a narrow card: its address goes under the name instead of squeezing it. */
+@container (max-width: 480px) {
+    #JellyfinEnhancedForm .arr-instance-card > summary { flex-wrap: wrap; }
+    #JellyfinEnhancedForm .arr-instance-summary-name { flex: 1 1 8em; min-width: 0; }
+    #JellyfinEnhancedForm .arr-instance-summary-url { flex: 1 1 100%; max-width: none; padding-left: 70px; }
+}

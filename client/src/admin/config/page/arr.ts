@@ -82,20 +82,21 @@ export function createArr(m: ArrDeps) {
             // Body header: [name input (flex:1)] [Remove]. The Enabled toggle used to live here
             // too, which crowded the row and left the name input pinched against it. Moved to
             // the summary above so this row has only the rename + remove affordances.
-            var nameInput = createEl('input', { className: 'arr-instance-name jea-input', type: 'text', placeholder: namePlaceholder, value: instance.Name || '', style: 'flex:1' });
-            var removeBtn = createEl('button', { className: 'arr-instance-remove', type: 'button', title: 'Remove instance', textContent: 'Remove' });
+            // Each field carries its label's words as its accessible name (no ids: the dirty check keys unnamed fields by position).
+            var nameInput = createEl('input', { className: 'arr-instance-name jea-input', type: 'text', placeholder: namePlaceholder, value: instance.Name || '', style: 'flex:1', 'aria-label': 'Name of this ' + (type === 'sonarr' ? 'Sonarr' : 'Radarr') + ' instance' });
+            var removeBtn = createEl('button', { className: 'arr-instance-remove', type: 'button', title: 'Remove instance', textContent: 'Remove', 'aria-label': 'Remove ' + ariaName + ' instance' });
             var header = createEl('div', { className: 'arr-instance-header' }, [nameInput, removeBtn]);
 
             var urlLabel = createEl('label', { className: 'inputLabel inputLabelUnfocused', textContent: 'URL' });
-            var urlInput = createEl('input', { className: 'arr-instance-url jea-input', type: 'text', placeholder: urlPlaceholder, value: instance.Url || '' });
+            var urlInput = createEl('input', { className: 'arr-instance-url jea-input', type: 'text', placeholder: urlPlaceholder, value: instance.Url || '', 'aria-label': 'URL of ' + ariaName });
             var defaultPort = type === 'sonarr' ? '8989' : '7878';
-            var urlDesc = createEl('div', { className: 'fieldDescription', textContent: 'The Jellyfin server uses this URL to talk to ' + (type === 'sonarr' ? 'Sonarr' : 'Radarr') + ' directly. If your public URL sits behind an auth proxy (Authentik, Authelia, Cloudflare Access, etc.), put the INTERNAL address here (e.g. http://' + type + ':' + defaultPort + ' or http://192.168.x.y:' + defaultPort + ') and use the URL Mappings below to redirect user-facing links to the public URL.' });
+            var urlDesc = createEl('div', { className: 'fieldDescription', textContent: 'The Jellyfin server uses this URL to talk to ' + (type === 'sonarr' ? 'Sonarr' : 'Radarr') + ' directly. If your public URL sits behind an auth proxy (Authentik, Authelia, Cloudflare Access, etc.), put the INTERNAL address here (e.g. http://' + type + ':' + defaultPort + ' or http://192.168.x.y:' + defaultPort + ') and use the URL mappings below to send users\' links to the public address.' });
             var urlContainer = createEl('div', { className: 'inputContainer', style: 'margin-top: 0.5em;' }, [urlLabel, urlInput, urlDesc]);
 
-            var apiLabel = createEl('label', { className: 'inputLabel inputLabelUnfocused', textContent: 'API Key' });
-            var apiInput = createEl('input', { className: 'arr-instance-apikey jea-input', type: 'text', autocomplete: 'off', placeholder: 'API key (find in Settings > General > Security)', value: instance.ApiKey || '' });
+            var apiLabel = createEl('label', { className: 'inputLabel inputLabelUnfocused', textContent: 'API key' });
+            var apiInput = createEl('input', { className: 'arr-instance-apikey jea-input', type: 'text', autocomplete: 'off', placeholder: 'API key (find in Settings > General > Security)', value: instance.ApiKey || '', 'aria-label': 'API key of ' + ariaName });
             var statusIcon = createEl('span', { className: 'material-icons arr-instance-status', style: 'transition: color 0.3s ease;' });
-            var testBtn = createEl('button', { className: 'jea-btn arr-instance-test', type: 'button' });
+            var testBtn = createEl('button', { className: 'jea-btn arr-instance-test', type: 'button', 'aria-label': 'Test ' + ariaName + ' instance' });
             testBtn.appendChild(createEl('span', { textContent: 'Test' }));
             var apiRow = createEl('div', { style: 'display: flex; align-items: center; gap: 1em;' }, [apiInput, statusIcon, testBtn]);
             var apiDesc = createEl('div', { className: 'fieldDescription', textContent: 'Find this in ' + (type === 'sonarr' ? 'Sonarr' : 'Radarr') + ' under Settings > General > Security > API Key' });
@@ -104,8 +105,8 @@ export function createArr(m: ArrDeps) {
             // URL Mappings shown inline (no nested <details>) — the whole card already
             // expands behind its own <details>, so doubling up on collapses hides a
             // frequently-edited field one extra click deep.
-            var mappingsLabel = createEl('label', { className: 'inputLabel inputLabelUnfocused', textContent: 'URL Mappings (optional)' });
-            var mappingsTextarea = createEl('textarea', { className: 'arr-instance-urlmappings jea-input', style: 'display:block; min-height: 5em; margin-top: 0.25em;', placeholder: 'jellyfin_url|arr_url (one per line)' });
+            var mappingsLabel = createEl('label', { className: 'inputLabel inputLabelUnfocused', textContent: 'URL mappings (optional)' });
+            var mappingsTextarea = createEl('textarea', { className: 'arr-instance-urlmappings jea-input', style: 'display:block; min-height: 5em; margin-top: 0.25em;', placeholder: 'jellyfin_url|arr_url (one per line)', 'aria-label': 'URL mappings of ' + ariaName });
             mappingsTextarea.value = instance.UrlMappings || '';
             var mappingsDesc = createEl('div', { className: 'fieldDescription', textContent: 'Map Jellyfin access URLs to this instance\'s URL. Format: jellyfin_url|arr_url (one per line). Useful for reverse-proxy setups.' });
             var mappingsContainer = createEl('div', { className: 'inputContainer', style: 'margin-top: 0.5em;' }, [mappingsLabel, mappingsTextarea, mappingsDesc]);

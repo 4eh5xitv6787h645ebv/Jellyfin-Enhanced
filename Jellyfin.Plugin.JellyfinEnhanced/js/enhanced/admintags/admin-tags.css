@@ -983,6 +983,7 @@ body.je-hide-descriptions .je-tag-admin .je-ta-intro { display: none; }
     .je-tag-admin .je-kind-looks-table tr { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) 36px; align-items: center; gap: 2px 8px; padding: 6px 0; }
     .je-tag-admin .je-kind-looks-table tr > th[scope="row"] { grid-column: 1 / -1; font-weight: 600; }
     .je-tag-admin .je-kind-looks-table thead th:first-child { display: none; }
+    .je-tag-admin .je-kind-looks-table caption { display: block; width: auto; }
     .je-tag-admin .je-kind-looks-table tfoot tr:last-child { display: block; }
     .je-tag-admin .je-kind-looks-table td { padding: 0; }
     .je-tag-admin .je-kind-looks-reset { width: 36px; height: 36px; }

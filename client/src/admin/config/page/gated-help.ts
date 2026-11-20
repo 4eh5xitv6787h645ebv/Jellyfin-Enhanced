@@ -109,7 +109,7 @@ export function createGatedHelp(m: GatedHelpDeps) {
                     value.className = 'jea-group-value';
                     summary.appendChild(value);
                 }
-                value.textContent = places.length ? places.join(', ') : 'Its own page only';
+                value.textContent = places.length ? places.join(', ') : 'No extra placement';
             });
         }
 
