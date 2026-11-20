@@ -1,0 +1,20 @@
+  before: je12 browse '#/home' --script artifacts/restructure-plan/step-logs/upstream-sync-evidence/p99-removal-dialog.mjs
+    deployed 0616ffa8918a (dll 35fbebcfd316a657) on lab je125ce284, 2026-11-21 05:24:51
+    | SCRIPT row je-maintainerr-keep: Keep (cancel removal)
+    | row je-maintainerr-postpone: Postpone removal
+    | title: Postpone removal
+    | button je-mt-x: Close
+    | button je-mt-day: +7 days
+    | button je-mt-day: +14 days
+    | button je-mt-day: +30 days
+    | button je-mt-day: +90 days
+    | button je-mt-primary.je-mt-apply: Postpone
+    | button je-mt-reset: Reset timer (count from today)
+    | button je-mt-ghost.je-mt-cancel: Cancel
+    | footer row: yes
+    | last part: je-mt-footer
+    | closed by the close button: true
+    | reopened: true, closed by Escape: true
+    | removal POSTs: none
+    | CONSOLE Failed to load resource: the server responded with a status of 404 (Not Found) /JellyfinEnhanced/cdn/selfhst/svg/maintainerr.svg
+    | URL /web/index.html#/details?id=06de48d758074756c732c7de70aa79f8

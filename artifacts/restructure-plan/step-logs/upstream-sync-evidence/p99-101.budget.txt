@@ -1,0 +1,16 @@
+Assembly budget (client/assembly-budget.json), measured with je12 test --only
+JE.Tests.PackedResourcesTests.WhatThePluginAssemblyEmbedsIsWithinTheCheckedInSizeBudget, the limit set to 1 in the
+working tree (0616ffa8 and ab87736e in scratch worktrees `git worktree add --detach`, since removed). je12 2.5.0.
+
+0616ffa89+dirty   Jellyfin.Plugin.JellyfinEnhanced.dll embeds 12,339,577 bytes   (the base; limit 12,341,503, headroom 1,926)
+ab87736e7+dirty   Jellyfin.Plugin.JellyfinEnhanced.dll embeds 12,338,123 bytes   (port 99, fc9b58ea: -1,454)
+ab87736e7+dirty   Jellyfin.Plugin.JellyfinEnhanced.dll embeds 12,368,894 bytes   (with 65161c52's locales, committed as ca2aa651: +30,771)
+90e39853e+dirty   Jellyfin.Plugin.JellyfinEnhanced.dll embeds 12,366,843 bytes   (port 101, 961b67bd: -2,051)
+
+Without a raise, on the tree of ca2aa651:
+FAIL JE.Tests.PackedResourcesTests.WhatThePluginAssemblyEmbedsIsWithinTheCheckedInSizeBudget
+     Jellyfin.Plugin.JellyfinEnhanced.dll embeds 12,368,894 bytes, over the 12,341,503 budget in client/assembly-budget.json.
+
+New limit 12,368,769 = 12,341,503 + 27,266 (commit 53b27451, headroom 1,926 as before). With it, on the final tree:
+test --only: pass (0 failed, 5 passed) JE.Tests.PackedResourcesTests
+test --only: pass (0 failed, 2 passed) JE.Tests.BundleBudgetTests (the served bundle: no raise needed)

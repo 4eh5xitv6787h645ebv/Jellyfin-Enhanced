@@ -1,0 +1,6 @@
+Port 101 (upstream 961b67bd), checked on rewrite commit f80746d2 against upstream 961b67bd and its parent.
+locale files other than en.json: 32; byte-identical to upstream at 961b67bd: 32
+keys removed: ['discovery_filter_rule_all', 'discovery_filter_rule_any', 'discovery_filter_rule_none', 'discovery_filter_score_hint']
+in this tree's en.json: []
+in upstream's en.json: []
+read anywhere in client/src or tests: nowhere

@@ -1,0 +1,10 @@
+je12 2.5.0 (v2.5.0); every je12 test run of port 99, from je12 evidence
+tests/frontend/features/media-tags/features-maintainerr-menu.test.mjs :: the removal date dialog has no Reset timer and no Cancel (upstream fc9b58ea): the close button and Escape close it, sending nothing
+  FAILED on 0616ffa89+dirty@193f3e42 at 2026-11-21 05:23:56: AssertionError: maintainerr: no Reset timer / + HTMLButtonElement {} / - null
+  passed on 0616ffa89+dirty@43daf2f9 at 2026-11-21 05:26:25
+  passed on ab87736e7 at 2026-11-21 05:30:14
+  => failed on 0616ffa89+dirty@193f3e42 (2026-11-21 05:23:56), passes on ab87736e7 (2026-11-21 05:30:14); the commit ab87736e7 has exactly the files of that run
+test: test: pass in 76s (the repo's quick mode) [features: platform, media-tags] (2026-11-21 05:27:41, tree 0616ffa89+dirty)
+tests/frontend/features/media-tags/features-maintainerr-menu.test.mjs (the whole file, 17 tests)
+  passed on f80746d28 (after the locale commits)
+test: pass in 76s (the repo's quick mode) [features: platform, media-tags] on 53b27451c: node 3492 passed, 0 failed
