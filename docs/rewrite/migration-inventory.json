@@ -1741,7 +1741,7 @@
       "source": "client/src/admin/config/page-entry.ts",
       "template": "client/html/admin-config/configPage.html",
       "manifest": "client/html-entries/admin-config.json",
-      "sha256": "c2283484a120a22da826a1113fb093e1a9a17ebe35c952eaee6737cbfd1ad214"
+      "sha256": "52798a39559e92afbc2df99c16b8874910d0df4ac1d27bf4bb0d8c2da3976cb1"
     },
     {
       "path": "Configuration/mediaTagsPage.html",

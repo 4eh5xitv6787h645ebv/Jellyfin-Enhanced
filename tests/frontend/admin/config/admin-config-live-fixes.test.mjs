@@ -93,6 +93,19 @@ test('with unsaved changes, sidebar entries and in-page links open in place with
   assert.match(h.window.location.hash, /configurationpage/, 'Stay keeps the page');
 });
 
+test('while a shortcut key is recording, it is marked as a key recorder, so no shortcut runs on the key pressed', async t => {
+  const h = await page(t);
+  tabButton(h, 'keyboard').click();
+  await settle(h.window);
+  const chip = h.document.querySelector('[data-sc-name] .je-sc-key');
+  assert.equal(chip.hasAttribute('data-je-key-recorder'), false, 'not while idle');
+  chip.click();
+  assert.equal(chip.getAttribute('aria-pressed'), 'true');
+  assert.equal(chip.hasAttribute('data-je-key-recorder'), true, 'the shortcut listener stands aside while it records');
+  chip.dispatchEvent(new h.window.KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true }));
+  assert.equal(chip.hasAttribute('data-je-key-recorder'), false, 'and only while it records');
+});
+
 test('a tab or card shown writes the address quietly, through the plugin\'s writer, so it is not a site navigation', async t => {
   const quiet = [];
   const h = await page(t, { globals: { JellyfinEnhanced: { core: { navigation: { setAddressQuietly: (state, url, push) => quiet.push([url, !!push]) } } } } });
@@ -105,4 +118,17 @@ test('a tab or card shown writes the address quietly, through the plugin\'s writ
   assert.ok(quiet.some(([url, push]) => /tab=display/.test(url) && !push), 'the tab, written in place');
   assert.ok(quiet.some(([url]) => /card=spoiler-guard/.test(url)), 'the card');
   assert.equal(replaced, 0, 'nothing written past the plugin');
+});
+
+test('a shortcut on the space bar is shown as "Space", not as a blank key', async t => {
+  const h = await page(t);
+  tabButton(h, 'keyboard').click();
+  await settle(h.window);
+  const row = [...h.document.querySelectorAll('[data-sc-name]')].find(r => r.dataset.scName === 'OpenSearch');
+  row.querySelector('.je-sc-key').click();
+  row.querySelector('.je-sc-key').dispatchEvent(new h.window.KeyboardEvent('keydown', { key: ' ', code: 'Space', bubbles: true, cancelable: true }));
+  await settle(h.window);
+  const chip = h.document.querySelector('[data-sc-name="OpenSearch"] .je-sc-key');
+  assert.equal(chip.textContent, 'Space');
+  assert.match(chip.getAttribute('aria-label'), /^Open Search: Space\./);
 });
