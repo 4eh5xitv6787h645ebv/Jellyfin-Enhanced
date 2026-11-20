@@ -1,0 +1,47 @@
+# Upstream da3d9ee9 (#1091): the contract lines a port would change in this tree
+# Recorded 2026-11-21T02:43:21+08:00 on sync/auto-20261121-0240 at 9afcd4149 (main line 8d8165d2).
+
+## 1. Upstream's route and action changes
+$ git show da3d9ee984 -- Jellyfin.Plugin.JellyfinEnhanced/Controllers/ | grep -E '^[-+].*(\[Http|\[Authorize|public (async )?Task<)'
+-        [HttpPost("create-users")]
++        [HttpGet("user-audit")]
+-        public async Task<IActionResult> CreateUsers([FromBody] ReclaimerrCreateUsersRequest? request, CancellationToken token)
++        public async Task<IActionResult> UserAudit(CancellationToken token)
+-        [HttpPost("service-account")]
++        [HttpPost("import-users")]
+-        public async Task<IActionResult> CreateServiceAccount([FromBody] ReclaimerrActionRequest request, CancellationToken token)
++        public async Task<IActionResult> ImportUsers([FromBody] ReclaimerrImportUsersRequest? request, CancellationToken token)
+
+## 2. This tree's frozen lines for the two routes upstream removes
+$ git grep -n -E 'reclaimerr/(service-account|create-users)|CreateReclaimerr(ServiceAccount|Users)"' -- tests/backend/Architecture artifacts/restructure-plan/baselines
+artifacts/restructure-plan/baselines/inventory-routes.txt:140:POST /JellyfinEnhanced/reclaimerr/create-users
+artifacts/restructure-plan/baselines/inventory-routes.txt:147:POST /JellyfinEnhanced/reclaimerr/service-account
+tests/backend/Architecture/auth-helper-calls.snapshot.json:15:  "CreateReclaimerrServiceAccount": {"IsAdminUser":1},
+tests/backend/Architecture/auth-helper-calls.snapshot.json:16:  "CreateReclaimerrUsers": {"IsAdminUser":1},
+tests/backend/Architecture/auth-reads-by-route.base.json:196:    "POST JellyfinEnhanced/reclaimerr/create-users": {"IsAdminUser":1},
+tests/backend/Architecture/auth-reads-by-route.base.json:202:    "POST JellyfinEnhanced/reclaimerr/service-account": {"IsAdminUser":1},
+tests/backend/Architecture/route-auth.snapshot.json:141:  {"verb":"POST","route":"JellyfinEnhanced/reclaimerr/create-users","requiresAuth":true,"auth":"","action":"CreateReclaimerrUsers","apiBehavior":true,"parameters":["request:Body","reclaimerr:Services","token:Special"]},
+tests/backend/Architecture/route-auth.snapshot.json:148:  {"verb":"POST","route":"JellyfinEnhanced/reclaimerr/service-account","requiresAuth":true,"auth":"","action":"CreateReclaimerrServiceAccount","apiBehavior":true,"parameters":["request:Body","http:Services","token:Special"]},
+
+## 3. The two actions here (Features/MediaTags/JeMediaTagsController.Reclaimerr.cs)
+$ git grep -n -A3 -E '\[HttpPost\("reclaimerr/(service-account|create-users)"\)\]' -- Jellyfin.Plugin.JellyfinEnhanced
+Jellyfin.Plugin.JellyfinEnhanced/Features/MediaTags/JeMediaTagsController.Reclaimerr.cs:148:        [HttpPost("reclaimerr/service-account")]
+Jellyfin.Plugin.JellyfinEnhanced/Features/MediaTags/JeMediaTagsController.Reclaimerr.cs-149-        [Authorize]
+Jellyfin.Plugin.JellyfinEnhanced/Features/MediaTags/JeMediaTagsController.Reclaimerr.cs-150-        [Produces("application/json")]
+Jellyfin.Plugin.JellyfinEnhanced/Features/MediaTags/JeMediaTagsController.Reclaimerr.cs-151-        public async Task<IActionResult> CreateReclaimerrServiceAccount([FromBody] ReclaimerrServiceAccountRequest request, [FromServices] IHttpClientFactory http, CancellationToken token)
+--
+Jellyfin.Plugin.JellyfinEnhanced/Features/MediaTags/JeMediaTagsController.Reclaimerr.cs:185:        [HttpPost("reclaimerr/create-users")]
+Jellyfin.Plugin.JellyfinEnhanced/Features/MediaTags/JeMediaTagsController.Reclaimerr.cs-186-        [Authorize]
+Jellyfin.Plugin.JellyfinEnhanced/Features/MediaTags/JeMediaTagsController.Reclaimerr.cs-187-        [Produces("application/json")]
+Jellyfin.Plugin.JellyfinEnhanced/Features/MediaTags/JeMediaTagsController.Reclaimerr.cs-188-        public async Task<IActionResult> CreateReclaimerrUsers([FromBody] ReclaimerrCreateUsersRequest? request, [FromServices] ReclaimerrActions reclaimerr, CancellationToken token)
+
+## 4. The routes upstream adds have no line here yet
+$ git grep -c -E 'reclaimerr/(import-users|user-audit)' -- tests/backend/Architecture artifacts/restructure-plan/baselines Jellyfin.Plugin.JellyfinEnhanced || echo none
+none
+
+## 5. Upstream's stored-setting changes (PluginConfiguration.cs)
+-        public string ReclaimerrUsername { get; set; } = string.Empty;
+-        public bool ReclaimerrActAsUser { get; set; } = true;
++        public bool ReclaimerrUserRequests { get; set; } = false;
+-        public string ReclaimerrUserMap { get; set; } = string.Empty;
+-        public string ReclaimerrPassword { get; set; } = string.Empty;
