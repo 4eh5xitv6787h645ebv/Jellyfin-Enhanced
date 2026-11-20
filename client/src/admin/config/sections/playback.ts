@@ -59,10 +59,10 @@ define({
     'pb-timing': {
         title: 'Shortcuts Panel & Toast Timing', icon: 'timer',
         items: [
-            { id: 'HelpPanelAutocloseDelay', prop: 'HelpPanelAutocloseDelay', type: 'number', default: 15000, min: 0, step: 1, label: 'Shortcuts Panel Autoclose Delay (ms)',
+            { id: 'HelpPanelAutocloseDelay', prop: 'HelpPanelAutocloseDelay', type: 'number', default: 15000, min: 0, max: 3600000, step: 1, label: 'Shortcuts Panel Autoclose Delay (ms)',
               desc: 'How long the Jellyfin Enhanced shortcuts/settings panel (opened with the <kbd>?</kbd> key) stays open without interaction before auto-closing. Default: 15000 ms (15 seconds).' },
             { type: 'button', id: 'jeTestShortcutsPanel', label: 'Preview autoclose' },
-            { id: 'ToastDuration', prop: 'ToastDuration', type: 'number', default: 1500, min: 0, step: 1, label: 'Toast Notification Duration (ms)',
+            { id: 'ToastDuration', prop: 'ToastDuration', type: 'number', default: 1500, min: 0, max: 3600000, step: 1, label: 'Toast Notification Duration (ms)',
               desc: 'How long pop-up toast messages (e.g. &ldquo;Shuffle enabled&rdquo;, &ldquo;Bookmark saved&rdquo;) stay on-screen before fading out. Default: 1500 ms (1.5 seconds). Set to <strong>0</strong> to turn toasts off. Use 1000 or more so they can be read; the preview uses the value you typed, before saving.' },
             { type: 'button', id: 'jeTestToast', label: 'Preview toast' }
         ]

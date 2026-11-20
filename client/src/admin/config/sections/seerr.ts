@@ -263,10 +263,10 @@ define({
         items: [
             { id: 'jellyseerrDisableCache', prop: 'JellyseerrDisableCache', type: 'toggle', label: 'Disable server-side response cache',
               desc: 'When enabled, all Seerr proxy requests bypass the server-side cache and are fetched fresh from Seerr every time. This is useful for testing but will increase load on your Seerr instance. <b>Not recommended for normal use.</b>' },
-            { id: 'jellyseerrResponseCacheTtlMinutes', prop: 'JellyseerrResponseCacheTtlMinutes', type: 'number', min: 1, default: 10, label: 'Response cache lifetime (minutes)',
+            { id: 'jellyseerrResponseCacheTtlMinutes', prop: 'JellyseerrResponseCacheTtlMinutes', type: 'number', min: 1, max: 525600, default: 10, label: 'Response cache lifetime (minutes)',
               toConfig: (v) => Math.trunc(v) || 10,
               desc: 'How long Seerr API responses (search, discovery, recommendations) are cached. Default: 10 minutes.' },
-            { id: 'jellyseerrUserIdCacheTtlMinutes', prop: 'JellyseerrUserIdCacheTtlMinutes', type: 'number', min: 1, default: 30, label: 'User ID cache lifetime (minutes)',
+            { id: 'jellyseerrUserIdCacheTtlMinutes', prop: 'JellyseerrUserIdCacheTtlMinutes', type: 'number', min: 1, max: 525600, default: 30, label: 'User ID cache lifetime (minutes)',
               toConfig: (v) => Math.trunc(v) || 30,
               desc: 'How long the Jellyfin → Seerr user ID mapping is cached. Default: 30 minutes.' }
         ]

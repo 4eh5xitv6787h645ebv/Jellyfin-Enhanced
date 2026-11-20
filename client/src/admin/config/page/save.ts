@@ -4,7 +4,7 @@ import type { WriteScope } from '../domain/write-scope';
 import { autoMovieTrigger, clampedInt, httpUrls, lines, maintenanceAction } from '../domain/config-values';
 import { asObject, stringList, text } from '../domain/config';
 import { shortcutsToJson } from '../domain/shortcuts';
-import { asControl, asHtml, asInput, eventDetail, needControl, needHtml, needInput } from './dom';
+import { asControl, asHtml, asInput, eventDetail, formControls, needControl, needHtml, needInput, plainLabel } from './dom';
 import type { AdminConfig } from '../domain/config';
 import type { CustomTabsSyncResult } from './types';
 
@@ -12,7 +12,7 @@ import type { CustomTabsSyncResult } from './types';
 export type SaveDeps = Pick<PageModules, 'context' | 'arr' | 'blockedUsers' | 'customTabs' | 'dirty' | 'displayCards' | 'gatedHelp' | 'maintenance' | 'mediaTagsTab' | 'shortcuts' | 'spoiler' | 'load'>;
 
 export function createSave(m: SaveDeps) {
-    const { ApiClient, Dashboard, JEAdmin, lifecycle, pluginId } = m.context;
+    const { ApiClient, Dashboard, JEAdmin, form, lifecycle, pluginId } = m.context;
 
             const resetAllUserSettingsBtn = asHtml(document.querySelector('#resetAllUserSettingsBtn'));
 
@@ -398,6 +398,65 @@ export function createSave(m: SaveDeps) {
             return true;
         }
 
+        /** What a number accepts, in words: "a whole number from 1 to 168". */
+        function accepted(field: HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement): string {
+            if (!(field instanceof HTMLInputElement) || field.type !== 'number') return 'valid: ' + field.validationMessage;
+            const kind = field.step === 'any' ? 'a number' : 'a whole number';
+            if (field.min && field.max) return kind + ' from ' + field.min + ' to ' + field.max;
+            if (field.min) return kind + ' of ' + field.min + ' or more';
+            return field.max ? kind + ' up to ' + field.max : kind;
+        }
+
+        /**
+         * The form has novalidate: the browser's own check cannot show a control on a tab that is not open, and then
+         * cancels the save without a word. Every save path asks here first. A control the browser would refuse (a
+         * number out of range or not whole) refuses the save: its tab opens, with its card, any closed group and a
+         * sub-setting its parent switch hides, it takes focus, and a message names it and says what it accepts.
+         */
+        function refuseInvalidField(): boolean {
+            form.querySelectorAll('.jea-reveal').forEach(function(el) { el.classList.remove('jea-reveal'); });
+            const invalid = formControls(form).filter(function(el) { return !el.validity.valid; });
+            // The copy on screen (a Services linked copy, "--mirror", or the original), else the original.
+            const field = invalid.find(function(el) { return el.getClientRects().length > 0; })
+                ?? invalid.find(function(el) { return !el.id.endsWith('--mirror'); }) ?? invalid[0];
+            if (!field) return false;
+            const search = asHtml(document.getElementById('settingsSearchClear'));
+            if (form.classList.contains('je-search-mode') && search && !field.getClientRects().length) search.click();
+            const tab = field.closest('.jellyfin-tab-content');
+            const tabButton = tab && asHtml(document.querySelector('.jellyfin-tab-button[data-tab="' + tab.id + '"]'));
+            const card = field.closest('fieldset');
+            // Its tab, showing every card (a card picked in the sidebar hides the others).
+            if (tabButton && tab && (!tab.classList.contains('active') || (tab.classList.contains('jea-focused') && !(card && card.classList.contains('jea-focus'))))) tabButton.click();
+            const revealed: Element[] = [];
+            for (let el: Element | null = field.parentElement; el && el !== tab; el = el.parentElement) {
+                if (el instanceof HTMLDetailsElement) el.open = true;
+                if (el.matches('.jea-dep-hidden, .jea-section.jea-off .jea-sub, fieldset.jea-locked > .configSection') || (el instanceof HTMLElement && el.style.display === 'none')) {
+                    el.classList.add('jea-reveal');
+                    revealed.push(el);
+                }
+            }
+            // Hidden again once the value is one the field accepts.
+            field.addEventListener('change', function settled() {
+                if (!field.validity.valid) return;
+                field.removeEventListener('change', settled);
+                revealed.forEach(function(el) { el.classList.remove('jea-reveal'); });
+            });
+            const label = (field.id && asHtml(document.querySelector('label[for="' + field.id + '"] .jea-label-text, label[for="' + field.id + '"]'))) || field.closest('label');
+            const name = (label ? plainLabel(label) : '') || field.id;
+            const place = [tabButton ? plainLabel(tabButton.querySelector('.je-tab-label') ?? tabButton) : '', card ? plainLabel(card.querySelector(':scope > legend') ?? card) : ''].filter(Boolean).join(' \u203a ');
+            field.focus({ preventScroll: true });
+            // After the tab's own scroll restore (a frame after it opens), as jeJumpToTab does.
+            requestAnimationFrame(function() { requestAnimationFrame(function() { field.scrollIntoView({ block: 'center' }); }); });
+            // The message keeps focus on its button; closing it gives focus back to the field.
+            Dashboard.alert({
+                title: 'Not saved',
+                message: '"' + name + '"' + (place ? ' (' + place + ')' : '') + ' must be ' + accepted(field) + '.'
+                    + (field.disabled ? ' It is locked while the setting it depends on is off: turn on that setting to change it.' : '')
+                    + ' Nothing was saved.'
+            });
+            return true;
+        }
+
         // Re-entrancy guard. `Dashboard.showLoadingMsg()` provides only a visual
         // overlay, not an input block, so two rapid Enter presses or a second
         // click on the save dock can still fire saveConfig in parallel — the
@@ -426,7 +485,7 @@ export function createSave(m: SaveDeps) {
                 Dashboard.alert({ title: 'Settings not loaded', message: 'The saved settings could not be read, so nothing was saved. Retry from the banner at the top of this page, or reload it.' });
                 return false;
             }
-            if (refuseEmptyMaintenanceSelection()) return false;
+            if (refuseEmptyMaintenanceSelection() || refuseInvalidField()) return false;
             _jeSaveInFlight = true;
             m.gatedHelp.enforceTabExclusivity();
             Dashboard.showLoadingMsg();
@@ -557,7 +616,7 @@ export function createSave(m: SaveDeps) {
         }
 
         async function resetAllUserSettingsNow(scope: WriteScope) : Promise<void> {
-            if (refuseEmptyMaintenanceSelection()) return;
+            if (refuseEmptyMaintenanceSelection() || refuseInvalidField()) return;
             if (await JEAdmin.confirm("Are you sure?\n\nThis saves the current configuration, then copies these Display/Playback/etc. values into every user's Enhanced Panel settings, replacing anything they've customized for themselves. This cannot be undone per-user; each user would have to re-apply their own preferences afterward.")) {
                 scope.throwIfStale();
                 Dashboard.showLoadingMsg();
@@ -608,7 +667,7 @@ export function createSave(m: SaveDeps) {
             const detail = eventDetail(e);
             const props = stringList(detail.props);
             const labels = stringList(detail.labels);
-            if (!props.length || refuseEmptyMaintenanceSelection()) return;
+            if (!props.length || refuseEmptyMaintenanceSelection() || refuseInvalidField()) return;
             const ok = await JEAdmin.confirm('Apply these settings to every user?\n\n<ul>' + labels.map((l) => '<li>' + l.replace(/</g, '&lt;') + '</li>').join('') + '</ul>\nThis saves your configuration first. Only these settings change; every other personal setting stays as it is.', 'Apply to all users');
             scope.throwIfStale();
             if (!ok) return;

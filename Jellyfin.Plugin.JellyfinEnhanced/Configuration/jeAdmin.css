@@ -2207,6 +2207,8 @@ div#bazarrMappingsValidationResult {
 /* Dependent settings disappear while their parent toggle is off (all tabs, via PARENT_DEPS). Search mode reveals them. */
 #JellyfinEnhancedForm .jea-dep-hidden { display: none !important; }
 #JellyfinEnhancedForm.je-search-mode .jea-dep-hidden { display: revert !important; }
+/* A setting a refused save points at (page/save.ts refuseInvalidField) is shown even where its parent hides it, until it holds an accepted value. */
+#JellyfinEnhancedForm .jea-reveal { display: revert !important; }
 
 /* ===== Header: title left, search centre, Docs and Descriptions right ===== */
 #JellyfinEnhancedPage .sectionTitleContainer { flex-wrap: nowrap; gap: 16px; padding: 14px 0; border-bottom: 1px solid var(--je-border); }

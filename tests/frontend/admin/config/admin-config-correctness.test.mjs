@@ -422,3 +422,76 @@ test('control: TMDB without a key and nothing that needs it stays off', async t 
   const h = await page(t);
   assert.match(h.service('tmdb').className, /je-state-off/);
 });
+
+// ── A number the field does not accept ─────────────────────────────────────────
+
+/** Leaving Soon's "Refresh every (hours)" (1 to 168, on the *arr tab, which is not shown) typed as 500. */
+const typeBadRefresh = h => {
+  const field = h.document.getElementById('LeavingSoonRefreshHours');
+  field.value = '500';
+  field.dispatchEvent(new h.window.Event('input', { bubbles: true }));
+  field.dispatchEvent(new h.window.Event('change', { bubbles: true }));
+  return field;
+};
+
+for (const [path, save] of [
+  ['the Save button', async h => { h.document.querySelector('.je-save-dock-btn').click(); await settle(h.window, 120); }],
+  ['Save in the leave question', async h => {
+    const link = drawerLink(h);
+    link.click();
+    await settle(h.window);
+    await choose(h, 'Save');
+    assert.equal(h.routed, 0, 'the page stays');
+  }],
+  ['Import Users Now', async h => {
+    let imports = 0;
+    h.window.ApiClient.fetch = async () => { imports++; return {}; };
+    h.document.getElementById('btnImportJellyseerrUsers').click();
+    await settle(h.window, 120);
+    assert.equal(imports, 0, 'no import');
+  }],
+]) {
+  test(`a number out of range on a tab that is not shown: ${path} writes nothing, opens the field and says what is wrong`, async t => {
+    const h = await page(t, { saved: SEERR });
+    await makeDirty(h);
+    const field = typeBadRefresh(h);
+    assert.equal(h.document.getElementById('arr').classList.contains('active'), false, 'the field is on another tab');
+    await save(h);
+    assert.equal(h.calls.puts.length, 0, 'nothing was written');
+    assert.match(h.dialogs().join(' | '), /Refresh every \(hours\)[^|]*must be a whole number from 1 to 168[^|]*Nothing was saved/);
+    assert.equal(h.document.getElementById('arr').classList.contains('active'), true, 'its tab is open');
+    await choose(h, 'OK');
+    assert.equal(h.document.activeElement, field, 'the field has focus');
+  });
+}
+
+test('a number held by a setting that is off is shown as well, and the message says how to change it', async t => {
+  const h = await page(t, { saved: { DownloadsPageEnabled: true, DownloadsPagePollingEnabled: true } });
+  const polling = h.document.getElementById('downloadsPagePollingEnabled');
+  const field = h.document.getElementById('downloadsPollIntervalSeconds');
+  field.value = '5';
+  field.dispatchEvent(new h.window.Event('input', { bubbles: true }));
+  polling.click();
+  await settle(h.window);
+  assert.equal(field.disabled, true, 'locked while polling is off');
+  await h.submit();
+  assert.equal(h.calls.puts.length, 0, 'nothing was written');
+  assert.match(h.dialogs().join(' '), /Refresh every \(seconds\).*from 30 to 300.*turn on/);
+  const row = field.closest('.inputContainer');
+  assert.ok(row.closest('.jea-reveal') || row.classList.contains('jea-reveal'), 'the collapsed row is shown');
+  assert.equal(h.document.getElementById('pages').classList.contains('active'), true);
+});
+
+test('every number has an upper bound a whole-number setting can hold, so no value fails the whole configuration write', async t => {
+  const h = await page(t);
+  const numbers = [...h.document.querySelectorAll('#JellyfinEnhancedForm input[type="number"]')];
+  assert.ok(numbers.length >= 14);
+  for (const field of numbers) {
+    assert.ok(field.max !== '' && Number(field.max) <= 2147483647, `${field.id} has max ${JSON.stringify(field.max)}`);
+  }
+  const toast = h.document.getElementById('ToastDuration');
+  toast.value = '99999999999';
+  await h.submit();
+  assert.equal(h.calls.puts.length, 0, 'an overflowing value is refused before the write');
+  assert.match(h.dialogs().join(' '), /Toast notification duration|Toast Notification Duration/i);
+});

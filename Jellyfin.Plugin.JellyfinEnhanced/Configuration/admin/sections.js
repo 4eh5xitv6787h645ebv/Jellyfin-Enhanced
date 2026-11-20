@@ -787,6 +787,7 @@
             type: "number",
             default: 15e3,
             min: 0,
+            max: 36e5,
             step: 1,
             label: "Shortcuts Panel Autoclose Delay (ms)",
             desc: "How long the Jellyfin Enhanced shortcuts/settings panel (opened with the <kbd>?</kbd> key) stays open without interaction before auto-closing. Default: 15000 ms (15 seconds)."
@@ -798,6 +799,7 @@
             type: "number",
             default: 1500,
             min: 0,
+            max: 36e5,
             step: 1,
             label: "Toast Notification Duration (ms)",
             desc: "How long pop-up toast messages (e.g. &ldquo;Shuffle enabled&rdquo;, &ldquo;Bookmark saved&rdquo;) stay on-screen before fading out. Default: 1500 ms (1.5 seconds). Set to <strong>0</strong> to turn toasts off. Use 1000 or more so they can be read; the preview uses the value you typed, before saving."
@@ -2065,6 +2067,7 @@
             prop: "JellyseerrResponseCacheTtlMinutes",
             type: "number",
             min: 1,
+            max: 525600,
             default: 10,
             label: "Response cache lifetime (minutes)",
             toConfig: (v) => Math.trunc(v) || 10,
@@ -2075,6 +2078,7 @@
             prop: "JellyseerrUserIdCacheTtlMinutes",
             type: "number",
             min: 1,
+            max: 525600,
             default: 30,
             label: "User ID cache lifetime (minutes)",
             toConfig: (v) => Math.trunc(v) || 30,
