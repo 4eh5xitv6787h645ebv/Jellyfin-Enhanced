@@ -58,7 +58,7 @@ export interface SectionDep {
     bannerId: string;
 }
 export interface IndividualDep { id: string; checkFn: () => boolean; hint: string; icon: string; label?: string; noHint?: boolean }
-export interface ParentDep { parent: string; label: string; children: readonly string[]; anyOf?: readonly string[]; noHint?: boolean }
+export interface ParentDep { parent: string; children: readonly string[]; anyOf?: readonly string[]; noHint?: boolean }
 export interface MappingDef { id: string; service: string }
 export interface BannerGroup { banners: readonly HTMLElement[]; trigger: HTMLElement; parentCheckbox: HTMLInputElement | null }
 
