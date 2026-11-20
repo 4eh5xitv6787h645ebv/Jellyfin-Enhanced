@@ -192,9 +192,10 @@ export function createActions(m: ActionsDeps) {
 
                 var tested = 0;
 
-                // TMDB — one click is enough; pages share the same backing key
+                // TMDB — one click is enough; pages share the same backing key. Without a key there is nothing to test.
                 var tmdbBtn = asControl(document.querySelector('.testTmdbBtn'));
-                if (tmdbBtn && !tmdbBtn.disabled) { tmdbBtn.click(); tested++; }
+                var tmdbKey = asControl(document.querySelector('#TMDB_API_KEY'));
+                if (tmdbBtn && !tmdbBtn.disabled && tmdbKey && tmdbKey.value.trim()) { tmdbBtn.click(); tested++; }
 
                 // Seerr — only if enabled with a URL + key (otherwise button
                 // would show a "missing info" toast, which is noisy for a
@@ -210,10 +211,9 @@ export function createActions(m: ActionsDeps) {
                     tested++;
                 }
 
-                // Sonarr / Radarr — per-instance tests. The per-instance test
-                // function itself guards against empty URL/API-key, so we
-                // don't need to re-check here; we just skip already-disabled
-                // buttons (mid-flight tests).
+                // Sonarr / Radarr — per-instance tests of every enabled instance with
+                // a URL and key. An instance's own button is disabled while its
+                // test runs and while the instance is switched off: both skip.
                 var arrBtns = document.querySelectorAll<HTMLElement>('.arr-instance-test');
                 arrBtns.forEach(function(btn) {
                     var card = btn.closest('.arr-instance-card');
@@ -222,7 +222,8 @@ export function createActions(m: ActionsDeps) {
                     var keyEl = asControl(card.querySelector('.arr-instance-apikey'));
                     if (!urlEl || !keyEl) return;
                     if (!urlEl.value.trim() || !keyEl.value.trim()) return;
-                    if (retestButton.disabled) return;
+                    var enabled = asInput(card.querySelector('.arr-instance-enabled'));
+                    if ((enabled && !enabled.checked) || asControl(btn)?.disabled) return;
                     btn.click();
                     tested++;
                 });

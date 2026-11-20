@@ -216,6 +216,16 @@ export function createConnections(m: ConnectionsDeps) {
             return (url || '').trim().toLowerCase().replace(/\/+$/, '');
         }
 
+        /**
+         * Cache key of a Sonarr/Radarr instance's test result: type, address and a fingerprint of the API key
+         * (FNV-1a, so the key itself is never stored), so a result never shows for another key at the same address.
+         */
+        function arrTestKey(type: string, url: string, apiKey: string) : string {
+            let hash = 0x811c9dc5;
+            for (let i = 0; i < apiKey.length; i++) hash = Math.imul(hash ^ apiKey.charCodeAt(i), 0x01000193) >>> 0;
+            return type + ':' + _jeNormalizeArrUrl(url) + '#' + hash.toString(16);
+        }
+
     /** Runs this module's start-up work, in the page's original order. */
     function wire(): void {
 
@@ -223,7 +233,7 @@ export function createConnections(m: ConnectionsDeps) {
 
     return {
         wire,
-        _jeNormalizeArrUrl,
+        arrTestKey,
         get _jeSuppressTestAlerts() { return _jeSuppressTestAlerts; },
         set _jeSuppressTestAlerts(value) { _jeSuppressTestAlerts = value; },
         beginConnectionTest,

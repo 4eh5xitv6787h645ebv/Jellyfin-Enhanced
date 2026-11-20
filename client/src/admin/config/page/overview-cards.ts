@@ -128,20 +128,11 @@ export function createOverviewCards(m: OverviewCardsDeps) {
                 var el = asControl(document.getElementById(id));
                 return el ? (el.value || '').trim() : '';
             }
-            function anyArrConfigured() {
-                var cards = document.querySelectorAll<HTMLElement>('#sonarrInstancesList .arr-instance-card, #radarrInstancesList .arr-instance-card');
-                for (var i = 0; i < cards.length; i++) {
-                    const card = cards[i];
-                    if (!card) continue;
-                    var url = asControl(card.querySelector('.arr-instance-url'));
-                    var key = asControl(card.querySelector('.arr-instance-apikey'));
-                    if (url && key && url.value.trim() && key.value.trim()) return true;
-                }
-                return false;
-            }
-            function seerrConfigured() {
-                return !!val('jellyseerrUrls') && !!val('JellyseerrApiKey');
-            }
+            // The same readiness the dependency gates use: an enabled instance, and Seerr on with an http(s) URL and a key.
+            var anyArrConfigured = m.dependencies.hasAnyArrService;
+            var seerrConfigured = m.dependencies.hasJellyseerrConfigured;
+            var seerrNeeded = function(id: string): boolean { return bool(id) && !seerrConfigured(); };
+            var tmdbNeeded = function(id: string): boolean { return bool(id) && !val('TMDB_API_KEY'); };
 
             var features: OverviewFeature[] = [];
             function feat(name: string, enabled: boolean, tab: string, detail: string, warn?: boolean): void {
@@ -152,8 +143,15 @@ export function createOverviewCards(m: OverviewCardsDeps) {
             // Display
             feat('Remove from Continue Watching', bool('removeContinueWatchingEnabled'), 'display', 'Enabled');
             var tagCount = ['QualityTagsEnabled','GenreTagsEnabled','LanguageTagsEnabled','RatingTagsEnabled','AgeRatingTagsEnabled','StatusTagsEnabled','AwardsTagsEnabled','LogoTagsEnabled','CustomTagsEnabled','PeopleTagsEnabled'].filter(function (k) { return m.displayCards._jeMediaTagsConfig && m.displayCards._jeMediaTagsConfig[k] === true; }).length;
-            feat('Media Tags', tagCount > 0, 'display', tagCount + ' tag type(s) enabled');
+            feat('Media Tags', tagCount > 0, 'media-tags', tagCount + ' tag type(s) enabled');
             feat('Random Button', bool('randomButtonEnabled'), 'display', 'Enabled');
+            feat('Spoiler Guard', bool('spoilerBlurEnabled'), 'display', 'Enabled');
+            var dddWarn = bool('doesTheDogDieEnabled') && !val('doesTheDogDieApiKey');
+            feat('Content Warnings', bool('doesTheDogDieEnabled'), 'display', dddWarn ? 'Enabled but API key missing' : 'Enabled', dddWarn);
+            var mdblistWarn = bool('mdblistRatingsEnabled') && !val('mdblistApiKey');
+            feat('MDBList Ratings', bool('mdblistRatingsEnabled'), 'display', mdblistWarn ? 'Enabled but API key missing' : 'Enabled', mdblistWarn);
+            feat('Awards', bool('showAwards'), 'display', 'Enabled');
+            feat('Audio Language Tags Sync', bool('audioLanguageTagSyncEnabled'), 'display', 'Enabled');
 
             // Playback
             feat('Custom Pause Screen', bool('pauseScreenEnabled'), 'playback', 'Enabled');
@@ -165,8 +163,9 @@ export function createOverviewCards(m: OverviewCardsDeps) {
             feat('Auto-skip Intro/Outro', autoSkip, 'playback',
                 autoSkipWarn ? 'Enabled but Intro Skipper plugin is missing' : 'Enabled',
                 autoSkipWarn);
-            var tabSwitch = bool('autoPauseEnabled') || bool('autoResumeEnabled') || bool('autoPipEnabled');
-            feat('Tab-switch actions', tabSwitch, 'playback', 'Auto-pause / resume / PiP');
+            var tabSwitchOn = [['autoPauseEnabled', 'Auto-pause'], ['autoResumeEnabled', 'Auto-resume'], ['autoPipEnabled', 'Auto-PiP']]
+                .filter(function(a) { return bool(a[0] ?? ''); }).map(function(a) { return a[1]; });
+            feat('Tab-switch actions', tabSwitchOn.length > 0, 'playback', tabSwitchOn.join(' / '));
 
             // Pages
             var bookmarksWarn = bool('bookmarksEnabled') && (
@@ -187,10 +186,16 @@ export function createOverviewCards(m: OverviewCardsDeps) {
             feat('Requests Page', bool('downloadsPageEnabled'), 'pages',
                 reqWarn ? 'Enabled but neither Seerr nor *arr is configured' : 'Enabled',
                 reqWarn);
-            var calWarn = bool('calendarPageEnabled') && !anyArrConfigured();
+            // The calendar also reads Shoko when its URL and key are both set (JeCalendarController).
+            var calWarn = bool('calendarPageEnabled') && !anyArrConfigured() && !(val('shokoUrl') && val('shokoApiKey'));
             feat('Calendar Page', bool('calendarPageEnabled'), 'pages',
-                calWarn ? 'Enabled but no *arr instance is configured' : 'Enabled',
+                calWarn ? 'Enabled but no *arr instance or Shoko is configured' : 'Enabled',
                 calWarn);
+            var recWarn = seerrNeeded('recommendationsPageEnabled');
+            feat('Seerr Recommendations', bool('recommendationsPageEnabled'), 'pages', recWarn ? 'Enabled but Seerr is not configured' : 'Enabled', recWarn);
+            feat('Activity Feed', bool('activityFeedEnabled'), 'pages', 'Enabled');
+            feat('Leaving Soon page', bool('leavingSoonPageEnabled'), 'pages', 'Enabled');
+            feat('Catch Up', bool('catchUpEnabled'), 'pages', 'Enabled');
 
             // Custom splash screen / branding. Both the splash screen and the
             // branding image uploads (icons/favicon/logos) are handled by Jellyfin
@@ -204,6 +209,16 @@ export function createOverviewCards(m: OverviewCardsDeps) {
             feat('Elsewhere (streaming providers)', bool('elsewhereEnabled'), 'elsewhere',
                 elsewhereWarn ? 'Enabled but neither a TMDB API key nor Seerr is configured' : 'Enabled',
                 elsewhereWarn);
+            var reviewsWarn = tmdbNeeded('showReviews');
+            feat('TMDB Reviews', bool('showReviews'), 'elsewhere', reviewsWarn ? 'Enabled but TMDB API key missing' : 'Enabled', reviewsWarn);
+            feat('AniList Reviews', bool('showAnilistReviews'), 'elsewhere', 'Enabled');
+            feat('User Reviews', bool('showUserReviews'), 'elsewhere', 'Enabled');
+            var translateWarn = bool('reviewTranslationEnabled') && !val('reviewTranslationUrl');
+            feat('Review translation', bool('reviewTranslationEnabled'), 'elsewhere', translateWarn ? 'Enabled but server URL missing' : 'Enabled', translateWarn);
+            var releaseWarn = tmdbNeeded('showReleaseDate');
+            feat('Release dates', bool('showReleaseDate'), 'elsewhere', releaseWarn ? 'Enabled but TMDB API key missing' : 'Enabled', releaseWarn);
+            feat('Active Streams', bool('activeStreamsEnabled'), 'extras', 'Enabled');
+            feat('Letterboxd links', bool('letterboxdEnabled'), 'extras', 'Enabled');
 
             // Seerr
             var seerrWarn = bool('jellyseerrEnabled') && !seerrConfigured();
@@ -221,11 +236,17 @@ export function createOverviewCards(m: OverviewCardsDeps) {
             // need KefinTweaks to actually render the watchlist UI in Jellyfin;
             // the feature writes the data either way, but the user can't see
             // it without KefinTweaks.
-            var watchlistAny = bool('addRequestedMediaToWatchlist') || bool('syncJellyseerrWatchlist');
+            var watchlistAny = bool('addRequestedMediaToWatchlist') || bool('syncJellyseerrWatchlist') || bool('syncJellyfinWatchlistToSeerr');
             var watchlistWarn = watchlistAny && m.plugins.hasKefinTweaks !== true;
             feat('Watchlist sync', watchlistAny, 'seerr',
                 watchlistWarn ? 'Enabled but KefinTweaks plugin not installed (watchlist UI won\'t render)' : 'Enabled',
                 watchlistWarn);
+
+            [['autoSeasonRequestEnabled', 'Automatic season requests'], ['autoMovieRequestEnabled', 'Automatic movie requests'],
+             ['autoRequestRemovalEnabled', 'Remove watched requests'], ['triggerSeerrScanOnItemAdded', 'Seerr scan on new items']].forEach(function(f) {
+                var id = f[0] ?? '', warn = seerrNeeded(id);
+                feat(f[1] ?? '', bool(id), 'seerr', warn ? 'Enabled but Seerr is not configured' : 'Enabled', warn);
+            });
 
             // *arr
             var arrLinksWarn = bool('arrLinksEnabled') && !anyArrConfigured();

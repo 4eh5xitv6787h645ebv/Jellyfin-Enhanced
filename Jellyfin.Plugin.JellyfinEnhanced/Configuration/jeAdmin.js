@@ -418,6 +418,9 @@
     const html = source.innerHTML.replace(/\sid="[^"]*"/g, "");
     if (mirror.innerHTML !== html) mirror.innerHTML = html;
   }
+  function copyDisabled(source, mirror) {
+    if (source instanceof HTMLButtonElement && mirror instanceof HTMLButtonElement) mirror.disabled = source.disabled;
+  }
   function syncMirrors() {
     copies().forEach((mirror) => {
       const source = sourceOf(mirror);
@@ -426,6 +429,8 @@
         if (isFormField(source)) copyValue(source, mirror);
       } else if (mirror.tagName !== "BUTTON") {
         copyLeaf(source, mirror);
+      } else {
+        copyDisabled(source, mirror);
       }
     });
   }
@@ -451,6 +456,7 @@
         source.addEventListener("change", toMirror, { signal });
       } else if (mirror.tagName === "BUTTON") {
         mirror.addEventListener("click", () => source.click(), { signal });
+        lifecycle.track(new MutationObserver(() => copyDisabled(source, mirror))).observe(source, { attributes: true, attributeFilter: ["disabled"] });
       } else {
         lifecycle.track(new MutationObserver(() => copyLeaf(source, mirror))).observe(source, { attributes: true, childList: true, characterData: true, subtree: true });
       }
