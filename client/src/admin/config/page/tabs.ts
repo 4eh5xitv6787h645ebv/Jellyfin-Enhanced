@@ -208,6 +208,11 @@ export function createTabs(m: TabsDeps) {
 
     /** Runs this module's start-up work, in the page's original order. */
     function wire(): void {
+            // The tab the markup opens on is active before any tab is picked: name it too, so the rules keyed on the
+            // open tab (the Save dock on read-only tabs) hold from the first paint.
+            const opened = document.querySelector<HTMLElement>('#JellyfinEnhancedPage .jellyfin-tab-button.active')?.dataset.tab;
+            const openedPage = document.getElementById('JellyfinEnhancedPage');
+            if (opened && openedPage && !openedPage.dataset.jeTab) openedPage.dataset.jeTab = opened;
             // Drag-to-scroll on the tab bar so mouse users can pan the tab strip
             // the same way touch users do on mobile (the overflow-x auto strip
             // has no visible scrollbar). Threshold at 5 px before we consider it

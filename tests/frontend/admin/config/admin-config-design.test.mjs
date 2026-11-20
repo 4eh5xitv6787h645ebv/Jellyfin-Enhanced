@@ -184,3 +184,11 @@ test('every secret has a Show button and stays masked until it is pressed', asyn
 
 // (Whether the sidebar lists a card's groups depends on the stylesheet, so that check runs in a browser:
 // tests/browser/admin-config-rewrite.spec.cjs.)
+
+test('the tab the page opens on is named before any tab is picked, so Overview has no Save dock on first load', async t => {
+  const h = await page(t);
+  assert.equal(h.document.querySelector('.jellyfin-tab-button.active').dataset.tab, 'overview', 'no tab in the address opens Overview');
+  assert.equal(h.page().dataset.jeTab, 'overview', 'the open tab is named without a click');
+  const css = readFileSync(join(config, 'jeAdmin.css'), 'utf8');
+  assert.match(css, /\[data-je-tab="overview"\][^{]*\.je-save-dock:not\(\.je-dirty\)[^{]*\{[^}]*display:\s*none/s, 'and that name is what hides the Save dock there');
+});
