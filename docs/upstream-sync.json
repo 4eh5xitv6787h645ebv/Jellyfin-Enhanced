@@ -3372,6 +3372,29 @@
       ],
       "evidence": "artifacts/restructure-plan/step-logs/upstream-sync-evidence/p99-*",
       "notes": "Re-implemented in client/src/features/media-tags/editor/maintainerr-item-menu.ts (the removal date dialog, shipped in tags/tag-item-menu.js here): the footer row with Reset timer (count from today) and Cancel is gone for every mode and tool (Maintainerr postpone, Reclaimerr change date and schedule), so the dialog ends with the preview line and is closed by its close button (x), Escape or a click on the backdrop, as upstream. The footer, reset and ghost rules leave maintainerr-item-menu.css, and upstream's locale hunks applied as is (maintainerr_reset_timer removed from all 33 locales; maintainerr_cancel stays, the Leaving soon page uses it). Same as upstream, the dialog's internal run() keeps its no-days branch (postpone without days, toast maintainerr_reset), which nothing in the dialog reaches any more; the server's postpone-without-days answer is unchanged. Differences: none in behaviour. docs/enhanced/tags-status.md drops Reset timer from the item-menu table and the Reclaimerr item-menu line (upstream's copy of that page still names it); docs/images/tags/maintainerr-postpone.webp, the same file as upstream's and already older than the dialog's logo and close button, still shows the removed row and was not re-shot. Tests: a new test in tests/frontend/features/media-tags/features-maintainerr-menu.test.mjs (no Reset timer, Cancel or footer for Maintainerr and Reclaimerr, the preview ends the dialog, the close button and Escape close it with no request; failed first), and the two tests that pressed Reset and Cancel now close with the close button and expect no reset. Lab: the Postpone dialog of a listed movie on the pre-port build, upstream's build of fc9b58ea and the port."
+    },
+    {
+      "sha": "65161c5299a33cd211f4dd12583b86c35f382340",
+      "date": "2026-11-20T21:26:10Z",
+      "subject": "fix(i18n): add the 72 missing leavingsoon and discovery filter strings to every locale",
+      "class": "translation",
+      "features": [
+        "platform"
+      ],
+      "issues": [],
+      "release": null,
+      "size": {
+        "files": 32,
+        "insertions": 2336,
+        "deletions": 32
+      },
+      "paths": [
+        "Jellyfin.Plugin.JellyfinEnhanced/js/locales/ (32 files)"
+      ],
+      "status": "ported",
+      "rewriteCommits": [],
+      "evidence": "artifacts/restructure-plan/step-logs/upstream-sync-evidence/p100-*",
+      "notes": "Applied as is (git show 65161c52 | git apply --3way, clean): the 32 locale files under Jellyfin.Plugin.JellyfinEnhanced/js/locales other than en.json are byte for byte upstream's at 65161c52. Each gains 72 keys (2,304 values), translated rather than Weblate's English prefill (209 of the values equal the English text, mostly in en-GB and en-US): 15 leavingsoon_* strings of the Leaving soon page (the scope, removal-date and approval lines) and 57 discovery_filter* strings of the Seerr discovery filters, Undo and rules. No key changes or goes; every value keeps the {placeholders} of this tree's en.json. 71 of the keys are in this tree's en.json. One, leavingsoon_requests_unavailable_reason, is the administrator's reason line of upstream da3d9ee9 (row 97, deferred for a contract review): this tree's en.json and code gain it when that port lands, and until then the 32 translations are unused, as row 46's elsewhere_settings_seerr_region was. The server reads no leavingsoon_* or discovery_* key for poster captions (StatusRules reads leaving_*), so no resolver version moves. The assembly embeds the locales packed: +30,771 bytes, covered by the run's chore(budget) commit."
     }
   ]
 }
