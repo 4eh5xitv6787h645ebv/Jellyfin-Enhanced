@@ -1,5 +1,5 @@
 import type { AdminConfig } from '../domain/config';
-import type { AlertInput } from './dialogs';
+import type { AlertInput, DialogChoice, DialogOptions } from './dialogs';
 import type { MountLifecycle } from './lifecycle';
 import type { SectionMap, SectionSpec } from './schema';
 
@@ -30,6 +30,8 @@ export interface AdminEngine {
     mountShell(): void;
     alert(options?: string | AlertInput): Promise<void>;
     confirm(message: string, title?: string, danger?: boolean): Promise<boolean>;
+    /** The same dialog with a third button (otherLabel). */
+    choose(options: DialogOptions): Promise<DialogChoice>;
     dashboardShim(real?: DashboardSource): EngineDashboard;
     define(sections: SectionMap): void;
     mount(root?: ParentNode, options?: MountOptions): void;

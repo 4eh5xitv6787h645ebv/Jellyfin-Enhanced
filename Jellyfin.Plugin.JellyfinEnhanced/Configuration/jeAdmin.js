@@ -169,12 +169,15 @@
   function safeHtml(text) {
     return esc(text ?? "").replace(/&lt;(\/?(?:br|b|strong|em|i|code|ul|li|p))\s*\/?&gt;/gi, "<$1>").replace(/\r?\n/g, "<br>");
   }
-  function dialog({ title, message, confirmLabel, cancelLabel, danger }) {
+  function dialog(options) {
+    return choiceBox(options).then((choice) => choice === "confirm");
+  }
+  function choiceBox({ title, message, confirmLabel, cancelLabel, danger, otherLabel }) {
     return new Promise((resolve) => {
       const previous = document.activeElement;
       const wrap = document.createElement("div");
       wrap.className = "jea-dialog-backdrop";
-      wrap.innerHTML = `<div class="jea-dialog" role="dialog" aria-modal="true" aria-label="${esc(title || "Message")}"><h3 class="jea-dialog-title">${esc(title || "")}</h3><div class="jea-dialog-body">${safeHtml(message)}</div><div class="jea-dialog-actions">${cancelLabel ? `<button type="button" class="jea-btn" data-r="0">${esc(cancelLabel)}</button>` : ""}<button type="button" class="jea-btn ${danger ? "jea-btn-danger" : "jea-btn-primary"}" data-r="1">${esc(confirmLabel || "OK")}</button></div></div>`;
+      wrap.innerHTML = `<div class="jea-dialog" role="dialog" aria-modal="true" aria-label="${esc(title || "Message")}"><h3 class="jea-dialog-title">${esc(title || "")}</h3><div class="jea-dialog-body">${safeHtml(message)}</div><div class="jea-dialog-actions">${cancelLabel ? `<button type="button" class="jea-btn" data-r="0">${esc(cancelLabel)}</button>` : ""}` + (otherLabel ? `<button type="button" class="jea-btn" data-r="2">${esc(otherLabel)}</button>` : "") + `<button type="button" class="jea-btn ${danger ? "jea-btn-danger" : "jea-btn-primary"}" data-r="1">${esc(confirmLabel || "OK")}</button></div></div>`;
       const done = (value) => {
         document.removeEventListener("keydown", onKey, true);
         wrap.remove();
@@ -184,14 +187,14 @@
       const onKey = (event) => {
         if (event.key === "Escape") {
           event.stopPropagation();
-          done(false);
+          done("cancel");
         }
       };
       wrap.addEventListener("click", (event) => {
         const target = event.target instanceof Element ? event.target : null;
         const button = target ? target.closest("[data-r]") : null;
-        if (button) done(button.dataset.r === "1");
-        else if (target === wrap && !cancelLabel) done(true);
+        if (button) done(button.dataset.r === "1" ? "confirm" : button.dataset.r === "2" ? "other" : "cancel");
+        else if (target === wrap && !cancelLabel) done("confirm");
       });
       document.addEventListener("keydown", onKey, true);
       (document.getElementById("JellyfinEnhancedPage") || document.body).appendChild(wrap);
@@ -784,6 +787,7 @@
       },
       alert: alertBox,
       confirm: confirmBox,
+      choose: choiceBox,
       dashboardShim(real) {
         const source = real ?? {};
         return {

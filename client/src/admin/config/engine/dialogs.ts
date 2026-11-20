@@ -1,6 +1,8 @@
 import { esc } from './render';
 
-export interface DialogOptions { title?: string | undefined; message?: string | undefined; confirmLabel?: string; cancelLabel?: string; danger?: boolean }
+export interface DialogOptions { title?: string | undefined; message?: string | undefined; confirmLabel?: string; cancelLabel?: string; danger?: boolean; otherLabel?: string }
+/** Which button closed a dialog: confirm, the other choice (otherLabel), or cancel (also Escape). */
+export type DialogChoice = 'confirm' | 'other' | 'cancel';
 export interface AlertInput { title?: string; message?: string; text?: string; callback?: () => void }
 
 /** Messages may carry a few trusted formatting tags; everything else is escaped. */
@@ -10,7 +12,12 @@ export function safeHtml(text: string | null | undefined): string {
         .replace(/\r?\n/g, '<br>');
 }
 
-export function dialog({ title, message, confirmLabel, cancelLabel, danger }: DialogOptions): Promise<boolean> {
+export function dialog(options: DialogOptions): Promise<boolean> {
+    return choiceBox(options).then(choice => choice === 'confirm');
+}
+
+/** The dialog with up to three buttons: cancel, the other choice, and confirm. */
+export function choiceBox({ title, message, confirmLabel, cancelLabel, danger, otherLabel }: DialogOptions): Promise<DialogChoice> {
     return new Promise(resolve => {
         const previous = document.activeElement;
         const wrap = document.createElement('div');
@@ -19,21 +26,22 @@ export function dialog({ title, message, confirmLabel, cancelLabel, danger }: Di
             + `<h3 class="jea-dialog-title">${esc(title || '')}</h3>`
             + `<div class="jea-dialog-body">${safeHtml(message)}</div>`
             + `<div class="jea-dialog-actions">${cancelLabel ? `<button type="button" class="jea-btn" data-r="0">${esc(cancelLabel)}</button>` : ''}`
+            + (otherLabel ? `<button type="button" class="jea-btn" data-r="2">${esc(otherLabel)}</button>` : '')
             + `<button type="button" class="jea-btn ${danger ? 'jea-btn-danger' : 'jea-btn-primary'}" data-r="1">${esc(confirmLabel || 'OK')}</button></div></div>`;
-        const done = (value: boolean): void => {
+        const done = (value: DialogChoice): void => {
             document.removeEventListener('keydown', onKey, true);
             wrap.remove();
             if (previous instanceof HTMLElement) previous.focus();
             resolve(value);
         };
         const onKey = (event: KeyboardEvent): void => {
-            if (event.key === 'Escape') { event.stopPropagation(); done(false); }
+            if (event.key === 'Escape') { event.stopPropagation(); done('cancel'); }
         };
         wrap.addEventListener('click', event => {
             const target = event.target instanceof Element ? event.target : null;
             const button = target ? target.closest<HTMLElement>('[data-r]') : null;
-            if (button) done(button.dataset.r === '1');
-            else if (target === wrap && !cancelLabel) done(true);
+            if (button) done(button.dataset.r === '1' ? 'confirm' : button.dataset.r === '2' ? 'other' : 'cancel');
+            else if (target === wrap && !cancelLabel) done('confirm');
         });
         document.addEventListener('keydown', onKey, true);
         (document.getElementById('JellyfinEnhancedPage') || document.body).appendChild(wrap);

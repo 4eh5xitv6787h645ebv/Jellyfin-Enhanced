@@ -1,7 +1,7 @@
 import type { AdminConfig, JsonValue } from '../domain/config';
 import { setHash } from './address';
 import type { AdminEngine, DashboardSource, EngineDashboard, MountOptions } from './api';
-import { alertBox, confirmBox } from './dialogs';
+import { alertBox, choiceBox, confirmBox } from './dialogs';
 import { MountLifecycle } from './lifecycle';
 import { initMasonry } from './masonry';
 import { wireMirrors, syncMirrors } from './mirrors';
@@ -152,6 +152,7 @@ export function createEngine(): AdminEngine {
         },
         alert: alertBox,
         confirm: confirmBox,
+        choose: choiceBox,
         dashboardShim(real?: DashboardSource): EngineDashboard {
             const source = real ?? {};
             return {
