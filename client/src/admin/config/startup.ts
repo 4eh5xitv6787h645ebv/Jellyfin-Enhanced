@@ -2,6 +2,7 @@ import {
     apiClient, engine, publishAssetVersion, publishCdnRoute, publishStartup, pluginVersion, startup,
     type AdminStartup,
 } from '../../host/admin-config-host';
+import { setHash } from './engine/address';
 import type { AdminEngine } from './engine/api';
 
 /** How long the engine may take before the page reports it could not load. */
@@ -43,6 +44,42 @@ function loadEngine(url: string): Promise<AdminEngine> {
     });
 }
 
+const PAGE_ID = 'JellyfinEnhancedPage';
+/** Address parameter that makes a reopened view's address new to Jellyfin's view cache; removed again once the view starts. */
+const REOPEN_PARAM = 'jeView';
+
+/** A superseded view that Jellyfin shows again has nothing in it: ask the router for a new one in its place. */
+function reopen(): void {
+    const [path = '', query = ''] = window.location.hash.split('?');
+    if (!path.includes('configurationpage')) return;
+    const params = new URLSearchParams(query);
+    params.set(REOPEN_PARAM, String(Date.now()));
+    window.location.replace(path + '?' + params.toString().replace(/\+/g, '%20'));
+}
+
+/**
+ * jellyfin-web keeps earlier views in its cache, and opens the page again as a second view whenever the address differs
+ * from the cached one (it nearly always does: the page writes the open tab into it). Every script here finds its elements
+ * by id, so a second copy in the document would wire itself to the hidden first one and stay unstyled and dead. Only the
+ * newest view holds the page: earlier ones are stopped, emptied and lose the id.
+ */
+export function claimPage(): HTMLElement | null {
+    const views = Array.from(document.querySelectorAll<HTMLElement>('[id="' + PAGE_ID + '"]'));
+    const fresh = views.filter(view => !view.dataset.jeView).pop() ?? null;
+    if (!fresh) return null;
+    views.forEach(view => {
+        if (view === fresh) return;
+        view.dispatchEvent(new Event('jeadminretire'));
+        view.replaceChildren();
+        view.removeAttribute('id');
+        view.dataset.jeView = 'retired';
+        view.addEventListener('viewshow', reopen);
+    });
+    fresh.dataset.jeView = 'live';
+    setHash(REOPEN_PARAM, null);
+    return fresh;
+}
+
 function addOnce(id: string, create: () => HTMLElement): void {
     if (document.getElementById(id)) return;
     const element = create();
@@ -55,6 +92,7 @@ function addOnce(id: string, create: () => HTMLElement): void {
  * script waits for that load, so nothing here blocks the main thread while the view is being inserted.
  */
 export function beginStartup(): void {
+    const page = claimPage();
     const client = apiClient();
     const version = pluginVersion();
     publishAssetVersion(version);
@@ -88,7 +126,7 @@ export function beginStartup(): void {
         },
     };
     // The page may be shown before the engine arrives; the page script replays that once it starts.
-    document.querySelector('#JellyfinEnhancedPage')?.addEventListener('pageshow', () => { state.pageShown = true; }, { once: true });
+    page?.addEventListener('pageshow', () => { state.pageShown = true; }, { once: true });
     state.engine.catch(() => { /* The page script reports this; it may start after the rejection. */ });
     publishStartup(state);
 }

@@ -26,13 +26,11 @@ export function createTiming(m: TimingDeps) {
             var panelInput = asInput(document.getElementById('HelpPanelAutocloseDelay'));
             var toastInput = asInput(document.getElementById('ToastDuration'));
 
-            // Clamp to a sane window: at least 200 ms (anything shorter is a flash
-            // that the user can't see), at most 120 s (prevents stuck overlays
-            // from fat-fingered values). Fallback if the field is blank/invalid.
-            function readMs(input: HTMLInputElement | null, fallback: number): number {
+            // The same rule as the panel itself (JE.CONFIG.HELP_PANEL_AUTOCLOSE_DELAY in features/settings/state.ts):
+            // 0, blank or invalid is the 15 s default; any other value is used as typed.
+            function readPanelMs(input: HTMLInputElement | null): number {
                 var raw = parseInt(input ? input.value : '', 10);
-                if (!Number.isFinite(raw) || raw < 200) return fallback;
-                return Math.min(raw, 120000);
+                return Number.isFinite(raw) && raw > 0 ? raw : 15000;
             }
 
             function fmtSeconds(ms: number): string {
@@ -54,7 +52,8 @@ export function createTiming(m: TimingDeps) {
                     // the DOM node.
                     if (_activePanelPreviewCleanup) _activePanelPreviewCleanup();
 
-                    var ms = readMs(panelInput, 15000);
+                    var ms = readPanelMs(panelInput);
+                    var opener = panelBtn;
                     var overlay = document.createElement('div');
                     overlay.className = 'je-preview-panel-overlay';
 
@@ -117,6 +116,8 @@ export function createTiming(m: TimingDeps) {
                         if (overlay && overlay.parentNode) overlay.parentNode.removeChild(overlay);
                         document.removeEventListener('keydown', onKey);
                         if (_activePanelPreviewCleanup === cleanup) _activePanelPreviewCleanup = null;
+                        // Back to the button that opened it, whichever way it closed (focus was on Close now).
+                        try { opener?.focus(); } catch (e) { /* focus may fail in rare host conditions */ }
                     }
                     function onKey(e: KeyboardEvent): void {
                         if (e.key === 'Escape') {
@@ -145,9 +146,10 @@ export function createTiming(m: TimingDeps) {
                         toastTimers.delete(el);
                         el.remove();
                     });
-                    // Same rule as the real toast: 0 means toasts are off, any other value is used as typed.
+                    // Same rule as the real toast (JE.CONFIG.TOAST_DURATION in features/settings/state.ts): 0 means
+                    // toasts are off, any other value is used as typed, and a blank or invalid one is the 1500 ms default.
                     var rawToastMs = parseInt(toastInput ? toastInput.value : '', 10);
-                    var toastMs = Number.isFinite(rawToastMs) && rawToastMs >= 0 ? Math.min(rawToastMs, 120000) : 3000;
+                    var toastMs = Number.isFinite(rawToastMs) && rawToastMs >= 0 ? rawToastMs : 1500;
                     var toastOff = toastMs === 0;
                     var ms = toastOff ? 3000 : toastMs;
                     var toast = document.createElement('div');

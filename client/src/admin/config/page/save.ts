@@ -290,6 +290,9 @@ export function createSave(m: SaveDeps) {
         async function writeFormConfig(config: AdminConfig) : Promise<unknown> {
             const result = await ApiClient.updatePluginConfiguration(pluginId, config);
             m.load.formBase = formValues.get(config) ?? m.load.formBase;
+            // Lines that are not http(s) were dropped from the write: show what was stored, not what was typed.
+            const seerrUrls = asControl(document.querySelector('#jellyseerrUrls'));
+            if (seerrUrls) seerrUrls.value = text(config.JellyseerrUrls);
             return result;
         }
 
@@ -382,6 +385,19 @@ export function createSave(m: SaveDeps) {
             }
         }
 
+        /**
+         * "Select specific users" with nobody ticked is refused: the stored "[]" reads as every non-admin user
+         * (MaintenanceModeService.ParseAffectedUsersSetting), so saving it would widen the selection. Says why;
+         * the form stays as it is.
+         */
+        function refuseEmptyMaintenanceSelection(): boolean {
+            const mode = asControl(document.querySelector('input[name="maintenanceModeUsers"]:checked'));
+            if (!mode || mode.value !== 'select' || !m.maintenance.usersLoaded) return false;
+            if (document.querySelector('.je-mm-user-cb:checked')) return false;
+            Dashboard.alert({ title: 'No users selected', message: 'Maintenance mode is set to "Select specific users", but no user is ticked. Tick at least one user, or choose "All non-admin users". Nothing was saved.' });
+            return true;
+        }
+
         // Re-entrancy guard. `Dashboard.showLoadingMsg()` provides only a visual
         // overlay, not an input block, so two rapid Enter presses or a second
         // click on the save dock can still fire saveConfig in parallel — the
@@ -397,29 +413,33 @@ export function createSave(m: SaveDeps) {
          * @param {Event} e
          * @returns {Promise<boolean>}
          */
-        function saveConfig(e: Event): Promise<void> {
+        function saveConfig(e: Event): Promise<boolean> {
             e.preventDefault();
             return m.mediaTagsTab.jeHoldMediaTags((scope) => saveConfigNow(e, scope));
         }
 
-        async function saveConfigNow(e: Event, scope: WriteScope) : Promise<void> {
+        /** Resolves true once the configuration was written; false when nothing was saved (refused, skipped or failed). */
+        async function saveConfigNow(e: Event, scope: WriteScope) : Promise<boolean> {
             e.preventDefault();
-            if (_jeSaveInFlight) return;
+            if (_jeSaveInFlight) return false;
             if (!m.load.configLoaded) {
                 Dashboard.alert({ title: 'Settings not loaded', message: 'The saved settings could not be read, so nothing was saved. Retry from the banner at the top of this page, or reload it.' });
-                return;
+                return false;
             }
+            if (refuseEmptyMaintenanceSelection()) return false;
             _jeSaveInFlight = true;
             m.gatedHelp.enforceTabExclusivity();
             Dashboard.showLoadingMsg();
             var saveBtns = document.querySelectorAll<HTMLButtonElement>('.je-save-dock-btn');
             saveBtns.forEach(function(b) { b.disabled = true; });
+            let saved = false;
 
             try {
                 const config = await buildConfigFromForm(scope);
                 const wasOn = maintenanceWasOn;
                 scope.throwIfStale();
                 const result = await writeFormConfig(config);
+                saved = true;
                 scope.throwIfStale();
                 // After JE config is persisted, sync any managed Custom Tabs entries.
                 // We surface non-OK results to the admin via Dashboard.alert so a
@@ -428,11 +448,15 @@ export function createSave(m: SaveDeps) {
                 scope.throwIfStale();
 
                 // Apply maintenance mode: enable/disable users to match the toggle
+                let maintenanceFailed = false;
                 try {
                     if (config.MaintenanceModeEnabled) {
-                        const affectedIds = config.MaintenanceModeAffectedUsers === 'all'
-                            ? []
+                        // null is every non-admin user; the server refuses an empty list. A stored "[]" (only left
+                        // when the user list has not loaded) keeps the meaning the server gives it: every non-admin.
+                        const selected: unknown = config.MaintenanceModeAffectedUsers === 'all'
+                            ? null
                             : JSON.parse(text(config.MaintenanceModeAffectedUsers) || '[]');
+                        const affectedIds = Array.isArray(selected) && selected.length > 0 ? selected : null;
                         await ApiClient.ajax({
                             type: 'POST',
                             url: ApiClient.getUrl('/JellyfinEnhanced/MaintenanceMode/Enable'),
@@ -482,12 +506,19 @@ export function createSave(m: SaveDeps) {
                 } catch (mmErr) {
                     if (isAbortError(mmErr)) throw mmErr;
                     console.warn('[JE] Maintenance mode apply failed:', mmErr);
+                    maintenanceFailed = true;
                 }
 
                 scope.throwIfStale();
                 Dashboard.processPluginConfigurationUpdateResult(result);
                 // The form now is the just-saved state, so re-snapshot immediately.
                 m.dirty.jeMarkSaved();
+                if (maintenanceFailed) {
+                    Dashboard.alert({
+                        title: 'Maintenance mode not changed',
+                        message: 'Your settings were saved, but maintenance mode could not be turned ' + (config.MaintenanceModeEnabled ? 'on' : 'off') + ' on the server. Check the server log, then save again to retry.'
+                    });
+                }
                 if (syncResult && syncResult.ok === false) {
                     try {
                         Dashboard.alert({
@@ -511,6 +542,7 @@ export function createSave(m: SaveDeps) {
                 _jeSaveInFlight = false;
                 saveBtns.forEach(function(b) { b.disabled = false; });
             }
+            return saved;
         }
 
         /** The form's submit and the save dock. A caller that continues after saving uses saveConfig. */
@@ -525,6 +557,7 @@ export function createSave(m: SaveDeps) {
         }
 
         async function resetAllUserSettingsNow(scope: WriteScope) : Promise<void> {
+            if (refuseEmptyMaintenanceSelection()) return;
             if (await JEAdmin.confirm("Are you sure?\n\nThis saves the current configuration, then copies these Display/Playback/etc. values into every user's Enhanced Panel settings, replacing anything they've customized for themselves. This cannot be undone per-user; each user would have to re-apply their own preferences afterward.")) {
                 scope.throwIfStale();
                 Dashboard.showLoadingMsg();
@@ -575,7 +608,7 @@ export function createSave(m: SaveDeps) {
             const detail = eventDetail(e);
             const props = stringList(detail.props);
             const labels = stringList(detail.labels);
-            if (!props.length) return;
+            if (!props.length || refuseEmptyMaintenanceSelection()) return;
             const ok = await JEAdmin.confirm('Apply these settings to every user?\n\n<ul>' + labels.map((l) => '<li>' + l.replace(/</g, '&lt;') + '</li>').join('') + '</ul>\nThis saves your configuration first. Only these settings change; every other personal setting stays as it is.', 'Apply to all users');
             scope.throwIfStale();
             if (!ok) return;

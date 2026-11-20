@@ -3,6 +3,7 @@ import { asObject, num, shown, type JsonObject } from '../domain/config';
 import type { ServiceCard, ServiceUsage } from './types';
 import { requestFailure, requestFailureWithBody } from '../domain/http';
 import { asControl, asHtml, asInput } from './dom';
+import { httpUrls, lines } from '../domain/config-values';
 import { MIRROR } from '../engine/schema';
 
 /** Dependencies this module calls; members are resolved lazily, after every module exists. */
@@ -162,15 +163,20 @@ export function createServiceStatus(m: ServiceStatusDeps) {
             var cards: ServiceCard[] = [];
             function pushCard(opts: ServiceCard): void { cards.push(opts); }
 
-            // TMDB — no dedicated test endpoint; presence-based state only.
+            // TMDB — no dedicated test endpoint; presence-based state only. Without a key, a switch that does
+            // nothing without one being on is a warning, as for MDBList. (Per-season providers is left out: it is
+            // on by default and refines Elsewhere, which runs on Seerr without a key.)
             var tmdbKey = readFieldValue('#TMDB_API_KEY');
+            var tmdbNeeded = !tmdbKey && ['showReviews', 'showReleaseDate', 'autoMovieRequestEnabled'].some(function(id) {
+                return !!asInput(document.getElementById(id))?.checked;
+            });
             pushCard({
                 id: 'tmdb',
                 name: 'TMDB',
                 tab: 'services',
                 scrollTo: '#TMDB_API_KEY',
-                state: tmdbKey ? 'ok' : 'off',
-                detail: tmdbKey ? 'API key set' : 'No API key',
+                state: tmdbKey ? 'ok' : tmdbNeeded ? 'warn' : 'off',
+                detail: tmdbKey ? 'API key set' : tmdbNeeded ? 'Enabled but API key missing' : 'No API key',
                 icon: 'vpn_key'
             });
 
@@ -178,8 +184,10 @@ export function createServiceStatus(m: ServiceStatusDeps) {
             var seerrEnabled = asInput(document.getElementById('jellyseerrEnabled'));
             var seerrUrls = readFieldValue('#jellyseerrUrls');
             var seerrKey = readFieldValue('#JellyseerrApiKey');
+            // The page saves only http(s) lines (save.ts), so only those make Seerr usable.
+            var seerrUrlValid = httpUrls(lines(seerrUrls)).valid.length > 0;
             if (seerrEnabled && seerrEnabled.checked) {
-                if (seerrUrls && seerrKey) {
+                if (seerrUrlValid && seerrKey) {
                     var r = m.connections.checklistRowState('seerr', 'Configured, not yet verified');
                     var urlCount = seerrUrls.split(/\r?\n/).filter(function(u) { return u.trim(); }).length;
                     pushCard({
@@ -191,7 +199,8 @@ export function createServiceStatus(m: ServiceStatusDeps) {
                     pushCard({
                         id: 'seerr', name: 'Seerr', tab: 'seerr', icon: 'bolt', state: 'warn',
                         detail: !seerrUrls && !seerrKey ? 'Enabled but URL and API key missing'
-                            : !seerrUrls ? 'URL missing' : 'API key missing'
+                            : !seerrUrls ? 'URL missing'
+                            : !seerrUrlValid ? 'URL must start with http:// or https://' : 'API key missing'
                     });
                 }
             } else if (seerrUrls || seerrKey) {
@@ -216,7 +225,7 @@ export function createServiceStatus(m: ServiceStatusDeps) {
                     if (!urlVal && !keyVal) return;
                     var nameVal = (nameEl && nameEl.value ? nameEl.value.trim() : '')
                                   || (type === 'sonarr' ? 'Sonarr' : 'Radarr');
-                    var cacheKey = type + ':' + m.connections._jeNormalizeArrUrl(urlVal);
+                    var cacheKey = m.connections.arrTestKey(type, urlVal, keyVal);
                     var icon = type === 'sonarr' ? 'tv' : 'movie';
 
                     // Disabled instances (Enabled checkbox unchecked) render as
@@ -285,9 +294,10 @@ export function createServiceStatus(m: ServiceStatusDeps) {
                     maintainerrCard.state = 'pending';
                     maintainerrCard.detail = 'Checking...';
                     void loadMaintainerr(false);
-                } else if (ms.failed === true || ms.Maintainerr !== true) {
+                } else if (ms.failed === true || ms.Maintainerr !== true || (typeof ms.Provider === 'string' && ms.Provider !== (reclaimerrOn ? 'reclaimerr' : 'maintainerr'))) {
+                    // The status is the saved tool's; a tool switched on here but not saved yet has none.
                     maintainerrCard.state = 'warn';
-                    maintainerrCard.detail = ms.failed === true ? 'Status unavailable' : 'Address not saved yet';
+                    maintainerrCard.detail = ms.failed === true ? 'Status unavailable' : ms.Maintainerr !== true ? 'Address not saved yet' : 'Not saved yet';
                 } else if (ms.LastError) {
                     maintainerrCard.state = 'error';
                     maintainerrCard.detail = 'Last read failed: ' + shown(ms.LastError);

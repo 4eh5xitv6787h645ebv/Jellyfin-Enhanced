@@ -26,6 +26,11 @@ function copyLeaf(source: HTMLElement, mirror: HTMLElement): void {
     if (mirror.innerHTML !== html) mirror.innerHTML = html;
 }
 
+/** A copy of an action button is as available as its original (a click on a disabled original does nothing). */
+function copyDisabled(source: HTMLElement, mirror: HTMLElement): void {
+    if (source instanceof HTMLButtonElement && mirror instanceof HTMLButtonElement) mirror.disabled = source.disabled;
+}
+
 /** Originals can change without an event (the page loads values straight in), so copy them across now and then. */
 export function syncMirrors(): void {
     copies().forEach(mirror => {
@@ -35,6 +40,8 @@ export function syncMirrors(): void {
             if (isFormField(source)) copyValue(source, mirror);
         } else if (mirror.tagName !== 'BUTTON') {
             copyLeaf(source, mirror);
+        } else {
+            copyDisabled(source, mirror);
         }
     });
 }
@@ -61,6 +68,7 @@ export function wireMirrors(lifecycle: MountLifecycle): void {
             source.addEventListener('change', toMirror, { signal });
         } else if (mirror.tagName === 'BUTTON') {
             mirror.addEventListener('click', () => source.click(), { signal });
+            lifecycle.track(new MutationObserver(() => copyDisabled(source, mirror))).observe(source, { attributes: true, attributeFilter: ['disabled'] });
         } else {
             lifecycle.track(new MutationObserver(() => copyLeaf(source, mirror))).observe(source, { attributes: true, childList: true, characterData: true, subtree: true });
         }

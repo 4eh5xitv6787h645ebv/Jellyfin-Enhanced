@@ -61,7 +61,7 @@ export function createArrTests(m: ArrTestsDeps) {
             indicator.classList.add('status-check');
             indicator.style.color = 'var(--primary-accent-color, #00a4dc)';
 
-            var arrCacheKey = type + ':' + m.connections._jeNormalizeArrUrl(urlVal);
+            var arrCacheKey = m.connections.arrTestKey(type || '', urlVal, apiKeyVal);
             try {
                 var endpoint = type === 'sonarr' ? 'sonarr' : 'radarr';
                 var validationUrl = ApiClient.getUrl('/JellyfinEnhanced/arr/validate/' + endpoint, { url: urlVal });

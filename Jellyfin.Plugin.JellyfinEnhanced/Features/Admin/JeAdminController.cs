@@ -311,6 +311,9 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Features.Admin
         public async Task<IActionResult> EnableMaintenanceMode([FromBody] MaintenanceModeRequest request)
         {
             if (!IsAdminUser()) return Forbid();
+            // No selection (null) is every non-admin user; an explicit empty selection is nobody, never widened to everyone.
+            if (request.AffectedUserIds is { Count: 0 })
+                return BadRequest(new { error = "No users selected. Select at least one user, or send no selection for every non-admin user." });
             await _maintenanceModeService.EnableAsync(
                 request.Message ?? string.Empty,
                 request.DurationMinutes,
@@ -391,7 +394,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Features.Admin
         public int DurationMinutes { get; set; }
         /// <summary>"none" | "disable_accounts" | "disable_remote" | "both"</summary>
         public string Action { get; set; } = "disable_accounts";
-        /// <summary>Specific user IDs to affect. Null or empty = all non-admin users.</summary>
+        /// <summary>Specific user IDs to affect. Null = all non-admin users; an empty list is refused.</summary>
         public List<string>? AffectedUserIds { get; set; }
     }
 }

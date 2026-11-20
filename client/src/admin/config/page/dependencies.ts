@@ -339,42 +339,42 @@ export function createDependencies(m: DependenciesDeps) {
         }
 
         var PARENT_DEPS: readonly ParentDep[] = [
-            { parent: 'elsewhereEnabled', label: 'Enable Elsewhere', children: ['DEFAULT_PROVIDERS', 'IGNORE_PROVIDERS', 'ElsewhereUseSeerrRegion', 'ElsewhereSeasonProviders', 'ElsewhereCustomBrandingText', 'ElsewhereCustomBrandingImageUrl', 'showReviews'] },
-            { parent: 'doesTheDogDieEnabled', label: 'Show Content Warnings', children: ['doesTheDogDieApiKey'] },
-            { parent: 'mdblistRatingsEnabled', label: 'Enable MDBList Ratings', children: ['mdblistApiKey', 'mdblistRatingsShowOnItemDetails', 'mdblistRatingsFetchEnabled', 'mdblistFetchReserve', 'mdblistRatingsAutoSyncEnabled', 'mdblistCommunityRatingSource', 'mdblistCommunityRatingFallbackSource', 'mdblistCriticRatingSource', 'mdblistCriticRatingFallbackSource', 'mdblistRatingsOverwriteExisting', 'mdblistRatingsShowPercentSymbol'] },
-            { parent: 'showReviews', anyOf: ['showReviews', 'showUserReviews', 'showAnilistReviews'], label: 'Show TMDB Reviews" / "Enable User Written Reviews" / "Show AniList Reviews', children: ['reviewsExpandedByDefault'] },
-            { parent: 'reviewTranslationEnabled', label: 'Enable Review Translation', children: ['reviewTranslationUrl', 'reviewTranslationApiKey'] },
-            { parent: 'showUserReviews', label: 'Enable User Reviews', children: ['hideReviewsFromHiddenUsers', 'hideReviewsFromDisabledUsers', 'mirrorReviewRatingsToJellyfin', 'showUserRatingDash', 'showUserRatingOnPosters'] },
-            { parent: 'randomButtonEnabled', label: 'Enable Random Button', children: ['randomUnwatchedOnly', 'randomIncludeMovies', 'randomIncludeShows', 'randomScopeCurrentContainer'] },
-            { parent: 'showWatchProgress', label: 'Show watch progress', children: ['watchProgressDefaultMode', 'watchProgressTimeFormat'] },
-            { parent: 'useIcons', label: 'Use Icons', children: ['iconStyle'] },
-            { parent: 'letterboxdEnabled', label: 'Enable Letterboxd', children: ['showLetterboxdLinkAsText'] },
-            { parent: 'enableCustomSplashScreen', label: 'Enable Custom Splash Screen', children: ['splashScreenImageUrl'] },
-            { parent: 'jellyseerrShowSearchResults', label: 'Show Seerr Results in Search', children: ['showCollectionsInSearch'] },
-            { parent: 'jellyseerrShowReportButton', label: 'Show Report Issue button', children: ['jellyseerrShowIssueIndicator'] },
-            { parent: 'jellyseerrShowDetailPageLink', label: 'Show Seerr link on item detail pages', children: ['jellyseerrShowDetailPageLinkAsText'] },
-            { parent: 'downloadsPageEnabled', label: 'Enable Requests Page', children: ['showDownloadsInRequests', 'downloadsPageShowIssues', 'downloadsShowHistory', 'downloadsUsePluginPages', 'downloadsUseNativeTab', 'downloadsUseCustomTabs', 'downloadsPagePollingEnabled'] },
-            { parent: 'showDownloadsInRequests', label: 'Show Downloads in Requests Page', children: ['downloadsFilterByUserRequests'] },
-            { parent: 'downloadsShowHistory', label: 'Show Download History Section', children: ['downloadsHistoryAdminOnly'] },
-            { parent: 'downloadsPagePollingEnabled', label: 'Enable Auto-Refresh', children: ['downloadsPollIntervalSeconds'] },
-            { parent: 'arrLinksEnabled', label: 'Enable *arr Links', children: ['showArrLinksAsText', 'arrLinksShowStatusSingle'] },
-            { parent: 'arrTagsSyncEnabled', label: 'Enable *arr Tags Sync', children: ['arrTagsPrefix', 'arrTagsClearOldTags', 'arrTagsShowAsLinks', 'arrTagsSyncFilter'] },
-            { parent: 'arrTagsShowAsLinks', label: 'Show synced tags as links', children: ['arrTagsLinksFilter', 'arrTagsLinksHideFilter'] },
-            { parent: 'audioLanguageTagSyncEnabled', label: 'Enable Audio Language Tags Sync', children: ['audioLanguageTagPrefix', 'audioLanguageTagShowAsLinks'] },
-            { parent: 'calendarPageEnabled', label: 'Enable Calendar Page', children: ['calendarUsePluginPages', 'calendarUseNativeTab', 'calendarUseCustomTabs', 'calendarFirstDayOfWeek', 'calendarTimeFormat', 'calendarHighlightFavorites', 'calendarHighlightWatchedSeries', 'calendarFilterByLibraryAccess', 'calendarShowOnlyRequested', 'calendarForceOnlyRequested'] },
-            { parent: 'recommendationsPageEnabled', label: 'Enable Recommendations Page', children: ['recommendationsUseNativeTab', 'recommendationsUsePluginPages', 'recommendationsUseCustomTabs', 'recommendationsAutoCreateCustomTab'] },
-            { parent: 'activityFeedEnabled', label: 'Enable Activity Feed', children: ['activityFeedShowWatched', 'activityFeedShowFavorited', 'activityFeedShowReviewed', 'activityFeedOwnOnlyForNonAdmins', 'activityFeedShowActiveStreams', 'activityFeedUseNativeTab', 'activityFeedUsePluginPages', 'activityFeedUseCustomTabs', 'activityFeedAutoCreateCustomTab'] },
-            { parent: 'leavingSoonPageEnabled', label: 'Enable the Leaving Soon page', children: ['leavingSoonPageUseNativeTab', 'leavingSoonPageUsePluginPages', 'leavingSoonPageUseCustomTabs', 'leavingSoonPageAutoCreateCustomTab'] },
-            { parent: 'catchUpEnabled', label: 'Enable Catch Up', children: ['catchUpLogEnabled', 'catchUpUseNativeTab', 'catchUpUsePluginPages', 'catchUpUseCustomTabs', 'catchUpAutoCreateCustomTab'] },
-            { parent: 'autoMovieRequestEnabled', label: 'Enable Automatic Movie Requests', children: ['autoMovieRequestTriggerOnStart', 'autoMovieRequestTriggerOnMinutesWatched', 'autoMovieRequestMinutesWatched', 'autoMovieRequestCheckReleaseDate', 'autoMovieRequestQualityMode', 'autoMovieRequestFallbackOn4k'] },
-            { parent: 'autoSeasonRequestEnabled', label: 'Enable Automatic Season Requests', children: ['autoSeasonRequestRequireAllWatched', 'autoSeasonRequestThresholdValue'] },
-            { parent: 'preventWatchlistReAddition', label: 'Don\'t re-add items a user removed from Jellyfin', children: ['watchlistMemoryRetentionDays'] },
-            { parent: 'triggerSeerrScanOnItemAdded', label: 'Trigger Seerr scan on item added', children: ['seerrScanDebounceSeconds'] },
-            { parent: 'bookmarksEnabled', label: 'Enable Bookmarks', children: ['bookmarksUsePluginPages', 'bookmarksUseNativeTab', 'bookmarksUseCustomTabs'] },
-            { parent: 'hiddenContentEnabled', label: 'Enable Hidden Content', children: ['hiddenContentUsePluginPages', 'hiddenContentUseNativeTab', 'hiddenContentUseCustomTabs'] },
-            { parent: 'spoilerBlurEnabled', label: 'Enable Spoiler Guard', children: ['spoilerBlurIntensity', 'spoilerBlurArtwork', 'spoilerStripSeriesOverview', 'spoilerStripOverview', 'spoilerOverviewPlaceholder', 'spoilerStripTags', 'spoilerStripChapters', 'spoilerStripTaglines', 'spoilerStripRatings', 'spoilerStripPremiereDate', 'spoilerReplaceTitle', 'spoilerStripCast', 'spoilerAutoEnableOnFirstPlay', 'spoilerAutoEnableOnSeerrRequest', 'spoilerAutoEnableOnLibraryAdd', 'spoilerAutoEnableSeries', 'spoilerAutoEnableMovies', 'spoilerBlurStrictRefresh', 'spoilerKeepMoviePosters', 'spoilerBlurTrickplay', 'spoilerAdvancedMode'] },
-            { parent: 'spoilerStripCast',     label: 'Hide cast on unwatched episodes', children: ['spoilerStripCastMode'] },
-            { parent: 'spoilerAdvancedMode',  label: 'Enable advanced per-category reveals', children: ['spoilerNextEpisodeStripTitle', 'spoilerNextEpisodeStripOverview', 'spoilerNextEpisodeStripRatings', 'spoilerNextEpisodeStripImage', 'spoilerCurrentSeasonStripTitle', 'spoilerCurrentSeasonStripOverview', 'spoilerCurrentSeasonStripRatings'] }
+            { parent: 'elsewhereEnabled', children: ['DEFAULT_PROVIDERS', 'IGNORE_PROVIDERS', 'ElsewhereUseSeerrRegion', 'ElsewhereSeasonProviders', 'ElsewhereCustomBrandingText', 'ElsewhereCustomBrandingImageUrl'] },
+            { parent: 'doesTheDogDieEnabled', children: ['doesTheDogDieApiKey'] },
+            { parent: 'mdblistRatingsEnabled', children: ['mdblistApiKey', 'mdblistRatingsShowOnItemDetails', 'mdblistRatingsFetchEnabled', 'mdblistFetchReserve', 'mdblistRatingsAutoSyncEnabled', 'mdblistCommunityRatingSource', 'mdblistCommunityRatingFallbackSource', 'mdblistCriticRatingSource', 'mdblistCriticRatingFallbackSource', 'mdblistRatingsOverwriteExisting', 'mdblistRatingsShowPercentSymbol'] },
+            { parent: 'showReviews', anyOf: ['showReviews', 'showUserReviews', 'showAnilistReviews'], children: ['reviewsExpandedByDefault'] },
+            { parent: 'reviewTranslationEnabled', children: ['reviewTranslationUrl', 'reviewTranslationApiKey'] },
+            { parent: 'showUserReviews', children: ['hideReviewsFromHiddenUsers', 'hideReviewsFromDisabledUsers', 'mirrorReviewRatingsToJellyfin', 'showUserRatingDash', 'showUserRatingOnPosters'] },
+            { parent: 'randomButtonEnabled', children: ['randomUnwatchedOnly', 'randomIncludeMovies', 'randomIncludeShows', 'randomScopeCurrentContainer'] },
+            { parent: 'showWatchProgress', children: ['watchProgressDefaultMode', 'watchProgressTimeFormat'] },
+            { parent: 'useIcons', children: ['iconStyle'] },
+            { parent: 'letterboxdEnabled', children: ['showLetterboxdLinkAsText'] },
+            { parent: 'enableCustomSplashScreen', children: ['splashScreenImageUrl'] },
+            { parent: 'jellyseerrShowSearchResults', children: ['showCollectionsInSearch'] },
+            { parent: 'jellyseerrShowReportButton', children: ['jellyseerrShowIssueIndicator'] },
+            { parent: 'jellyseerrShowDetailPageLink', children: ['jellyseerrShowDetailPageLinkAsText'] },
+            { parent: 'downloadsPageEnabled', children: ['showDownloadsInRequests', 'downloadsPageShowIssues', 'downloadsShowHistory', 'downloadsUsePluginPages', 'downloadsUseNativeTab', 'downloadsUseCustomTabs', 'downloadsPagePollingEnabled'] },
+            { parent: 'showDownloadsInRequests', children: ['downloadsFilterByUserRequests'] },
+            { parent: 'downloadsShowHistory', children: ['downloadsHistoryAdminOnly'] },
+            { parent: 'downloadsPagePollingEnabled', children: ['downloadsPollIntervalSeconds'] },
+            { parent: 'arrLinksEnabled', children: ['showArrLinksAsText', 'arrLinksShowStatusSingle'] },
+            { parent: 'arrTagsSyncEnabled', children: ['arrTagsPrefix', 'arrTagsClearOldTags', 'arrTagsShowAsLinks', 'arrTagsSyncFilter'] },
+            { parent: 'arrTagsShowAsLinks', children: ['arrTagsLinksFilter', 'arrTagsLinksHideFilter'] },
+            { parent: 'audioLanguageTagSyncEnabled', children: ['audioLanguageTagPrefix', 'audioLanguageTagShowAsLinks'] },
+            { parent: 'calendarPageEnabled', children: ['calendarUsePluginPages', 'calendarUseNativeTab', 'calendarUseCustomTabs', 'calendarFirstDayOfWeek', 'calendarTimeFormat', 'calendarHighlightFavorites', 'calendarHighlightWatchedSeries', 'calendarFilterByLibraryAccess', 'calendarShowOnlyRequested', 'calendarForceOnlyRequested'] },
+            { parent: 'recommendationsPageEnabled', children: ['recommendationsUseNativeTab', 'recommendationsUsePluginPages', 'recommendationsUseCustomTabs', 'recommendationsAutoCreateCustomTab'] },
+            { parent: 'activityFeedEnabled', children: ['activityFeedShowWatched', 'activityFeedShowFavorited', 'activityFeedShowReviewed', 'activityFeedOwnOnlyForNonAdmins', 'activityFeedShowActiveStreams', 'activityFeedUseNativeTab', 'activityFeedUsePluginPages', 'activityFeedUseCustomTabs', 'activityFeedAutoCreateCustomTab'] },
+            { parent: 'leavingSoonPageEnabled', children: ['leavingSoonPageUseNativeTab', 'leavingSoonPageUsePluginPages', 'leavingSoonPageUseCustomTabs', 'leavingSoonPageAutoCreateCustomTab'] },
+            { parent: 'catchUpEnabled', children: ['catchUpLogEnabled', 'catchUpUseNativeTab', 'catchUpUsePluginPages', 'catchUpUseCustomTabs', 'catchUpAutoCreateCustomTab'] },
+            { parent: 'autoMovieRequestEnabled', children: ['autoMovieRequestTriggerOnStart', 'autoMovieRequestTriggerOnMinutesWatched', 'autoMovieRequestMinutesWatched', 'autoMovieRequestCheckReleaseDate', 'autoMovieRequestQualityMode', 'autoMovieRequestFallbackOn4k'] },
+            { parent: 'autoSeasonRequestEnabled', children: ['autoSeasonRequestRequireAllWatched', 'autoSeasonRequestThresholdValue'] },
+            { parent: 'preventWatchlistReAddition', children: ['watchlistMemoryRetentionDays'] },
+            { parent: 'triggerSeerrScanOnItemAdded', children: ['seerrScanDebounceSeconds'] },
+            { parent: 'bookmarksEnabled', children: ['bookmarksUsePluginPages', 'bookmarksUseNativeTab', 'bookmarksUseCustomTabs'] },
+            { parent: 'hiddenContentEnabled', children: ['hiddenContentUsePluginPages', 'hiddenContentUseNativeTab', 'hiddenContentUseCustomTabs'] },
+            { parent: 'spoilerBlurEnabled', children: ['spoilerBlurIntensity', 'spoilerBlurArtwork', 'spoilerStripSeriesOverview', 'spoilerStripOverview', 'spoilerOverviewPlaceholder', 'spoilerStripTags', 'spoilerStripChapters', 'spoilerStripTaglines', 'spoilerStripRatings', 'spoilerStripPremiereDate', 'spoilerReplaceTitle', 'spoilerStripCast', 'spoilerAutoEnableOnFirstPlay', 'spoilerAutoEnableOnSeerrRequest', 'spoilerAutoEnableOnLibraryAdd', 'spoilerAutoEnableSeries', 'spoilerAutoEnableMovies', 'spoilerBlurStrictRefresh', 'spoilerKeepMoviePosters', 'spoilerBlurTrickplay', 'spoilerAdvancedMode'] },
+            { parent: 'spoilerStripCast', children: ['spoilerStripCastMode'] },
+            { parent: 'spoilerAdvancedMode', children: ['spoilerNextEpisodeStripTitle', 'spoilerNextEpisodeStripOverview', 'spoilerNextEpisodeStripRatings', 'spoilerNextEpisodeStripImage', 'spoilerCurrentSeasonStripTitle', 'spoilerCurrentSeasonStripOverview', 'spoilerCurrentSeasonStripRatings'] }
         ];
 
         /**
@@ -410,6 +410,21 @@ export function createDependencies(m: DependenciesDeps) {
             }
         }
 
+        /** A switch's label as the page shows it: its own text, without the badges and hints added into it. */
+        function switchLabel(id: string): string {
+            var label = document.getElementById(id)?.closest('label');
+            // Rendered rows keep the text in .jea-label-text (the markers sit beside it); hand-written ones in their first span.
+            var span = asHtml(label?.querySelector('.jea-label-text') ?? label?.querySelector('span') ?? null);
+            var own = span ? Array.from(span.childNodes).filter(function(n) { return n.nodeType === Node.TEXT_NODE; }).map(function(n) { return n.textContent; }).join('').trim() : '';
+            return own || id;
+        }
+
+        /** The parent switch(es) by their labels: '“A”', or '“A”, “B” or “C”' when any of them will do (a label can hold straight quotes). */
+        function parentNames(dep: ParentDep): string {
+            var names = (dep.anyOf || [dep.parent]).map(function(id) { return '\u201c' + switchLabel(id) + '\u201d'; });
+            return names.length > 1 ? names.slice(0, -1).join(', ') + ' or ' + names[names.length - 1] : names[0] ?? '';
+        }
+
         function updateParentDep(dep: ParentDep) : void {
             var parent = asHtml(document.getElementById(dep.parent));
             if (!parent) return;
@@ -440,7 +455,7 @@ export function createDependencies(m: DependenciesDeps) {
                         if (!dep.noHint && !asHtml(container.querySelector('.' + hintClass))) {
                             var hint = document.createElement('div');
                             hint.className = 'dep-hint-text ' + hintClass;
-                            hint.textContent = 'Enable "' + dep.label + '" to configure';
+                            hint.textContent = 'Needs ' + parentNames(dep) + ' on';
                             container.appendChild(hint);
                         }
                     }
@@ -478,6 +493,7 @@ export function createDependencies(m: DependenciesDeps) {
         INDIVIDUAL_DEPS,
         PARENT_DEPS,
         SECTION_DEPS,
+        hasAnyArrService,
         hasJellyseerrConfigured,
         updateCustomTabsV12Hint,
         updateIndividualDep,

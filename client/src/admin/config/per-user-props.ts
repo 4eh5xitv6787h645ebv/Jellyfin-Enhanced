@@ -99,4 +99,6 @@ export const PER_USER_PROPS: readonly string[] = [
     'TagsHideOnHover',
     'VersionsTagOrder',
     'VideoCodecTagOrder',
+    'WatchProgressDefaultMode',
+    'WatchProgressTimeFormat',
 ];

@@ -244,6 +244,9 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Features.Settings
                 RandomIncludeShows = defaultConfig.RandomIncludeShows,
                 RandomScopeCurrentContainer = defaultConfig.RandomScopeCurrentContainer,
                 ShowWatchProgress = defaultConfig.ShowWatchProgress,
+                // As a new user is seeded (SettingsDefaults): the admin's Watch Progress Default and Time Format.
+                WatchProgressMode = defaultConfig.WatchProgressDefaultMode is { } watchMode && !string.IsNullOrWhiteSpace(watchMode) ? watchMode : "percentage",
+                WatchProgressTimeFormat = defaultConfig.WatchProgressTimeFormat is { } watchFormat && !string.IsNullOrWhiteSpace(watchFormat) ? watchFormat : "hours",
                 ShowFileSizes = defaultConfig.ShowFileSizes,
                 ShowAudioLanguages = defaultConfig.ShowAudioLanguages,
                 UseNativePosterTags = null, // Back to not chosen: on while the administrator allows native poster tags.
@@ -426,6 +429,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Features.Settings
             ["DefaultSubtitleFont"] = "SelectedFontFamilyPresetIndex",
             ["DefaultSubtitleTextEffect"] = "SelectedTextEffectPresetIndex",
             ["DefaultLanguage"] = "DisplayLanguage",
+            ["WatchProgressDefaultMode"] = "WatchProgressMode",
         };
 
         /// <summary>
