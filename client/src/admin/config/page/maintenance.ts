@@ -143,7 +143,8 @@ export function createMaintenance(m: MaintenanceDeps) {
                     const listEl = needHtml(document.getElementById('je-mm-user-list'));
                     if (radio.value === 'select') {
                         listEl.style.display = '';
-                        loadMaintenanceUsers();
+                        // Boxes already on screen hold the administrator's draft: keep them.
+                        if (!usersLoaded) loadMaintenanceUsers();
                     } else {
                         listEl.style.display = 'none';
                     }

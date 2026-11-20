@@ -651,4 +651,25 @@ public class CoreMaintenanceTests
     [InlineData(61, "2m")][InlineData(3900, "1h 05m")]
     public void CountdownRoundsUpAndClampsExpiredWindows(int seconds, string expected)
         => Assert.Equal(expected, MaintenanceModeService.FormatCountdown(TimeSpan.FromSeconds(seconds)));
+
+    /// <summary>The config page's Enable: an explicit empty selection is refused, never widened to every non-admin.</summary>
+    [Fact]
+    public async Task EnableEndpointRefusesAnEmptySelectionAndNullStillMeansEveryNonAdmin()
+    {
+        using var f = new Fixture();
+        var controller = (Jellyfin.Plugin.JellyfinEnhanced.Features.Admin.JeAdminController)ApiAssetTests.Controller(
+            typeof(Jellyfin.Plugin.JellyfinEnhanced.Features.Admin.JeAdminController), f.Core, f.Users.Object, f.Service, f.Sessions.Object);
+        controller.ControllerContext.HttpContext.User = global::JE.Tests.Features.SpoilerGuard.PrivacyPolicyTests.Principal(f.Admin.Id, admin: true);
+
+        var refused = await controller.EnableMaintenanceMode(new Jellyfin.Plugin.JellyfinEnhanced.Features.Admin.MaintenanceModeRequest { Action = "both", AffectedUserIds = [] });
+        Assert.IsType<Microsoft.AspNetCore.Mvc.BadRequestObjectResult>(refused);
+        Assert.False(f.Service.GetStatus().IsActive);
+        Assert.False(f.Policies[f.Alice.Id].IsDisabled);
+        Assert.True(f.Policies[f.Alice.Id].EnableRemoteAccess);
+
+        var all = await controller.EnableMaintenanceMode(new Jellyfin.Plugin.JellyfinEnhanced.Features.Admin.MaintenanceModeRequest { Action = "both", AffectedUserIds = null });
+        Assert.IsType<Microsoft.AspNetCore.Mvc.OkObjectResult>(all);
+        Assert.True(f.Policies[f.Alice.Id].IsDisabled);
+        Assert.False(f.Policies[f.Admin.Id].IsDisabled);
+    }
 }

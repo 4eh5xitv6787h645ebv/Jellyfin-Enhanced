@@ -113,8 +113,9 @@ export function createBlockedUsers(m: BlockedUsersDeps) {
             resultDiv.style.display = 'none';
 
             try {
-                // Save config first so the server uses the current blocklist
-                await m.save.saveConfig(new Event('submit'));
+                // Save config first so the server uses the current blocklist. A save that wrote nothing (it failed,
+                // was refused or the settings were never read) leaves the server on the old list: no import then.
+                if (!await m.save.saveConfig(new Event('submit'))) throw new Error('the settings were not saved');
             } catch (e) {
                 if (!scope.isCurrent()) {
                     btn.disabled = false;
