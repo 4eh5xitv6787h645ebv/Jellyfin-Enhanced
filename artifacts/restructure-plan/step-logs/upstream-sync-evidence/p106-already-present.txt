@@ -1,0 +1,53 @@
+# Entry 106, upstream fbbb0213 (fix(reclaimerr): drop a redundant string cast flagged by CodeQL): already present
+
+## Upstream's change (git show fbbb0213 -- Jellyfin.Plugin.JellyfinEnhanced/Services/ReclaimerrActions.cs)
+
+@@ -448,9 +448,8 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
+             }
+ 
+             // Omitting scheduled_at means the grace period; null means now; a day schedules it.
+-            object body = !approve || timing == ApprovalTiming.GracePeriod ? new { admin_notes = text }
+-                : timing == ApprovalTiming.Now ? new { admin_notes = text, scheduled_at = (string?)null }
+-                : new { admin_notes = text, scheduled_at = Iso(CheckedDate(at ?? throw new MaintainerrActions.ActionException("Pick the day to delete it."))) };
++            string? when = approve && timing == ApprovalTiming.OnDate ? Iso(CheckedDate(at ?? throw new MaintainerrActions.ActionException("Pick the day to delete it."))) : null;
++            object body = !approve || timing == ApprovalTiming.GracePeriod ? new { admin_notes = text } : new { admin_notes = text, scheduled_at = when };
+             try
+             {
+                 using (await TokenAsync(config, HttpMethod.Post, $"/api/v1/delete-requests/{requestId}/{(approve ? "approve" : "deny")}", body, token).ConfigureAwait(false)) { }
+
+## This tree at 6bbd95cf (Features/MediaTags/Services/ReclaimerrActions.cs, ReviewRequestAsync)
+
+533:            // Omitting scheduled_at means the grace period; null means now; a day schedules it.
+534-            var scheduled = approve && timing != ApprovalTiming.GracePeriod;
+535-            string? day = null;
+536-            if (scheduled)
+537-            {
+538-                if (!await SchedulingSupportedAsync(config, token).ConfigureAwait(false))
+539-                    throw new MaintainerrActions.ActionException("This Reclaimerr cannot schedule an approval yet (update it), so nothing was approved.");
+540-                if (timing == ApprovalTiming.OnDate) day = Iso(CheckedDate(at ?? throw new MaintainerrActions.ActionException("Pick the day to delete it.")));
+541-            }
+542-
+543-            object Body(string? notes) => scheduled ? new { admin_notes = notes, scheduled_at = day } : new { admin_notes = notes };
+544-            await SessionAsync(config, HttpMethod.Post, $"/api/delete-requests/{requestId}/{(approve ? "approve" : "deny")}", Body(text), actingUser, token, adminAction: true, serviceBody: Body(byService)).ConfigureAwait(false);
+
+## git grep -n 'scheduled_at = (string?)' -- Jellyfin.Plugin.JellyfinEnhanced (at 6bbd95cf)
+
+(no match)
+
+## je12 test --only 'JE.Tests.Features.MediaTags.IntegrationReclaimerrApprovalTimingTests' on 6bbd95cfb (ledger edit only in the working tree)
+
+ok   JE.Tests.Features.MediaTags.IntegrationReclaimerrApprovalTimingTests.A_Reclaimerr_account_is_named_by_the_mapping_else_by_the_Jellyfin_login_Reclaimerr_linked_to_it
+ok   JE.Tests.Features.MediaTags.IntegrationReclaimerrApprovalTimingTests.A_day_is_refused_without_calling_approve_when_Reclaimerr_cannot_schedule_or_the_day_is_past_or_missing
+ok   JE.Tests.Features.MediaTags.IntegrationReclaimerrApprovalTimingTests.An_approval_reads_the_Leaving_soon_facts_again_at_once_and_a_denial_does_not
+ok   JE.Tests.Features.MediaTags.IntegrationReclaimerrApprovalTimingTests.Approving_now_sends_scheduled_at_null_and_on_a_day_sends_that_moment_in_UTC
+ok   JE.Tests.Features.MediaTags.IntegrationReclaimerrApprovalTimingTests.Approving_without_a_day_sends_the_old_body_so_an_older_Reclaimerr_behaves_as_before
+ok   JE.Tests.Features.MediaTags.IntegrationReclaimerrApprovalTimingTests.Denying_never_carries_a_day
+ok   JE.Tests.Features.MediaTags.IntegrationReclaimerrApprovalTimingTests.Scheduling_is_supported_only_when_the_approve_body_that_takes_a_day_is_in_the_OpenAPI
+ok   JE.Tests.Features.MediaTags.IntegrationReclaimerrApprovalTimingTests.The_approve_route_sends_when_and_date_and_an_older_Reclaimerr_is_sent_nothing_for_a_day
+ok   JE.Tests.Features.MediaTags.IntegrationReclaimerrApprovalTimingTests.The_grace_period_is_read_from_Reclaimerr_and_unknown_when_it_cannot_be
+ok   JE.Tests.Features.MediaTags.IntegrationReclaimerrApprovalTimingTests.The_kept_answer_is_for_one_Reclaimerr_address_so_another_Reclaimerr_is_asked_again
+ok   JE.Tests.Features.MediaTags.IntegrationReclaimerrApprovalTimingTests.The_list_keeps_a_failed_or_blocked_schedule_carries_the_day_and_names_a_mapped_Reclaimerr_account
+ok   JE.Tests.Features.MediaTags.IntegrationReclaimerrApprovalTimingTests.The_list_tells_an_administrator_whether_an_approval_can_take_a_day_and_the_grace_period_and_tells_a_viewer_neither
+ok   JE.Tests.Features.MediaTags.IntegrationReclaimerrApprovalTimingTests.The_mapping_reads_both_ways_so_a_Reclaimerr_account_is_found_for_its_Jellyfin_name
+Passed!  - Failed:     0, Passed:    13, Skipped:     0, Total:    13 - JE.Tests.dll (net10.0)
+test --only: pass (0 failed, 13 passed) on 6bbd95cfb+dirty (the only change in the tree: the new pending entry in docs/upstream-sync.json and its table row)
