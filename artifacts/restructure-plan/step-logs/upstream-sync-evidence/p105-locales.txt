@@ -1,0 +1,11 @@
+Port 105 (upstream 8212d287), checked on rewrite commit 2ec8df0f against upstream 8212d287 and the tree before the port (742f2f3e).
+locale files changed: 1 (fr.json); byte-identical to upstream at 8212d287: True
+keys changed: ['leavingsoon_confirm_delete_scope', 'leavingsoon_status_deferred', 'leavingsoon_requests_unavailable_reason', 'discovery_filter_match_label', 'discovery_filter_profile_full']
+keys added or removed: none
+  leavingsoon_confirm_delete_scope: only change is a plain space -> U+00A0 before a colon: True; placeholders kept: True; in this tree's en.json: True
+  leavingsoon_status_deferred: only change is a plain space -> U+00A0 before a colon: True; placeholders kept: True; in this tree's en.json: True
+  leavingsoon_requests_unavailable_reason: only change is a plain space -> U+00A0 before a colon: True; placeholders kept: True; in this tree's en.json: False
+  discovery_filter_match_label: only change is a plain space -> U+00A0 before a colon: True; placeholders kept: True; in this tree's en.json: True
+  discovery_filter_profile_full: only change is a plain space -> U+00A0 before a colon: True; placeholders kept: True; in this tree's en.json: True
+fr.json values with U+00A0 before a colon: before 13 after 18 ; with a plain space before a colon after: 69
+server code (.cs) reading leavingsoon_* or discovery_filter* keys: none
