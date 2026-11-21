@@ -1,0 +1,83 @@
+# p107: release 12.17.0.0 (upstream df9dcdc3), lab je12 2.5.0, Jellyfin 12.4, 2026-11-22
+
+## upstream's change
+df9dcdc3b v12.17.0.0
+
+diff --git a/Jellyfin.Plugin.JellyfinEnhanced/JellyfinEnhanced.csproj b/Jellyfin.Plugin.JellyfinEnhanced/JellyfinEnhanced.csproj
+index 68f882aaa..e16673539 100644
+--- a/Jellyfin.Plugin.JellyfinEnhanced/JellyfinEnhanced.csproj
++++ b/Jellyfin.Plugin.JellyfinEnhanced/JellyfinEnhanced.csproj
+@@ -14,8 +14,8 @@
+ 
+         <ImplicitUsings>enable</ImplicitUsings>
+         <Nullable>enable</Nullable>
+-        <AssemblyVersion>12.16.0.0</AssemblyVersion>
+-        <FileVersion>12.16.0.0</FileVersion>
++        <AssemblyVersion>12.17.0.0</AssemblyVersion>
++        <FileVersion>12.17.0.0</FileVersion>
+         <RootNamespace>Jellyfin.Plugin.JellyfinEnhanced</RootNamespace>
+         <AssemblyName>Jellyfin.Plugin.JellyfinEnhanced</AssemblyName>
+     </PropertyGroup>
+
+## je12 evidence: live pairs (GET /Plugins output cut to the Jellyfin Enhanced row)
+== live check (3 before/after pair(s))
+pair (unnamed): complete
+  before: je12 api GET /JellyfinEnhanced/version
+    deployed upstream-df9dcdc3b9b9 = df9dcdc3 (dll 9e6cceac6b110824) on lab je125ce284, 2026-11-22 05:24:08
+    | HTTP 200
+    | 12.17.0.0
+  after: je12 api GET /JellyfinEnhanced/version
+    deployed 255b25130 (dll 496dbc1bc8f3e388) on lab je125ce284, 2026-11-22 05:24:23
+    | HTTP 200
+    | 12.17.0.0
+  same command before and after: yes; builds: before upstream-df9dcdc3b9b9, after 255b25130 (a clean build of the checkout's commit)
+pair 'plugins': complete
+  before: je12 api GET /Plugins
+    deployed upstream-df9dcdc3b9b9 = df9dcdc3 (dll 9e6cceac6b110824) on lab je125ce284, 2026-11-22 05:24:09
+    | HTTP 200
+    | … {"Name": "Jellyfin Enhanced", "Version": "12.17.0.0" … "Status": "Active"} …
+  after: je12 api GET /Plugins
+    deployed 255b25130 (dll 496dbc1bc8f3e388) on lab je125ce284, 2026-11-22 05:24:23
+    | HTTP 200
+    | … {"Name": "Jellyfin Enhanced", "Version": "12.17.0.0" … "Status": "Active"} …
+  same command before and after: yes; builds: before upstream-df9dcdc3b9b9, after 255b25130 (a clean build of the checkout's commit)
+pair 'mainline': complete
+  before: je12 api GET /JellyfinEnhanced/version
+    deployed 5ab0476d2a95 (dll e018ce585f9e5665) on lab je125ce284, 2026-11-22 05:24:42
+    | HTTP 200
+    | 12.16.0.0
+  after: je12 api GET /JellyfinEnhanced/version
+    deployed 255b25130 (dll 496dbc1bc8f3e388) on lab je125ce284, 2026-11-22 05:24:52
+    | HTTP 200
+    | 12.17.0.0
+  same command before and after: yes; builds: before 5ab0476d2a95, after 255b25130 (a clean build of the checkout's commit)
+
+## smoke on 255b25130 (je12 smoke after je12 deploy)
+smoke: comparing the deployed 255b25130 with the baseline of 255b25130b74 (docs(sync): rewrite commit of upstream df9dcdc3), from the start of this lab (je12 up)
+page admin           ok      14 tabs; Media Tags section 7 tabs (1.9s)
+page settings        ok      panel open, 24 tabs (2.1s)
+page media-tags-hub  ok      #jeMediaTagsHub visible (1.9s)
+page poster          ok      15/100 cards tagged (1.9s)
+page details         ok      101 Dalmatians II: Patch's London Adventure: 70 JE elements (1.8s)
+page hidden-content  ok      page rendered (1.3s)
+page bookmarks       ok      page rendered (1.2s)
+page calendar        ok      5 events (3.2s)
+page downloads       ok      4 items (4.7s)
+page activity        ok      Activity tab rendered (1.8s)
+page catchup         ok      Catch Up tab rendered (1.5s)
+page seerr           ok      5 Seerr cards (1.7s)
+page player          ok      playing 1.0s; OSD rating present (2.9s)
+plugin               ok      12.17.0.0 Active
+scheduled tasks      ok      17 JE tasks (keys and ids)
+openapi              ok      HTTP 200, 498 paths, 204 under /JellyfinEnhanced
+bundle wire          ok      br 200 624687B 304:yes, gzip 200 758093B 304:yes, identity 200 2748639B 304:yes; decoded bodies identical
+server log           ok      170 ERR/WRN lines, 0 new kind(s)
+smoke: pass (0 failing, 0 flaky, 0 changed, 0 known, 0 fixed) in 35s
+
+## 108: upstream's manifest commit (868803ef), taken as is
+manifest.json on the main line (5ab0476d) vs upstream's at 868803ef^: identical
+manifest.json on this branch vs upstream's at 868803ef: byte-identical
+ 1 file changed, 16 insertions(+)
+The lab above ran on 255b2513 (version commit + ledger, before 868803ef arrived). Between that build's tree and the
+final branch only these paths differ: docs/upstream-sync.json docs/upstream-sync.md manifest.json tests/frontend/bootstrap/bootstrap-loader-groups.test.mjs 
+none of which is part of the plugin build.

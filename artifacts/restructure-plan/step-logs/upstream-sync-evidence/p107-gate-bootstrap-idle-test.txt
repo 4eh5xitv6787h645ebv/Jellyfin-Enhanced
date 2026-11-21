@@ -1,0 +1,35 @@
+# The gate failure on this run and its fix (2026-11-22, t3-lenovo, je12 2.5.0)
+
+## je12 gate final on 3e9dec416 (the release port, before the fix)
+npm test: 1 failing test(s) not in artifacts/restructure-plan/baselines/npm-failures.txt:
+npm test: total 4589 (baseline 3956), passed 4588 (baseline 3956), failed 1 (baseline list 0)
+T (dotnet test): total 3785 (baseline 3343), passed 3785 (baseline 3343), failed 0 (baseline list 0)
+BROWSER: 813 tests, passed 782, failed 0 (baseline list 0), skipped 31
+failing by name:
+  tests/frontend/bootstrap/bootstrap-loader-groups.test.mjs :: a boot batch of several groups runs as one paced list: one wait for idle time, not one per group
+     AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+     3 !== 2
+
+## The same test alone (je12 test --only), before the fix: fails every time, on the branch and on the main line
+test --only: FAIL (1 failed, 0 passed) in 3s on 3e9dec416   (three runs, all 3 !== 2)
+test --only: FAIL (1 failed, 0 passed) in 3s on 5ab0476d2   (the main line, restructure/integration, before this run)
+The whole file alone passes (38 passed on 3e9dec416): earlier tests in the same process warm the realm up first.
+
+## Where the third wait comes from (a temporary log line in the test, run alone, then removed)
+idle waits as [ms since boot start, last module run, modules run so far]:
+DIAG [[5,null,0],[6,null,0],[39,"enhanced/config.js",3]]
+The first two are the planned ones (before the request, before the modules). The third is runBundleModules
+(client/src/bootstrap/loader/component-loader.ts) ending its slice because its 10 ms run budget
+(BUNDLE_RUN_BUDGET_MS) was spent on the wall clock: core/navigation.js, core/session.js and the real
+enhanced/config.js (152 KB) took about 33 ms in a cold realm. The loader behaves as designed; the test counted a
+wall-clock-dependent wait.
+
+## The fix (test only; the expected counts are unchanged)
+Both tests in the file that count idle waits stop the realm's clock (boot.window.performance.now = () => 0), as
+tests/frontend/bootstrap/bootstrap-loader-rewrite.test.mjs's slicing test already does since ee0ff7c0. A loader that
+waited once per group would still be caught: each run of runBundleModules begins with its own wait, whatever the clock.
+
+## After the fix (je12 test --only, each alone)
+test --only: pass (0 failed, 1 passed) in 3s on 3e9dec416+dirty@25a7a895   a boot batch of several groups runs as one paced list: one wait for idle time, not one per group
+test --only: pass (0 failed, 1 passed) in 3s on 3e9dec416+dirty@25a7a895   groups loaded for a page the user went to run in idle time; a group asked for directly does not wait for it
+je12 test (quick): node 1378 passed, 0 failed
