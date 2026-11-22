@@ -3679,7 +3679,9 @@
         "tests/frontend/features/features-hidden.test.mjs"
       ],
       "status": "ported",
-      "rewriteCommits": [],
+      "rewriteCommits": [
+        "fa6c620468fd351d7575d0706334724a837a2c1b"
+      ],
       "evidence": "artifacts/restructure-plan/step-logs/upstream-sync-evidence/p111-home-row.keep-before.txt, p111-home-row.keep-after.txt, p111-home-row.mjs, p111.tests.txt, p111.smoke.txt",
       "notes": "The behaviour arrived here first, in 2beb1e94 (fix(hidden-content), #1096, before upstream's commit): the same rule, byte for byte, `.verticalSection:has(.card.je-hidden):not(:has(.card:not(.je-hidden))) { display: none !important; }` with upstream's comment, in client/src/features/hidden-content/hidden-content.css, the stylesheet that hidden-content-styles.js injects as `je-hidden-content`, with a test of a direct hide and an unhide. This commit applies upstream's docs sentence (docs/enhanced/enhanced-features.md, git apply --3way, clean) and adds upstream's test beside the existing one in tests/frontend/features/hidden-content/features-hidden-regressions.test.mjs (upstream: tests/frontend/features/features-hidden.test.mjs): the row hides with filterNativeCards, comes back when filtering is turned off, hides again when it is turned on, and comes back when one card is restored. The one difference is where the test reaches the feature: getHiddenData, refreshNativeCardVisibility, restoreNativeCardsForIds and injectCSS are read from JE.internals.hiddenContent, where this tree keeps them, not from JE.hiddenContent. The test fails with the rule removed from hidden-content.css and passes with it. Lab parity: hiding all 16 cards of the home row Recently Added in Shows hides that row's heading and leaves Recently Added in Movies shown, on upstream's build at e16cc10b and on this tree alike; unhiding them brings it back on both."
     }
