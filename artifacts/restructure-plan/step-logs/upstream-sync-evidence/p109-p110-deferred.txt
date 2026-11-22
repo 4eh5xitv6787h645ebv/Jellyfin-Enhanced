@@ -1,0 +1,120 @@
+Entries 109 (54a6f418) and 110 (7762f8e1): both build on entry 97 (da3d9ee9, #1091), deferred.
+Tree: restructure/integration at ef113e5bcf; upstream main at 7762f8e17b.
+
+== What upstream's two commits call (from git show) ==
+$ git show 54a6f418 | grep -oE "ReclaimerrApi\.[A-Za-z]+|ReclaimerrUserAsync|ActingTokenAsync|/api/v1/[a-z-]+" | sort -u
+ActingTokenAsync
+/api/v1/candidates
+/api/v1/delete-requests
+/api/v1/scheduled-deletions
+ReclaimerrApi.cs
+ReclaimerrApi.TokenAsync
+ReclaimerrUserAsync
+$ git show 7762f8e1 | grep -oE "ReclaimerrApi\.[A-Za-z]+|SignInTrustedAsync|RefusedForAccountOnly|UserAudit[A-Za-z]*|user-audit|/api/account/me" | sort -u
+/api/account/me
+ReclaimerrApi.SendAsUserAsync
+RefusedForAccountOnly
+SignInTrustedAsync
+user-audit
+UserAudit
+$ git show da3d9ee9 --stat | grep -E "ReclaimerrApi|audit"
+    feat(reclaimerr): use Reclaimerr 0.6.15's token API, add a user audit, drop the service account (#1091)
+    * feat(reclaimerr): user audit; say why requests could not load; shorter hints
+    - User audit (Reclaimerr card, Run Audit; GET reclaimerr/user-audit),
+      read-only, in the Seerr permission audit's style: the token scopes
+      the audit read accounts the same way.
+    * fix(reclaimerr): audit names what a missing manage scope stops; stops after a timeout
+      the page worked. The audit now says what the manage scope adds when
+    - A Reclaimerr that stops answering mid-audit is said once, and the
+    * fix(reclaimerr): audit review (Services-tab copy, unchecked users, gates, admins, reason)
+    - The audit draws into the card and its Services-tab copy alike: the
+    - Import and the audit need Reclaimerr on with a URL and token, not the
+    * fix(reclaimerr): Services-tab import ticks count; audit says requests need the item menu
+      and postpone from the item menu" is off. The audit now says so
+    * docs(reclaimerr): requests need the item-menu actions; audit uses the trusted-proxy sign-in; home row bullet in its list
+ .../Services/ReclaimerrApi.cs                      |  170 ++++
+
+== The same names in this tree (plugin, client, tests) ==
+$ git grep -n -E "class ReclaimerrApi|TokenAsync|ReclaimerrUserAsync|SignInTrustedAsync|RefusedForAccountOnly|UserAudit|user-audit" -- Jellyfin.Plugin.JellyfinEnhanced client/src tests/backend tests/frontend ":!Jellyfin.Plugin.JellyfinEnhanced/js/**"
+Jellyfin.Plugin.JellyfinEnhanced/Features/MediaTags/Services/ReclaimerrActions.cs:137:            if (owner > 0) await TokenAsync(config, HttpMethod.Post, $"/api/v1/candidates/{owner}/protect", new { reason = "Kept from Jellyfin" }, token).ConfigureAwait(false);
+Jellyfin.Plugin.JellyfinEnhanced/Features/MediaTags/Services/ReclaimerrActions.cs:159:                if (exact is { } day) await TokenAsync(config, HttpMethod.Post, $"/api/v1/candidates/{owner}/postpone", new { until = Iso(day), reason = "Postponed from Jellyfin" }, token).ConfigureAwait(false);
+Jellyfin.Plugin.JellyfinEnhanced/Features/MediaTags/Services/ReclaimerrActions.cs:160:                else if (days is { } n) await TokenAsync(config, HttpMethod.Post, $"/api/v1/candidates/{owner}/postpone", new { until = Iso((fact?.DeleteAt is { } at ? DateTimeOffset.FromUnixTimeMilliseconds(at) : Now()).AddDays(n)), reason = "Postponed from Jellyfin" }, token).ConfigureAwait(false);
+Jellyfin.Plugin.JellyfinEnhanced/Features/MediaTags/Services/ReclaimerrActions.cs:161:                else await TokenAsync(config, HttpMethod.Post, $"/api/v1/candidates/{owner}/reset-timer", new { reason = "Reset from Jellyfin" }, token).ConfigureAwait(false);
+Jellyfin.Plugin.JellyfinEnhanced/Features/MediaTags/Services/ReclaimerrActions.cs:307:                    using var cand = await TokenAsync(config, HttpMethod.Get, $"/api/v1/candidates/{owner}", null, token).ConfigureAwait(false);
+Jellyfin.Plugin.JellyfinEnhanced/Features/MediaTags/Services/ReclaimerrActions.cs:466:                using var doc = await TokenAsync(config, HttpMethod.Get, "/openapi.json", null, token).ConfigureAwait(false);
+Jellyfin.Plugin.JellyfinEnhanced/Features/MediaTags/Services/ReclaimerrActions.cs:620:                using var doc = await TokenAsync(config, HttpMethod.Get, $"/api/v1/{(key.Item1 == "movie" ? "movies" : "series")}/{mediaId}", null, token).ConfigureAwait(false);
+Jellyfin.Plugin.JellyfinEnhanced/Features/MediaTags/Services/ReclaimerrActions.cs:653:            using var doc = await TokenAsync(config, HttpMethod.Get, $"/api/v1/{(type == "movie" ? "movies" : "series")}?tmdb_id={Uri.EscapeDataString(tmdb)}&per_page=5", null, token).ConfigureAwait(false);
+Jellyfin.Plugin.JellyfinEnhanced/Features/MediaTags/Services/ReclaimerrActions.cs:665:        private Task<JsonDocument> TokenAsync(PluginConfiguration config, HttpMethod method, string path, object? body, CancellationToken token)
+$ git grep -n "/api/v1/" -- "*Reclaimerr*" "client/src/**/reclaimerr*"
+Jellyfin.Plugin.JellyfinEnhanced/Features/MediaTags/Services/ReclaimerrActions.cs:137:            if (owner > 0) await TokenAsync(config, HttpMethod.Post, $"/api/v1/candidates/{owner}/protect", new { reason = "Kept from Jellyfin" }, token).ConfigureAwait(false);
+Jellyfin.Plugin.JellyfinEnhanced/Features/MediaTags/Services/ReclaimerrActions.cs:159:                if (exact is { } day) await TokenAsync(config, HttpMethod.Post, $"/api/v1/candidates/{owner}/postpone", new { until = Iso(day), reason = "Postponed from Jellyfin" }, token).ConfigureAwait(false);
+Jellyfin.Plugin.JellyfinEnhanced/Features/MediaTags/Services/ReclaimerrActions.cs:160:                else if (days is { } n) await TokenAsync(config, HttpMethod.Post, $"/api/v1/candidates/{owner}/postpone", new { until = Iso((fact?.DeleteAt is { } at ? DateTimeOffset.FromUnixTimeMilliseconds(at) : Now()).AddDays(n)), reason = "Postponed from Jellyfin" }, token).ConfigureAwait(false);
+Jellyfin.Plugin.JellyfinEnhanced/Features/MediaTags/Services/ReclaimerrActions.cs:161:                else await TokenAsync(config, HttpMethod.Post, $"/api/v1/candidates/{owner}/reset-timer", new { reason = "Reset from Jellyfin" }, token).ConfigureAwait(false);
+Jellyfin.Plugin.JellyfinEnhanced/Features/MediaTags/Services/ReclaimerrActions.cs:307:                    using var cand = await TokenAsync(config, HttpMethod.Get, $"/api/v1/candidates/{owner}", null, token).ConfigureAwait(false);
+Jellyfin.Plugin.JellyfinEnhanced/Features/MediaTags/Services/ReclaimerrActions.cs:620:                using var doc = await TokenAsync(config, HttpMethod.Get, $"/api/v1/{(key.Item1 == "movie" ? "movies" : "series")}/{mediaId}", null, token).ConfigureAwait(false);
+Jellyfin.Plugin.JellyfinEnhanced/Features/MediaTags/Services/ReclaimerrActions.cs:653:            using var doc = await TokenAsync(config, HttpMethod.Get, $"/api/v1/{(type == "movie" ? "movies" : "series")}?tmdb_id={Uri.EscapeDataString(tmdb)}&per_page=5", null, token).ConfigureAwait(false);
+tests/backend/Features/MediaTags/IntegrationReclaimerrActionsTests.cs:171:            "/api/v1/candidates?per_page=200&page=1" => (200, Candidates((4, 550, "movie", soon))),
+tests/backend/Features/MediaTags/IntegrationReclaimerrActionsTests.cs:179:            var candidates = Assert.Single(server.All, s => s.Path.StartsWith("/api/v1/candidates", StringComparison.Ordinal));
+tests/backend/Features/MediaTags/IntegrationReclaimerrActionsTests.cs:189:            server.Answer = s => s.Path.StartsWith("/api/v1/candidates", StringComparison.Ordinal) ? (200, Candidates((4, 550, "movie", soon))) : (500, "{\"detail\":\"boom\"}");
+tests/backend/Features/MediaTags/IntegrationReclaimerrActionsTests.cs:206:            { Path: "/api/v1/movies?tmdb_id=1234139&per_page=5" } => (200, "{\"items\":[{\"id\":77}]}"),
+tests/backend/Features/MediaTags/IntegrationReclaimerrActionsTests.cs:209:            _ when s.Path.StartsWith("/api/v1/candidates", StringComparison.Ordinal) => (200, Candidates()),
+tests/backend/Features/MediaTags/IntegrationReclaimerrActionsTests.cs:225:                : s.Path == "/api/v1/movies?tmdb_id=1234139&per_page=5" ? (200, "{\"items\":[{\"id\":77}]}")
+tests/backend/Features/MediaTags/IntegrationReclaimerrActionsTests.cs:227:                : s.Path.StartsWith("/api/v1/candidates", StringComparison.Ordinal) ? (200, Candidates())
+tests/backend/Features/MediaTags/IntegrationReclaimerrActionsTests.cs:249:            { Path: "/api/v1/movies?tmdb_id=1640&per_page=5" } => (200, "{\"items\":[{\"id\":31}]}"),
+tests/backend/Features/MediaTags/IntegrationReclaimerrActionsTests.cs:252:            _ when s.Path.StartsWith("/api/v1/candidates", StringComparison.Ordinal) => (200, Candidates()),
+tests/backend/Features/MediaTags/IntegrationReclaimerrActionsTests.cs:475:            "/api/v1/candidates?per_page=200&page=1" => (200, Candidates((4, 550, "movie", soon), (9, 555, "version", soon), (5, 1399, "series", soon))),
+tests/backend/Features/MediaTags/IntegrationReclaimerrActionsTests.cs:476:            "/api/v1/candidates/9" => (200, "{\"id\":9,\"scope\":\"version\",\"movie_version_id\":22,\"tmdb_id\":555}"),
+tests/backend/Features/MediaTags/IntegrationReclaimerrActionsTests.cs:511:            "/api/v1/movies/31" => (200, "{\"id\":31,\"tmdb_id\":1640}"),
+tests/backend/Features/MediaTags/IntegrationReclaimerrActionsTests.cs:533:            slow = "/api/v1/movies/31";
+tests/backend/Features/MediaTags/IntegrationReclaimerrActionsTests.cs:624:        server.Answer = s => s.Path.StartsWith("/api/v1/candidates", StringComparison.Ordinal) ? (200, Candidates()) : s.Path == "/api/media/scheduled-deletions" ? (200, "[]") : (404, "{}");
+tests/backend/Features/MediaTags/IntegrationReclaimerrApprovalTimingTests.cs:192:        Assert.DoesNotContain(server.All, s => s.Path.StartsWith("/api/v1/candidates"));
+tests/backend/Features/MediaTags/IntegrationReclaimerrApprovalTimingTests.cs:194:        Assert.Contains(server.All, s => s.Path.StartsWith("/api/v1/candidates"));
+tests/backend/Features/MediaTags/IntegrationReclaimerrVersionSizeTests.cs:116:            if (path == "/api/v1/candidates/9") return "{\"id\":9,\"scope\":\"version\",\"movie_version_id\":22,\"tmdb_id\":555}";
+tests/backend/Features/MediaTags/IntegrationReclaimerrVersionSizeTests.cs:128:        server.Answer = path => path == "/api/v1/candidates/9" ? "{\"id\":9,\"scope\":\"version\",\"tmdb_id\":555}" : "{\"items\":[]}";
+
+== How this tree sends the same five administrator actions (service-account model) ==
+$ git grep -n -E "SessionAsync\(config, HttpMethod.Post" -- Jellyfin.Plugin.JellyfinEnhanced/Features/MediaTags/Services/ReclaimerrActions.cs
+Jellyfin.Plugin.JellyfinEnhanced/Features/MediaTags/Services/ReclaimerrActions.cs:127:            await SessionAsync(config, HttpMethod.Post, "/api/media/schedule-deletion", new { media_type = type, media_id = mediaId, movie_version_id = versionId, scheduled_at = Iso(when) }, actingUser, token, adminAction: true).ConfigureAwait(false);
+Jellyfin.Plugin.JellyfinEnhanced/Features/MediaTags/Services/ReclaimerrActions.cs:138:            else await SessionAsync(config, HttpMethod.Post, $"/api/media/scheduled-deletions/{-owner}/cancel", new { }, actingUser, token, adminAction: true).ConfigureAwait(false);
+Jellyfin.Plugin.JellyfinEnhanced/Features/MediaTags/Services/ReclaimerrActions.cs:167:                await SessionAsync(config, HttpMethod.Post, $"/api/media/scheduled-deletions/{-owner}/reschedule", new { scheduled_at = Iso(to) }, actingUser, token, adminAction: true).ConfigureAwait(false);
+Jellyfin.Plugin.JellyfinEnhanced/Features/MediaTags/Services/ReclaimerrActions.cs:185:            var asUser = await SessionAsync(config, HttpMethod.Post, "/api/delete-requests", new { media_type = type, media_id = mediaId, reason = text.Length <= 500 ? text : text[..500] }, requester, token).ConfigureAwait(false);
+Jellyfin.Plugin.JellyfinEnhanced/Features/MediaTags/Services/ReclaimerrActions.cs:544:            await SessionAsync(config, HttpMethod.Post, $"/api/delete-requests/{requestId}/{(approve ? "approve" : "deny")}", Body(text), actingUser, token, adminAction: true, serviceBody: Body(byService)).ConfigureAwait(false);
+$ sed -n 772,800p Jellyfin.Plugin.JellyfinEnhanced/Features/MediaTags/Services/ReclaimerrActions.cs
+        /// <summary>
+        /// Send as the Jellyfin user when acting as the user is on and they have a Reclaimerr account, else (or when Reclaimerr refuses
+        /// them) as the service account, with <paramref name="serviceBody"/> when one is given. True when sent as the user.
+        /// </summary>
+        private async Task<bool> SessionAsync(PluginConfiguration config, HttpMethod method, string path, object body, string? actingUser, CancellationToken token, bool adminAction = false, object? serviceBody = null)
+        {
+            var json = JsonSerializer.Serialize(body);
+            if (ReclaimerrSession.ActsAsUser(config) && !string.IsNullOrWhiteSpace(actingUser))
+            {
+                var who = await ResolveUserAsync(config, actingUser!, token).ConfigureAwait(false);
+                if (who != null)
+                try
+                {
+                    using var _ = await ReclaimerrSession.SendAsUserAsync(_http, config, who, method, path, json, Timeout, null, token).ConfigureAwait(false);
+                    return true;
+                }
+                catch (MaintainerrHttp.MaintainerrException e) when ((e.Status == 401 || (adminAction && e.Status == 403)) && ReclaimerrSession.HasAccount(config))
+                {
+                    _logger.Info($"[Reclaimerr] Reclaimerr did not accept '{who}' (no such user, or its trusted-proxy sign-in is off); using the service account.");
+                }
+                catch (MaintainerrHttp.MaintainerrException e) when (e.Status == 401)
+                {
+                    throw new MaintainerrActions.ActionException($"Reclaimerr has no user '{who}' (or its trusted-proxy sign-in is off). Add that user in Reclaimerr, map it in the Reclaimerr card, or set a service account.");
+                }
+            }
+
+            if (!ReclaimerrSession.HasAccount(config)) throw new MaintainerrActions.ActionException("This needs a Reclaimerr service account (username and password in the Reclaimerr card).");
+            using var __ = await ReclaimerrSession.SendAsync(_http, config, method, path, serviceBody == null ? json : JsonSerializer.Serialize(serviceBody), Timeout, null, token).ConfigureAwait(false);
+            return false;
+$ git grep -n "ReclaimerrActAsUser\|ReclaimerrUsername\|ReclaimerrPassword\|ReclaimerrUserMap" -- Jellyfin.Plugin.JellyfinEnhanced/Configuration/PluginConfiguration.cs
+Jellyfin.Plugin.JellyfinEnhanced/Configuration/PluginConfiguration.cs:981:        public string ReclaimerrUsername { get; set; } = string.Empty;
+Jellyfin.Plugin.JellyfinEnhanced/Configuration/PluginConfiguration.cs:987:        public bool ReclaimerrActAsUser { get; set; } = true;
+Jellyfin.Plugin.JellyfinEnhanced/Configuration/PluginConfiguration.cs:994:        public string ReclaimerrUserMap { get; set; } = string.Empty;
+Jellyfin.Plugin.JellyfinEnhanced/Configuration/PluginConfiguration.cs:996:        public string ReclaimerrPassword { get; set; } = string.Empty;
+$ grep -n "public async Task A_review_the_service_account" tests/backend/Features/MediaTags/IntegrationReclaimerrActionsTests.cs
+413:    public async Task A_review_the_service_account_sends_names_the_administrator_in_the_note_and_one_sent_as_them_does_not()
+
+No lab run: neither commit has anything in this tree to apply to, and no source file changes in this run.
