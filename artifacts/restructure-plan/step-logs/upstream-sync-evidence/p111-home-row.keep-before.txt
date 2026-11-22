@@ -1,0 +1,6 @@
+  before: je12 browse '#/home' --wait 3000 --script <the lab's out dir>/p111-home-row.mjs   (the script is this folder's p111-home-row.mjs)
+    deployed upstream-e16cc10b14f5 = e16cc10b (dll 71a86bd01553a282) on lab je125ce284, 2026-11-22 21:05:36
+    (upstream's Jellyfin 12 build at e16cc10b, installed with scripts/upstream_lab_deploy.py e16cc10b14f5719a209da265acdfeb0c9007213a)
+    | SCRIPT {"before":["Recently Added in Movies: 16 cards, 0 hidden, heading shown","Recently Added in Shows: 16 cards, 0 hidden, heading shown"],"allShowsHidden":["Recently Added in Movies: 16 cards, 0 hidden, heading shown","Recently Added in Shows: 16 cards, 16 hidden, heading hidden"],"unhidden":["Recently Added in Movies: 16 cards, 0 hidden, heading shown","Recently Added in Shows: 16 cards, 0 hidden, heading shown"]}
+    | BLOCKED https://www.gstatic.com/cv/js/sender/v1/cast_sender.js
+    | URL /web/index.html#/home

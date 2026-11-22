@@ -1,0 +1,10 @@
+je12 2.5.0 (v2.5.0); every je12 test run of port 111, from je12 evidence
+tests/frontend/features/hidden-content/features-hidden-regressions.test.mjs :: #1096 a home row whose every card is hidden follows filtering off and on, and comes back when one card is shown again
+  passed on 2beb1e944+dirty@97a013fc at 2026-11-22 21:03:22   (the new test on the tree that already has 2beb1e94's rule)
+  FAILED on 2beb1e944+dirty@c1836c7e at 2026-11-22 21:03:31: AssertionError: every card of the row is hidden, so its heading must go too / true !== false
+                                                              (the same tree with the one .verticalSection:has(...) line removed from
+                                                               client/src/features/hidden-content/hidden-content.css; restored right after)
+  passed on 2beb1e944+dirty@97a013fc at 2026-11-22 21:03:37
+  passed on b0b2d06d4 (the committed branch)
+  => fails without the rule, passes with it
+test: pass in 27s (the repo's quick mode) [features: hidden-content] on b0b2d06d4: node 262 passed, 0 failed (19 node test files)

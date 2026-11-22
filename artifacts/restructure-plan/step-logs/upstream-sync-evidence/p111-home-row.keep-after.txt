@@ -1,0 +1,7 @@
+  after: je12 browse '#/home' --wait 3000 --script <the lab's out dir>/p111-home-row.mjs   (the script is this folder's p111-home-row.mjs)
+    deployed b0b2d06d4 (dll 418afa7c26850bf9) on lab je125ce284, 2026-11-22 21:06:42
+    (a clean build of this branch's commit b0b2d06d4, which has 2beb1e94's rule and this port's test and docs line)
+    | SCRIPT {"before":["Recently Added in Movies: 16 cards, 0 hidden, heading shown","Recently Added in Shows: 16 cards, 0 hidden, heading shown"],"allShowsHidden":["Recently Added in Movies: 16 cards, 0 hidden, heading shown","Recently Added in Shows: 16 cards, 16 hidden, heading hidden"],"unhidden":["Recently Added in Movies: 16 cards, 0 hidden, heading shown","Recently Added in Shows: 16 cards, 0 hidden, heading shown"]}
+    | BLOCKED https://www.gstatic.com/cv/js/sender/v1/cast_sender.js
+    | URL /web/index.html#/home
+  same command before and after: yes; builds: before upstream-e16cc10b14f5, after b0b2d06d4 (a clean build of the checkout's commit)
