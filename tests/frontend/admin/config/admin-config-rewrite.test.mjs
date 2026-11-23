@@ -999,13 +999,14 @@ test('the User audit draws its answer as text into both copies of the Reclaimerr
     const out = $(id);
     assert.equal(out.style.display, 'block', id);
     assert.equal(out.querySelector('.je-audit-summary-title').textContent, 'Audit complete (Reclaimerr 0.6.15), review the items below.');
-    assert.deepEqual([...out.querySelectorAll('.je-audit-summary-chips .je-audit-chip')].map(c => c.textContent), ['settings1 setup', 'warning1 with issues', 'help1 not checked', 'check_circle1 OK']);
+    // Upstream 7762f8e1: the administrator is not checked, so not counted as OK but apart.
+    assert.deepEqual([...out.querySelectorAll('.je-audit-summary-chips .je-audit-chip')].map(c => c.textContent), ['settings1 setup', 'warning1 with issues', 'help1 not checked', 'admin_panel_settings1 administrator(s)']);
     const cards = [...out.querySelectorAll('.je-audit-card')];
     assert.equal(cards.length, 2);
     assert.match(cards[0].textContent, /lacks users:manage/);
     assert.equal(cards[1].querySelector('.je-audit-card-user').textContent, 'person_off<b>Ana</b>', 'a name is text, never markup');
     assert.equal(out.querySelector('b'), null);
-    assert.deepEqual([...out.querySelectorAll('.je-audit-ok-section summary')].map(s => s.textContent), ['Show 1 user(s) not checked (see Setup)', 'Show 1 user(s) with no issues']);
+    assert.deepEqual([...out.querySelectorAll('.je-audit-ok-section summary')].map(s => s.textContent), ['Show 1 linked user(s) whose Request permission was not checked (see Setup)', 'Show 1 administrator(s), not checked: they mark with the API token']);
     assert.deepEqual([...out.querySelectorAll('.je-audit-ok-names li')].map(li => li.textContent), ['Bo \u2192 bo_user', 'Cy \u2192 cy']);
   }
   assert.equal($('reclaimerrAuditBtn').textContent, 'Run Audit');

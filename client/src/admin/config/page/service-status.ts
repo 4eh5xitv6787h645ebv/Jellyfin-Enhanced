@@ -473,9 +473,11 @@ export function createServiceStatus(m: ServiceStatusDeps) {
 
     /**
      * Reclaimerr user audit (upstream da3d9ee9): the token's missing scopes and setup problems first, then a card for each user
-     * with issues (in the Seerr permission audit's style), the users the sign-in check never reached, and the users with none
-     * folded away. Built with textContent only: names and reasons come from Jellyfin and Reclaimerr. Drawn into the card and
-     * into its Services-tab copy alike: the copy only follows a box that holds plain text, and this one holds elements.
+     * with issues (in the Seerr permission audit's style), the users the sign-in check never reached (in grey: their link is
+     * fine, only their Request permission is unknown), the users with none folded away, and the administrators apart (in grey
+     * too: they are not checked, so they are not counted as OK; upstream 7762f8e1). Built with textContent only: names and
+     * reasons come from Jellyfin and Reclaimerr. Drawn into the card and into its Services-tab copy alike: the copy only follows
+     * a box that holds plain text, and this one holds elements.
      */
     function wireUserAudit(): void {
         var button = asControl(document.getElementById('reclaimerrAuditBtn'));
@@ -501,10 +503,10 @@ export function createServiceStatus(m: ServiceStatusDeps) {
             return Array.isArray(u.issues) ? u.issues.filter(function(i): i is string { return typeof i === 'string'; }) : [];
         };
         var label = function(u: JsonObject): string { return text(u.jellyfinUsername) + (text(u.reclaimerrUsername) ? ' \u2192 ' + text(u.reclaimerrUsername) : ''); };
-        var folded = function(title: string, list: JsonObject[]): HTMLElement {
+        var folded = function(title: string, list: JsonObject[], kind?: string): HTMLElement {
             var details = node('details', 'je-audit-ok-section');
             details.append(node('summary', null, title));
-            var ul = node('ul', 'je-audit-ok-names');
+            var ul = node('ul', 'je-audit-ok-names' + (kind ? ' je-audit-' + kind + '-names' : ''));
             list.forEach(function(u) { ul.append(node('li', null, label(u))); });
             details.append(ul);
             return details;
@@ -515,11 +517,16 @@ export function createServiceStatus(m: ServiceStatusDeps) {
             var version = text(data.version);
             var flagged = users.filter(function(u) { return issuesOf(u).length > 0; });
             var unchecked = users.filter(function(u) { return !issuesOf(u).length && u.checked === false; });
-            var ok = users.filter(function(u) { return !issuesOf(u).length && u.checked !== false; });
+            var fine = users.filter(function(u) { return !issuesOf(u).length && u.checked !== false; });
+            // Administrators are not checked (they mark with the API token): neither a problem nor counted with the users who passed.
+            var admins = fine.filter(function(u) { return u.admin === true; });
+            var ok = fine.filter(function(u) { return u.admin !== true; });
             var clean = !setup.length && !flagged.length && !unchecked.length;
             var summary = node('div', 'je-audit-summary');
             summary.append(node('div', 'je-audit-summary-title', clean
-                ? 'All ' + ok.length + ' user(s) are set up.' + (version ? ' Reclaimerr ' + version + '.' : '')
+                ? (admins.length && !ok.length ? 'Nothing to check: all ' + admins.length + ' user(s) are administrators.'
+                    : 'All ' + ok.length + ' user(s) are set up' + (admins.length ? '; ' + admins.length + ' administrator(s) not checked' : '') + '.')
+                    + (version ? ' Reclaimerr ' + version + '.' : '')
                 : 'Audit complete' + (version ? ' (Reclaimerr ' + version + ')' : '') + ', review the items below.'));
             if (!clean) {
                 var chips = node('div', 'je-audit-summary-chips');
@@ -527,6 +534,7 @@ export function createServiceStatus(m: ServiceStatusDeps) {
                 if (flagged.length) chips.append(chip('warn', 'warning', flagged.length + ' with issues'));
                 if (unchecked.length) chips.append(chip('unlinked', 'help', unchecked.length + ' not checked'));
                 if (ok.length) chips.append(chip('ok', 'check_circle', ok.length + ' OK'));
+                if (admins.length) chips.append(chip('unlinked', 'admin_panel_settings', admins.length + ' administrator(s)'));
                 summary.append(chips);
             }
             out.append(summary);
@@ -555,9 +563,10 @@ export function createServiceStatus(m: ServiceStatusDeps) {
                 cards.append(userCard);
             });
             if (cards.childNodes.length) out.append(cards);
-            // Not reached by the sign-in check (see Setup): neither a problem nor known to be fine.
-            if (unchecked.length) out.append(folded('Show ' + unchecked.length + ' user(s) not checked (see Setup)', unchecked));
+            // Not reached by the sign-in check (see Setup): linked to one active account, but whether they may request is unknown.
+            if (unchecked.length) out.append(folded('Show ' + unchecked.length + ' linked user(s) whose Request permission was not checked (see Setup)', unchecked, 'unchecked'));
             if (ok.length && !clean) out.append(folded('Show ' + ok.length + ' user(s) with no issues', ok));
+            if (admins.length && !clean) out.append(folded('Show ' + admins.length + ' administrator(s), not checked: they mark with the API token', admins, 'unchecked'));
         }
         target.addEventListener('click', function() {
             if (!boxes().length) return;
