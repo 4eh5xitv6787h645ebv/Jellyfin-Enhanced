@@ -1,0 +1,48 @@
+# upstream 499376848a (#1099): action pins on sync/auto-20261123-1730 after 4ead3e5e
+
+$ git show 499376848a | git apply --3way   (run on 50954916)
+Applied patch to each of the 10 workflows cleanly (check-unused-translations, codeql, dependency-review, docs, more-info-needed, regression, scorecards, security-scan, stale, translation_validation).
+
+$ git grep -c <old pin> -- .github   (old: harden-runner 1d88384f, create-github-app-token 64ab729a, dependency-review-action a1d282b3, scorecard-action fa7117db, trufflehog 3bd2b588)
+(no match)
+
+$ git grep -n <new pin> -- .github
+.github/workflows/check-unused-translations.yml:14:        uses: step-security/harden-runner@aebdcf6156ab6691adf63218240e476564a1ed4c # v2.23.0
+.github/workflows/codeql.yml:43:      uses: step-security/harden-runner@aebdcf6156ab6691adf63218240e476564a1ed4c # v2.23.0
+.github/workflows/dependency-review.yml:16:        uses: step-security/harden-runner@aebdcf6156ab6691adf63218240e476564a1ed4c # v2.23.0
+.github/workflows/dependency-review.yml:26:        uses: actions/create-github-app-token@f418cff399f7aef4c2f0ad47e25ca7a6abbdd6fc # v3.4.0
+.github/workflows/dependency-review.yml:32:        uses: actions/dependency-review-action@bbc44d14a204704ccc493733616cd1e93a0321ec
+.github/workflows/docs.yml:55:        uses: step-security/harden-runner@aebdcf6156ab6691adf63218240e476564a1ed4c # v2.23.0
+.github/workflows/more-info-needed.yml:27:        uses: actions/create-github-app-token@f418cff399f7aef4c2f0ad47e25ca7a6abbdd6fc # v3.4.0
+.github/workflows/more-info-needed.yml:52:        uses: actions/create-github-app-token@f418cff399f7aef4c2f0ad47e25ca7a6abbdd6fc # v3.4.0
+.github/workflows/regression.yml:47:        uses: actions/create-github-app-token@f418cff399f7aef4c2f0ad47e25ca7a6abbdd6fc # v3.4.0
+.github/workflows/scorecards.yml:26:        uses: step-security/harden-runner@aebdcf6156ab6691adf63218240e476564a1ed4c # v2.23.0
+.github/workflows/scorecards.yml:36:        uses: ossf/scorecard-action@23f22cd43608bae7a1f1fa2603d7314dee9538a5
+.github/workflows/security-scan.yml:24:        uses: step-security/harden-runner@aebdcf6156ab6691adf63218240e476564a1ed4c # v2.23.0
+.github/workflows/security-scan.yml:34:        uses: trufflesecurity/trufflehog@d232362a64a09a9e7d58267b8f5acef00ae90e23
+.github/workflows/security-scan.yml:48:        uses: step-security/harden-runner@aebdcf6156ab6691adf63218240e476564a1ed4c # v2.23.0
+.github/workflows/security-scan.yml:108:        uses: step-security/harden-runner@aebdcf6156ab6691adf63218240e476564a1ed4c # v2.23.0
+.github/workflows/stale.yml:16:        uses: step-security/harden-runner@aebdcf6156ab6691adf63218240e476564a1ed4c # v2.23.0
+.github/workflows/stale.yml:22:        uses: actions/create-github-app-token@f418cff399f7aef4c2f0ad47e25ca7a6abbdd6fc # v3.4.0
+.github/workflows/translation_validation.yml:14:        uses: step-security/harden-runner@aebdcf6156ab6691adf63218240e476564a1ed4c # v2.23.0
+
+$ git diff --stat 499376848a -- .github/workflows   (this tree vs upstream at 499376848a, the files upstream changed)
+ .github/workflows/codeql.yml        | 11 +++++++++++
+ .github/workflows/regression.yml    | 32 +++++++++++++++-----------------
+ .github/workflows/security-scan.yml | 12 +++++-------
+ 3 files changed, 31 insertions(+), 24 deletions(-)
+The three files that differ carry only the rewrite's own lines (codeql: Node setup and npm ci for the generated client; regression and security-scan: the jf12-only build), and the difference is the same as before the port:
+$ for f in codeql regression security-scan: compare `git diff 499376848a~1 50954916a` with `git diff 499376848a 4ead3e5e` (index lines dropped)
+codeql: same difference from upstream before and after = yes
+regression: same difference from upstream before and after = yes
+security-scan: same difference from upstream before and after = yes
+The other seven workflows upstream changed are byte-identical to upstream's at 499376848a.
+
+$ grep uses: rewrite-only workflows
+.github/workflows/validate-manifest.yml:17:      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+.github/workflows/validate-manifest.yml:20:      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0
+.github/workflows/validate-manifest.yml:24:        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+.github/workflows/rewrite-validation.yml:23:      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+.github/workflows/rewrite-validation.yml:26:      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1
+.github/workflows/rewrite-validation.yml:30:      - uses: actions/setup-dotnet@0f4a354dd5547a28c70b7853dbd95d5b67886e73
+.github/workflows/rewrite-validation.yml:37:      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
