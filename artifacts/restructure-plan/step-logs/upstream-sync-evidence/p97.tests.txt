@@ -1,0 +1,100 @@
+# Tests recorded with `je12 test --only` (failing on the parent of each port, passing on the port).
+# "<a scratch checkout of the parent commit>" ran the new tests on ba6cdbdf8 (row 97) and a2991112d (row 110) with
+# only the test files changed; for row 110 the two new symbols were spelled out there and its one theory over the new
+# helper RefusedForAccountOnly left out (it cannot compile before the port).
+
+2026-11-23 15:09:55  scratch checkout  fail  ba6cdbdf8+dirty@18aa6d97  tests/frontend/features/media-tags/features-leavingsoon-approval-timing.test.mjs
+    FAIL tests/frontend/features/media-tags/features-leavingsoon-approval-timing.test.mjs :: approving always offers when to delete: Reclaimerr 0.6.15 and newer schedule approvals
+    FAIL tests/frontend/features/media-tags/features-leavingsoon-approval-timing.test.mjs :: an approval is sent with the grace period, now, or a chosen day
+    FAIL tests/frontend/features/media-tags/features-leavingsoon-approval-timing.test.mjs :: a chosen day is sent as that moment in UTC, shown in the warning, and a day that is not in the future cannot be approved
+    FAIL tests/frontend/features/media-tags/features-leavingsoon-approval-timing.test.mjs :: an approved request whose schedule was kept or has run shows no leave date
+    FAIL tests/frontend/features/media-tags/features-leavingsoon-approval-timing.test.mjs :: the grace period is named in the choice and the warning when Reclaimerr says what it is
+    FAIL tests/frontend/features/media-tags/features-leavingsoon-approval-timing.test.mjs :: a review carries the Reclaimerr the list came from, and the grace period only when it was shown
+2026-11-23 15:10:04  scratch checkout  fail  ba6cdbdf8+dirty@18aa6d97  tests/frontend/features/media-tags/features-leavingsoon-request-cards.test.mjs
+    FAIL tests/frontend/features/media-tags/features-leavingsoon-request-cards.test.mjs :: a request says what it would delete, approving names that scope and carries the note, and a failed deletion stays visible
+    FAIL tests/frontend/features/media-tags/features-leavingsoon-request-cards.test.mjs :: an administrator is told why the requests could not be read; anyone else only that they could not
+2026-11-23 15:10:07  scratch checkout  fail  ba6cdbdf8+dirty@18aa6d97  tests/frontend/features/media-tags/features-leavingsoon-page.test.mjs :: an administrator gets Keep and the date change on each card, and approves or denies pending requests
+    FAIL tests/frontend/features/media-tags/features-leavingsoon-page.test.mjs :: an administrator gets Keep and the date change on each card, and approves or denies pending requests
+2026-11-23 15:10:11  scratch checkout  fail  ba6cdbdf8+dirty@18aa6d97  tests/frontend/admin/config/admin-config-rewrite.test.mjs :: Import Jellyfin users sends the ticked permissions and pages, from either copy of the card, and says what Reclaimerr did
+    FAIL tests/frontend/admin/config/admin-config-rewrite.test.mjs :: Import Jellyfin users sends the ticked permissions and pages, from either copy of the card, and says what Reclaimerr did
+2026-11-23 15:10:15  scratch checkout  fail  ba6cdbdf8+dirty@18aa6d97  tests/frontend/admin/config/admin-config-rewrite.test.mjs :: the User audit draws its answer as text into both copies of the Reclaimerr card, and a refusal as the server words it
+    FAIL tests/frontend/admin/config/admin-config-rewrite.test.mjs :: the User audit draws its answer as text into both copies of the Reclaimerr card, and a refusal as the server words it
+2026-11-23 15:10:19  scratch checkout  fail  ba6cdbdf8+dirty@18aa6d97  tests/frontend/admin/config/admin-config-rewrite.test.mjs :: Maintainerr and Reclaimerr are one choice: turning one on turns the other off, and the one that is off folds its settings
+    FAIL tests/frontend/admin/config/admin-config-rewrite.test.mjs :: Maintainerr and Reclaimerr are one choice: turning one on turns the other off, and the one that is off folds its settings
+2026-11-23 15:10:44  scratch checkout  none  ba6cdbdf8+dirty@99749faf  JE.Tests.Features.MediaTags.PosterTags.LeavingSoonTests.The_Reclaimerr_user_header_must_be_a_header_name_or_the_stored_one_is_kept
+2026-11-23 15:10:56  scratch checkout  fail  ba6cdbdf8+dirty@99749faf  JE.Tests.Features.MediaTags.LeavingSoonTests.The_Reclaimerr_user_header_must_be_a_header_name_or_the_stored_one_is_kept
+    FAIL JE.Tests.Features.MediaTags.LeavingSoonTests.The_Reclaimerr_user_header_must_be_a_header_name_or_the_stored_one_is_kept
+2026-11-23 15:15:55  scratch checkout  fail  a2991112d+dirty@0bec47f3  JE.Tests.Features.MediaTags.IntegrationReclaimerrTests
+    FAIL JE.Tests.Features.MediaTags.IntegrationReclaimerrTests.An_answer_without_the_permission_list_is_not_read_as_lacking_the_permission
+    FAIL JE.Tests.Features.MediaTags.IntegrationReclaimerrTests.A_401_with_any_other_reason_or_none_still_counts_as_refusing_this_server(body: "{}", said: "HTTP 401)")
+    FAIL JE.Tests.Features.MediaTags.IntegrationReclaimerrTests.A_401_with_any_other_reason_or_none_still_counts_as_refusing_this_server(body: "{\"detail\":\"Trusted proxy supplied multiple user"···, said: "HTTP 401: Trusted proxy supplied multiple username"···)
+    FAIL JE.Tests.Features.MediaTags.IntegrationReclaimerrTests.A_sign_in_refused_for_one_account_only_is_that_users_issue_and_the_rest_are_still_checked
+    FAIL JE.Tests.Features.MediaTags.IntegrationReclaimerrTests.An_answer_that_is_not_the_account_asked_for_is_never_read_as_its_permissions
+    FAIL JE.Tests.Features.MediaTags.IntegrationReclaimerrTests.A_401_with_any_other_reason_or_none_still_counts_as_refusing_this_server(body: "<html>401 Authorization Required</html>", said: "HTTP 401)")
+    FAIL JE.Tests.Features.MediaTags.IntegrationReclaimerrTests.A_trusted_proxy_sign_in_refused_for_everyone_is_said_once_and_not_retried_per_user
+    FAIL JE.Tests.Features.MediaTags.IntegrationReclaimerrTests.A_user_without_a_linked_active_account_or_with_the_sign_in_refused_gets_a_clear_reason
+    FAIL JE.Tests.Features.MediaTags.IntegrationReclaimerrTests.A_plain_refusal_after_Reclaimerr_accepted_another_account_is_that_accounts_issue_not_the_servers
+    FAIL JE.Tests.Features.MediaTags.IntegrationReclaimerrTests.A_plain_refusal_is_settled_by_asking_about_the_server_not_by_which_account_came_first
+    FAIL JE.Tests.Features.MediaTags.IntegrationReclaimerrTests.Two_refusals_that_differ_are_each_quoted_as_they_came
+    FAIL JE.Tests.Features.MediaTags.IntegrationReclaimerrTests.A_401_with_any_other_reason_or_none_still_counts_as_refusing_this_server(body: "{\"detail\":\"Session has expired\"}", said: "HTTP 401: Session has expired")
+    FAIL JE.Tests.Features.MediaTags.IntegrationReclaimerrTests.When_the_server_cannot_be_asked_about_nothing_is_concluded_about_it
+2026-11-23 15:17:39  scratch checkout  fail  a2991112d+dirty@823e6d11  tests/frontend/admin/config/admin-config-reclaimerr-audit.test.mjs
+    FAIL tests/frontend/admin/config/admin-config-reclaimerr-audit.test.mjs :: a sign-in Reclaimerr refuses for everyone is one Setup item: the users are listed as linked and not checked, the administrator apart, and nobody as OK
+    FAIL tests/frontend/admin/config/admin-config-reclaimerr-audit.test.mjs :: an account Reclaimerr refuses on its own gets its own card, and everyone else is checked
+    FAIL tests/frontend/admin/config/admin-config-reclaimerr-audit.test.mjs :: with every user set up the audit says so in one line, counting the administrators it did not check apart
+    FAIL tests/frontend/admin/config/admin-config-reclaimerr-audit.test.mjs :: a clean audit without administrators, and one with nobody but administrators
+2026-11-23 15:03:44  this branch  fail  ba6cdbdf8+dirty@5950d291  JE.Tests.Features.MediaTags.IntegrationReclaimerrRoutesTests
+    FAIL JE.Tests.Features.MediaTags.IntegrationReclaimerrRoutesTests.A_request_card_links_an_item_the_viewer_can_open_and_names_the_linked_Jellyfin_requester
+    FAIL JE.Tests.Features.MediaTags.IntegrationReclaimerrRoutesTests.The_list_gives_Reclaimerr_sizes_else_the_library_and_leaves_out_a_title_in_a_library_the_user_cannot_open
+2026-11-23 15:04:28  this branch  pass  ba6cdbdf8+dirty@000078ad  JE.Tests.Features.MediaTags.IntegrationReclaimerrRoutesTests
+    6 passed
+2026-11-23 15:09:31  this branch  pass  ba6cdbdf8+dirty@bfb14b7f  tests/frontend/admin/config/admin-config-rewrite.test.mjs
+    65 passed
+2026-11-23 15:12:28  this branch  fail  acf5eac22+dirty@b244ef6f  JE.Tests.Features.MediaTags.IntegrationReclaimerrRoutesTests.Admin_actions_name_the_acting_administrators_linked_Reclaimerr_account_only_while_requests_are_on
+    FAIL JE.Tests.Features.MediaTags.IntegrationReclaimerrRoutesTests.Admin_actions_name_the_acting_administrators_linked_Reclaimerr_account_only_while_requests_are_on
+2026-11-23 15:13:35  this branch  fail  acf5eac22+dirty@b705aaba  JE.Tests.Features.MediaTags.IntegrationReclaimerrRoutesTests
+    FAIL JE.Tests.Features.MediaTags.IntegrationReclaimerrRoutesTests.A_review_from_a_list_read_at_another_Reclaimerr_is_refused_and_one_from_this_one_is_sent
+2026-11-23 15:14:34  this branch  none  acf5eac22+dirty@49aab815  JE.Tests.Features.MediaTags.IntegrationReclaimerr
+2026-11-23 15:14:44  this branch  pass  acf5eac22+dirty@49aab815  JE.Tests.Features.MediaTags.IntegrationReclaimerrRoutesTests
+    7 passed
+2026-11-23 15:14:51  this branch  pass  acf5eac22+dirty@49aab815  JE.Tests.Features.MediaTags.IntegrationReclaimerrTests
+    60 passed
+2026-11-23 15:18:03  this branch  pass  a2991112d+dirty@7c7c48b0  tests/frontend/admin/config/admin-config-reclaimerr-audit.test.mjs
+    5 passed
+2026-11-23 15:18:17  this branch  fail  a2991112d+dirty@7c7c48b0  JE.Tests.Features.MediaTags.IntegrationReclaimerrTests
+    FAIL JE.Tests.Features.MediaTags.IntegrationReclaimerrTests.An_answer_that_is_not_the_account_asked_for_is_never_read_as_its_permissions
+2026-11-23 15:18:53  this branch  pass  a2991112d+dirty@8db15f4a  JE.Tests.Features.MediaTags.IntegrationReclaimerrTests
+    79 passed
+2026-11-23 15:21:56  this branch  pass  a2991112d+dirty@3eaf6856  tests/frontend/admin/config/admin-config-rewrite.test.mjs :: the User audit draws its answer as text into both copies of the Reclaimerr card, and a refusal as the server words it
+    1 passed
+2026-11-23 15:31:04  this branch  fail  9be26968f  JE.Tests.Architecture
+    FAIL JE.Tests.Architecture.ServiceFactorySnapshotTests.FactoryRegistrationsAndHttpClientsMatchRestructureBase
+    FAIL JE.Tests.Architecture.AuthReadClosureSnapshotTests.TransitiveAuthReadsPerRouteMatchRestructureBase
+    FAIL JE.Tests.Architecture.AuthReadClosureSnapshotTests.RoutesMatchGateA
+    FAIL JE.Tests.Architecture.RouteAuthSnapshotTests.RouteVerbAuthAndBindingMatchTheSnapshot
+    FAIL JE.Tests.Architecture.AuthHelperCallSnapshotTests.AuthHelperCallsPerActionMatchTheSnapshot
+    FAIL JE.Tests.Architecture.AuthHelperCallSnapshotTests.EveryRoutedActionIsCounted
+2026-11-23 15:32:31  this branch  fail  9be26968f+dirty@a1098fc6  JE.Tests.Architecture
+    FAIL JE.Tests.Architecture.AuthReadClosureSnapshotTests.TransitiveAuthReadsPerRouteMatchRestructureBase
+2026-11-23 15:32:55  this branch  pass  9be26968f+dirty@6af4e615  JE.Tests.Architecture
+    24 passed
+2026-11-23 15:34:17  this branch  pass  9be26968f  tests/frontend/features/media-tags/features-leavingsoon-approval-timing.test.mjs
+    8 passed
+2026-11-23 15:34:21  this branch  pass  9be26968f  tests/frontend/features/media-tags/features-leavingsoon-request-cards.test.mjs
+    6 passed
+2026-11-23 15:34:24  this branch  pass  9be26968f  tests/frontend/features/media-tags/features-leavingsoon-page.test.mjs :: an administrator gets Keep and the date change on each card, and approves or denies pending requests
+    1 passed
+2026-11-23 15:34:29  this branch  pass  9be26968f  tests/frontend/admin/config/admin-config-rewrite.test.mjs :: Import Jellyfin users sends the ticked permissions and pages, from either copy of the card, and says what Reclaimerr did
+    1 passed
+2026-11-23 15:34:34  this branch  pass  9be26968f  tests/frontend/admin/config/admin-config-rewrite.test.mjs :: the User audit draws its answer as text into both copies of the Reclaimerr card, and a refusal as the server words it
+    1 passed
+2026-11-23 15:34:38  this branch  pass  9be26968f  tests/frontend/admin/config/admin-config-rewrite.test.mjs :: Maintainerr and Reclaimerr are one choice: turning one on turns the other off, and the one that is off folds its settings
+    1 passed
+2026-11-23 15:34:48  this branch  pass  9be26968f  tests/frontend/admin/config/admin-config-reclaimerr-audit.test.mjs
+    5 passed
+2026-11-23 15:34:54  this branch  pass  9be26968f  JE.Tests.Features.MediaTags.LeavingSoonTests.The_Reclaimerr_user_header_must_be_a_header_name_or_the_stored_one_is_kept
+    1 passed
+2026-11-23 15:35:02  this branch  pass  9be26968f  JE.Tests.Features.MediaTags.IntegrationReclaimerrTests
+    79 passed
+2026-11-23 15:35:09  this branch  pass  9be26968f  JE.Tests.Features.MediaTags.IntegrationReclaimerrRoutesTests
+    7 passed

@@ -1,0 +1,30 @@
+# p111: an installation on the old Reclaimerr integration (service account saved) updated to the port, then saved once
+$ je12 deploy --base ba6cdbdf8   (main line before the port)
+deployed ba6cdbdf8491 (dll 41dd8cbaa5dfdf95) to http://<lab>:8096: restart 4s, total 9s
+$ je12 api admin POST /Plugins/f69e946a4b3c4e9a8f0a8d7c1b2c4d9b/Configuration @old-settings.json  (Reclaimerr on, service account jellyfin-enhanced, a password, a user map, act as the user)
+HTTP 204
+$ je12 lab files cat Jellyfin.Plugin.JellyfinEnhanced.xml | grep -oE 'Reclaimerr...'
+<ReclaimerrEnabled>true
+<ReclaimerrUsername>jellyfin-enhanced
+<ReclaimerrActAsUser>true
+<ReclaimerrUserHeader>Remote-User
+<ReclaimerrUserMap>Sam = sam_user
+<ReclaimerrPassword>(the password, as stored)
+$ je12 deploy   (the port, 9be26968f)
+deployed 9be26968f (dll 9ebc7e23cdf6144e) to http://<lab>:8096: restart 4s, total 9s
+$ je12 api admin GET /Plugins/f69e946a4b3c4e9a8f0a8d7c1b2c4d9b/Configuration  (Reclaimerr keys the server serves)
+{'ReclaimerrEnabled': True, 'ReclaimerrUrl': 'http://reclaimerr:8000', 'ReclaimerrUserRequests': False, 'ReclaimerrUserHeader': 'Remote-User'}
+$ je12 lab files cat Jellyfin.Plugin.JellyfinEnhanced.xml | grep -oE 'Reclaimerr...'   (the file before any save)
+<ReclaimerrEnabled>true
+<ReclaimerrUserRequests>false
+<ReclaimerrUserHeader>Remote-User
+$ je12 api admin POST /Plugins/f69e946a4b3c4e9a8f0a8d7c1b2c4d9b/Configuration @<what GET answered>   (any save, as the admin page's Save)
+HTTP 204
+$ je12 lab files cat Jellyfin.Plugin.JellyfinEnhanced.xml | grep -oE 'Reclaimerr...'   (after the save)
+<ReclaimerrEnabled>true
+<ReclaimerrUserRequests>false
+<ReclaimerrUserHeader>Remote-User
+$ je12 logs   (errors and warnings since the deploy, Reclaimerr or configuration)
+[2026-11-23 07:30:38.180 +00:00] [WRN] [10] Microsoft.AspNetCore.DataProtection.KeyManagement.XmlKeyManager: No XML encryptor configured. Key {af63c067-20cf-48a3-9274-e3067bf60304} may be persisted to storage in unencrypted form.
+[2026-11-23 07:30:41.636 +00:00] [WRN] [16] Jellyfin.Plugin.JellyfinEnhanced: "[CDN] Failed to refresh known asset 'selfhst/svg/reclaimerr.svg'."
+(end)

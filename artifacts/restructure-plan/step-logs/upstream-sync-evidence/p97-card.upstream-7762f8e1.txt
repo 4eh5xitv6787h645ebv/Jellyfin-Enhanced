@@ -1,0 +1,17 @@
+$ je12 browse '#/home' --script p97-reclaimerr-card.mjs
+# on upstream's build at 7762f8e1 (scripts/upstream_lab_deploy.py), same lab as the before/after pairs
+SCRIPT {"card":{"settings":["ReclaimerrEnabled (checkbox, on) \"Use Reclaimerr\" hidden","ReclaimerrUrl (text) \"Reclaimerr URL\" hidden","ReclaimerrApiKey (text) \"Reclaimerr API token\" hidden","ReclaimerrUserRequests (checkbox, off) \"Let users request removals\" hidden","ReclaimerrUserHeader (text) \"User header\" hidden"],"groups":["Import Jellyfin users into Reclaimerr","User audit"],"buttons":["reclaimerrImportUsersBtn: Import Jellyfin users","reclaimerrAuditBtn: Run Audit"],"groupNotes":["Creates and links a Reclaimerr account for each Jellyfin user without one. Users Reclaimerr matches to an existing account are listed for you to confirm in Recl","Checks each Jellyfin user's linked Reclaimerr account and, with requests on, whether they can request removals. Administrators mark for removal with the API tok"]},"header":"User header shown with requests off: false; with requests on: false","audit":"Audit failed: Turn on Use Reclaimerr and save its URL and API token first."}
+CONSOLE Translation key is missing from dictionary: url
+CONSOLE Translation key is missing from dictionary: ...
+CONSOLE Translation key is missing from dictionary: baseName
+CONSOLE Translation key is missing from dictionary: code.split('-')[1]
+CONSOLE Translation key is missing from dictionary: index + 1
+CONSOLE Translation key is missing from dictionary: trimmedLine
+CONSOLE Translation key is missing from dictionary: invalidLines.join('\n')
+CONSOLE Failed to load resource: the server responded with a status of 404 (Not Found) /JellyfinEnhanced/cdn/selfhst/svg/tmdb.svg
+CONSOLE Failed to load resource: the server responded with a status of 404 (Not Found) /JellyfinEnhanced/cdn/selfhst/svg/maintainerr.svg
+CONSOLE Failed to load resource: the server responded with a status of 404 (Not Found) /JellyfinEnhanced/cdn/selfhst/svg/reclaimerr.svg
+CONSOLE Failed to load resource: the server responded with a status of 400 (Bad Request) /JellyfinEnhanced/reclaimerr/user-audit
+BLOCKED https://www.gstatic.com/cv/js/sender/v1/cast_sender.js
+BLOCKED https://api.github.com/repos/n00bcodr/Jellyfin-Enhanced/contents/Jellyfin.Plugin.JellyfinEnhanced/js/locales
+URL /web/index.html#/configurationpage?name=Jellyfin%20Enhanced&tab=services&card=reclaimerr

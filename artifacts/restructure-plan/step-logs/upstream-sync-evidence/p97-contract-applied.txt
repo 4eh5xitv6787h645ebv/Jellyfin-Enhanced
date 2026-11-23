@@ -1,0 +1,67 @@
+# The contract lines this branch changes by hand in its last commit (contract: reclaimerr token API (upstream da3d9ee9)).
+# Each is what the failing Architecture test printed, applied as printed; JE_UPDATE_SNAPSHOTS was not set.
+# Before: 6 Architecture tests failed on 9be26968f (RouteVerbAuthAndBindingMatchTheSnapshot, AuthHelperCallsPerActionMatchTheSnapshot,
+# EveryRoutedActionIsCounted, TransitiveAuthReadsPerRouteMatchRestructureBase, RoutesMatchGateA, FactoryRegistrationsAndHttpClientsMatchRestructureBase);
+# after: all 24 Architecture tests pass, and gate INV passes.
+
+diff --git a/artifacts/restructure-plan/baselines/inventory-routes.txt b/artifacts/restructure-plan/baselines/inventory-routes.txt
+--- a/artifacts/restructure-plan/baselines/inventory-routes.txt
++++ b/artifacts/restructure-plan/baselines/inventory-routes.txt
+@@ -140 +140 @@ GET /JellyfinEnhanced/public-config
+-POST /JellyfinEnhanced/reclaimerr/create-users
++POST /JellyfinEnhanced/reclaimerr/import-users
+@@ -147 +146,0 @@ POST /JellyfinEnhanced/reclaimerr/requests/{requestId:int}/deny
+-POST /JellyfinEnhanced/reclaimerr/service-account
+@@ -148,0 +148 @@ POST /JellyfinEnhanced/reclaimerr/unmark
++GET /JellyfinEnhanced/reclaimerr/user-audit
+diff --git a/tests/backend/Architecture/auth-helper-calls.snapshot.json b/tests/backend/Architecture/auth-helper-calls.snapshot.json
+--- a/tests/backend/Architecture/auth-helper-calls.snapshot.json
++++ b/tests/backend/Architecture/auth-helper-calls.snapshot.json
+@@ -15,2 +14,0 @@
+-  "CreateReclaimerrServiceAccount": {"IsAdminUser":1},
+-  "CreateReclaimerrUsers": {"IsAdminUser":1},
+@@ -118,0 +117 @@
++  "GetReclaimerrUserAudit": {"IsAdminUser":1},
+@@ -176,0 +176 @@
++  "ImportReclaimerrUsers": {"IsAdminUser":1},
+@@ -180 +180 @@
+-  "KeepFromReclaimerrRemoval": {"IsAdminUser":1},
++  "KeepFromReclaimerrRemoval": {"IsAdminUser":1,"User":1,"UserHelper.GetCurrentUserId":1},
+@@ -182 +182 @@
+-  "MarkForReclaimerrRemoval": {"IsAdminUser":1},
++  "MarkForReclaimerrRemoval": {"IsAdminUser":1,"User":1,"UserHelper.GetCurrentUserId":1},
+@@ -187 +187 @@
+-  "PostponeReclaimerrRemoval": {"IsAdminUser":1},
++  "PostponeReclaimerrRemoval": {"IsAdminUser":1,"User":1,"UserHelper.GetCurrentUserId":1},
+@@ -200 +200 @@
+-  "RequestReclaimerrRemoval": {},
++  "RequestReclaimerrRemoval": {"User":1,"UserHelper.GetCurrentUserId":1},
+diff --git a/tests/backend/Architecture/auth-reads-by-route.base.json b/tests/backend/Architecture/auth-reads-by-route.base.json
+--- a/tests/backend/Architecture/auth-reads-by-route.base.json
++++ b/tests/backend/Architecture/auth-reads-by-route.base.json
+@@ -125,0 +126 @@
++    "GET JellyfinEnhanced/reclaimerr/user-audit": {"IsAdminUser":1},
+@@ -196 +197 @@
+-    "POST JellyfinEnhanced/reclaimerr/create-users": {"IsAdminUser":1},
++    "POST JellyfinEnhanced/reclaimerr/import-users": {"IsAdminUser":1},
+@@ -202 +202,0 @@
+-    "POST JellyfinEnhanced/reclaimerr/service-account": {"IsAdminUser":1},
+diff --git a/tests/backend/Architecture/route-auth.snapshot.json b/tests/backend/Architecture/route-auth.snapshot.json
+--- a/tests/backend/Architecture/route-auth.snapshot.json
++++ b/tests/backend/Architecture/route-auth.snapshot.json
+@@ -141 +141 @@
+-  {"verb":"POST","route":"JellyfinEnhanced/reclaimerr/create-users","requiresAuth":true,"auth":"","action":"CreateReclaimerrUsers","apiBehavior":true,"parameters":["request:Body","reclaimerr:Services","token:Special"]},
++  {"verb":"POST","route":"JellyfinEnhanced/reclaimerr/import-users","requiresAuth":true,"auth":"","action":"ImportReclaimerrUsers","apiBehavior":true,"parameters":["request:Body","reclaimerr:Services","token:Special"]},
+@@ -148 +147,0 @@
+-  {"verb":"POST","route":"JellyfinEnhanced/reclaimerr/service-account","requiresAuth":true,"auth":"","action":"CreateReclaimerrServiceAccount","apiBehavior":true,"parameters":["request:Body","http:Services","token:Special"]},
+@@ -149,0 +149 @@
++  {"verb":"GET","route":"JellyfinEnhanced/reclaimerr/user-audit","requiresAuth":true,"auth":"","action":"GetReclaimerrUserAudit","apiBehavior":true,"parameters":["reclaimerr:Services","token:Special"]},
+diff --git a/tests/backend/Architecture/service-factories.base.json b/tests/backend/Architecture/service-factories.base.json
+--- a/tests/backend/Architecture/service-factories.base.json
++++ b/tests/backend/Architecture/service-factories.base.json
+@@ -11 +11 @@
+-    "IConfigureOptions<HttpClientFactoryOptions>": ["\"JellyfinEnhanced.Maintainerr\" ConfigureNamedOptions<HttpClientFactoryOptions> HttpClientBuilderExtensions+<>c__DisplayClass5_0.<ConfigurePrimaryHttpMessageHandler>b__0(configureHandler=lambda{HttpClientHandler..ctor, HttpClientHandler.set_AllowAutoRedirect})","\"JellyfinEnhancedSeerr\" ConfigureNamedOptions<HttpClientFactoryOptions> HttpClientBuilderExtensions+<>c__DisplayClass2_0.<AddHttpMessageHandler>b__0(configureHandler=lambda{SeerrCsrfHandler..ctor})","\"JellyfinEnhancedSeerr\" ConfigureNamedOptions<HttpClientFactoryOptions> HttpClientBuilderExtensions+<>c__DisplayClass5_0.<ConfigurePrimaryHttpMessageHandler>b__0(configureHandler=lambda{HttpClientHandler..ctor, HttpClientHandler.set_AllowAutoRedirect, HttpClientHandler.set_UseCookies})"],
++    "IConfigureOptions<HttpClientFactoryOptions>": ["\"JellyfinEnhanced.Maintainerr\" ConfigureNamedOptions<HttpClientFactoryOptions> HttpClientBuilderExtensions+<>c__DisplayClass5_0.<ConfigurePrimaryHttpMessageHandler>b__0(configureHandler=lambda{HttpClientHandler..ctor, HttpClientHandler.set_AllowAutoRedirect, HttpClientHandler.set_UseCookies})","\"JellyfinEnhancedSeerr\" ConfigureNamedOptions<HttpClientFactoryOptions> HttpClientBuilderExtensions+<>c__DisplayClass2_0.<AddHttpMessageHandler>b__0(configureHandler=lambda{SeerrCsrfHandler..ctor})","\"JellyfinEnhancedSeerr\" ConfigureNamedOptions<HttpClientFactoryOptions> HttpClientBuilderExtensions+<>c__DisplayClass5_0.<ConfigurePrimaryHttpMessageHandler>b__0(configureHandler=lambda{HttpClientHandler..ctor, HttpClientHandler.set_AllowAutoRedirect, HttpClientHandler.set_UseCookies})"],
+@@ -17 +17 @@
+-    "JellyfinEnhanced.Maintainerr": {"handlerLifetime":"00:02:00","suppressHandlerScope":false,"handlerBuilderActions":["HttpClientBuilderExtensions+<>c__DisplayClass5_0.<ConfigurePrimaryHttpMessageHandler>b__1(configureHandler=lambda{HttpClientHandler..ctor, HttpClientHandler.set_AllowAutoRedirect})"],"httpClientActions":[],"shouldRedactHeaderValue":"LogHelper+<>c.<.cctor>b__17_0","handlerChain":["LifetimeTrackingHttpMessageHandler","LoggingScopeHttpMessageHandler","LoggingHttpMessageHandler","HttpClientHandler"],"primaryHandler":{"AllowAutoRedirect":"False","AutomaticDecompression":"None","CheckCertificateRevocationList":"False","ClientCertificateOptions":"Manual","ClientCertificates":"object X509CertificateCollection","CookieContainer":"object CookieContainer","Credentials":"null","DefaultProxyCredentials":"null","MaxAutomaticRedirections":"50","MaxConnectionsPerServer":"2147483647","MaxRequestContentBufferSize":"0","MaxResponseHeadersLength":"64","MeterFactory":"object DefaultMeterFactory","PreAuthenticate":"False","Proxy":"null","ServerCertificateCustomValidationCallback":"null","SslProtocols":"None","SupportsAutomaticDecompression":"True","SupportsProxy":"True","SupportsRedirectConfiguration":"True","UseCookies":"True","UseDefaultCredentials":"False","UseProxy":"True"},"underlyingHandler":{"ActivityHeadersPropagator":"object W3CPropagator","AllowAutoRedirect":"False","AutomaticDecompression":"None","ConnectCallback":"null","ConnectTimeout":"-00:00:00.0010000","CookieContainer":"object CookieContainer","Credentials":"null","DefaultProxyCredentials":"null","EnableMultipleHttp2Connections":"False","EnableMultipleHttp3Connections":"False","Expect100ContinueTimeout":"00:00:01","InitialHttp2StreamWindowSize":"65535","KeepAlivePingDelay":"-00:00:00.0010000","KeepAlivePingPolicy":"Always","KeepAlivePingTimeout":"00:00:20","MaxAutomaticRedirections":"50","MaxConnectionsPerServer":"2147483647","MaxResponseDrainSize":"1048576","MaxResponseHeadersLength":"64","MeterFactory":"object DefaultMeterFactory","PlaintextStreamFilter":"null","PooledConnectionIdleTimeout":"00:01:00","PooledConnectionLifetime":"-00:00:00.0010000","PreAuthenticate":"False","Proxy":"null","RequestHeaderEncodingSelector":"null","ResponseDrainTimeout":"00:00:02","ResponseHeaderEncodingSelector":"null","SslOptions":"object SslClientAuthenticationOptions","UseCookies":"True","UseProxy":"True"},"client":{"BaseAddress":"null","DefaultRequestHeaders":"","DefaultRequestVersion":"1.1","DefaultVersionPolicy":"RequestVersionOrLower","MaxResponseContentBufferSize":"2147483647","Timeout":"00:01:40"}},
++    "JellyfinEnhanced.Maintainerr": {"handlerLifetime":"00:02:00","suppressHandlerScope":false,"handlerBuilderActions":["HttpClientBuilderExtensions+<>c__DisplayClass5_0.<ConfigurePrimaryHttpMessageHandler>b__1(configureHandler=lambda{HttpClientHandler..ctor, HttpClientHandler.set_AllowAutoRedirect, HttpClientHandler.set_UseCookies})"],"httpClientActions":[],"shouldRedactHeaderValue":"LogHelper+<>c.<.cctor>b__17_0","handlerChain":["LifetimeTrackingHttpMessageHandler","LoggingScopeHttpMessageHandler","LoggingHttpMessageHandler","HttpClientHandler"],"primaryHandler":{"AllowAutoRedirect":"False","AutomaticDecompression":"None","CheckCertificateRevocationList":"False","ClientCertificateOptions":"Manual","ClientCertificates":"object X509CertificateCollection","CookieContainer":"object CookieContainer","Credentials":"null","DefaultProxyCredentials":"null","MaxAutomaticRedirections":"50","MaxConnectionsPerServer":"2147483647","MaxRequestContentBufferSize":"0","MaxResponseHeadersLength":"64","MeterFactory":"object DefaultMeterFactory","PreAuthenticate":"False","Proxy":"null","ServerCertificateCustomValidationCallback":"null","SslProtocols":"None","SupportsAutomaticDecompression":"True","SupportsProxy":"True","SupportsRedirectConfiguration":"True","UseCookies":"False","UseDefaultCredentials":"False","UseProxy":"True"},"underlyingHandler":{"ActivityHeadersPropagator":"object W3CPropagator","AllowAutoRedirect":"False","AutomaticDecompression":"None","ConnectCallback":"null","ConnectTimeout":"-00:00:00.0010000","CookieContainer":"object CookieContainer","Credentials":"null","DefaultProxyCredentials":"null","EnableMultipleHttp2Connections":"False","EnableMultipleHttp3Connections":"False","Expect100ContinueTimeout":"00:00:01","InitialHttp2StreamWindowSize":"65535","KeepAlivePingDelay":"-00:00:00.0010000","KeepAlivePingPolicy":"Always","KeepAlivePingTimeout":"00:00:20","MaxAutomaticRedirections":"50","MaxConnectionsPerServer":"2147483647","MaxResponseDrainSize":"1048576","MaxResponseHeadersLength":"64","MeterFactory":"object DefaultMeterFactory","PlaintextStreamFilter":"null","PooledConnectionIdleTimeout":"00:01:00","PooledConnectionLifetime":"-00:00:00.0010000","PreAuthenticate":"False","Proxy":"null","RequestHeaderEncodingSelector":"null","ResponseDrainTimeout":"00:00:02","ResponseHeaderEncodingSelector":"null","SslOptions":"object SslClientAuthenticationOptions","UseCookies":"False","UseProxy":"True"},"client":{"BaseAddress":"null","DefaultRequestHeaders":"","DefaultRequestVersion":"1.1","DefaultVersionPolicy":"RequestVersionOrLower","MaxResponseContentBufferSize":"2147483647","Timeout":"00:01:40"}},

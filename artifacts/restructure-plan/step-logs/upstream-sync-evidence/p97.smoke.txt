@@ -1,0 +1,26 @@
+$ je12 deploy --base ba6cdbdf8 && je12 smoke --record && je12 deploy && je12 smoke
+# The lab started on the port (9be26968f), so its first smoke compared the port with itself: the baseline was recorded
+# again on the main line (ba6cdbdf8) and the port compared with that.
+deployed ba6cdbdf8491 (dll 41dd8cbaa5dfdf95)
+smoke: pass (0 failing, 0 flaky, 0 changed, 0 known, 0 fixed) in 35s   (recorded as the baseline)
+deployed 9be26968f (dll 9ebc7e23cdf6144e)
+smoke: comparing the deployed 9be26968f with the baseline of ba6cdbdf8491 (docs(sync): gate record for upstream e16cc10b), from the last je12 smoke --record
+page admin           ok      14 tabs; Media Tags section 16 tabs
+page settings        ok      panel open, 24 tabs
+page media-tags-hub  ok      #jeMediaTagsHub visible
+page poster          ok      23/100 cards tagged
+page details         ok      101 Dalmatians II: Patch's London Adventure: 66 JE elements
+page hidden-content  ok      page rendered
+page bookmarks       ok      page rendered
+page calendar        ok      5 events
+page downloads       ok      4 items
+page activity        ok      Activity tab rendered
+page catchup         ok      Catch Up tab rendered
+page seerr           ok      5 Seerr cards
+page player          ok      playing 1.0s; OSD rating present
+plugin               ok      12.17.0.0 Active
+scheduled tasks      ok      17 JE tasks (keys and ids)
+openapi              ok      HTTP 200, 498 paths, 204 under /JellyfinEnhanced
+bundle wire          ok      br 200 624692B 304:yes, gzip 200 758298B 304:yes, identity 200 2749218B 304:yes; decoded bodies identical
+server log           ok      170 ERR/WRN lines, 0 new kind(s)
+smoke: pass (0 failing, 0 flaky, 0 changed, 0 known, 0 fixed) in 35s

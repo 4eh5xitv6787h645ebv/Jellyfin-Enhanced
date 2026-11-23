@@ -1,0 +1,13 @@
+$ je12 browse '#/home' --script p97-leaving-page.mjs
+# on upstream's build at 7762f8e1 (scripts/upstream_lab_deploy.py), same lab as the before/after pairs
+SCRIPT server list keys: provider,admin,canRequest,actions,items,requests,mine,requestsUnavailable,requestsError,source
+server requestsUnavailable=true requestsError="not reachable" canSchedule=undefined source=(a 16-character digest)
+notice drawn from the server's list: "Removal requests could not be loaded: not reachable"
+card: name plain=12th Fail | chip warn=Waiting
+card: name plain=Cars | chip ok=Approved | sub=Leaves on 10 Dec 2026
+card: name plain=Coco | chip ok=Approved
+card: name plain=Heat | chip ok=Approved
+approve step: warn="Approving deletes this from your library on 07 Dec 2026." confirm="Approve" select=default:Use Reclaimerr's grace period (14 days) / now:Delete now / date:Choose a date
+sent: POST reclaimerr/requests/7/approve {"when":"default","graceDays":14,"source":"0123456789abcdef"}
+BLOCKED https://www.gstatic.com/cv/js/sender/v1/cast_sender.js
+URL /web/index.html#/home

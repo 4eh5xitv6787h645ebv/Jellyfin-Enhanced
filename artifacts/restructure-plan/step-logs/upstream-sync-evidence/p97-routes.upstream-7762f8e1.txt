@@ -1,0 +1,12 @@
+$ je12 browse '#/home' --script p97-reclaimerr-routes.mjs
+# on upstream's build at 7762f8e1 (scripts/upstream_lab_deploy.py), same lab as the before/after pairs
+SCRIPT GET reclaimerr/user-audit: 400 "Turn on Use Reclaimerr and save its URL and API token first."
+POST reclaimerr/import-users: 400 "Turn on Use Reclaimerr and save its URL and API token first."
+POST reclaimerr/service-account: 404
+POST reclaimerr/create-users: 404
+CONSOLE Failed to load resource: the server responded with a status of 400 (Bad Request) /JellyfinEnhanced/reclaimerr/user-audit
+CONSOLE Failed to load resource: the server responded with a status of 400 (Bad Request) /JellyfinEnhanced/reclaimerr/import-users
+CONSOLE Failed to load resource: the server responded with a status of 404 (Not Found) /JellyfinEnhanced/reclaimerr/service-account
+CONSOLE Failed to load resource: the server responded with a status of 404 (Not Found) /JellyfinEnhanced/reclaimerr/create-users
+BLOCKED https://www.gstatic.com/cv/js/sender/v1/cast_sender.js
+URL /web/index.html#/home

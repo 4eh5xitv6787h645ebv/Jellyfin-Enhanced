@@ -1,0 +1,75 @@
+je12 2.5.0 (code 9fbe3fd0d00f, git v2.5.0) at je12; evidence for <this branch>
+== live check (3 before/after pair(s))
+pair 'routes': complete
+  before: je12 browse '#/home' --script artifacts/restructure-plan/step-logs/upstream-sync-evidence/p97-reclaimerr-routes.mjs
+    deployed ba6cdbdf8491 (dll 41dd8cbaa5dfdf95) on lab je126c009b, 2026-11-23 15:26:09
+    | SCRIPT GET reclaimerr/user-audit: 404
+    | POST reclaimerr/import-users: 404
+    | POST reclaimerr/service-account: 400 "Save the Reclaimerr URL first."
+    | POST reclaimerr/create-users: 404
+    | CONSOLE Failed to load resource: the server responded with a status of 404 (Not Found) /JellyfinEnhanced/reclaimerr/user-audit
+    | CONSOLE Failed to load resource: the server responded with a status of 404 (Not Found) /JellyfinEnhanced/reclaimerr/import-users
+    | CONSOLE Failed to load resource: the server responded with a status of 400 (Bad Request) /JellyfinEnhanced/reclaimerr/service-account
+    | CONSOLE Failed to load resource: the server responded with a status of 404 (Not Found) /JellyfinEnhanced/reclaimerr/create-users
+    | BLOCKED https://www.gstatic.com/cv/js/sender/v1/cast_sender.js
+    | URL /web/index.html#/home
+  after: je12 browse '#/home' --script artifacts/restructure-plan/step-logs/upstream-sync-evidence/p97-reclaimerr-routes.mjs
+    deployed 9be26968f (dll 9ebc7e23cdf6144e) on lab je126c009b, 2026-11-23 15:29:46
+    | SCRIPT GET reclaimerr/user-audit: 400 "Turn on Use Reclaimerr and save its URL and API token first."
+    | POST reclaimerr/import-users: 400 "Turn on Use Reclaimerr and save its URL and API token first."
+    | POST reclaimerr/service-account: 404
+    | POST reclaimerr/create-users: 404
+    | CONSOLE Failed to load resource: the server responded with a status of 400 (Bad Request) /JellyfinEnhanced/reclaimerr/user-audit
+    | CONSOLE Failed to load resource: the server responded with a status of 400 (Bad Request) /JellyfinEnhanced/reclaimerr/import-users
+    | CONSOLE Failed to load resource: the server responded with a status of 404 (Not Found) /JellyfinEnhanced/reclaimerr/service-account
+    | CONSOLE Failed to load resource: the server responded with a status of 404 (Not Found) /JellyfinEnhanced/reclaimerr/create-users
+    | BLOCKED https://www.gstatic.com/cv/js/sender/v1/cast_sender.js
+    | URL /web/index.html#/home
+  same command before and after: yes; builds: before ba6cdbdf8491, after 9be26968f (a clean build of the checkout's commit)
+pair 'card': complete
+  before: je12 browse '#/home' --script artifacts/restructure-plan/step-logs/upstream-sync-evidence/p97-reclaimerr-card.mjs
+    deployed ba6cdbdf8491 (dll 41dd8cbaa5dfdf95) on lab je126c009b, 2026-11-23 15:26:16
+    | SCRIPT {"card":{"settings":["ReclaimerrEnabled (checkbox, on) \"Use Reclaimerr\" shown","ReclaimerrUrl (text) \"Reclaimerr URL\" shown","ReclaimerrApiKey (text) \"Reclaimerr API token\" shown","ReclaimerrActAsUser (checkbox, on) \"Act as the Jellyfin user\" shown","ReclaimerrUserHeader (text) \"User header\" shown","ReclaimerrUserMap (textarea) \"Jellyfin user to Reclaimerr user\" shown","ReclaimerrUsername (text) \"Service account username (fallback)\" shown","ReclaimerrPassword (text) \"Service account password (only for local login)\" shown"],"groups":["Create Reclaimerr accounts for Jellyfin users"],"buttons":["reclaimerrCreateAccountBtn: Create service account","reclaimerrCreateUsersBtn: Create accounts for all Jellyfin users"],"groupNotes":["Creates a Reclaimerr account for every Jellyfin user who has none, so each person's requests carry their own name and they can see them under My requests. They "]},"header":"no Let users request removals toggle","audit":"no Run Audit button"}
+    | CONSOLE Failed to load resource: the server responded with a status of 404 (Not Found) /JellyfinEnhanced/cdn/selfhst/svg/reclaimerr.svg
+    | CONSOLE Failed to load resource: the server responded with a status of 404 (Not Found) /JellyfinEnhanced/cdn/selfhst/svg/tmdb.svg
+    | CONSOLE Failed to load resource: the server responded with a status of 404 (Not Found) /JellyfinEnhanced/cdn/selfhst/svg/maintainerr.svg
+    | BLOCKED https://www.gstatic.com/cv/js/sender/v1/cast_sender.js
+    | URL /web/index.html#/configurationpage?name=Jellyfin%20Enhanced&tab=arr&card=reclaimerr
+  after: je12 browse '#/home' --script artifacts/restructure-plan/step-logs/upstream-sync-evidence/p97-reclaimerr-card.mjs
+    deployed 9be26968f (dll 9ebc7e23cdf6144e) on lab je126c009b, 2026-11-23 15:29:53
+    | SCRIPT {"card":{"settings":["ReclaimerrEnabled (checkbox, on) \"Use Reclaimerr\" shown","ReclaimerrUrl (text) \"Reclaimerr URL\" shown","ReclaimerrApiKey (text) \"Reclaimerr API token\" shown","ReclaimerrUserRequests (checkbox, off) \"Let users request removals\" shown","ReclaimerrUserHeader (text) \"User header\" hidden"],"groups":["Import Jellyfin users into Reclaimerr","User audit"],"buttons":["reclaimerrImportUsersBtn: Import Jellyfin users","reclaimerrAuditBtn: Run Audit"],"groupNotes":["Creates and links a Reclaimerr account for each Jellyfin user without one. Users Reclaimerr matches to an existing account are listed for you to confirm in Recl","Checks each Jellyfin user's linked Reclaimerr account and, with requests on, whether they can request removals. Administrators mark for removal with the API tok"]},"header":"User header shown with requests off: false; with requests on: true","audit":"Audit failed: Turn on Use Reclaimerr and save its URL and API token first."}
+    | CONSOLE Failed to load resource: the server responded with a status of 404 (Not Found) /JellyfinEnhanced/cdn/selfhst/svg/maintainerr.svg
+    | CONSOLE Failed to load resource: the server responded with a status of 404 (Not Found) /JellyfinEnhanced/cdn/selfhst/svg/reclaimerr.svg
+    | CONSOLE Failed to load resource: the server responded with a status of 404 (Not Found) /JellyfinEnhanced/cdn/selfhst/svg/tmdb.svg
+    | CONSOLE Failed to load resource: the server responded with a status of 400 (Bad Request) /JellyfinEnhanced/reclaimerr/user-audit
+    | BLOCKED https://www.gstatic.com/cv/js/sender/v1/cast_sender.js
+    | URL /web/index.html#/configurationpage?name=Jellyfin%20Enhanced&tab=arr&card=reclaimerr
+  same command before and after: yes; builds: before ba6cdbdf8491, after 9be26968f (a clean build of the checkout's commit)
+pair 'page': complete
+  before: je12 browse '#/home' --script artifacts/restructure-plan/step-logs/upstream-sync-evidence/p97-leaving-page.mjs
+    deployed ba6cdbdf8491 (dll 41dd8cbaa5dfdf95) on lab je126c009b, 2026-11-23 15:26:21
+    | SCRIPT server list keys: provider,admin,canRequest,actions,items,requests,mine,requestsUnavailable,canSchedule
+    | server requestsUnavailable=false requestsError=undefined canSchedule=false source=undefined
+    | notice drawn from the server's list: null
+    | card: name plain=12th Fail | chip warn=Waiting
+    | card: name plain=Cars | chip ok=Approved | sub=Leaves on 10 Dec 2026
+    | card: name plain=Coco | chip ok=Approved | sub=Leaves on 11 Dec 2026
+    | card: name plain=Heat | chip ok=Approved | sub=Leaves on 12 Dec 2026
+    | approve step: warn="Approving deletes this from your library now." confirm="Delete now" select=none
+    | sent: POST reclaimerr/requests/7/approve {}
+    | BLOCKED https://www.gstatic.com/cv/js/sender/v1/cast_sender.js
+    | URL /web/index.html#/home
+  after: je12 browse '#/home' --script artifacts/restructure-plan/step-logs/upstream-sync-evidence/p97-leaving-page.mjs
+    deployed 9be26968f (dll 9ebc7e23cdf6144e) on lab je126c009b, 2026-11-23 15:29:58
+    | SCRIPT server list keys: provider,admin,canRequest,actions,items,requests,mine,requestsUnavailable,requestsError,source
+    | server requestsUnavailable=true requestsError="not reachable" canSchedule=undefined source=(a 16-character digest)
+    | notice drawn from the server's list: "Removal requests could not be loaded: not reachable"
+    | card: name plain=12th Fail | chip warn=Waiting
+    | card: name plain=Cars | chip ok=Approved | sub=Leaves on 10 Dec 2026
+    | card: name plain=Coco | chip ok=Approved
+    | card: name plain=Heat | chip ok=Approved
+    | approve step: warn="Approving deletes this from your library on 07 Dec 2026." confirm="Approve" select=default:Use Reclaimerr's grace period (14 days) / now:Delete now / date:Choose a date
+    | sent: POST reclaimerr/requests/7/approve {"when":"default","graceDays":14,"source":"0123456789abcdef"}
+    | BLOCKED https://www.gstatic.com/cv/js/sender/v1/cast_sender.js
+    | URL /web/index.html#/home
+  same command before and after: yes; builds: before ba6cdbdf8491, after 9be26968f (a clean build of the checkout's commit)
