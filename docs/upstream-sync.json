@@ -3712,7 +3712,9 @@
         ".github/workflows/ (10 files)"
       ],
       "status": "ported",
-      "rewriteCommits": [],
+      "rewriteCommits": [
+        "4ead3e5ecab3808a193f54e8dcb61c9af6951aa4"
+      ],
       "notes": "Applied as is (git apply --3way, clean): the same five action pins in the ten workflows upstream changed: step-security/harden-runner 2.23.0 (aebdcf61), actions/create-github-app-token 3.4.0 (f418cff3), actions/dependency-review-action 5.0.1 (bbc44d14), ossf/scorecard-action 2.6.0 (23f22cd4) and trufflesecurity/trufflehog 3.100.0 (d232362a). The two workflows only the rewrite has, rewrite-validation.yml and validate-manifest.yml, use none of these actions, so nothing else changes; git grep finds none of the old pins left."
     }
   ]
