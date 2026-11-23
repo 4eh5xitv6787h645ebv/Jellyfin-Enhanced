@@ -53,7 +53,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags
         [Authorize]
         [Produces("application/json")]
         public Task<IActionResult> MarkForReclaimerrRemoval([FromBody] ReclaimerrItemRequest request, [FromServices] ReclaimerrActions reclaimerr, CancellationToken token)
-            => RunReclaimerrAction(request, (item, config) => reclaimerr.MarkAsync(item, config, request.Date, request.MediaSourceId, CallerName(), token));
+            => RunReclaimerrAction(request, (item, config) => reclaimerr.MarkAsync(item, config, request.Date, request.MediaSourceId, CallerName(), token, CallerUser()?.Id));
 
         /// <summary>Keep the item: protect its cleanup candidate, or cancel its scheduled deletion. Admin only.</summary>
         /// <param name="request">The item.</param>
@@ -64,7 +64,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags
         [Authorize]
         [Produces("application/json")]
         public Task<IActionResult> KeepFromReclaimerrRemoval([FromBody] ReclaimerrItemRequest request, [FromServices] ReclaimerrActions reclaimerr, CancellationToken token)
-            => RunReclaimerrAction(request, (item, config) => reclaimerr.UnmarkAsync(item, config, CallerName(), token));
+            => RunReclaimerrAction(request, (item, config) => reclaimerr.UnmarkAsync(item, config, CallerName(), token, CallerUser()?.Id));
 
         /// <summary>Move the removal to <c>date</c>, or <c>days</c> later, or restart a candidate's timer when neither is given. Admin only.</summary>
         /// <param name="request">The item, and the day or the days.</param>
@@ -75,7 +75,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags
         [Authorize]
         [Produces("application/json")]
         public Task<IActionResult> PostponeReclaimerrRemoval([FromBody] ReclaimerrItemRequest request, [FromServices] ReclaimerrActions reclaimerr, CancellationToken token)
-            => RunReclaimerrAction(request, (item, config) => reclaimerr.PostponeAsync(item, request.Days, request.Date, config, CallerName(), token));
+            => RunReclaimerrAction(request, (item, config) => reclaimerr.PostponeAsync(item, request.Days, request.Date, config, CallerName(), token, CallerUser()?.Id));
 
         /// <summary>
         /// Ask the administrators to remove the item (any signed-in user who can open it): filed as a Reclaimerr deletion request, as the
@@ -230,7 +230,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags
                     "date" => ReclaimerrActions.ApprovalTiming.OnDate,
                     _ => ReclaimerrActions.ApprovalTiming.GracePeriod,
                 };
-                await reclaimerr.ReviewRequestAsync(requestId, approve, body?.Note, CallerName(), config, token, timing, body?.Date, body?.GraceDays).ConfigureAwait(false);
+                await reclaimerr.ReviewRequestAsync(requestId, approve, body?.Note, CallerName(), config, token, timing, body?.Date, body?.GraceDays, CallerUser()?.Id).ConfigureAwait(false);
                 return Ok(new { id = requestId, approved = approve });
             }
             catch (MaintainerrActions.ActionException ex)

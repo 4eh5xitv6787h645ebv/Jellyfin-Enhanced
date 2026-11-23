@@ -10,6 +10,7 @@ using MediaBrowser.Controller.Entities;
 using MediaBrowser.Controller.Entities.Movies;
 using MediaBrowser.Controller.Entities.TV;
 using MediaBrowser.Controller.Library;
+using MediaBrowser.Model.Entities;
 using MediaBrowser.Model.Globalization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.DependencyInjection;
@@ -144,7 +145,9 @@ public sealed class IntegrationReclaimerrRoutesTests : IDisposable
         LeavingSoonService.AddHttpClient(services);
         var clients = services.BuildServiceProvider().GetRequiredService<IHttpClientFactory>();
         var leaving = new LeavingSoonService(clients, Path.Combine(_f.Core.Root, "leaving-soon-" + Guid.NewGuid().ToString("N") + ".json"), _library.Object, _f.Core.Logger) { Timeout = TimeSpan.FromSeconds(5) };
-        var cache = new TagCacheService(_library.Object, _f.Core.Paths.Object, Mock.Of<ILocalizationManager>(), _f.Core.Logger, new MatroskaLanguageCache(_f.Core.Paths.Object, _f.Core.Logger), leavingSoonService: leaving);
+        // No Leaving soon service in the tag cache: an action's queued publish would otherwise write into the fixture's folder
+        // while it is deleted (these tests read the facts from the Leaving soon service itself).
+        var cache = new TagCacheService(_library.Object, _f.Core.Paths.Object, Mock.Of<ILocalizationManager>(), _f.Core.Logger, new MatroskaLanguageCache(_f.Core.Paths.Object, _f.Core.Logger));
         var actions = new ReclaimerrActions(clients, leaving, cache, _f.Core.Logger) { Timeout = TimeSpan.FromSeconds(5) };
         return (actions, leaving, cache);
     }
@@ -390,6 +393,71 @@ public sealed class IntegrationReclaimerrRoutesTests : IDisposable
             var services = new ServiceCollection();
             LeavingSoonService.AddHttpClient(services);
             Assert.IsType<NotFoundResult>(asAdmin.GetMaintainerrItemState(movie.Id, new MaintainerrActions(services.BuildServiceProvider().GetRequiredService<IHttpClientFactory>(), _library.Object, leaving, cache, _f.Core.Logger)));
+        }
+    }
+
+    // Upstream 54a6f418: schedule, keep, reschedule, approve and deny also send the acting administrator's linked Reclaimerr name in
+    // the user header, beside the token, so Reclaimerr credits the person; only with Let users request removals on, and never when
+    // the administrator has no active linked account or the lookup fails (the call then stays the token's). Keep and postpone of a
+    // cleanup candidate's timer stay the token's, as upstream.
+    [Fact]
+    public async Task Admin_actions_name_the_acting_administrators_linked_Reclaimerr_account_only_while_requests_are_on()
+    {
+        var movie = new Movie { Id = Guid.NewGuid(), Name = "Film" };
+        movie.SetProviderId(MetadataProvider.Tmdb, "550");
+        var kept = new Series { Id = Guid.NewGuid(), Name = "Kept" };
+        var moved = new Series { Id = Guid.NewGuid(), Name = "Moved" };
+        _items.AddRange(new BaseItem[] { movie, kept, moved });
+        using var server = new Reclaimerr();
+        var (admin, _, users) = People();
+        var linked = $"[{{\"id\":3,\"username\":\"boss\",\"is_active\":true,\"media_identities\":[{{\"source_service\":\"jellyfin\",\"source_user_id\":\"{admin.Id:N}\"}}]}}]";
+        const string Users = "GET /api/v1/users?limit=1000&offset=0";
+        server.Routes[Users] = (200, linked);
+        server.Routes["GET /api/v1/movies?tmdb_id=550&per_page=5"] = (200, $"{{\"items\":[{{\"id\":31,\"versions\":[{{\"id\":5,\"service_item_id\":\"{movie.Id:N}\",\"service_media_id\":\"{movie.Id:N}\"}}]}}]}}");
+        server.Routes[Feed] = (200, Page(Entry(4, kept.Id, "series", null),
+            $"{{\"source\":\"manual\",\"candidate_id\":null,\"scheduled_deletion_id\":9,\"media_type\":\"series\",\"scope\":\"series\",\"media_server_items\":[{Jf(moved.Id)}],\"size_bytes\":null,\"delete_at\":\"{DateTimeOffset.UtcNow.AddDays(10):yyyy-MM-ddTHH:mm:ssZ}\",\"state\":\"scheduled\"}}"));
+        var (actions, leaving, cache) = Services(server);
+        using (cache)
+        {
+            Assert.True(await leaving.RefreshAsync(_f.Plugin.Configuration, force: true, CancellationToken.None));
+            var asAdmin = ControllerAs(admin, true, users.Object, cache);
+            async Task<Dictionary<string, string?>> Run()
+            {
+                lock (server.Seen) server.Seen.Clear();
+                Assert.IsType<OkObjectResult>(await asAdmin.MarkForReclaimerrRemoval(new ReclaimerrItemRequest { ItemId = movie.Id }, actions, CancellationToken.None));
+                Assert.IsType<OkObjectResult>(await asAdmin.KeepFromReclaimerrRemoval(new ReclaimerrItemRequest { ItemId = kept.Id }, actions, CancellationToken.None));
+                Assert.IsType<OkObjectResult>(await asAdmin.PostponeReclaimerrRemoval(new ReclaimerrItemRequest { ItemId = moved.Id, Days = 7 }, actions, CancellationToken.None));
+                Assert.IsType<OkObjectResult>(await asAdmin.ApproveReclaimerrRequest(7, null, actions, CancellationToken.None));
+                Assert.IsType<OkObjectResult>(await asAdmin.DenyReclaimerrRequest(8, null, actions, CancellationToken.None));
+                var posts = server.Posts;
+                Assert.All(posts, p => Assert.Equal("Bearer rcl_secret", p.Bearer));
+                return posts.ToDictionary(p => p.Path, p => p.User);
+            }
+
+            // Requests on and the administrator linked: every one of these names them.
+            _f.Plugin.Configuration.ReclaimerrUserRequests = true;
+            Assert.Equal(new Dictionary<string, string?>
+            {
+                ["/api/v1/scheduled-deletions"] = "boss",
+                ["/api/v1/candidates/4/protect"] = "boss",
+                ["/api/v1/scheduled-deletions/9/reschedule"] = "boss",
+                ["/api/v1/delete-requests/7/approve"] = "boss",
+                ["/api/v1/delete-requests/8/deny"] = "boss",
+            }, await Run());
+
+            // Requests off: no header, and Reclaimerr's accounts are not read for it.
+            _f.Plugin.Configuration.ReclaimerrUserRequests = false;
+            Assert.All(await Run(), p => Assert.Null(p.Value));
+            Assert.DoesNotContain(server.All, h => h.Path.StartsWith("/api/v1/users", StringComparison.Ordinal));
+
+            // Not linked, or the lookup fails: the call is still sent, as the token's.
+            _f.Plugin.Configuration.ReclaimerrUserRequests = true;
+            server.Routes[Users] = (200, "[]");
+            Assert.All(await Run(), p => Assert.Null(p.Value));
+            server.Routes[Users] = (500, "{\"detail\":\"boom\"}");
+            var failed = await Run();
+            Assert.Equal(5, failed.Count);
+            Assert.All(failed, p => Assert.Null(p.Value));
         }
     }
 }

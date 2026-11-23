@@ -110,7 +110,9 @@ public sealed class IntegrationReclaimerrTests : IDisposable
         LeavingSoonService.AddHttpClient(services);
         var clients = services.BuildServiceProvider().GetRequiredService<IHttpClientFactory>();
         var leaving = new LeavingSoonService(clients, Path.Combine(_f.Core.Root, "leaving-soon-" + Guid.NewGuid().ToString("N") + ".json"), _library.Object, _f.Core.Logger) { Timeout = TimeSpan.FromSeconds(5), Now = () => Fixed };
-        var cache = new TagCacheService(_library.Object, _f.Core.Paths.Object, Mock.Of<ILocalizationManager>(), _f.Core.Logger, new MatroskaLanguageCache(_f.Core.Paths.Object, _f.Core.Logger), leavingSoonService: leaving);
+        // No Leaving soon service in the tag cache: an action's queued publish would otherwise write into the fixture's folder
+        // while it is deleted (these tests read the facts from the Leaving soon service itself).
+        var cache = new TagCacheService(_library.Object, _f.Core.Paths.Object, Mock.Of<ILocalizationManager>(), _f.Core.Logger, new MatroskaLanguageCache(_f.Core.Paths.Object, _f.Core.Logger));
         return (new ReclaimerrActions(clients, leaving, cache, _f.Core.Logger) { Timeout = TimeSpan.FromSeconds(5), Now = () => Fixed }, leaving);
     }
 
