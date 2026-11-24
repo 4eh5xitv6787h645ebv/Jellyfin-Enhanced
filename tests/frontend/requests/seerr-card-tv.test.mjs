@@ -36,3 +36,34 @@ test('other layouts keep the external Seerr link when the modal is off', t => {
   assert.equal(link.getAttribute('href'), 'http://seerr:5055/movie/603');
   assert.equal(link.getAttribute('target'), '_blank');
 });
+
+
+function keydown(h, target, init) {
+  const event = new h.window.KeyboardEvent('keydown', { bubbles: true, cancelable: true, ...init });
+  target.dispatchEvent(event);
+  return event;
+}
+
+test("TV layout: a remote's Back closes the poster overview and returns to the poster", t => {
+  const { h, card } = setup(t, { tv: true, modal: true });
+  h.load('jellyseerr/ui/ui-buttons.js'); // configures the overview's request button
+  const poster = card.querySelector('.jellyseerr-poster-image');
+  poster.focus();
+  keydown(h, poster, { key: 'Enter' });
+  assert.ok(card.querySelector('.jellyseerr-overview'));
+  assert.equal(keydown(h, card.querySelector('.jellyseerr-request-button'), { key: 'Unidentified', keyCode: 10009 }).defaultPrevented, true);
+  assert.equal(card.querySelector('.jellyseerr-overview'), null);
+  assert.equal(h.document.activeElement, poster);
+});
+
+test('Back is left alone with an overview a pointer opened', t => {
+  const { h, card } = setup(t, { tv: true, modal: true });
+  h.load('jellyseerr/ui/ui-buttons.js');
+  const poster = card.querySelector('.jellyseerr-poster-image');
+  const scalable = card.querySelector('.cardScalable');
+  scalable.dispatchEvent(new h.window.MouseEvent('mouseover', { bubbles: true }));
+  scalable.dispatchEvent(new h.window.MouseEvent('mouseenter', { bubbles: false }));
+  assert.ok(card.querySelector('.jellyseerr-overview'));
+  poster.focus();
+  assert.equal(keydown(h, poster, { key: 'Unidentified', keyCode: 10009 }).defaultPrevented, false);
+});

@@ -120,6 +120,13 @@
   var shared4 = /* @__PURE__ */ sharedModule("features/seerr/core/ui/icon-markup");
   var export02 = /* @__PURE__ */ sharedExport(shared4, "ICONS");
 
+  // client/src/core/ui/tv-back.ts
+  function isTvBackKey(event) {
+    const key = "key" in event ? event.key : void 0;
+    const code = "keyCode" in event ? event.keyCode : void 0;
+    return key === "Escape" || key === "BrowserBack" || key === "GoBack" || code === 10009 || code === 461;
+  }
+
   // client/src/features/seerr/core/ui/cards.ts
   var linkableBase = (base) => /^https?:\/\//i.test(base) || base.startsWith("/") ? base : "";
   function part(parent, index) {
@@ -495,6 +502,7 @@
         cardScalable,
         imageContainer,
         overview: null,
+        overviewByKey: false,
         button: null,
         outsideClick: null,
         tapNavigatedAt: 0
@@ -527,6 +535,7 @@
                     <button type="button" class="jellyseerr-request-button" data-tmdb-id="${item.id}" data-media-type="${escapeHtml(item.mediaType)}"></button>
                 `;
       state.overview = overview;
+      state.overviewByKey = false;
       state.cardScalable.appendChild(overview);
       const button = overview.querySelector(".jellyseerr-request-button");
       state.button = button instanceof HTMLButtonElement ? button : null;
@@ -665,6 +674,15 @@
       if (inCard(card, target, ".jellyseerr-poster-image") === state.imageContainer) onPosterClick(event, card, state);
     }
     function onCardKeydown(container, event) {
+      if (isTvBackKey(event) && isTvLayout()) {
+        const hit2 = cardEventTarget(container, event);
+        if (!hit2?.state.overview || !hit2.state.overviewByKey) return;
+        event.preventDefault();
+        JE.core?.ui?.swallowTvBack?.();
+        removeOverview(hit2.state);
+        hit2.state.imageContainer.focus();
+        return;
+      }
       if (event.key !== "Enter" && event.key !== " ") return;
       const hit = cardEventTarget(container, event);
       if (!hit || inCard(hit.card, hit.target, ".jellyseerr-poster-image") !== hit.state.imageContainer) return;
@@ -674,6 +692,7 @@
         goToJellyfinItem(state);
       } else if (!state.overview) {
         const overview = createOverview(state);
+        state.overviewByKey = true;
         if (isTvLayout()) overview.querySelector(".jellyseerr-request-button")?.focus();
       } else {
         removeOverview(state);

@@ -1,6 +1,13 @@
 (() => {
 "use strict";
 (() => {
+  // client/src/core/ui/tv-back.ts
+  function isTvBackKey(event) {
+    const key = "key" in event ? event.key : void 0;
+    const code = "keyCode" in event ? event.keyCode : void 0;
+    return key === "Escape" || key === "BrowserBack" || key === "GoBack" || code === 10009 || code === 461;
+  }
+
   // client/src/host/context.ts
   function sharedModule(id) {
     const namespace = window.JellyfinEnhanced?.core?.sharedModules?.[id];
@@ -542,7 +549,7 @@
           this.overlayContent.focus();
           return true;
         }
-        if (e.key === "Escape" || e.key === "BrowserBack" || e.keyCode === 10009 || e.keyCode === 461) {
+        if (isTvBackKey(e)) {
           swallow();
           this.hideOverlay(true);
           return true;

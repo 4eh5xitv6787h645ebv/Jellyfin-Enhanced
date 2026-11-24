@@ -6,6 +6,7 @@ import { MEDIA, effectiveMediaStatus } from '../status';
 import type { SeerrMediaItem } from '../types';
 import { LOG_UI, bindViewOrigin, isViewCurrent, escapeWith, firstInstall, groupInternals } from '../runtime';
 import { ICONS } from './icon-markup';
+import { isTvBackKey } from '../../../../core/ui/tv-back';
 
 interface BatchContext {
     seerrBase: string;
@@ -37,6 +38,8 @@ interface CardState {
     cardScalable: HTMLElement;
     imageContainer: HTMLElement;
     overview: HTMLElement | null;
+    /** The open overview was opened by OK on the poster, not by a pointer: Back closes it (TV layout). */
+    overviewByKey: boolean;
     button: HTMLButtonElement | null;
     outsideClick: ((event: MouseEvent) => void) | null;
     /** performance.now() of the tap that navigated to Jellyfin; 0 once its click is seen. */
@@ -427,7 +430,7 @@ export function installCards(host: SeerrCoreHost): void {
             posterOpensModal: useMoreInfoModal && ctx.moreInfoLoaded,
             // Without the modal, an item outside the library links its overview text to Seerr.
             navigatesExternally: !useMoreInfoModal && !jellyfinMediaId && !!jellyseerrUrl && item.mediaType !== 'collection',
-            cardScalable, imageContainer, overview: null, button: null, outsideClick: null, tapNavigatedAt: 0
+            cardScalable, imageContainer, overview: null, overviewByKey: false, button: null, outsideClick: null, tapNavigatedAt: 0
         });
         return card;
     }
@@ -458,6 +461,7 @@ export function installCards(host: SeerrCoreHost): void {
                     <button type="button" class="jellyseerr-request-button" data-tmdb-id="${item.id}" data-media-type="${escapeHtml(item.mediaType)}"></button>
                 `;
         state.overview = overview;
+        state.overviewByKey = false;
         state.cardScalable.appendChild(overview);
         const button = overview.querySelector('.jellyseerr-request-button');
         state.button = button instanceof HTMLButtonElement ? button : null;
@@ -598,6 +602,16 @@ export function installCards(host: SeerrCoreHost): void {
     }
     /** Enter / Space on a focused poster toggles the overview (or goes to Jellyfin). */
     function onCardKeydown(container: HTMLElement, event: KeyboardEvent): void {
+        if (isTvBackKey(event) && isTvLayout()) {
+            // Back in a card whose overview OK opened closes it, instead of leaving the page.
+            const hit = cardEventTarget(container, event);
+            if (!hit?.state.overview || !hit.state.overviewByKey) return;
+            event.preventDefault();
+            JE.core?.ui?.swallowTvBack?.();
+            removeOverview(hit.state);
+            hit.state.imageContainer.focus();
+            return;
+        }
         if (event.key !== 'Enter' && event.key !== ' ') return;
         const hit = cardEventTarget(container, event);
         if (!hit || inCard(hit.card, hit.target, '.jellyseerr-poster-image') !== hit.state.imageContainer) return;
@@ -607,6 +621,7 @@ export function installCards(host: SeerrCoreHost): void {
             goToJellyfinItem(state);
         } else if (!state.overview) {
             const overview = createOverview(state);
+            state.overviewByKey = true;
             if (isTvLayout()) overview.querySelector<HTMLElement>('.jellyseerr-request-button')?.focus();
         } else {
             removeOverview(state);
