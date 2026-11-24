@@ -20,6 +20,14 @@
     return host.JellyfinEnhanced;
   }
 
+  // client/src/features/shared/dom.ts
+  function createCustomElement(tag, is) {
+    const create = document.createElement;
+    const element = create.call(document, tag, is);
+    if (element.getAttribute("is") !== is) element.setAttribute("is", is);
+    return element;
+  }
+
   // client/src/features/chrome/header-actions.ts
   var number = (value) => parseFloat(value) || 0;
   var SOURCE_SELECTOR = ".headerButton:not(.je-header-launcher)";
@@ -248,11 +256,10 @@
       }
     }
     function createLauncher(currentTray) {
-      const launcher = document.createElement("button");
+      const launcher = createCustomElement("button", "paper-icon-button-light");
       launcher.type = "button";
       launcher.id = "je-header-launcher";
-      launcher.className = "headerButton headerButtonRight paper-icon-button-light je-header-launcher";
-      launcher.setAttribute("is", "paper-icon-button-light");
+      launcher.classList.add("headerButton", "headerButtonRight", "paper-icon-button-light", "je-header-launcher");
       launcher.setAttribute("aria-haspopup", "dialog");
       launcher.setAttribute("aria-controls", "je-header-launcher-panel");
       launcher.setAttribute("aria-expanded", "false");

@@ -3858,8 +3858,9 @@
         "Jellyfin.Plugin.JellyfinEnhanced/js/tags/maintainerr-item-menu.js",
         "Jellyfin.Plugin.JellyfinEnhanced/js/tags/tag-item-menu.js"
       ],
-      "status": "pending",
-      "rewriteCommits": []
+      "status": "ported",
+      "rewriteCommits": [],
+      "notes": "Re-implemented through one typed helper, createCustomElement(tag, type) in client/src/features/shared/dom.ts. It calls document.createElement(tag, type), the v0 form jellyfin-web uses (TypeScript's DOM types declare only the options form, so the call goes through one cast), and sets the is attribute itself where nothing handled the type (a page without webcomponents.js, the test DOM), so the markup there is as before. Every one of the 40 places in client/src that created an element and set is afterwards now uses it: the same places as upstream's 32 files, where the Elsewhere, Letterboxd and MDBList links go through the shared createExternalLink and details-providers/links.ts's fallback, both changed. Class handling follows upstream place by place: classList.add instead of assigning className for the header and player buttons (the launcher, random item, active streams, the native tabs' header link, bookmark, subtitle sync, the settings button), the Home tab button and the theme selector's select; the shared external link and its fallback join the caller's classes to the ones the upgrade added (upstream appends with +=); the other places keep assigning className, as upstream does, since their classes name emby-button themselves. Native tabs drop the upgradeSubtree call and its type. The recommendations rows create their scroller, items container and heading link with their types; a row is still built detached and filled before it is inserted, as it already was here. Upstream has no tests for this; new ones emulate an engine with native v0 custom elements (createElement upgrades only an element given its type, and adds its classes then) for the shared external link and the Home tab button, a test that without a type handler external links still carry is=\"emby-linkbutton\", and a source check that no client file sets is after creating an element (the helper's fallback aside)."
     }
   ]
 }
