@@ -1,0 +1,16 @@
+The pre-port main line (f6c47dc6) on the same lab, je12 browse --profile tv with this folder's p115-custom-elements.mjs; compare p113-116.live.txt (pair custom-elements-tv).
+PROFILE tv {"layout":"tv","tvClass":true}
+SCRIPT home: button#je-active-streams is=paper-icon-button-light class=[headerButton headerButtonRight paper-icon-button-light show-focus]
+home: button#je-header-launcher is=paper-icon-button-light class=[headerButton headerButtonRight je-header-launcher paper-icon-button-light show-focus]
+home: button#je-native-tab-btn-activity is=emby-button class=[emby-button emby-tab-button show-focus]
+home: button#je-native-tab-btn-catchup is=emby-button class=[emby-button emby-tab-button show-focus]
+home: button#randomItemButton is=paper-icon-button-light class=[headerButton headerButtonRight paper-icon-button-light show-focus]
+details: a is=emby-linkbutton class=[button-link emby-button letterboxd-link letterboxd-link-icon]
+details: a is=emby-linkbutton class=[emby-button jellyseerr-more-info-link show-focus]
+details: button is=emby-button class=[button-flat detailButton emby-button je-detail-hide-btn]
+details: button is=emby-button class=[button-flat detailButton emby-button je-spoiler-blur-btn]
+details: button is=emby-button class=[button-flat detailButton emby-button jellyseerr-report-issue-icon]
+details: button#je-active-streams is=paper-icon-button-light class=[headerButton headerButtonRight paper-icon-button-light show-focus]
+details: button#je-header-launcher is=paper-icon-button-light class=[headerButton headerButtonRight je-header-launcher paper-icon-button-light show-focus]
+details: button#randomItemButton is=paper-icon-button-light class=[headerButton headerButtonRight paper-icon-button-light show-focus]
+URL /web/index.html#/details?id=06de48d758074756c732c7de70aa79f8

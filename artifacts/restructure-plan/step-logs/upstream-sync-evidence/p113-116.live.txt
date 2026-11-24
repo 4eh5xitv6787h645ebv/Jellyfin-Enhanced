@@ -1,0 +1,122 @@
+je12 2.7.3 (v2.7.3); the before/after pairs of ports 113-116, from je12 evidence. before = upstream's own Jellyfin 12 build at 235dc152 (scripts/upstream_lab_deploy.py 235dc1528576548e52888341aa9fe8ca99e9a5ec), after = this branch at 73e76050. The scripts are this folder's p113-tv-remote.mjs and p115-custom-elements.mjs. The same scripts on the main line before the ports (f6c47dc6): the *.rewrite-base.txt files.
+== live check (3 before/after pair(s))
+pair 'tv-remote': complete
+  before: je12 browse '#/home' --profile tv --script p113-tv-remote.mjs
+    deployed upstream-235dc1528576 = 235dc152 (dll 43b2e73fabf1a8a7) on lab je125ce284, 2026-11-24 16:39:08
+    | PROFILE tv {"layout":"tv","tvClass":true}
+    | SCRIPT header tab strip: 559px wide in a 1920px viewport
+    | random button: is=paper-icon-button-light class=[headerButton headerButtonRight paper-icon-button-light show-focus]
+    | More Info external links: 6; with a target: 0; inert (href="#"): 6
+    | More Info focus: button.jellyseerr-request-button.jellyseerr-button-request
+    | More Info Back: default prevented true; a second Back at once: default prevented true
+    | after Back: More Info open false; focus #randomItemButton; address #/home -> #/home
+    | request window: focuscontainer true; focus button.jellyseerr-modal-button.jellyseerr-modal-button-secondary
+    | request window Back: default prevented true; open after false; focus #randomItemButton; address #/home -> #/home
+    | card "Mock Odyssey": title link tabindex -1
+    | OK on the poster: overview false; More Info open true
+    | focus: button.jellyseerr-request-button.jellyseerr-button-request
+    | Back: default prevented true; overview false; More Info open false; focus div.cardImageContainer.coveredImage; address #/search?query=Mock -> #/search?query=Mock
+    | BLOCKED https://www.gstatic.com/cv/js/sender/v1/cast_sender.js
+    | URL /web/index.html#/search?query=Mock
+  after: je12 browse '#/home' --profile tv --script p113-tv-remote.mjs
+    deployed 73e760501 (dll 29e3644b1e80ce2a) on lab je125ce284, 2026-11-24 16:40:28
+    | PROFILE tv {"layout":"tv","tvClass":true}
+    | SCRIPT header tab strip: 559px wide in a 1920px viewport
+    | random button: is=paper-icon-button-light class=[headerButton headerButtonRight paper-icon-button-light show-focus]
+    | More Info external links: 5; with a target: 0; inert (href="#"): 5
+    | More Info focus: button.jellyseerr-request-button.jellyseerr-button-request
+    | More Info Back: default prevented true; a second Back at once: default prevented true
+    | after Back: More Info open false; focus #randomItemButton; address #/home -> #/home
+    | request window: focuscontainer true; focus button.jellyseerr-modal-button.jellyseerr-modal-button-secondary
+    | request window Back: default prevented true; open after false; focus #randomItemButton; address #/home -> #/home
+    | card "Mock Odyssey": title link tabindex -1
+    | OK on the poster: overview false; More Info open true
+    | focus: button.jellyseerr-request-button.jellyseerr-button-request
+    | Back: default prevented true; overview false; More Info open false; focus div.cardImageContainer.coveredImage; address #/search?query=Mock -> #/search?query=Mock
+    | BLOCKED https://www.gstatic.com/cv/js/sender/v1/cast_sender.js
+    | URL /web/index.html#/search?query=Mock
+  same command before and after: yes; builds: before upstream-235dc1528576, after 73e760501 (a clean build of 73e76050, not the checkout's commit 9a8f3a3d: je12 deploy, then rerun with --keep after:tv-remote)
+pair 'custom-elements-tv': complete
+  before: je12 browse '#/home' --profile tv --script p115-custom-elements.mjs
+    deployed upstream-235dc1528576 = 235dc152 (dll 43b2e73fabf1a8a7) on lab je125ce284, 2026-11-24 16:39:24
+    | PROFILE tv {"layout":"tv","tvClass":true}
+    | SCRIPT home: button#je-active-streams is=paper-icon-button-light class=[headerButton headerButtonRight paper-icon-button-light show-focus]
+    | home: button#je-header-launcher is=paper-icon-button-light class=[headerButton headerButtonRight je-header-launcher paper-icon-button-light show-focus]
+    | home: button#je-native-tab-btn-activity is=emby-button class=[emby-button emby-tab-button show-focus]
+    | home: button#je-native-tab-btn-catchup is=emby-button class=[emby-button emby-tab-button show-focus]
+    | home: button#randomItemButton is=paper-icon-button-light class=[headerButton headerButtonRight paper-icon-button-light show-focus]
+    | details: a is=emby-linkbutton class=[button-link emby-button letterboxd-link letterboxd-link-icon]
+    | details: a is=emby-linkbutton class=[emby-button jellyseerr-more-info-link show-focus]
+    | details: button is=emby-button class=[button-flat detailButton emby-button je-detail-hide-btn]
+    | details: button is=emby-button class=[button-flat detailButton emby-button je-spoiler-blur-btn]
+    | details: button is=emby-button class=[button-flat detailButton emby-button jellyseerr-report-issue-icon]
+    | details: button#je-active-streams is=paper-icon-button-light class=[headerButton headerButtonRight paper-icon-button-light show-focus]
+    | details: button#je-header-launcher is=paper-icon-button-light class=[headerButton headerButtonRight je-header-launcher paper-icon-button-light show-focus]
+    | details: button#randomItemButton is=paper-icon-button-light class=[headerButton headerButtonRight paper-icon-button-light show-focus]
+    | BLOCKED https://www.gstatic.com/cv/js/sender/v1/cast_sender.js
+    | URL /web/index.html#/details?id=06de48d758074756c732c7de70aa79f8
+  after: je12 browse '#/home' --profile tv --script p115-custom-elements.mjs
+    deployed 73e760501 (dll 29e3644b1e80ce2a) on lab je125ce284, 2026-11-24 16:40:44
+    | PROFILE tv {"layout":"tv","tvClass":true}
+    | SCRIPT home: button#je-active-streams is=paper-icon-button-light class=[headerButton headerButtonRight paper-icon-button-light show-focus]
+    | home: button#je-header-launcher is=paper-icon-button-light class=[headerButton headerButtonRight je-header-launcher paper-icon-button-light show-focus]
+    | home: button#je-native-tab-btn-activity is=emby-button class=[emby-button emby-tab-button show-focus]
+    | home: button#je-native-tab-btn-catchup is=emby-button class=[emby-button emby-tab-button show-focus]
+    | home: button#randomItemButton is=paper-icon-button-light class=[headerButton headerButtonRight paper-icon-button-light show-focus]
+    | details: a is=emby-linkbutton class=[button-link emby-button letterboxd-link letterboxd-link-icon]
+    | details: a is=emby-linkbutton class=[emby-button jellyseerr-more-info-link show-focus]
+    | details: button is=emby-button class=[button-flat detailButton emby-button je-detail-hide-btn]
+    | details: button is=emby-button class=[button-flat detailButton emby-button je-spoiler-blur-btn]
+    | details: button is=emby-button class=[button-flat detailButton emby-button jellyseerr-report-issue-icon]
+    | details: button#je-active-streams is=paper-icon-button-light class=[headerButton headerButtonRight paper-icon-button-light show-focus]
+    | details: button#je-header-launcher is=paper-icon-button-light class=[headerButton headerButtonRight je-header-launcher paper-icon-button-light show-focus]
+    | details: button#randomItemButton is=paper-icon-button-light class=[headerButton headerButtonRight paper-icon-button-light show-focus]
+    | BLOCKED https://www.gstatic.com/cv/js/sender/v1/cast_sender.js
+    | URL /web/index.html#/details?id=06de48d758074756c732c7de70aa79f8
+  same command before and after: yes; builds: before upstream-235dc1528576, after 73e760501 (a clean build of 73e76050, not the checkout's commit 9a8f3a3d: je12 deploy, then rerun with --keep after:custom-elements-tv)
+pair 'custom-elements': complete
+  before: je12 browse '#/home' --script p115-custom-elements.mjs
+    deployed upstream-235dc1528576 = 235dc152 (dll 43b2e73fabf1a8a7) on lab je125ce284, 2026-11-24 16:39:35
+    | SCRIPT home: button#je-active-streams is=paper-icon-button-light class=[headerButton headerButtonRight paper-icon-button-light]
+    | home: button#je-header-launcher is=paper-icon-button-light class=[headerButton headerButtonRight je-header-launcher paper-icon-button-light]
+    | home: button#je-native-tab-btn-activity is=emby-button class=[emby-button emby-tab-button]
+    | home: button#je-native-tab-btn-catchup is=emby-button class=[emby-button emby-tab-button]
+    | home: button#je-native-tab-link-activity is=paper-icon-button-light class=[headerButton headerButtonRight paper-icon-button-light]
+    | home: button#je-native-tab-link-catchup is=paper-icon-button-light class=[headerButton headerButtonRight paper-icon-button-light]
+    | home: button#randomItemButton is=paper-icon-button-light class=[headerButton headerButtonRight paper-icon-button-light]
+    | details: a is=emby-linkbutton class=[button-link emby-button letterboxd-link letterboxd-link-icon]
+    | details: a is=emby-linkbutton class=[button-link emby-button seerr-link]
+    | details: a is=emby-linkbutton class=[emby-button jellyseerr-more-info-link]
+    | details: button is=emby-button class=[button-flat detailButton emby-button je-detail-hide-btn]
+    | details: button is=emby-button class=[button-flat detailButton emby-button je-spoiler-blur-btn]
+    | details: button is=emby-button class=[button-flat detailButton emby-button jellyseerr-report-issue-icon]
+    | details: button#je-active-streams is=paper-icon-button-light class=[headerButton headerButtonRight paper-icon-button-light]
+    | details: button#je-header-launcher is=paper-icon-button-light class=[headerButton headerButtonRight je-header-launcher paper-icon-button-light]
+    | details: button#randomItemButton is=paper-icon-button-light class=[headerButton headerButtonRight paper-icon-button-light]
+    | BLOCKED https://www.gstatic.com/cv/js/sender/v1/cast_sender.js
+    | BLOCKED https://cdn.jsdelivr.net/gh/Druidblack/jellyfin-icon-metadata@main/icons/imdb/imdb.png
+    | BLOCKED https://cdn.jsdelivr.net/gh/Druidblack/jellyfin-icon-metadata@main/icons/themoviedb/themoviedb.png
+    | URL /web/index.html#/details?id=06de48d758074756c732c7de70aa79f8
+  after: je12 browse '#/home' --script p115-custom-elements.mjs
+    deployed 73e760501 (dll 29e3644b1e80ce2a) on lab je125ce284, 2026-11-24 16:40:55
+    | SCRIPT home: button#je-active-streams is=paper-icon-button-light class=[headerButton headerButtonRight paper-icon-button-light]
+    | home: button#je-header-launcher is=paper-icon-button-light class=[headerButton headerButtonRight je-header-launcher paper-icon-button-light]
+    | home: button#je-native-tab-btn-activity is=emby-button class=[emby-button emby-tab-button]
+    | home: button#je-native-tab-btn-catchup is=emby-button class=[emby-button emby-tab-button]
+    | home: button#je-native-tab-link-activity is=paper-icon-button-light class=[headerButton headerButtonRight paper-icon-button-light]
+    | home: button#je-native-tab-link-catchup is=paper-icon-button-light class=[headerButton headerButtonRight paper-icon-button-light]
+    | home: button#randomItemButton is=paper-icon-button-light class=[headerButton headerButtonRight paper-icon-button-light]
+    | details: a is=emby-linkbutton class=[button-link emby-button letterboxd-link letterboxd-link-icon]
+    | details: a is=emby-linkbutton class=[button-link emby-button seerr-link]
+    | details: a is=emby-linkbutton class=[emby-button jellyseerr-more-info-link]
+    | details: button is=emby-button class=[button-flat detailButton emby-button je-detail-hide-btn]
+    | details: button is=emby-button class=[button-flat detailButton emby-button je-spoiler-blur-btn]
+    | details: button is=emby-button class=[button-flat detailButton emby-button jellyseerr-report-issue-icon]
+    | details: button#je-active-streams is=paper-icon-button-light class=[headerButton headerButtonRight paper-icon-button-light]
+    | details: button#je-header-launcher is=paper-icon-button-light class=[headerButton headerButtonRight je-header-launcher paper-icon-button-light]
+    | details: button#randomItemButton is=paper-icon-button-light class=[headerButton headerButtonRight paper-icon-button-light]
+    | BLOCKED https://www.gstatic.com/cv/js/sender/v1/cast_sender.js
+    | BLOCKED https://cdn.jsdelivr.net/gh/Druidblack/jellyfin-icon-metadata@main/icons/imdb/imdb.png
+    | BLOCKED https://cdn.jsdelivr.net/gh/Druidblack/jellyfin-icon-metadata@main/icons/themoviedb/themoviedb.png
+    | URL /web/index.html#/details?id=06de48d758074756c732c7de70aa79f8
+  same command before and after: yes; builds: before upstream-235dc1528576, after 73e760501 (a clean build of 73e76050, not the checkout's commit 9a8f3a3d: je12 deploy, then rerun with --keep after:custom-elements)

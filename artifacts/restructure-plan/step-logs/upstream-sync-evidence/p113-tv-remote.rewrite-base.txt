@@ -1,0 +1,15 @@
+The pre-port main line (f6c47dc6) on the same lab, je12 browse --profile tv with this folder's p113-tv-remote.mjs; compare p113-116.live.txt (pair tv-remote).
+PROFILE tv {"layout":"tv","tvClass":true}
+SCRIPT header tab strip: 1056px wide in a 1920px viewport
+random button: is=paper-icon-button-light class=[headerButton headerButtonRight paper-icon-button-light show-focus]
+More Info external links: 5; with a target: 5; inert (href="#"): 0
+More Info focus: button.jellyseerr-request-button.jellyseerr-button-request
+More Info Back: default prevented true; a second Back at once: default prevented true
+after Back: More Info open true; focus button.jellyseerr-request-button.jellyseerr-button-request; address #/home -> #/home
+request window: focuscontainer false; focus button.jellyseerr-modal-button.jellyseerr-modal-button-secondary
+request window Back: default prevented true; open after true; focus button.jellyseerr-modal-button.jellyseerr-modal-button-secondary; address #/home -> #/home
+card "Mock Odyssey": title link tabindex null
+OK on the poster: overview true; More Info open false
+focus: button.jellyseerr-request-button.jellyseerr-button-request
+Back: default prevented true; overview false; More Info open false; focus body; address #/search?query=Mock -> 
+URL about:blank

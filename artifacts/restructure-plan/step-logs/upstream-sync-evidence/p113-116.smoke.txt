@@ -1,0 +1,5 @@
+je12 smoke (je12 2.7.3), lab on jellyfin/jellyfin:12.4: je12 deploy --base f6c47dc67 then je12 smoke --record (the main line before the ports), then je12 deploy --smoke of 73e76050 (this branch's last code commit)
+baseline recorded for f6c47dc67a77: ok (18 of 18 rows): plugin, scheduled tasks, openapi, bundle wire, server log, pages admin, settings, media-tags-hub, poster, details, hidden-content, bookmarks, calendar, downloads, activity, catchup, seerr, player
+smoke: comparing the deployed 73e760501 with the baseline of f6c47dc67a77 (docs(sync): gate record for upstream 49937684), from the last je12 smoke --record
+ok (18 of 18 rows): plugin, scheduled tasks, openapi, bundle wire, server log, pages admin, settings, media-tags-hub, poster, details, hidden-content, bookmarks, calendar, downloads, activity, catchup, seerr, player
+smoke: pass (0 failing, 0 flaky, 0 changed, 0 known, 0 fixed) in 17s

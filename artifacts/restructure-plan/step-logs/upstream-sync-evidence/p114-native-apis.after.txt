@@ -1,0 +1,3 @@
+je12 browse '#/home' --eval (je12 2.7.3) on this branch at 73e76050, lab jellyfin/jellyfin:12.4: are replaceChildren on Element, Document and DocumentFragment still the browser's own after plugin.js ran, is Intl.DisplayNames there, and how many language chips Home shows
+EVAL {"element":true,"document":true,"fragment":true,"displayNames":"function","languageChips":42}
+URL /web/index.html#/home

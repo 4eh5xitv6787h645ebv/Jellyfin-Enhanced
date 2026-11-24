@@ -1,0 +1,76 @@
+je12 2.7.3 (v2.7.3); every je12 test --only run of the new tests of ports 113-116 (2026-11-24 sync), from this checkout's je12 test records.
+Trees: f6c47dc67+dirty@8949108d = the main line with upstream f83971e3's and b0cabd9f's tests added, no port; @97ba027b and @ba4646fb = with port 113 (the second after the More Info link count was set to 5);
+c92cabccb+dirty@5cf4823c = port 113 committed, port 114's tests present and its sources set aside; @cdc83269 = with port 114;
+df0c5f32c+dirty@211b8064 = port 114 committed, port 115's tests present and its client sources set aside; @488d2be4 = with port 115;
+f86dbe541+dirty@f6b34dd6 = port 115 committed, upstream 235dc152's test change applied, no port; @d9f5ab12 = with port 116.
+Tests that pass on both sides are what must not change (a pointer-opened overview, navigation-closed More Info, links where nothing handles the type).
+
+tests/frontend/requests/request-modal-tv.test.mjs :: a TV remote's Back closes the dialog and its held repeats stay with it
+  FAILED on f6c47dc67+dirty@8949108d at 2026-11-24 16:07:28: AssertionError: Expected values to be strictly equal: /  / false !== true / 
+  passed on f6c47dc67+dirty@97ba027b at 2026-11-24 16:13:11
+tests/frontend/requests/request-modal-tv.test.mjs :: remote navigation stays inside the dialog
+  FAILED on f6c47dc67+dirty@8949108d at 2026-11-24 16:07:28: AssertionError: The expression evaluated to a falsy value: /  /   assert.ok(created.modalElement.classList.contains('focuscontainer')) / 
+  passed on f6c47dc67+dirty@97ba027b at 2026-11-24 16:13:11
+tests/frontend/requests/request-modal-tv.test.mjs :: closing gives focus back to what opened the dialog
+  FAILED on f6c47dc67+dirty@8949108d at 2026-11-24 16:07:28: AssertionError: Values have same structure but are not reference-equal: /  / HTMLButtonElement {} / 
+  passed on f6c47dc67+dirty@97ba027b at 2026-11-24 16:13:11
+tests/frontend/requests/request-modal-tv.test.mjs :: a Request button disabled by its successful request hands focus to its card poster
+  FAILED on f6c47dc67+dirty@8949108d at 2026-11-24 16:07:28: AssertionError: Expected "actual" to be reference-equal to "expected": / + actual - expected /  / + HTMLButtonElement {} / - HTMLDivElement {} / 
+  passed on f6c47dc67+dirty@97ba027b at 2026-11-24 16:13:11
+tests/frontend/requests/seerr-card-tv.test.mjs :: TV layout: a remote's Back closes the poster overview and returns to the poster
+  FAILED on f6c47dc67+dirty@8949108d at 2026-11-24 16:07:32: AssertionError: Expected values to be strictly equal: /  / false !== true / 
+  passed on f6c47dc67+dirty@97ba027b at 2026-11-24 16:13:14
+tests/frontend/requests/seerr-card-tv.test.mjs :: Back is left alone with an overview a pointer opened
+  passed on f6c47dc67+dirty@8949108d at 2026-11-24 16:07:32
+  passed on f6c47dc67+dirty@97ba027b at 2026-11-24 16:13:14
+  passed on f86dbe541+dirty@f6b34dd6 at 2026-11-24 16:30:34
+  passed on f86dbe541+dirty@d9f5ab12 at 2026-11-24 16:30:52
+tests/frontend/pages/pages-moreinfo.test.mjs :: more-info closes on a TV remote Back, keeps it from Jellyfin, and leaves it to a stacked dialog
+  FAILED on f6c47dc67+dirty@8949108d at 2026-11-24 16:07:35: AssertionError: Expected values to be strictly equal: /  / false !== true / 
+  passed on f6c47dc67+dirty@97ba027b at 2026-11-24 16:13:17
+tests/frontend/pages/pages-moreinfo.test.mjs :: more-info on TV gives focus back to the title it was opened from
+  FAILED on f6c47dc67+dirty@8949108d at 2026-11-24 16:07:35: AssertionError: Expected "actual" to be reference-equal to "expected": / + actual - expected /  / + HTMLButtonElement {} / - HTMLAnchorElement {} / 
+  passed on f6c47dc67+dirty@97ba027b at 2026-11-24 16:13:17
+tests/frontend/pages/pages-moreinfo.test.mjs :: more-info closed by navigation does not pull focus back to its opener
+  passed on f6c47dc67+dirty@8949108d at 2026-11-24 16:07:35
+  passed on f6c47dc67+dirty@97ba027b at 2026-11-24 16:13:17
+tests/frontend/features/spoiler-guard/features-seerr-spoiler-guard.test.mjs :: on the TV layout More Info renders its external links inert
+  FAILED on f6c47dc67+dirty@8949108d at 2026-11-24 16:07:39: AssertionError: Expected values to be strictly equal: / + actual - expected /  / + HTMLAnchorElement {} / - null / 
+  FAILED on f6c47dc67+dirty@97ba027b at 2026-11-24 16:13:21: AssertionError: Expected values to be strictly equal: /  / 5 !== 6 / 
+  passed on f6c47dc67+dirty@ba4646fb at 2026-11-24 16:14:48
+tests/frontend/features/media-tags/features-language-display.test.mjs :: language tags load and fall back to codes on engines without Intl.DisplayNames
+  FAILED on f6c47dc67+dirty@8949108d at 2026-11-24 16:07:43: TypeError: Intl.DisplayNames is not a constructor
+  FAILED on c92cabccb+dirty@5cf4823c at 2026-11-24 16:19:35: TypeError: Intl.DisplayNames is not a constructor
+  passed on c92cabccb+dirty@cdc83269 at 2026-11-24 16:19:54
+tests/frontend/chrome/chrome-header.test.mjs :: native tabs: the borrowed backdrop is found without an :is() selector
+  FAILED on c92cabccb+dirty@5cf4823c at 2026-11-24 16:19:41: AssertionError: the borrowed backdrop
+  passed on c92cabccb+dirty@cdc83269 at 2026-11-24 16:19:57
+  passed on df0c5f32c+dirty@488d2be4 at 2026-11-24 16:28:12
+tests/frontend/bootstrap/bootstrap-loader-rewrite.test.mjs :: plugin.js gives engines without replaceChildren one before any module loads, and keeps a native one
+  FAILED on c92cabccb+dirty@5cf4823c at 2026-11-24 16:19:44: TypeError: box.replaceChildren is not a function
+  passed on c92cabccb+dirty@cdc83269 at 2026-11-24 16:20:00
+tests/frontend/core/core-shared-runtime.test.mjs :: external links are created with their type, so a v0 engine upgrades them, and keep the caller's classes
+  FAILED on df0c5f32c+dirty@211b8064 at 2026-11-24 16:27:50: AssertionError: Expected values to be strictly deep-equal: / + actual - expected /  /   [ /     'arr-link', /     'button-link', / -   'emby-button', 
+  passed on df0c5f32c+dirty@488d2be4 at 2026-11-24 16:28:08
+tests/frontend/core/core-shared-runtime.test.mjs :: no client source sets is after creating an element (v0 engines never upgrade it)
+  FAILED on df0c5f32c+dirty@211b8064 at 2026-11-24 16:27:53: AssertionError: create these with createCustomElement(tag, type) from features/shared/dom.ts / + actual - expected /  / + [ / +   'features/bookmarks/
+  passed on df0c5f32c+dirty@488d2be4 at 2026-11-24 16:28:08
+tests/frontend/chrome/chrome-header.test.mjs :: native tabs: the Home tab button is created with its type and keeps the classes its upgrade adds
+  FAILED on df0c5f32c+dirty@211b8064 at 2026-11-24 16:27:57: AssertionError: Expected values to be strictly deep-equal: / + actual - expected /  /   [ / -   'emby-button', /     'emby-tab-button', / -   'show-fo
+  passed on df0c5f32c+dirty@488d2be4 at 2026-11-24 16:28:12
+tests/frontend/core/core-shared-runtime.test.mjs :: where nothing handles the type, external links still carry is="emby-linkbutton"
+  passed on df0c5f32c+dirty@211b8064 at 2026-11-24 16:28:00
+  passed on df0c5f32c+dirty@488d2be4 at 2026-11-24 16:28:08
+tests/frontend/requests/seerr-card-tv.test.mjs :: TV layout without More Info: a remote's Back closes the poster overview and returns to the poster
+  passed on f86dbe541+dirty@f6b34dd6 at 2026-11-24 16:30:34
+  passed on f86dbe541+dirty@d9f5ab12 at 2026-11-24 16:30:52
+tests/frontend/requests/seerr-card-tv.test.mjs :: TV layout: OK on a poster opens More Info, and the title is not a separate remote stop
+  FAILED on f86dbe541+dirty@f6b34dd6 at 2026-11-24 16:30:34: AssertionError: Expected values to be strictly deep-equal: / + actual - expected /  / + [] / - [ / -   [ / -     603, / -     'movie' / -   ] / - ] / 
+  passed on f86dbe541+dirty@d9f5ab12 at 2026-11-24 16:30:52
+
+je12 test (quick mode, the touched features' node tests with architecture and guards) before each port commit:
+  port 113 (c92cabcc): node 1119 passed, 0 failed [seerr, player, settings-panel]
+  port 114 (df0c5f32): node 4090 passed, 0 failed [platform, chrome, media-tags, player, seerr, settings-panel, spoiler-guard]
+  port 115 (f86dbe54): node 4487 passed, 0 failed [platform and the 12 features the diff touches]
+  port 116 (73e76050): node 902 passed, 0 failed [seerr]
+  budgets (9a8f3a3d): JE.Tests.BundleBudgetTests 2 passed, JE.Tests.PackedResourcesTests 5 passed
