@@ -1,0 +1,5 @@
+je12 smoke (je12 2.7.3), lab on jellyfin/jellyfin:12.4: je12 up recorded the baseline of add28a67d (the main line before the ports), then je12 deploy --smoke of 431046055 (this branch's last code commit; the budget commit after it changes no served file)
+baseline recorded for add28a67d6f5: ok (18 of 18 rows): plugin, scheduled tasks, openapi, bundle wire, server log, pages admin, settings, media-tags-hub, poster, details, hidden-content, bookmarks, calendar, downloads, activity, catchup, seerr, player
+smoke: comparing the deployed 431046055 with the baseline of add28a67d6f5 (docs(sync): gate record for upstream f83971e3 to 235dc152), from the start of this lab (je12 up)
+ok (18 of 18 rows): plugin, scheduled tasks, openapi, bundle wire, server log, pages admin, settings, media-tags-hub, poster, details, hidden-content, bookmarks, calendar, downloads, activity, catchup, seerr, player
+smoke: pass (0 failing, 0 flaky, 0 changed, 0 known, 0 fixed) in 17s

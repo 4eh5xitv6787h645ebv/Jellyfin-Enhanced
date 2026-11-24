@@ -1,0 +1,3 @@
+$ je12 config set MdblistRatingsEnabled true MdblistRatingsShowOnItemDetails true MdblistRatingsShowPercentSymbol true   (MdblistRatingsScale: no such key on this build)
+$ je12 browse '#/home' --script p117-mdblist-scale.mjs   (lab build: add28a67d+dirty, the main line before the port; the uncommitted files were the ledger and the new test file only)
+SCRIPT {"served":{"MdblistRatingsScale":"absent","MdblistRatingsShowPercentSymbol":true},"badges":["RT Critic 85%","IMDb 64%","Roger Ebert 3.5"],"ratingsRequests":1,"adminControl":"absent"}

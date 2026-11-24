@@ -1,0 +1,40 @@
+je12 2.7.3 (v2.7.3); every je12 test --only run of this run's new tests and of the size budgets (2026-11-24 17:10 sync), from this checkout's je12 test records (earlier runs of the same tests on other branches left out).
+Trees: add28a67d+dirty@7ccc133e = the main line with upstream 03875081's and 49ee210d's tests added, no port; @57ef2020 and @798601c4 = with the MDBList scale port;
+add28a67d+dirty@e679c3cf = the MDBList port with its five admin-page sources set aside (the admin test written for it fails); 34887bbec = port 117 committed;
+34887bbec+dirty@cbdd4b58 = with the Maintainerr port; 431046055 = port 118 committed; 431046055+dirty@67cdd4cb = the raw bundle limit set to 1 to read the raw size;
+431046055+dirty@78d5318e = the budgets raised (committed as 4771300f).
+
+tests/frontend/pages/pages-mdblist-ratings-scale.test.mjs :: details ratings keep the 0-100 score by default and for unknown scales
+  passed on add28a67d+dirty@7ccc133e at 2026-11-24 17:12:57
+  passed on add28a67d+dirty@57ef2020 at 2026-11-24 17:15:19
+  passed on 34887bbec at 2026-11-24 17:24:22
+tests/frontend/pages/pages-mdblist-ratings-scale.test.mjs :: details ratings rescale MDBList scores to 0-10 and 0-5 with one decimal and no % symbol
+  FAILED on add28a67d+dirty@7ccc133e at 2026-11-24 17:12:57: AssertionError: Expected values to be strictly deep-equal: [ / +   '85%',
+  passed on add28a67d+dirty@57ef2020 at 2026-11-24 17:15:19
+  passed on 34887bbec at 2026-11-24 17:24:22
+tests/frontend/admin/config/admin-config-rewrite.test.mjs :: the MDBList rating scale loads as stored, unknown values as 0-100, and is saved as chosen
+  passed on add28a67d+dirty@798601c4 at 2026-11-24 17:17:35
+  FAILED on add28a67d+dirty@e679c3cf at 2026-11-24 17:17:46: TypeError: Cannot read properties of null (reading 'options')
+  passed on 34887bbec at 2026-11-24 17:24:28
+JE.Tests.Features.MediaTags.IntegrationMaintainerrActionsTests.An_item_goes_to_the_one_manual_collection_of_its_type_on_its_library
+  FAILED on add28a67d+dirty@7ccc133e at 2026-11-24 17:13:21: Assert.Contains() Failure: Sub-string not found / String:    "Maintainerr has no active manual collecti"··· / Not found: "It returned 2"
+  passed on 34887bbec+dirty@cbdd4b58 at 2026-11-24 17:26:17
+  passed on 431046055 at 2026-11-24 17:28:40
+JE.Tests.BundleBudgetTests.ServedBundleIsWithinTheCheckedInBudget
+  FAILED on 431046055 at 2026-11-24 17:30:41: bundle.js is 760,625 bytes gzip-9, over the 760,592 budget in client/bundle-budget.json. Make it smaller, or raise the budget in a new history entry with a reason.
+  FAILED on 431046055+dirty@67cdd4cb at 2026-11-24 17:31:30: bundle.js is 2,755,895 bytes raw, over the 1 budget in client/bundle-budget.json. Make it smaller, or raise the budget in a new history entry with a reason.
+  passed on 431046055+dirty@78d5318e at 2026-11-24 17:31:58
+JE.Tests.BundleBudgetTests.BudgetOnlyRisesWithADocumentedReason
+  passed on 431046055 at 2026-11-24 17:30:41
+  passed on 431046055+dirty@78d5318e at 2026-11-24 17:31:58
+JE.Tests.PackedResourcesTests.WhatThePluginAssemblyEmbedsIsWithinTheCheckedInSizeBudget
+  FAILED on 431046055 at 2026-11-24 17:30:53: Jellyfin.Plugin.JellyfinEnhanced.dll embeds 12,455,100 bytes, over the 12,454,502 budget in client/assembly-budget.json. Embed less (or pack it), or raise the budget in a new history entry with a reas
+  passed on 431046055+dirty@78d5318e at 2026-11-24 17:32:10
+JE.Tests.PackedResourcesTests.ThePackedLocalesAreWhatTheServerSideCaptionsAreReadFrom
+  passed on 431046055+dirty@78d5318e at 2026-11-24 17:32:10
+JE.Tests.PackedResourcesTests.OnlyPackedResourcesAsksTheAssemblyForAResource
+  passed on 431046055+dirty@78d5318e at 2026-11-24 17:32:10
+JE.Tests.PackedResourcesTests.EveryClientFileReadsBackByteForByteUnderItsOwnResourceName
+  passed on 431046055+dirty@78d5318e at 2026-11-24 17:32:10
+JE.Tests.PackedResourcesTests.ScriptsMapsTwinsAndLocalesArePackedAndTheEnumeratedFilesAreNot
+  passed on 431046055+dirty@78d5318e at 2026-11-24 17:32:10

@@ -1,0 +1,112 @@
+je12 2.7.3 (v2.7.3); the before/after pairs of ports 117 and 118, from je12 evidence. before = upstream's own Jellyfin 12 build at 49ee210d (scripts/upstream_lab_deploy.py 49ee210d7ea0322153717e6f843145478d2b6681), after = this branch: 34887bbe for the MDBList scale (pairs scale-*, with je12 config set MdblistRatingsScale <10|5|100> MdblistRatingsShowPercentSymbol <true|false|true> before each run), 43104605 for the Maintainerr refusal (pairs maintainerr-*, after p118-maintainerr.setup.py two|empty). The scripts are this folder's p117-mdblist-scale.mjs and p118-maintainerr.setup.py. The same checks on the main line before the ports: the *.rewrite-base.txt files.
+== live check (5 before/after pair(s))
+pair 'scale-10': complete
+  before: je12 browse '#/home' --script p117-mdblist-scale.mjs
+    deployed upstream-49ee210d7ea0 = 49ee210d (dll 4c4def74b06cfab6) on lab je125ce284, 2026-11-24 17:22:11
+    | SCRIPT {"served":{"MdblistRatingsScale":"10","MdblistRatingsShowPercentSymbol":true},"badges":["RT Critic 8.5","IMDb 6.4","Roger Ebert 3.5"],"ratingsRequests":1,"adminControl":{"label":"Rating Scale","value":"10","options":["100=0-100 (MDBList score)","10=0-10","5=0-5"]}}
+    | CONSOLE Translation key is missing from dictionary: url
+    | CONSOLE Translation key is missing from dictionary: ...
+    | CONSOLE Translation key is missing from dictionary: baseName
+    | CONSOLE Translation key is missing from dictionary: code.split('-')[1]
+    | CONSOLE Translation key is missing from dictionary: index + 1
+    | CONSOLE Translation key is missing from dictionary: trimmedLine
+    | CONSOLE Translation key is missing from dictionary: invalidLines.join('\n')
+    | CONSOLE Failed to load resource: the server responded with a status of 404 (Not Found) /JellyfinEnhanced/cdn/selfhst/svg/reclaimerr.svg
+    | CONSOLE Failed to load resource: the server responded with a status of 404 (Not Found) /JellyfinEnhanced/cdn/selfhst/svg/maintainerr.svg
+    | CONSOLE Failed to load resource: the server responded with a status of 404 (Not Found) /JellyfinEnhanced/cdn/selfhst/svg/tmdb.svg
+    | BLOCKED https://www.gstatic.com/cv/js/sender/v1/cast_sender.js
+    | BLOCKED https://cdn.jsdelivr.net/gh/Druidblack/jellyfin-icon-metadata@main/icons/imdb/imdb.png
+    | BLOCKED https://cdn.jsdelivr.net/gh/Druidblack/jellyfin-icon-metadata@main/icons/themoviedb/themoviedb.png
+    | BLOCKED https://api.github.com/repos/n00bcodr/Jellyfin-Enhanced/contents/Jellyfin.Plugin.JellyfinEnhanced/js/locales
+    | URL /web/index.html#/configurationpage?name=Jellyfin%20Enhanced
+  after: je12 browse '#/home' --script p117-mdblist-scale.mjs
+    deployed 34887bbec (dll 45b96b76e76ec0ed) on lab je125ce284, 2026-11-24 17:24:53
+    | SCRIPT {"served":{"MdblistRatingsScale":"10","MdblistRatingsShowPercentSymbol":true},"badges":["RT Critic 8.5","IMDb 6.4","Roger Ebert 3.5"],"ratingsRequests":1,"adminControl":{"label":"Rating Scale","value":"10","options":["100=0-100 (MDBList score)","10=0-10","5=0-5"]}}
+    | CONSOLE Failed to load resource: the server responded with a status of 404 (Not Found) /JellyfinEnhanced/cdn/selfhst/svg/maintainerr.svg
+    | CONSOLE Failed to load resource: the server responded with a status of 404 (Not Found) /JellyfinEnhanced/cdn/selfhst/svg/tmdb.svg
+    | CONSOLE Failed to load resource: the server responded with a status of 404 (Not Found) /JellyfinEnhanced/cdn/selfhst/svg/reclaimerr.svg
+    | BLOCKED https://www.gstatic.com/cv/js/sender/v1/cast_sender.js
+    | BLOCKED https://cdn.jsdelivr.net/gh/Druidblack/jellyfin-icon-metadata@main/icons/imdb/imdb.png
+    | BLOCKED https://cdn.jsdelivr.net/gh/Druidblack/jellyfin-icon-metadata@main/icons/themoviedb/themoviedb.png
+    | URL /web/index.html#/configurationpage?name=Jellyfin%20Enhanced
+  same command before and after: yes; builds: before upstream-49ee210d7ea0, after 34887bbec (a clean build of 34887bbe, not the checkout's commit 4771300f: je12 deploy, then rerun with --keep after:scale-10)
+pair 'scale-5': complete
+  before: je12 browse '#/home' --script p117-mdblist-scale.mjs
+    deployed upstream-49ee210d7ea0 = 49ee210d (dll 4c4def74b06cfab6) on lab je125ce284, 2026-11-24 17:22:19
+    | SCRIPT {"served":{"MdblistRatingsScale":"5","MdblistRatingsShowPercentSymbol":false},"badges":["RT Critic 4.3","IMDb 3.2","Roger Ebert 3.5"],"ratingsRequests":1,"adminControl":{"label":"Rating Scale","value":"5","options":["100=0-100 (MDBList score)","10=0-10","5=0-5"]}}
+    | CONSOLE Translation key is missing from dictionary: url
+    | CONSOLE Translation key is missing from dictionary: ...
+    | CONSOLE Translation key is missing from dictionary: baseName
+    | CONSOLE Translation key is missing from dictionary: code.split('-')[1]
+    | CONSOLE Translation key is missing from dictionary: index + 1
+    | CONSOLE Translation key is missing from dictionary: trimmedLine
+    | CONSOLE Translation key is missing from dictionary: invalidLines.join('\n')
+    | CONSOLE Failed to load resource: the server responded with a status of 404 (Not Found) /JellyfinEnhanced/cdn/selfhst/svg/maintainerr.svg
+    | CONSOLE Failed to load resource: the server responded with a status of 404 (Not Found) /JellyfinEnhanced/cdn/selfhst/svg/tmdb.svg
+    | CONSOLE Failed to load resource: the server responded with a status of 404 (Not Found) /JellyfinEnhanced/cdn/selfhst/svg/reclaimerr.svg
+    | BLOCKED https://www.gstatic.com/cv/js/sender/v1/cast_sender.js
+    | BLOCKED https://cdn.jsdelivr.net/gh/Druidblack/jellyfin-icon-metadata@main/icons/imdb/imdb.png
+    | BLOCKED https://cdn.jsdelivr.net/gh/Druidblack/jellyfin-icon-metadata@main/icons/themoviedb/themoviedb.png
+    | BLOCKED https://api.github.com/repos/n00bcodr/Jellyfin-Enhanced/contents/Jellyfin.Plugin.JellyfinEnhanced/js/locales
+    | URL /web/index.html#/configurationpage?name=Jellyfin%20Enhanced
+  after: je12 browse '#/home' --script p117-mdblist-scale.mjs
+    deployed 34887bbec (dll 45b96b76e76ec0ed) on lab je125ce284, 2026-11-24 17:25:00
+    | SCRIPT {"served":{"MdblistRatingsScale":"5","MdblistRatingsShowPercentSymbol":false},"badges":["RT Critic 4.3","IMDb 3.2","Roger Ebert 3.5"],"ratingsRequests":1,"adminControl":{"label":"Rating Scale","value":"5","options":["100=0-100 (MDBList score)","10=0-10","5=0-5"]}}
+    | CONSOLE Failed to load resource: the server responded with a status of 404 (Not Found) /JellyfinEnhanced/cdn/selfhst/svg/tmdb.svg
+    | CONSOLE Failed to load resource: the server responded with a status of 404 (Not Found) /JellyfinEnhanced/cdn/selfhst/svg/reclaimerr.svg
+    | CONSOLE Failed to load resource: the server responded with a status of 404 (Not Found) /JellyfinEnhanced/cdn/selfhst/svg/maintainerr.svg
+    | BLOCKED https://www.gstatic.com/cv/js/sender/v1/cast_sender.js
+    | BLOCKED https://cdn.jsdelivr.net/gh/Druidblack/jellyfin-icon-metadata@main/icons/imdb/imdb.png
+    | BLOCKED https://cdn.jsdelivr.net/gh/Druidblack/jellyfin-icon-metadata@main/icons/themoviedb/themoviedb.png
+    | URL /web/index.html#/configurationpage?name=Jellyfin%20Enhanced
+  same command before and after: yes; builds: before upstream-49ee210d7ea0, after 34887bbec (a clean build of 34887bbe, not the checkout's commit 4771300f: je12 deploy, then rerun with --keep after:scale-5)
+pair 'scale-100': complete
+  before: je12 browse '#/home' --script p117-mdblist-scale.mjs
+    deployed upstream-49ee210d7ea0 = 49ee210d (dll 4c4def74b06cfab6) on lab je125ce284, 2026-11-24 17:22:26
+    | SCRIPT {"served":{"MdblistRatingsScale":"100","MdblistRatingsShowPercentSymbol":true},"badges":["RT Critic 85%","IMDb 64%","Roger Ebert 3.5"],"ratingsRequests":1,"adminControl":{"label":"Rating Scale","value":"100","options":["100=0-100 (MDBList score)","10=0-10","5=0-5"]}}
+    | CONSOLE Translation key is missing from dictionary: url
+    | CONSOLE Translation key is missing from dictionary: ...
+    | CONSOLE Translation key is missing from dictionary: baseName
+    | CONSOLE Translation key is missing from dictionary: code.split('-')[1]
+    | CONSOLE Translation key is missing from dictionary: index + 1
+    | CONSOLE Translation key is missing from dictionary: trimmedLine
+    | CONSOLE Translation key is missing from dictionary: invalidLines.join('\n')
+    | CONSOLE Failed to load resource: the server responded with a status of 404 (Not Found) /JellyfinEnhanced/cdn/selfhst/svg/maintainerr.svg
+    | CONSOLE Failed to load resource: the server responded with a status of 404 (Not Found) /JellyfinEnhanced/cdn/selfhst/svg/reclaimerr.svg
+    | CONSOLE Failed to load resource: the server responded with a status of 404 (Not Found) /JellyfinEnhanced/cdn/selfhst/svg/tmdb.svg
+    | BLOCKED https://www.gstatic.com/cv/js/sender/v1/cast_sender.js
+    | BLOCKED https://cdn.jsdelivr.net/gh/Druidblack/jellyfin-icon-metadata@main/icons/imdb/imdb.png
+    | BLOCKED https://cdn.jsdelivr.net/gh/Druidblack/jellyfin-icon-metadata@main/icons/themoviedb/themoviedb.png
+    | BLOCKED https://api.github.com/repos/n00bcodr/Jellyfin-Enhanced/contents/Jellyfin.Plugin.JellyfinEnhanced/js/locales
+    | URL /web/index.html#/configurationpage?name=Jellyfin%20Enhanced
+  after: je12 browse '#/home' --script p117-mdblist-scale.mjs
+    deployed 34887bbec (dll 45b96b76e76ec0ed) on lab je125ce284, 2026-11-24 17:25:08
+    | SCRIPT {"served":{"MdblistRatingsScale":"100","MdblistRatingsShowPercentSymbol":true},"badges":["RT Critic 85%","IMDb 64%","Roger Ebert 3.5"],"ratingsRequests":1,"adminControl":{"label":"Rating Scale","value":"100","options":["100=0-100 (MDBList score)","10=0-10","5=0-5"]}}
+    | CONSOLE Failed to load resource: the server responded with a status of 404 (Not Found) /JellyfinEnhanced/cdn/selfhst/svg/maintainerr.svg
+    | CONSOLE Failed to load resource: the server responded with a status of 404 (Not Found) /JellyfinEnhanced/cdn/selfhst/svg/reclaimerr.svg
+    | CONSOLE Failed to load resource: the server responded with a status of 404 (Not Found) /JellyfinEnhanced/cdn/selfhst/svg/tmdb.svg
+    | BLOCKED https://www.gstatic.com/cv/js/sender/v1/cast_sender.js
+    | BLOCKED https://cdn.jsdelivr.net/gh/Druidblack/jellyfin-icon-metadata@main/icons/imdb/imdb.png
+    | BLOCKED https://cdn.jsdelivr.net/gh/Druidblack/jellyfin-icon-metadata@main/icons/themoviedb/themoviedb.png
+    | URL /web/index.html#/configurationpage?name=Jellyfin%20Enhanced
+  same command before and after: yes; builds: before upstream-49ee210d7ea0, after 34887bbec (a clean build of 34887bbe, not the checkout's commit 4771300f: je12 deploy, then rerun with --keep after:scale-100)
+pair 'maintainerr-two': complete
+  before: je12 api admin POST /JellyfinEnhanced/maintainerr/mark '{"itemId":"06de48d758074756c732c7de70aa79f8"}' --expect 400
+    deployed upstream-49ee210d7ea0 = 49ee210d (dll 4c4def74b06cfab6) on lab je125ce284, 2026-11-24 17:23:11
+    | HTTP 400
+    | {"error": "Maintainerr has no active manual collection. It returned 2: Rule list (not manual, active), Old (manual, inactive). A manual collection comes from a Maintainerr rule with 'Use manual collection' on; the rule must also be active."}
+  after: je12 api admin POST /JellyfinEnhanced/maintainerr/mark '{"itemId":"06de48d758074756c732c7de70aa79f8"}' --expect 400
+    deployed 431046055 (dll 95ebf9e840faaec4) on lab je125ce284, 2026-11-24 17:28:58
+    | HTTP 400
+    | {"error": "Maintainerr has no active manual collection. It returned 2: Rule list (not manual, active), Old (manual, inactive). A manual collection comes from a Maintainerr rule with 'Use manual collection' on; the rule must also be active."}
+  same command before and after: yes; builds: before upstream-49ee210d7ea0, after 431046055 (a clean build of 43104605, not the checkout's commit 4771300f: je12 deploy, then rerun with --keep after:maintainerr-two)
+pair 'maintainerr-empty': complete
+  before: je12 api admin POST /JellyfinEnhanced/maintainerr/mark '{"itemId":"06de48d758074756c732c7de70aa79f8"}' --expect 400
+    deployed upstream-49ee210d7ea0 = 49ee210d (dll 4c4def74b06cfab6) on lab je125ce284, 2026-11-24 17:23:12
+    | HTTP 400
+    | {"error": "Maintainerr returned no collections. A manual collection comes from a Maintainerr rule with 'Use manual collection' on; the rule must also be active."}
+  after: je12 api admin POST /JellyfinEnhanced/maintainerr/mark '{"itemId":"06de48d758074756c732c7de70aa79f8"}' --expect 400
+    deployed 431046055 (dll 95ebf9e840faaec4) on lab je125ce284, 2026-11-24 17:28:59
+    | HTTP 400
+    | {"error": "Maintainerr returned no collections. A manual collection comes from a Maintainerr rule with 'Use manual collection' on; the rule must also be active."}
+  same command before and after: yes; builds: before upstream-49ee210d7ea0, after 431046055 (a clean build of 43104605, not the checkout's commit 4771300f: je12 deploy, then rerun with --keep after:maintainerr-empty)

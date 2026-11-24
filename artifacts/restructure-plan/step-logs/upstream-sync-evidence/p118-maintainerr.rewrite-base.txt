@@ -1,0 +1,8 @@
+{"mode": "two", "collections": ["Rule list (active, not manual)", "Old (manual, inactive)"]}
+$ je12 api admin POST /JellyfinEnhanced/maintainerr/mark '{"itemId":"06de48d758074756c732c7de70aa79f8"}' --expect 400   (lab build 34887bbec, the main line's MediaTags before the port; Maintainerr mock: two)
+HTTP 400
+{"error": "Maintainerr has no active manual collection. Create one (a rule with 'Use manual collection') and try again."}
+{"mode": "empty", "collections": []}
+$ je12 api admin POST /JellyfinEnhanced/maintainerr/mark '{"itemId":"06de48d758074756c732c7de70aa79f8"}' --expect 400   (lab build 34887bbec, the main line's MediaTags before the port; Maintainerr mock: empty)
+HTTP 400
+{"error": "Maintainerr has no active manual collection. Create one (a rule with 'Use manual collection') and try again."}
