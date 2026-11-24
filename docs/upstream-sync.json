@@ -3960,8 +3960,9 @@
         "Jellyfin.Plugin.JellyfinEnhanced/Services/MaintainerrActions.cs",
         "tests/backend/Integrations/IntegrationMaintainerrActionsTests.cs"
       ],
-      "status": "pending",
-      "rewriteCommits": []
+      "status": "ported",
+      "rewriteCommits": [],
+      "notes": "Applied as is at the moved paths: upstream's NoManualCollection helper and its call in MatchAsync go into Jellyfin.Plugin.JellyfinEnhanced/Features/MediaTags/Services/MaintainerrActions.cs (the helper beside Names, which sits lower in this file than upstream's, so the hunk was placed by hand with the same text), and upstream's test change into tests/backend/Features/MediaTags/IntegrationMaintainerrActionsTests.cs (git apply, clean at an offset). When Maintainerr has no active manual collection, the mark refusal now names up to five of the collections it returned, each as manual or not and active or inactive, or says it returned none, followed by the hint that the rule must use a manual collection and be active. The test fails before the port (the old message has no \"It returned 2\") and passes after. No client change: the item menu shows the server's reason in its failure toast, escaped (client/src/features/media-tags/editor/maintainerr-item-menu.ts), as it already did for the other refusals that name collections."
     }
   ]
 }
