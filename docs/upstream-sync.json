@@ -3791,8 +3791,9 @@
         "Jellyfin.Plugin.JellyfinEnhanced/js/tags/languagetags.js",
         "tests/frontend/features/features-language-display.test.mjs"
       ],
-      "status": "pending",
-      "rewriteCommits": []
+      "status": "ported",
+      "rewriteCommits": [],
+      "notes": "Re-implemented, each of the five parts at the place that builds upstream's file. replaceChildren: the same polyfill (Element, Document and DocumentFragment, only where the method is missing) in client/src/bootstrap/loader/polyfills.ts, called first in plugin.js's entry, before the namespace and every module; a new test in tests/frontend/bootstrap/bootstrap-loader-rewrite.test.mjs removes the method, loads plugin.js and checks it works and that a native one is kept. Intl.DisplayNames: feature-detected (typeof === 'function') at the same three sites, media-language.ts's displayName and local-name lookup and languagetags.ts's module-level formatter, with upstream's fallbacks (the upper-case code, or no local name); upstream's test is added to tests/frontend/features/media-tags/features-language-display.test.mjs. The tag-hidden editor and the Seerr discovery filters already construct Intl.DisplayNames inside try/catch and are unchanged. Native tabs: the Home backdrop target spelled out without :is() (chrome/native-tabs.ts); a new test in tests/frontend/chrome/chrome-header.test.mjs gives the page a querySelector that rejects :is() as engines before Chrome 88 do, and the borrowed backdrop still appears. CSS, verbatim: the launcher's .layout-tv :focus rule (chrome/header-actions.ts), the pause screen's close button split from its grouped :hover rule with a .layout-tv :focus twin (player/pause-screen.css), the season, collection and TVDB-match rows' .layout-tv :focus rules (seerr/core/ui/season-modal.css) and the More Info backdrop's plain 360px height before its clamp() (seerr/details/moreinfo/more-info.css). The lab's Chromium supports :focus-visible and clamp(), so these rules change nothing there; they are checked in the built styles. Other :is() selectors passed to querySelector remain in the rewrite (downloads, the tag layout, the tag preview), as upstream keeps its own in tag-layout.js: filed as a found bug."
     },
     {
       "sha": "00ec8b46b47f6e7eeff0ed0baff0047c6d4a66a1",

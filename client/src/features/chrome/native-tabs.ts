@@ -545,7 +545,7 @@ export function createNativeTabs(JE: NativeTabsBridge, readClient: () => NativeT
         const holder = document.querySelector('.backdropContainer');
         if (!bg || !holder) return;
         syncScope();
-        const onOurPage = !!document.querySelector('#indexPage .tabContent.is-active :is(.jellyfinenhanced, .sections.bookmarks)');
+        const onOurPage = !!document.querySelector('#indexPage .tabContent.is-active .jellyfinenhanced, #indexPage .tabContent.is-active .sections.bookmarks');
         if (!onOurPage || !isHomeHash(hash())) { removeBorrowedBackdrop(); return; }
         // Jellyfin clears the backdrop on every tab change, so withBackdrop says whether it shows.
         if (!watchedBackgrounds.has(bg)) {

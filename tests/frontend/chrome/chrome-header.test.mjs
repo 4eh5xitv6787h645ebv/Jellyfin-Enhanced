@@ -144,3 +144,18 @@ test('header actions: the More dialog opens from the launcher, forwards to origi
   assert.equal(launcher.getAttribute('aria-expanded'), 'false');
   assert.equal(h.JE.headerActions.getTray(), null);
 });
+
+// Engines before Chrome 88 (older Tizen and webOS TVs) throw a SyntaxError for :is() in querySelector.
+test('native tabs: the borrowed backdrop is found without an :is() selector', async t => {
+  const items = userId => Promise.resolve({ Items: [{ Id: `${userId}-movie`, BackdropImageTags: ['tag'] }] });
+  const h = tabs(t, { hash: '#/home?tab=2&jeTab=requests', items });
+  for (const proto of [h.window.Document.prototype, h.window.Element.prototype]) {
+    const native = proto.querySelector;
+    proto.querySelector = function (selector) {
+      if (String(selector).includes(':is(')) throw new h.window.DOMException(`'${selector}' is not a valid selector.`, 'SyntaxError');
+      return native.call(this, selector);
+    };
+  }
+  h.JE.nativeTabs.register('requests', 'Requests', panel => { panel.innerHTML = '<div class="jellyfinenhanced"></div>'; });
+  await until(() => (h.document.querySelector('.je-backdrop')?.style.backgroundImage || '').includes('user-a-movie'), 'the borrowed backdrop');
+});
