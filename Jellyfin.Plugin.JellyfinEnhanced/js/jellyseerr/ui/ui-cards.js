@@ -335,10 +335,12 @@
       const mediaBadgeKeys = { movie: "jellyseerr_card_badge_movie", tv: "jellyseerr_card_badge_series", collection: "jellyseerr_card_badge_collection" };
       const mediaBadgeLabels = /* @__PURE__ */ new Map();
       let viewLabel = null;
+      const tvLayout = isTvLayout();
       const ctx = {
         seerrBase: JE.jellyseerrAPI?.resolveJellyseerrBaseUrl() || "",
+        tvLayout,
         // A TV app has no new window to open Seerr in, so it always uses the modal.
-        useMoreInfoModal: !!config?.JellyseerrUseMoreInfoModal || isTvLayout(),
+        useMoreInfoModal: !!config?.JellyseerrUseMoreInfoModal || tvLayout,
         moreInfoLoaded: !!JE.jellyseerrMoreInfo,
         availablePostersLinkToJellyfin: !!config?.JellyseerrAvailablePosterLinksToJellyfin,
         // TMDB, or Seerr's own watch-provider data when there is no TMDB key.
@@ -396,6 +398,7 @@
       const ctx = getBatchContext();
       return JSON.stringify([
         ctx.seerrBase,
+        ctx.tvLayout,
         ctx.useMoreInfoModal,
         ctx.moreInfoLoaded,
         ctx.availablePostersLinkToJellyfin,
@@ -467,6 +470,7 @@
       const titleText = titleLink.firstElementChild;
       if (titleText) titleText.textContent = title;
       titleLink.addEventListener("click", onTitleLinkCaptureClick, true);
+      if (ctx.tvLayout && ctx.moreInfoLoaded) titleLink.tabIndex = -1;
       const ratingElement = part(meta, 2);
       if (rating) {
         const value2 = ratingElement.lastElementChild;
@@ -690,10 +694,15 @@
       event.preventDefault();
       if (state.linksAvailableToJellyfin) {
         goToJellyfinItem(state);
+      } else if (state.ctx.tvLayout && state.posterOpensModal) {
+        const item = state.item;
+        if (state.jellyfinHref) goToJellyfinItem(state);
+        else if (item.mediaType === "collection") void ui.showCollectionRequestModal?.(item.id, item.name || item.title || "", item);
+        else openMoreInfo(item.id, item.mediaType);
       } else if (!state.overview) {
         const overview = createOverview(state);
         state.overviewByKey = true;
-        if (isTvLayout()) overview.querySelector(".jellyseerr-request-button")?.focus();
+        if (state.ctx.tvLayout) overview.querySelector(".jellyseerr-request-button")?.focus();
       } else {
         removeOverview(state);
       }
