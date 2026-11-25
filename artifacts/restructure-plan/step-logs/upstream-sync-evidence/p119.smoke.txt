@@ -1,0 +1,20 @@
+smoke: pass (0 failing, 0 flaky, 0 changed, 0 known, 0 fixed) in 18s vs baseline a808c5f3deb5 (2026-11-25 23:51:32, tree 289bd75ae)
+
+page admin           ok      14 tabs; Media Tags section 7 tabs (2.8s)
+page settings        ok      panel open, 24 tabs (2.8s); 19 new JE element(s): #je-tag-preview, #jeMtpTitle, .je-msym-outlined, .je-mtp …
+page media-tags-hub  ok      #jeMediaTagsHub visible (2.8s)
+page poster          ok      20/100 cards tagged (2.2s)
+page details         ok      101 Dalmatians II: Patch's London Adventure: 78 JE elements; spoiler guard button shown (2.0s)
+page hidden-content  ok      page rendered (1.5s)
+page bookmarks       ok      page rendered (2.0s)
+page calendar        ok      5 events (3.9s)
+page downloads       ok      4 items (5.3s)
+page activity        ok      Activity tab rendered (2.0s)
+page catchup         ok      Catch Up tab rendered (2.2s)
+page seerr           ok      5 Seerr cards (2.1s)
+page player          ok      playing 1.1s; OSD rating present (3.6s)
+plugin               ok      12.17.0.0 Active
+scheduled tasks      ok      17 JE tasks (keys and ids)
+openapi              ok      HTTP 200, 498 paths, 204 under /JellyfinEnhanced
+bundle wire          ok      br 200 626573B 304:yes, gzip 200 761021B 304:yes, identity 200 2757381B 304:yes; decoded bodies identical
+server log           ok      170 ERR/WRN lines, 0 new kind(s)

@@ -1,0 +1,103 @@
+je12 2.7.3 (v2.7.3); the tests of port 119 run alone, from je12 evidence (a808c5f3d+dirty = the main line with uncommitted work; @c25828ae and @935138e8 are the trees before the port, @a6f50704 has exactly the files of commit 289bd75a).
+== tests run alone (je12 test --only, and a failed gate's own reruns)
+tests/frontend/features/player/features-player-rewrite.test.mjs :: subtitle offset shortcut moves the host slider in 0.1 s steps and shows its panel for two idle seconds
+  passed on a808c5f3d+dirty@55205065 at 2026-11-25 23:42:52
+  => passes on a808c5f3d+dirty@55205065 (2026-11-25 23:42:52); no failing run of it alone is recorded; the files changed since (now 289bd75ae): rerun it before you report it
+tests/frontend/features/player/features-player-rewrite.test.mjs :: subtitle offset shortcut says so when the host has no usable slider and changes nothing
+  passed on a808c5f3d+dirty@55205065 at 2026-11-25 23:42:52
+  => passes on a808c5f3d+dirty@55205065 (2026-11-25 23:42:52); no failing run of it alone is recorded; the files changed since (now 289bd75ae): rerun it before you report it
+tests/frontend/features/player/features-player-rewrite.test.mjs :: leaving the player hides the subtitle offset panel the shortcut opened and drops its timer
+  passed on a808c5f3d+dirty@55205065 at 2026-11-25 23:42:52
+  => passes on a808c5f3d+dirty@55205065 (2026-11-25 23:42:52); no failing run of it alone is recorded; the files changed since (now 289bd75ae): rerun it before you report it
+tests/frontend/features/player/features-player-rewrite.test.mjs :: a skip that is not an intro or outro shows the translated Skipped toast
+  passed on a808c5f3d+dirty@55205065 at 2026-11-25 23:42:52
+  => passes on a808c5f3d+dirty@55205065 (2026-11-25 23:42:52); no failing run of it alone is recorded; the files changed since (now 289bd75ae): rerun it before you report it
+tests/frontend/features/player/features-long-press.test.mjs :: touch tap reaches the OSD once on release, without arming a synthetic hold
+  FAILED on a808c5f3d+dirty@c25828ae at 2026-11-25 23:37:50: AssertionError: Expected values to be strictly equal: + undefined / - true
+  passed on a808c5f3d+dirty@ae0df755 at 2026-11-25 23:42:05
+  passed on a808c5f3d+dirty@a6f50704 at 2026-11-25 23:50:49
+  => failed on a808c5f3d+dirty@c25828ae (2026-11-25 23:37:50), passes on a808c5f3d+dirty@a6f50704 (2026-11-25 23:50:49); the commit 289bd75ae has exactly the files of that run
+tests/frontend/features/player/features-long-press.test.mjs :: hold claims movement, does not tap the OSD, and restores the original rate
+  FAILED on a808c5f3d+dirty@c25828ae at 2026-11-25 23:37:50: AssertionError: Expected values to be strictly equal: + undefined / - true
+  passed on a808c5f3d+dirty@ae0df755 at 2026-11-25 23:42:05
+  passed on a808c5f3d+dirty@a6f50704 at 2026-11-25 23:50:49
+  => failed on a808c5f3d+dirty@c25828ae (2026-11-25 23:37:50), passes on a808c5f3d+dirty@a6f50704 (2026-11-25 23:50:49); the commit 289bd75ae has exactly the files of that run
+tests/frontend/features/player/features-long-press.test.mjs :: movement before the threshold cancels the hold and tap, including coordinates at zero
+  passed on a808c5f3d+dirty@c25828ae at 2026-11-25 23:37:50
+  passed on a808c5f3d+dirty@ae0df755 at 2026-11-25 23:42:05
+  passed on a808c5f3d+dirty@a6f50704 at 2026-11-25 23:50:49
+  => passes on a808c5f3d+dirty@a6f50704 (2026-11-25 23:50:49); no failing run of it alone is recorded; the commit 289bd75ae has exactly the files of that run
+tests/frontend/features/player/features-long-press.test.mjs :: touchcancel restores speed and does not replay a tap
+  passed on a808c5f3d+dirty@c25828ae at 2026-11-25 23:37:50
+  passed on a808c5f3d+dirty@ae0df755 at 2026-11-25 23:42:05
+  passed on a808c5f3d+dirty@a6f50704 at 2026-11-25 23:50:49
+  => passes on a808c5f3d+dirty@a6f50704 (2026-11-25 23:50:49); no failing run of it alone is recorded; the commit 289bd75ae has exactly the files of that run
+tests/frontend/features/player/features-long-press.test.mjs :: pointercancel restores speed and does not replay a tap
+  FAILED on a808c5f3d+dirty@c25828ae at 2026-11-25 23:37:50: AssertionError: Expected values to be strictly equal: 2 !== 1.25
+  passed on a808c5f3d+dirty@ae0df755 at 2026-11-25 23:42:05
+  passed on a808c5f3d+dirty@a6f50704 at 2026-11-25 23:50:49
+  => failed on a808c5f3d+dirty@c25828ae (2026-11-25 23:37:50), passes on a808c5f3d+dirty@a6f50704 (2026-11-25 23:50:49); the commit 289bd75ae has exactly the files of that run
+tests/frontend/features/player/features-long-press.test.mjs :: blur restores speed and does not replay a tap
+  FAILED on a808c5f3d+dirty@c25828ae at 2026-11-25 23:37:50: AssertionError: Expected values to be strictly equal: 2 !== 1.25
+  passed on a808c5f3d+dirty@ae0df755 at 2026-11-25 23:42:05
+  passed on a808c5f3d+dirty@a6f50704 at 2026-11-25 23:50:49
+  => failed on a808c5f3d+dirty@c25828ae (2026-11-25 23:37:50), passes on a808c5f3d+dirty@a6f50704 (2026-11-25 23:50:49); the commit 289bd75ae has exactly the files of that run
+tests/frontend/features/player/features-long-press.test.mjs :: hashchange restores speed and does not replay a tap
+  passed on a808c5f3d+dirty@c25828ae at 2026-11-25 23:37:50
+  passed on a808c5f3d+dirty@ae0df755 at 2026-11-25 23:42:05
+  passed on a808c5f3d+dirty@a6f50704 at 2026-11-25 23:50:49
+  => passes on a808c5f3d+dirty@a6f50704 (2026-11-25 23:50:49); no failing run of it alone is recorded; the commit 289bd75ae has exactly the files of that run
+tests/frontend/features/player/features-long-press.test.mjs :: multitouch cancels an active hold
+  FAILED on a808c5f3d+dirty@c25828ae at 2026-11-25 23:37:50: AssertionError: Expected values to be strictly equal: 2 !== 1.25
+  passed on a808c5f3d+dirty@ae0df755 at 2026-11-25 23:42:05
+  passed on a808c5f3d+dirty@a6f50704 at 2026-11-25 23:50:49
+  => failed on a808c5f3d+dirty@c25828ae (2026-11-25 23:37:50), passes on a808c5f3d+dirty@a6f50704 (2026-11-25 23:50:49); the commit 289bd75ae has exactly the files of that run
+tests/frontend/features/player/features-long-press.test.mjs :: release over a control or after navigation still restores the original video
+  FAILED on a808c5f3d+dirty@c25828ae at 2026-11-25 23:37:50: AssertionError: Expected values to be strictly equal: 2 !== 1.25
+  passed on a808c5f3d+dirty@ae0df755 at 2026-11-25 23:42:05
+  passed on a808c5f3d+dirty@a6f50704 at 2026-11-25 23:50:49
+  => failed on a808c5f3d+dirty@c25828ae (2026-11-25 23:37:50), passes on a808c5f3d+dirty@a6f50704 (2026-11-25 23:50:49); the commit 289bd75ae has exactly the files of that run
+tests/frontend/features/player/features-long-press.test.mjs :: paused video, controls, dialogs and disabled settings retain native input
+  FAILED on a808c5f3d+dirty@c25828ae at 2026-11-25 23:37:50: AssertionError: Expected values to be strictly equal: 2 !== 1.25
+  passed on a808c5f3d+dirty@ae0df755 at 2026-11-25 23:42:05
+  passed on a808c5f3d+dirty@a6f50704 at 2026-11-25 23:50:49
+  => failed on a808c5f3d+dirty@c25828ae (2026-11-25 23:37:50), passes on a808c5f3d+dirty@a6f50704 (2026-11-25 23:50:49); the commit 289bd75ae has exactly the files of that run
+tests/frontend/features/player/features-long-press.test.mjs :: mouse hold suppresses the trailing click, but the next deliberate click works
+  FAILED on a808c5f3d+dirty@c25828ae at 2026-11-25 23:37:50: AssertionError: Expected values to be strictly equal: + undefined / - true
+  passed on a808c5f3d+dirty@ae0df755 at 2026-11-25 23:42:05
+  passed on a808c5f3d+dirty@a6f50704 at 2026-11-25 23:50:49
+  => failed on a808c5f3d+dirty@c25828ae (2026-11-25 23:37:50), passes on a808c5f3d+dirty@a6f50704 (2026-11-25 23:50:49); the commit 289bd75ae has exactly the files of that run
+tests/frontend/features/player/features-long-press.test.mjs :: a deliberate control tap immediately after a hold is not a trailing click
+  passed on a808c5f3d+dirty@c25828ae at 2026-11-25 23:37:50
+  passed on a808c5f3d+dirty@ae0df755 at 2026-11-25 23:42:05
+  passed on a808c5f3d+dirty@a6f50704 at 2026-11-25 23:50:49
+  => passes on a808c5f3d+dirty@a6f50704 (2026-11-25 23:50:49); no failing run of it alone is recorded; the commit 289bd75ae has exactly the files of that run
+tests/frontend/features/player/features-long-press.test.mjs :: hiding the page restores the speed and cancels the gesture
+  FAILED on a808c5f3d+dirty@c25828ae at 2026-11-25 23:37:50: AssertionError: Expected values to be strictly equal: 2 !== 1.25
+  passed on a808c5f3d+dirty@ae0df755 at 2026-11-25 23:42:05
+  passed on a808c5f3d+dirty@a6f50704 at 2026-11-25 23:50:49
+  => failed on a808c5f3d+dirty@c25828ae (2026-11-25 23:37:50), passes on a808c5f3d+dirty@a6f50704 (2026-11-25 23:50:49); the commit 289bd75ae has exactly the files of that run
+tests/frontend/features/player/features-long-press.test.mjs :: pausing while waiting for the hold does not restart playback
+  FAILED on a808c5f3d+dirty@c25828ae at 2026-11-25 23:37:50: TypeError: Cannot read properties of undefined (reading 'catch')
+  passed on a808c5f3d+dirty@ae0df755 at 2026-11-25 23:42:05
+  passed on a808c5f3d+dirty@a6f50704 at 2026-11-25 23:50:49
+  => failed on a808c5f3d+dirty@c25828ae (2026-11-25 23:37:50), passes on a808c5f3d+dirty@a6f50704 (2026-11-25 23:50:49); the commit 289bd75ae has exactly the files of that run
+tests/frontend/features/player/features-long-press.test.mjs :: touch listeners can prevent native scrolling and ignore programmatic input
+  FAILED on a808c5f3d+dirty@c25828ae at 2026-11-25 23:37:50: AssertionError: Expected values to be strictly equal: true !== false
+  passed on a808c5f3d+dirty@ae0df755 at 2026-11-25 23:42:05
+  passed on a808c5f3d+dirty@a6f50704 at 2026-11-25 23:50:49
+  => failed on a808c5f3d+dirty@c25828ae (2026-11-25 23:37:50), passes on a808c5f3d+dirty@a6f50704 (2026-11-25 23:50:49); the commit 289bd75ae has exactly the files of that run
+tests/frontend/features/player/features-player-rewrite.test.mjs :: compiled long press keeps one live pointer listener per type across navigations
+  passed on a808c5f3d+dirty@55205065 at 2026-11-25 23:42:52
+  FAILED on a808c5f3d+dirty@935138e8 at 2026-11-25 23:43:04: AssertionError: pointerdown / undefined !== 1
+  passed on a808c5f3d+dirty@a6f50704 at 2026-11-25 23:50:52
+  => failed on a808c5f3d+dirty@935138e8 (2026-11-25 23:43:04), passes on a808c5f3d+dirty@a6f50704 (2026-11-25 23:50:52); the commit 289bd75ae has exactly the files of that run
+(1172 more test(s) run alone earlier)
+--only 'JE.Tests.Features.MediaTags.PosterTags.LeavingSoonTests' (dotnet) ran no test on 26e472da+dirty@31968f37 at 2026-11-20 01:23:21: no test matched the filter FullyQualifiedName=JE.Tests.Features.MediaTags.PosterTags.LeavingSoonTests|FullyQualifiedName~JE.Tests.Features.MediaTags.PosterTags.LeavingSoonTests.
+--only 'IntegrationReclaimerrApprovalTimingTests' (node) ran no test on 6bbd95cfb+dirty@d71e14a9 at 2026-11-22 05:11:40: no test name matched
+--only 'tests/frontend/features/spoiler-guard/zz-debug.test.mjs' (node) ran no test on f6c47dc67+dirty@d385d8be at 2026-11-24 16:13:42: test file(s) that could not load: tests/frontend/features/spoiler-guard/zz-debug.test.mjs (the log has the error): SyntaxError: Unexpected end of input
+--only 'tests/frontend/features/spoiler-guard/zz-debug.test.mjs' (node) ran no test on f6c47dc67+dirty@9a2aed12 at 2026-11-24 16:13:53: test file(s) that could not load: tests/frontend/features/spoiler-guard/zz-debug.test.mjs (the log has the error): SyntaxError: Unexpected end of input
+--only 'tests/frontend/features/player/features-long-press.test.mjs' (build) ran no test on a808c5f3d+dirty@1b85299f at 2026-11-25 23:41:55: the client build failed before any test ran
+
+test: pass in 33s (the repo's quick mode) [features: player, chrome] (2026-11-25 23:43:45, tree a808c5f3d+dirty)
+Set aside for the failing-first run of the new rewrite test (935138e8): the port's sources (client/src, the built js/ and client/generated-manifest.json) were stashed, so the tree was the main line plus the new and adapted tests; restored before the passing runs.
