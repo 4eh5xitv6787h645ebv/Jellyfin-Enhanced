@@ -1,0 +1,21 @@
+je12 deploy --smoke of c06ceddba (the port) against the baseline je12 up recorded from 43b0a5e08 (the main line), same lab:
+smoke: pass (0 failing, 0 flaky, 1 changed, 0 known, 0 fixed); openapi changed: 499 paths, 205 under /JellyfinEnhanced (baseline 498, 204): the new route GET arr/requests/{requestId}/options.
+
+page admin           ok      14 tabs; Media Tags section 7 tabs (4.1s)
+page settings        ok      panel open, 24 tabs (3.8s); 19 new JE element(s): #je-tag-preview, #jeMtpTitle, .je-msym-outlined, .je-mtp …
+page media-tags-hub  ok      #jeMediaTagsHub visible (3.8s)
+page poster          ok      18/100 cards tagged (3.2s)
+page details         ok      101 Dalmatians II: Patch's London Adventure: 68 JE elements; spoiler guard button shown (2.9s)
+page hidden-content  ok      page rendered (2.3s)
+page bookmarks       ok      page rendered (1.8s)
+page calendar        ok      24 events (3.6s)
+page downloads       ok      20 items (5.4s); 1 new JE element(s): .je-request-options-btn
+page activity        ok      Activity tab rendered (2.1s)
+page catchup         ok      Catch Up tab rendered (2.5s)
+page seerr           ok      12 Seerr cards (2.4s)
+page player          ok      playing 1.2s; OSD rating present (3.6s)
+plugin               ok      12.17.0.0 Active
+scheduled tasks      ok      17 JE tasks (keys and ids)
+openapi              changed HTTP 200, 499 paths, 205 under /JellyfinEnhanced (baseline: HTTP 200, 498 paths, 204 under /JellyfinEnhanced)
+bundle wire          ok      br 200 629811B 304:yes, gzip 200 764928B 304:yes, identity 200 2773512B 304:yes; decoded bodies identical
+server log           ok      170 ERR/WRN lines, 0 new kind(s)

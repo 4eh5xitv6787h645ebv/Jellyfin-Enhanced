@@ -1,0 +1,27 @@
+# What the lab's Seerr 3.5.1 (je12 up --real all) answers to an edit of a request, PUT /api/v1/request/{id}, sent
+# straight to it with je12 api seerr (the API key, as its administrator). Request 3 is the pending movie request,
+# request 4 the pending series request (season 1); both were made without advanced options, so Seerr holds a null
+# server, quality profile, root folder, language profile and tags for them. Outputs as printed, shortened to the
+# status and the validator's message.
+
+## je12 api seerr GET /api/v1/request/4
+{'id': 4, 'type': 'tv', 'status': 1, 'serverId': None, 'profileId': None, 'rootFolder': None, 'languageProfileId': None, 'tags': None} [1]
+
+## je12 api seerr PUT /api/v1/request/3 '{"serverId":0,"profileId":3,"rootFolder":"/movies","tags":[2],"userId":2}' --expect 400   (upstream's edit body)
+HTTP 400
+ "message": "request/body must have required property 'mediaType'",
+
+## je12 api seerr PUT /api/v1/request/4 '{"mediaType":"tv","serverId":0,"profileId":4,"rootFolder":"/tv","languageProfileId":null,"tags":null,"userId":2,"seasons":[1]}' --expect 400
+HTTP 400
+ "message": "request/body/languageProfileId must be number",
+
+## je12 api seerr PUT /api/v1/request/4 '{"mediaType":"tv","serverId":0,"profileId":4,"rootFolder":"/tv","tags":null,"userId":2,"seasons":[1]}' --expect 400
+HTTP 200      (accepted: this edit set request 4's server 0, profile 4 and folder /tv; it stayed pending)
+
+## je12 api seerr PUT /api/v1/request/4 '{"mediaType":"tv","serverId":null,"profileId":4,"rootFolder":"/tv","userId":2,"seasons":[1]}' --expect 400
+HTTP 400
+ "message": "request/body/serverId must be number",
+
+## je12 api seerr PUT /api/v1/request/4 '{"mediaType":"tv","serverId":0,"profileId":4,"rootFolder":null,"userId":2,"seasons":[1]}' --expect 400
+HTTP 400
+ "message": "request/body/rootFolder must be string",

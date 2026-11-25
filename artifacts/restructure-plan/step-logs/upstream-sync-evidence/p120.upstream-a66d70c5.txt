@@ -1,0 +1,39 @@
+# upstream's build at a66d70c5 (scripts/upstream_lab_deploy.py), same lab
+## je12 api admin GET /JellyfinEnhanced/jellyseerr/user-status --keep before:status-admin
+HTTP 200
+{"active": true, "userFound": true, "jellyseerrUserId": "1", "reason": "linked", "canRequestAdvanced": true, "autoApprove": {"movie": true, "tv": true, "movie4k": true, "tv4k": true}}
+kept as the 'before' half of the pair 'status-admin' (je12 evidence shows it)
+## je12 api viewer GET /JellyfinEnhanced/jellyseerr/user-status --keep before:status-viewer
+HTTP 200
+{"active": true, "userFound": true, "jellyseerrUserId": "2", "reason": "linked", "canRequestAdvanced": false, "autoApprove": {"movie": false, "tv": false, "movie4k": false, "tv4k": false}}
+kept as the 'before' half of the pair 'status-viewer' (je12 evidence shows it)
+## je12 api admin GET /JellyfinEnhanced/arr/requests/3/options --keep before:options-admin
+HTTP 200
+{"id": 3, "type": "movie", "is4k": false, "status": 1, "rootFolder": "", "tags": [], "userId": 2, "seasons": []}
+kept as the 'before' half of the pair 'options-admin' (je12 evidence shows it)
+## je12 api viewer GET /JellyfinEnhanced/arr/requests/3/options --expect 403 --keep before:options-viewer
+HTTP 403
+{"error": true, "message": "You do not have permission to approve or decline requests."}
+kept as the 'before' half of the pair 'options-viewer' (je12 evidence shows it)
+## je12 browse '#/home' --script p120-approve-options.mjs --user viewer --keep before:viewer
+SCRIPT {"admin":false,"requests page, pending cards":[],"movie request dialog":{"title":"Request Movie","subtitle":"Abominable","button":"Request","autoApproveNote":null,"labels":["Destination Server","Quality Profile","Root Folder","Tags"],"server":"Radarr (lab)","quality":"HD-1080p","folder":"/movies (186.61 GB)","tags":{"chosen":[],"placeholder":"Select tags"},"requestAs":"no field","tagChoices":["4k","anime","kids","lab"]},"series request dialog":{"title":"Request Series","subtitle":"Doctor Who","button":"Request","autoApproveNote":null,"labels":[],"server":"no field","quality":"no field","folder":"no field","tags":"no field","requestAs":"no field"},"requestsSent":[]}
+CONSOLE Failed to load resource: the server responded with a status of 404 (Not Found) /JellyfinEnhanced/proxy/avatar
+CONSOLE Failed to load resource: the server responded with a status of 401 (Unauthorized) /JellyfinEnhanced/proxy/avatar
+URL /web/index.html#/downloads
+## je12 browse '#/home' --script p120-approve-options.mjs --keep before:admin (real-admin)
+SCRIPT {"admin":true,"requests page, pending cards":["Phineas and Ferb: options(tune, \"Approve with options\") approve(check) decline(close) remove(delete, \"Remove request\")","Resident Evil: options(tune, \"Approve with options\") approve(check) decline(close) remove(delete, \"Remove request\")"],"approve with options":{"requestId":"3","opened":{"title":"Approve with options","subtitle":"Resident Evil","button":"Approve","autoApproveNote":null,"labels":["Destination Server","Quality Profile","Root Folder","Tags","Request As"],"server":"Radarr (lab)","quality":"HD-1080p","folder":"/movies (186.6 GB)","tags":{"chosen":[],"placeholder":"Select tags"},"requestAs":{"options":["real-admin","real-viewer"],"chosen":"real-viewer","picker":"Rreal-viewer","pictures":1}},"tagChoices":["4k","anime","kids","lab"],"chosenBeforeApprove":{"quality":"HD-720p","tags":{"chosen":["kids"],"placeholder":"Select tags"}},"sent":["POST /arr/requests/3/approve {\"serverId\":0,\"profileId\":3,\"rootFolder\":\"/movies\",\"tags\":[2],\"userId\":2} -> 400 {\"error\":true,\"code\":\"UpstreamError\",\"httpStatus\":400,\"message\":\"Seerr returned 400 from http://seerr:5055/api/v1/request/3.\",\"url\":\"http://seerr:5055/api/v1/request/3\"}"],"toasts":["HTTP 400"],"dialogOpenAfter":true,"cardsAfter":["Phineas and Ferb: options(tune, \"Approve with options\") approve(check) decline(close) remove(delete, \"Remove request\")","Resident Evil: options(tune, \"Approve with options\") approve(check) decline(close) remove(delete, \"Remove request\")"]},"movie request dialog":{"title":"Request Movie","subtitle":"Abominable","button":"Request","autoApproveNote":"check_circleThis request will be approved automatically.","labels":["Destination Server","Quality Profile","Root Folder","Tags","Request As"],"server":"Radarr (lab)","quality":"HD-1080p","folder":"/movies (186.6 GB)","tags":{"chosen":[],"placeholder":"Select tags"},"requestAs":{"options":["real-admin","real-viewer"],"chosen":"real-admin","picker":"Rreal-admin","pictures":1},"tagChoices":["4k","anime","kids","lab"]},"series request dialog":{"title":"Request Series","subtitle":"Doctor Who","button":"Request","autoApproveNote":"check_circleThis request will be approved automatically.","labels":["Destination Server","Quality Profile","Root Folder","Tags","Request As"],"server":"Sonarr (lab)","quality":"HD-1080p","folder":"/tv (186.56 GB)","tags":{"chosen":[],"placeholder":"Select tags"},"requestAs":{"options":["real-admin","real-viewer"],"chosen":"real-admin","picker":"Rreal-admin","pictures":1}},"requestsSent":["POST /arr/requests/3/approve {\"serverId\":0,\"profileId\":3,\"rootFolder\":\"/movies\",\"tags\":[2],\"userId\":2} -> 400 {\"error\":true,\"code\":\"UpstreamError\",\"httpStatus\":400,\"message\":\"Seerr returned 400 from http://seerr:5055/api/v1/request/3.\",\"url\":\"http://seerr:5055/api/v1/request/3\"}"]}
+CONSOLE Failed to load resource: the server responded with a status of 404 (Not Found) /JellyfinEnhanced/proxy/avatar
+CONSOLE Failed to load resource: the server responded with a status of 401 (Unauthorized) /JellyfinEnhanced/proxy/avatar
+CONSOLE Failed to load resource: the server responded with a status of 404 (Not Found) /Users/7ef882cd307344279240d0eca8333a9f/Images/Primary
+CONSOLE Failed to load resource: the server responded with a status of 404 (Not Found) /Users/c799f011678d4423bd7c07d24c672de8/Images/Primary
+CONSOLE Failed to load resource: the server responded with a status of 400 (Bad Request) /JellyfinEnhanced/arr/requests/3/approve
+CONSOLE 🪼 Jellyfin Enhanced: Requests Page: Failed to approve request 3 with options: Error: HTTP 400
+URL /web/index.html#/downloads
+## je12 logs (plugin warnings)
+[2026-11-25 17:46:02.966 +00:00] [WRN] [21] Jellyfin.Plugin.JellyfinEnhanced: "Seerr edit request 3 before approving failed: UpstreamError 400"
+## je12 api seerr GET /api/v1/request/3 (server, profile, folder, tags, status)
+{'id': 3, 'status': 1, 'serverId': None, 'profileId': None, 'rootFolder': None, 'tags': None} requestedBy 2
+## je12 api seerr PUT /api/v1/request/3 (upstream's edit body, as the plugin sends it) --expect 400
+HTTP 400
+{
+ "message": "request/body must have required property 'mediaType'",

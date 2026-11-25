@@ -1,0 +1,36 @@
+# this branch (sync/contract-a66d70c5 at c06ceddba, je12 deploy --smoke), same lab after upstream's run
+## je12 api admin GET /JellyfinEnhanced/jellyseerr/user-status --keep after:status-admin
+HTTP 200
+{"active": true, "userFound": true, "jellyseerrUserId": "1", "reason": "linked", "canRequestAdvanced": true, "autoApprove": {"movie": true, "tv": true, "movie4k": true, "tv4k": true}}
+kept as the 'after' half of the pair 'status-admin' (je12 evidence shows it)
+## je12 api viewer GET /JellyfinEnhanced/jellyseerr/user-status --keep after:status-viewer
+HTTP 200
+{"active": true, "userFound": true, "jellyseerrUserId": "2", "reason": "linked", "canRequestAdvanced": false, "autoApprove": {"movie": false, "tv": false, "movie4k": false, "tv4k": false}}
+kept as the 'after' half of the pair 'status-viewer' (je12 evidence shows it)
+## je12 api admin GET /JellyfinEnhanced/arr/requests/3/options --keep after:options-admin
+HTTP 200
+{"id": 3, "type": "movie", "is4k": false, "status": 1, "rootFolder": "", "tags": [], "userId": 2, "seasons": []}
+kept as the 'after' half of the pair 'options-admin' (je12 evidence shows it)
+## je12 api viewer GET /JellyfinEnhanced/arr/requests/3/options --expect 403 --keep after:options-viewer
+HTTP 403
+{"error": true, "message": "You do not have permission to approve or decline requests."}
+kept as the 'after' half of the pair 'options-viewer' (je12 evidence shows it)
+## je12 browse '#/home' --script p120-approve-options.mjs --user viewer --keep after:viewer
+SCRIPT {"admin":false,"requests page, pending cards":[],"movie request dialog":{"title":"Request Movie","subtitle":"Abominable","button":"Request","autoApproveNote":null,"labels":["Destination Server","Quality Profile","Root Folder","Tags"],"server":"Radarr (lab)","quality":"HD-1080p","folder":"/movies (186.6 GB)","tags":{"chosen":[],"placeholder":"Select tags"},"requestAs":"no field","tagChoices":["4k","anime","kids","lab"]},"series request dialog":{"title":"Request Series","subtitle":"Doctor Who","button":"Request","autoApproveNote":null,"labels":[],"server":"no field","quality":"no field","folder":"no field","tags":"no field","requestAs":"no field"},"requestsSent":[]}
+CONSOLE Failed to load resource: the server responded with a status of 404 (Not Found) /JellyfinEnhanced/proxy/avatar
+URL /web/index.html#/downloads
+## je12 browse '#/home' --script p120-approve-options.mjs --keep after:admin (real-admin)
+SCRIPT {"admin":true,"requests page, pending cards":["Phineas and Ferb: options(tune, \"Approve with options\") approve(check) decline(close) remove(delete, \"Remove request\")","Resident Evil: options(tune, \"Approve with options\") approve(check) decline(close) remove(delete, \"Remove request\")"],"approve with options":{"requestId":"3","opened":{"title":"Approve with options","subtitle":"Resident Evil","button":"Approve","autoApproveNote":null,"labels":["Destination Server","Quality Profile","Root Folder","Tags","Request As"],"server":"Radarr (lab)","quality":"HD-1080p","folder":"/movies (186.07 GB)","tags":{"chosen":[],"placeholder":"Select tags"},"requestAs":{"options":["real-admin","real-viewer"],"chosen":"real-viewer","picker":"Rreal-viewer","pictures":1}},"tagChoices":["4k","anime","kids","lab"],"chosenBeforeApprove":{"quality":"HD-720p","tags":{"chosen":["kids"],"placeholder":"Select tags"}},"sent":["POST /arr/requests/3/approve {\"serverId\":0,\"profileId\":3,\"rootFolder\":\"/movies\",\"tags\":[2],\"userId\":2} -> 200 {\"success\":true}"],"toasts":[],"dialogOpenAfter":false,"cardsAfter":["Phineas and Ferb: options(tune, \"Approve with options\") approve(check) decline(close) remove(delete, \"Remove request\")"]},"movie request dialog":{"title":"Request Movie","subtitle":"Abominable","button":"Request","autoApproveNote":"check_circleThis request will be approved automatically.","labels":["Destination Server","Quality Profile","Root Folder","Tags","Request As"],"server":"Radarr (lab)","quality":"HD-1080p","folder":"/movies (186.07 GB)","tags":{"chosen":[],"placeholder":"Select tags"},"requestAs":{"options":["real-admin","real-viewer"],"chosen":"real-admin","picker":"Rreal-admin","pictures":1},"tagChoices":["4k","anime","kids","lab"]},"series request dialog":{"title":"Request Series","subtitle":"Doctor Who","button":"Request","autoApproveNote":"check_circleThis request will be approved automatically.","labels":["Destination Server","Quality Profile","Root Folder","Tags","Request As"],"server":"Sonarr (lab)","quality":"HD-1080p","folder":"/tv (186.6 GB)","tags":{"chosen":[],"placeholder":"Select tags"},"requestAs":{"options":["real-admin","real-viewer"],"chosen":"real-admin","picker":"Rreal-admin","pictures":1}},"requestsSent":["POST /arr/requests/3/approve {\"serverId\":0,\"profileId\":3,\"rootFolder\":\"/movies\",\"tags\":[2],\"userId\":2} -> 200 {\"success\":true}"]}
+CONSOLE Failed to load resource: the server responded with a status of 404 (Not Found) /JellyfinEnhanced/proxy/avatar
+CONSOLE Failed to load resource: the server responded with a status of 404 (Not Found) /Users/7ef882cd307344279240d0eca8333a9f/Images/Primary
+CONSOLE Failed to load resource: the server responded with a status of 404 (Not Found) /Users/c799f011678d4423bd7c07d24c672de8/Images/Primary
+URL /web/index.html#/downloads
+## je12 logs (plugin warnings)
+## je12 api seerr GET /api/v1/request/3 (server, profile, folder, tags, status)
+{'id': 3, 'status': 2, 'serverId': 0, 'profileId': 3, 'rootFolder': '/movies', 'tags': [2]} requestedBy 2
+## je12 mock seerr log (what the plugin asked Seerr for the approve)
+t=2026-11-25T18:10:47Z method=GET path=/api/v1/request/3 status=200 ms=6 by=upstream ua=JellyfinEnhanced/unknown
+t=2026-11-25T18:10:49Z method=GET path=/api/v1/request/3 status=200 ms=6 by=upstream ua=JellyfinEnhanced/unknown
+t=2026-11-25T18:10:49Z method=PUT path=/api/v1/request/3 status=200 ms=44 by=upstream ua=JellyfinEnhanced/unknown
+t=2026-11-25T18:10:49Z method=POST path=/api/v1/request/3/approve status=200 ms=61 by=upstream ua=JellyfinEnhanced/unknown
+t=2026-11-25T18:10:54Z method=GET path=/api/v1/request/3 status=200 ms=6 by=upstream ua=Python-urllib/3.14

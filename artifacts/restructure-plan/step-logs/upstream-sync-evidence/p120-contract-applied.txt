@@ -1,0 +1,80 @@
+diff --git a/artifacts/restructure-plan/baselines/inventory-routes.txt b/artifacts/restructure-plan/baselines/inventory-routes.txt
+index eb4a623e9..cb1521cb8 100644
+--- a/artifacts/restructure-plan/baselines/inventory-routes.txt
++++ b/artifacts/restructure-plan/baselines/inventory-routes.txt
+@@ -35,6 +35,7 @@ GET /JellyfinEnhanced/arr/requests
+ DELETE /JellyfinEnhanced/arr/requests/{requestId}
+ POST /JellyfinEnhanced/arr/requests/{requestId}/approve
+ POST /JellyfinEnhanced/arr/requests/{requestId}/decline
++GET /JellyfinEnhanced/arr/requests/{requestId}/options
+ GET /JellyfinEnhanced/arr/series-slug
+ GET /JellyfinEnhanced/arr/series-slugs
+ GET /JellyfinEnhanced/arr/validate/radarr
+diff --git a/tests/backend/Architecture/RouteAuthSnapshotTests.cs b/tests/backend/Architecture/RouteAuthSnapshotTests.cs
+index c1545b66b..c0448334c 100644
+--- a/tests/backend/Architecture/RouteAuthSnapshotTests.cs
++++ b/tests/backend/Architecture/RouteAuthSnapshotTests.cs
+@@ -18,7 +18,7 @@ namespace JE.Tests.Architecture;
+ public class RouteAuthSnapshotTests(ITestOutputHelper output)
+ {
+     public const string SnapshotFile = "route-auth.snapshot.json";
+-    public const int ExpectedRoutes = 228;
++    public const int ExpectedRoutes = 229;
+     public const int ExpectedAnonymous = 13;
+ 
+     public sealed record RouteEntry(string Verb, string Route, bool RequiresAuth, string Auth, string Action, bool ApiBehavior, string[] Parameters);
+diff --git a/tests/backend/Architecture/auth-helper-calls.snapshot.json b/tests/backend/Architecture/auth-helper-calls.snapshot.json
+index 93b1c1266..cad803664 100644
+--- a/tests/backend/Architecture/auth-helper-calls.snapshot.json
++++ b/tests/backend/Architecture/auth-helper-calls.snapshot.json
+@@ -1,6 +1,6 @@
+ {
+   "AckSpoilerBlurCorruption": {"IsAdminUser":1,"User":1,"UserHelper.GetCurrentUserId":1},
+-  "ActOnRequest": {"IsAdminUser":2,"User":1,"UserHelper.GetCurrentUserId":1},
++  "ActOnRequest": {"IsAdminUser":5,"User":1,"UserHelper.GetCurrentUserId":1},
+   "AddJellyseerrWatchlist": {"IsAdminUser":5,"User":1,"UserHelper.GetCurrentUserId":1},
+   "AddUserBookmark": {"AuthorizeUserConfigAccess":1},
+   "AdminDeleteReview": {"IsAdminUser":1},
+@@ -117,6 +117,7 @@
+   "GetReclaimerrUserAudit": {"IsAdminUser":1},
+   "GetRecommendedMovies": {"IsAdminUser":5,"User":1,"UserHelper.GetCurrentUserId":1},
+   "GetRecommendedTvShows": {"IsAdminUser":5,"User":1,"UserHelper.GetCurrentUserId":1},
++  "GetRequestOptions": {"IsAdminUser":2,"User":1,"UserHelper.GetCurrentUserId":1},
+   "GetRequests": {"IsAdminUser":3,"User":2,"UserHelper.GetCurrentUserId":2},
+   "GetReviewRatings": {"IsAdminUser":1,"User":1,"UserHelper.GetCurrentUserId":1},
+   "GetRevisionedSettings": {"AuthorizeUserConfigAccess":1,"IsAdminUser":1},
+diff --git a/tests/backend/Architecture/auth-reads-by-route.base.json b/tests/backend/Architecture/auth-reads-by-route.base.json
+index 87168da33..828ece615 100644
+--- a/tests/backend/Architecture/auth-reads-by-route.base.json
++++ b/tests/backend/Architecture/auth-reads-by-route.base.json
+@@ -35,6 +35,7 @@
+     "GET JellyfinEnhanced/arr/movie-instances": {"IsAdminUser":1},
+     "GET JellyfinEnhanced/arr/queue": {"IsAdminUser":1,"User":2,"UserHelper.GetCurrentUserId":2},
+     "GET JellyfinEnhanced/arr/requests": {"IsAdminUser":3,"User":2,"UserHelper.GetCurrentUserId":2},
++    "GET JellyfinEnhanced/arr/requests/{requestId}/options": {"IsAdminUser":2,"User":1,"UserHelper.GetCurrentUserId":1},
+     "GET JellyfinEnhanced/arr/series-slug": {"IsAdminUser":1},
+     "GET JellyfinEnhanced/arr/series-slugs": {"IsAdminUser":1},
+     "GET JellyfinEnhanced/arr/validate/radarr": {"IsAdminUser":1},
+@@ -179,8 +180,8 @@
+     "POST JellyfinEnhanced/admin/media-tags/preview": {"IsAdminUser":1},
+     "POST JellyfinEnhanced/apply-user-settings": {"IsAdminUser":1},
+     "POST JellyfinEnhanced/arr/calendar/user-data": {"User":1,"UserHelper.GetCurrentUserId":1},
+-    "POST JellyfinEnhanced/arr/requests/{requestId}/approve": {"IsAdminUser":2,"User":1,"UserHelper.GetCurrentUserId":1},
+-    "POST JellyfinEnhanced/arr/requests/{requestId}/decline": {"IsAdminUser":2,"User":1,"UserHelper.GetCurrentUserId":1},
++    "POST JellyfinEnhanced/arr/requests/{requestId}/approve": {"IsAdminUser":5,"User":1,"UserHelper.GetCurrentUserId":1},
++    "POST JellyfinEnhanced/arr/requests/{requestId}/decline": {"IsAdminUser":5,"User":1,"UserHelper.GetCurrentUserId":1},
+     "POST JellyfinEnhanced/catchup/event": {"User":1,"UserHelper.GetCurrentUserId":1},
+     "POST JellyfinEnhanced/continue-watching/hide/{itemId}": {"User":1,"UserHelper.GetCurrentUserId":1},
+     "POST JellyfinEnhanced/jellyseerr/import-users": {"IsAdminUser":1},
+diff --git a/tests/backend/Architecture/route-auth.snapshot.json b/tests/backend/Architecture/route-auth.snapshot.json
+index e39eaf8e6..f24320ac2 100644
+--- a/tests/backend/Architecture/route-auth.snapshot.json
++++ b/tests/backend/Architecture/route-auth.snapshot.json
+@@ -36,6 +36,7 @@
+   {"verb":"DELETE","route":"JellyfinEnhanced/arr/requests/{requestId}","requiresAuth":true,"auth":"","action":"RemoveRequest","apiBehavior":true,"parameters":["requestId:Path"]},
+   {"verb":"POST","route":"JellyfinEnhanced/arr/requests/{requestId}/approve","requiresAuth":true,"auth":"","action":"ActOnRequest","apiBehavior":true,"parameters":["requestId:Path"]},
+   {"verb":"POST","route":"JellyfinEnhanced/arr/requests/{requestId}/decline","requiresAuth":true,"auth":"","action":"ActOnRequest","apiBehavior":true,"parameters":["requestId:Path"]},
++  {"verb":"GET","route":"JellyfinEnhanced/arr/requests/{requestId}/options","requiresAuth":true,"auth":"","action":"GetRequestOptions","apiBehavior":true,"parameters":["requestId:Path"]},
+   {"verb":"GET","route":"JellyfinEnhanced/arr/series-slug","requiresAuth":true,"auth":"","action":"GetSeriesSlug","apiBehavior":true,"parameters":["tvdbId:Query"]},
+   {"verb":"GET","route":"JellyfinEnhanced/arr/series-slugs","requiresAuth":true,"auth":"","action":"GetSeriesSlugs","apiBehavior":true,"parameters":["tvdbId:Query"]},
+   {"verb":"GET","route":"JellyfinEnhanced/arr/validate/radarr","requiresAuth":true,"auth":"","action":"ValidateRadarr","apiBehavior":true,"parameters":["url:Query","apiKey:Header"]},

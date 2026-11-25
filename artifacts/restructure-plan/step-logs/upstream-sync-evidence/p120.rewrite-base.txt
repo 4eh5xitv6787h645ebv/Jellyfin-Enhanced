@@ -1,0 +1,21 @@
+# main line before the port (deployed 43b0a5e08, the ledger file only differs), lab with real Seerr 3.5.1, Sonarr 4, Radarr 6
+## je12 browse '#/home' --script p120-approve-options.mjs (real-admin)
+SCRIPT {"admin":true,"requests page, pending cards":["Phineas and Ferb: approve(check) decline(close) remove(delete, \"Remove request\")","Resident Evil: approve(check) decline(close) remove(delete, \"Remove request\")"],"approve with options":"no \"Approve with options\" button on any card","movie request dialog":{"title":"Request Movie","subtitle":"Abominable","button":"Request","autoApproveNote":null,"labels":["Destination Server","Quality Profile","Root Folder"],"server":"Radarr (lab)","quality":"HD-1080p","folder":"/movies (189.59 GB)","tags":"no field","requestAs":"no field","tagChoices":null},"series request dialog":{"title":"Request Series","subtitle":"Doctor Who","button":"Request","autoApproveNote":null,"labels":["Destination Server","Quality Profile","Root Folder"],"server":"Sonarr (lab)","quality":"HD-1080p","folder":"/tv (189.59 GB)","tags":"no field","requestAs":"no field"},"requestsSent":[]}
+URL /web/index.html#/downloads
+## je12 browse '#/home' --script p120-approve-options.mjs --user viewer
+SCRIPT {"admin":false,"requests page, pending cards":[],"movie request dialog":{"title":"Request Movie","subtitle":"Abominable","button":"Request","autoApproveNote":null,"labels":["Destination Server","Quality Profile","Root Folder"],"server":"Radarr (lab)","quality":"HD-1080p","folder":"/movies (186.75 GB)","tags":"no field","requestAs":"no field","tagChoices":null},"series request dialog":{"title":"Request Series","subtitle":"Doctor Who","button":"Request","autoApproveNote":null,"labels":[],"server":"no field","quality":"no field","folder":"no field","tags":"no field","requestAs":"no field"},"requestsSent":[]}
+URL /web/index.html#/downloads
+## je12 api admin GET /JellyfinEnhanced/jellyseerr/user-status
+HTTP 200
+{"active": true, "userFound": true, "jellyseerrUserId": "1", "reason": "linked", "canRequestAdvanced": true}
+## je12 api viewer GET /JellyfinEnhanced/jellyseerr/user-status
+HTTP 200
+{"active": true, "userFound": true, "jellyseerrUserId": "2", "reason": "linked", "canRequestAdvanced": false}
+## je12 api admin GET /JellyfinEnhanced/arr/requests/3/options
+HTTP 404
+
+## je12 api viewer GET /JellyfinEnhanced/arr/requests/3/options
+HTTP 404
+
+## je12 api seerr GET /api/v1/request/3 (server, profile, folder, tags, status)
+{'id': 3, 'status': 1, 'serverId': None, 'profileId': None, 'rootFolder': None, 'tags': None} requestedBy 2

@@ -1,0 +1,93 @@
+je12 2.7.3 (v2.7.3); the before/after pairs of port 120, from je12 evidence. before = upstream's own Jellyfin 12 build at a66d70c5 (scripts/upstream_lab_deploy.py a66d70c52fc9), after = this port at c06ceddba (branch sync/contract-a66d70c5), one lab with the real Seerr 3.5.1, Sonarr 4 and Radarr 6 (je12 up --real all). The main line before the port: p120.rewrite-base.txt.
+== live check (6 before/after pair(s))
+pair 'status-admin': complete
+  before: je12 api admin GET /JellyfinEnhanced/jellyseerr/user-status
+    deployed upstream-a66d70c52fc9 = a66d70c5 (dll f28217083ef58e07) on lab je125ce284, 2026-11-26 01:45:44
+    | HTTP 200
+    | {"active": true, "userFound": true, "jellyseerrUserId": "1", "reason": "linked", "canRequestAdvanced": true, "autoApprove": {"movie": true, "tv": true, "movie4k": true, "tv4k": true}}
+  after: je12 api admin GET /JellyfinEnhanced/jellyseerr/user-status
+    deployed c06ceddba (dll 4d9aa6f081694b1a) on lab je125ce284, 2026-11-26 02:10:29
+    | HTTP 200
+    | {"active": true, "userFound": true, "jellyseerrUserId": "1", "reason": "linked", "canRequestAdvanced": true, "autoApprove": {"movie": true, "tv": true, "movie4k": true, "tv4k": true}}
+  same command before and after: yes; builds: before upstream-a66d70c52fc9, after c06ceddba (a clean build of c06ceddb, not the checkout's commit c6b7c206: je12 deploy, then rerun with --keep after:status-admin)
+pair 'status-viewer': complete
+  before: je12 api viewer GET /JellyfinEnhanced/jellyseerr/user-status
+    deployed upstream-a66d70c52fc9 = a66d70c5 (dll f28217083ef58e07) on lab je125ce284, 2026-11-26 01:45:44
+    | HTTP 200
+    | {"active": true, "userFound": true, "jellyseerrUserId": "2", "reason": "linked", "canRequestAdvanced": false, "autoApprove": {"movie": false, "tv": false, "movie4k": false, "tv4k": false}}
+  after: je12 api viewer GET /JellyfinEnhanced/jellyseerr/user-status
+    deployed c06ceddba (dll 4d9aa6f081694b1a) on lab je125ce284, 2026-11-26 02:10:29
+    | HTTP 200
+    | {"active": true, "userFound": true, "jellyseerrUserId": "2", "reason": "linked", "canRequestAdvanced": false, "autoApprove": {"movie": false, "tv": false, "movie4k": false, "tv4k": false}}
+  same command before and after: yes; builds: before upstream-a66d70c52fc9, after c06ceddba (a clean build of c06ceddb, not the checkout's commit c6b7c206: je12 deploy, then rerun with --keep after:status-viewer)
+pair 'options-admin': complete
+  before: je12 api admin GET /JellyfinEnhanced/arr/requests/3/options
+    deployed upstream-a66d70c52fc9 = a66d70c5 (dll f28217083ef58e07) on lab je125ce284, 2026-11-26 01:45:44
+    | HTTP 200
+    | {"id": 3, "type": "movie", "is4k": false, "status": 1, "rootFolder": "", "tags": [], "userId": 2, "seasons": []}
+  after: je12 api admin GET /JellyfinEnhanced/arr/requests/3/options
+    deployed c06ceddba (dll 4d9aa6f081694b1a) on lab je125ce284, 2026-11-26 02:10:30
+    | HTTP 200
+    | {"id": 3, "type": "movie", "is4k": false, "status": 1, "rootFolder": "", "tags": [], "userId": 2, "seasons": []}
+  same command before and after: yes; builds: before upstream-a66d70c52fc9, after c06ceddba (a clean build of c06ceddb, not the checkout's commit c6b7c206: je12 deploy, then rerun with --keep after:options-admin)
+pair 'options-viewer': complete
+  before: je12 api viewer GET /JellyfinEnhanced/arr/requests/3/options --expect 403
+    deployed upstream-a66d70c52fc9 = a66d70c5 (dll f28217083ef58e07) on lab je125ce284, 2026-11-26 01:45:44
+    | HTTP 403
+    | {"error": true, "message": "You do not have permission to approve or decline requests."}
+  after: je12 api viewer GET /JellyfinEnhanced/arr/requests/3/options --expect 403
+    deployed c06ceddba (dll 4d9aa6f081694b1a) on lab je125ce284, 2026-11-26 02:10:30
+    | HTTP 403
+    | {"error": true, "message": "You do not have permission to approve or decline requests."}
+  same command before and after: yes; builds: before upstream-a66d70c52fc9, after c06ceddba (a clean build of c06ceddb, not the checkout's commit c6b7c206: je12 deploy, then rerun with --keep after:options-viewer)
+pair 'viewer': complete
+  before: je12 browse '#/home' --script artifacts/restructure-plan/step-logs/upstream-sync-evidence/p120-approve-options.mjs --wait 2000 --user viewer
+    deployed upstream-a66d70c52fc9 = a66d70c5 (dll f28217083ef58e07) on lab je125ce284, 2026-11-26 01:45:54
+    | SCRIPT {"admin":false,"requests page, pending cards":[],"movie request dialog":{"title":"Request Movie","subtitle":"Abominable","button":"Request","autoApproveNote":null,"labels":["Destination Server","Quality Profile","Root Folder","Tags"],"server":"Radarr (lab)","quality":"HD-1080p","folder":"/movies (186.61 GB)","tags":{"chosen":[],"placeholder":"Select tags"},"requestAs":"no field","tagChoices":["4k","anime","kids","lab"]},"series request dialog":{"title":"Request Series","subtitle":"Doctor Who","button":"Request","autoApproveNote":null,"labels":[],"server":"no field","quality":"no field","folder":"no field","tags":"no field","requestAs":"no field"},"requestsSent":[]}
+    | CONSOLE Failed to load resource: the server responded with a status of 404 (Not Found) /JellyfinEnhanced/proxy/avatar
+    | CONSOLE Failed to load resource: the server responded with a status of 401 (Unauthorized) /JellyfinEnhanced/proxy/avatar
+    | BLOCKED https://www.gstatic.com/cv/js/sender/v1/cast_sender.js
+    | BLOCKED https://image.tmdb.org/t/p/original/4PtzGcegF5Po1NmDAW9IklyvAUh.jpg
+    | BLOCKED https://image.tmdb.org/t/p/original/rmaNMA1seHqpjtnYKzyynFAr1g8.jpg
+    | BLOCKED https://image.tmdb.org/t/p/original/7pUGiRg9Gq1JqmmNSJLLSonOKum.jpg
+    | BLOCKED https://image.tmdb.org/t/p/original/bjiS5ipwxb9JFy3XRRN4OAilSeX.jpg
+    | BLOCKED https://artworks.thetvdb.com/banners/posters/75897-5.jpg
+    | BLOCKED https://artworks.thetvdb.com/banners/posters/78804-52.jpg
+    | BLOCKED https://artworks.thetvdb.com/banners/v4/series/399838/posters/642367285d067.jpg
+    | BLOCKED https://artworks.thetvdb.com/banners/posters/71663-15.jpg
+    | BLOCKED https://artworks.thetvdb.com/banners/posters/74897-5.jpg
+    | URL /web/index.html#/downloads
+  after: je12 browse '#/home' --script artifacts/restructure-plan/step-logs/upstream-sync-evidence/p120-approve-options.mjs --wait 2000 --user viewer
+    deployed c06ceddba (dll 4d9aa6f081694b1a) on lab je125ce284, 2026-11-26 02:10:40
+    | SCRIPT {"admin":false,"requests page, pending cards":[],"movie request dialog":{"title":"Request Movie","subtitle":"Abominable","button":"Request","autoApproveNote":null,"labels":["Destination Server","Quality Profile","Root Folder","Tags"],"server":"Radarr (lab)","quality":"HD-1080p","folder":"/movies (186.6 GB)","tags":{"chosen":[],"placeholder":"Select tags"},"requestAs":"no field","tagChoices":["4k","anime","kids","lab"]},"series request dialog":{"title":"Request Series","subtitle":"Doctor Who","button":"Request","autoApproveNote":null,"labels":[],"server":"no field","quality":"no field","folder":"no field","tags":"no field","requestAs":"no field"},"requestsSent":[]}
+    | CONSOLE Failed to load resource: the server responded with a status of 404 (Not Found) /JellyfinEnhanced/proxy/avatar
+    | BLOCKED https://www.gstatic.com/cv/js/sender/v1/cast_sender.js
+    | BLOCKED https://image.tmdb.org/t/p/original/4PtzGcegF5Po1NmDAW9IklyvAUh.jpg
+    | BLOCKED https://image.tmdb.org/t/p/original/rmaNMA1seHqpjtnYKzyynFAr1g8.jpg
+    | BLOCKED https://image.tmdb.org/t/p/original/7pUGiRg9Gq1JqmmNSJLLSonOKum.jpg
+    | BLOCKED https://image.tmdb.org/t/p/original/bjiS5ipwxb9JFy3XRRN4OAilSeX.jpg
+    | BLOCKED https://artworks.thetvdb.com/banners/posters/75897-5.jpg
+    | BLOCKED https://artworks.thetvdb.com/banners/posters/78804-52.jpg
+    | BLOCKED https://artworks.thetvdb.com/banners/v4/series/399838/posters/642367285d067.jpg
+    | BLOCKED https://artworks.thetvdb.com/banners/posters/71663-15.jpg
+    | BLOCKED https://artworks.thetvdb.com/banners/posters/74897-5.jpg
+    | URL /web/index.html#/downloads
+  same command before and after: yes; builds: before upstream-a66d70c52fc9, after c06ceddba (a clean build of c06ceddb, not the checkout's commit c6b7c206: je12 deploy, then rerun with --keep after:viewer)
+pair 'admin': complete
+  before: je12 browse '#/home' --script artifacts/restructure-plan/step-logs/upstream-sync-evidence/p120-approve-options.mjs --wait 2000
+    deployed upstream-a66d70c52fc9 = a66d70c5 (dll f28217083ef58e07) on lab je125ce284, 2026-11-26 01:46:07
+    output: 4,696 bytes, 19 line(s); in full: <je12 state>
+  after: je12 browse '#/home' --script artifacts/restructure-plan/step-logs/upstream-sync-evidence/p120-approve-options.mjs --wait 2000
+    deployed c06ceddba (dll 4d9aa6f081694b1a) on lab je125ce284, 2026-11-26 02:10:54
+    output: 3,570 bytes, 15 line(s); in full: <je12 state>
+    lines that differ (6 line(s); - before, + after):
+    | @@ -1 +1 @@
+    | -SCRIPT {"admin":true,"requests page, pending cards":["Phineas and Ferb: options(tune, \"Approve with options\") approve(check) decline(close) remove(delete, \"Remove request\")","Resident Evil: optio
+    | +SCRIPT {"admin":true,"requests page, pending cards":["Phineas and Ferb: options(tune, \"Approve with options\") approve(check) decline(close) remove(delete, \"Remove request\")","Resident Evil: optio
+    | @@ -3 +2,0 @@
+    | -CONSOLE Failed to load resource: the server responded with a status of 401 (Unauthorized) /JellyfinEnhanced/proxy/avatar
+    | @@ -6,3 +4,0 @@
+    | -CONSOLE Failed to load resource: the server responded with a status of 400 (Bad Request) /JellyfinEnhanced/arr/requests/3/approve
+    | -CONSOLE 🪼 Jellyfin Enhanced: Requests Page: Failed to approve request 3 with options: Error: HTTP 400
+    | -    at fetchWithRetry (<lab>/JellyfinEnhanced/bundle.js?g=core,tags,spoiler-guard,player-badge,hidden-content,hidden-content-page,bookmarks,bookmarks-library,seerr-api,seerr,recomme
+  same command before and after: yes; builds: before upstream-a66d70c52fc9, after c06ceddba (a clean build of c06ceddb, not the checkout's commit c6b7c206: je12 deploy, then rerun with --keep after:admin)

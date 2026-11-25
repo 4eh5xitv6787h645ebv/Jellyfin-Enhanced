@@ -1,0 +1,256 @@
+je12 2.7.3 (v2.7.3); the tests of port 120 run alone (je12 test --only), from je12's test record, in order. Trees: 43b0a5e08+dirty@0bd7baa5 is the main line with the new tests and none of the port's source (the before run; the test of the new options route, which needs the new action, sat out that run); @8c22a592 is the port without its Request-as fallback guard; @7c359c55, @e91bbd24, @be64efe0, @ebedfe3a are the port while it was written; c06ceddba is the port's commit, c06ceddba+dirty@b6d7470a the bundle measured with its limits out of the way, @55e06446 the budget commit 024ac3b1a, 371b65003+dirty@d0907b92 the contract commit c6b7c206c.
+
+2026-11-26 01:57:19  tests/frontend/requests/request-advanced-options.test.mjs  on 43b0a5e08+dirty@3b957237: FAIL
+    FAIL tests/frontend/requests/request-advanced-options.test.mjs :: the request dialogs say a request will be approved automatically when the user-status says so, per type and 4K : AssertionError: Expected values to be strictly equal:
+    PASS tests/frontend/requests/request-advanced-options.test.mjs :: without autoApprove in the user-status (an older server, a user not yet cached) no note is claimed
+    FAIL tests/frontend/requests/request-advanced-options.test.mjs :: the advanced options offer the server's tags and the request sends the chosen ones : AssertionError: Expected values to be strictly equal:
+    FAIL tests/frontend/requests/request-advanced-options.test.mjs :: a tag chip can be removed, Backspace in the empty box removes the last, and Escape closes only the list : TypeError: Cannot read properties of undefined (reading 'querySelector')
+    FAIL tests/frontend/requests/request-advanced-options.test.mjs :: administrators choose who a request is for; the list shows names as text and pictures from Jellyfin only : AssertionError: Expected values to be strictly deep-equal:
+    FAIL tests/frontend/requests/request-advanced-options.test.mjs :: anyone else gets no "Request as" and Seerr's user list is never read for them : AssertionError: Values have same structure but are not reference-equal:
+    FAIL tests/frontend/requests/request-advanced-options.test.mjs :: an existing request's values are chosen instead of the server defaults, until another server is chosen : AssertionError: Expected values to be strictly deep-equal:
+2026-11-26 01:57:32  tests/frontend/requests/request-advanced-options.test.mjs  on 43b0a5e08+dirty@963fb216: FAIL
+    PASS tests/frontend/requests/request-advanced-options.test.mjs :: the request dialogs say a request will be approved automatically when the user-status says so, per type and 4K
+    PASS tests/frontend/requests/request-advanced-options.test.mjs :: without autoApprove in the user-status (an older server, a user not yet cached) no note is claimed
+    PASS tests/frontend/requests/request-advanced-options.test.mjs :: the advanced options offer the server's tags and the request sends the chosen ones
+    PASS tests/frontend/requests/request-advanced-options.test.mjs :: a tag chip can be removed, Backspace in the empty box removes the last, and Escape closes only the list
+    PASS tests/frontend/requests/request-advanced-options.test.mjs :: administrators choose who a request is for; the list shows names as text and pictures from Jellyfin only
+    FAIL tests/frontend/requests/request-advanced-options.test.mjs :: anyone else gets no "Request as" and Seerr's user list is never read for them : AssertionError: Values have same structure but are not reference-equal:
+    PASS tests/frontend/requests/request-advanced-options.test.mjs :: an existing request's values are chosen instead of the server defaults, until another server is chosen
+2026-11-26 01:58:52  tests/frontend/requests/requests-approve-with-options.test.mjs  on 43b0a5e08+dirty@c1f0b17d: FAIL
+    PASS tests/frontend/requests/requests-approve-with-options.test.mjs :: pending requests get Approve with options beside Approve, for those who may approve, and not for collections
+    PASS tests/frontend/requests/requests-approve-with-options.test.mjs :: without Seerr there is no Approve with options
+    PASS tests/frontend/requests/requests-approve-with-options.test.mjs :: Approve with options opens the dialog filled with what the request asks for, then approves with the choices
+    PASS tests/frontend/requests/requests-approve-with-options.test.mjs :: a request without advanced options starts from the server defaults; only administrators get Request As
+    PASS tests/frontend/requests/requests-approve-with-options.test.mjs :: nothing opens for a request this account may not approve
+    FAIL tests/frontend/requests/requests-approve-with-options.test.mjs :: a refused approval keeps the dialog open and shows the server's reason as text : AggregateError: Unexpected browser errors
+    FAIL tests/frontend/requests/requests-approve-with-options.test.mjs :: when the request cannot be read, the page says so and opens no dialog : AggregateError: Unexpected browser errors
+2026-11-26 01:59:07  tests/frontend/requests/requests-approve-with-options.test.mjs  on 43b0a5e08+dirty@7c359c55: PASS
+    PASS tests/frontend/requests/requests-approve-with-options.test.mjs :: pending requests get Approve with options beside Approve, for those who may approve, and not for collections
+    PASS tests/frontend/requests/requests-approve-with-options.test.mjs :: without Seerr there is no Approve with options
+    PASS tests/frontend/requests/requests-approve-with-options.test.mjs :: Approve with options opens the dialog filled with what the request asks for, then approves with the choices
+    PASS tests/frontend/requests/requests-approve-with-options.test.mjs :: a request without advanced options starts from the server defaults; only administrators get Request As
+    PASS tests/frontend/requests/requests-approve-with-options.test.mjs :: nothing opens for a request this account may not approve
+    PASS tests/frontend/requests/requests-approve-with-options.test.mjs :: a refused approval keeps the dialog open and shows the server's reason as text
+    PASS tests/frontend/requests/requests-approve-with-options.test.mjs :: when the request cannot be read, the page says so and opens no dialog
+2026-11-26 01:59:14  tests/frontend/requests/request-advanced-options.test.mjs  on 43b0a5e08+dirty@7c359c55: PASS
+    PASS tests/frontend/requests/request-advanced-options.test.mjs :: the request dialogs say a request will be approved automatically when the user-status says so, per type and 4K
+    PASS tests/frontend/requests/request-advanced-options.test.mjs :: without autoApprove in the user-status (an older server, a user not yet cached) no note is claimed
+    PASS tests/frontend/requests/request-advanced-options.test.mjs :: the advanced options offer the server's tags and the request sends the chosen ones
+    PASS tests/frontend/requests/request-advanced-options.test.mjs :: a tag chip can be removed, Backspace in the empty box removes the last, and Escape closes only the list
+    PASS tests/frontend/requests/request-advanced-options.test.mjs :: administrators choose who a request is for; the list shows names as text and pictures from Jellyfin only
+    PASS tests/frontend/requests/request-advanced-options.test.mjs :: anyone else gets no "Request as" and Seerr's user list is never read for them
+    PASS tests/frontend/requests/request-advanced-options.test.mjs :: an existing request's values are chosen instead of the server defaults, until another server is chosen
+2026-11-26 02:01:04  JE.Tests.Features.Downloads.ApiDownloadsTests  on 43b0a5e08+dirty@e91bbd24: PASS
+    PASS JE.Tests.Features.Downloads.ApiDownloadsTests.ApprovingWithoutOptionsAndDecliningSendOnlyTheAction(action: "approve", body: null)
+    PASS JE.Tests.Features.Downloads.ApiDownloadsTests.SomeoneElsesRequestNeedsManagePermission
+    PASS JE.Tests.Features.Downloads.ApiDownloadsTests.TheRequestOptionsRouteReadsWhatTheRequestAsksForForManagersOnly
+    PASS JE.Tests.Features.Downloads.ApiDownloadsTests.ARequesterRemovesTheirOwnApprovedRequestWithoutManagePermission
+    PASS JE.Tests.Features.Downloads.ApiDownloadsTests.OnlyAnAdministratorChangesWhoARequestIsFor
+    PASS JE.Tests.Features.Downloads.ApiDownloadsTests.AnUnlinkedUserCannotRemoveRequests
+    PASS JE.Tests.Features.Downloads.ApiDownloadsTests.OptionsOfTheWrongShapeAreRefusedBeforeSeerrIsAsked(body: "{\"profileId\":\"3\"}")
+    PASS JE.Tests.Features.Downloads.ApiDownloadsTests.ApprovingWithoutOptionsAndDecliningSendOnlyTheAction(action: "decline", body: "{\"profileId\":3}")
+    PASS JE.Tests.Features.Downloads.ApiDownloadsTests.ARefusedEditIsReportedAndNothingIsApproved
+    PASS JE.Tests.Features.Downloads.ApiDownloadsTests.AFailedDeleteIsReported
+    PASS JE.Tests.Features.Downloads.ApiDownloadsTests.ARequestDeletedBetweenTheReadAndTheDeleteCountsAsRemoved
+    PASS JE.Tests.Features.Downloads.ApiDownloadsTests.ApproveWithOptionsEditsTheRequestThenApprovesIt
+    PASS JE.Tests.Features.Downloads.ApiDownloadsTests.ASeriesEditKeepsItsSeasonsAndLeavesOutFieldsThatHaveNoValue
+    PASS JE.Tests.Features.Downloads.ApiDownloadsTests.OptionsOfTheWrongShapeAreRefusedBeforeSeerrIsAsked(body: "{\"userId\":\"someone\"}")
+    PASS JE.Tests.Features.Downloads.ApiDownloadsTests.ApprovingWithoutOptionsAndDecliningSendOnlyTheAction(action: "approve", body: "{}")
+    PASS JE.Tests.Features.Downloads.ApiDownloadsTests.ApprovingWithOptionsNeedsTheRightToApprove
+    PASS JE.Tests.Features.Downloads.ApiDownloadsTests.OptionsOfTheWrongShapeAreRefusedBeforeSeerrIsAsked(body: "{\"rootFolder\":5}")
+    PASS JE.Tests.Features.Downloads.ApiDownloadsTests.AMissingRequestCountsAsRemovedForManagersOnly
+    PASS JE.Tests.Features.Downloads.ApiDownloadsTests.AJellyfinAdminRemovesAnyRequest
+    PASS JE.Tests.Features.Downloads.ApiDownloadsTests.NonAdminQueueAndHistoryFailWhenTheSeerrRequestLookupFails
+    PASS JE.Tests.Features.Downloads.ApiDownloadsTests.OptionsOfTheWrongShapeAreRefusedBeforeSeerrIsAsked(body: "{not json")
+    PASS JE.Tests.Features.Downloads.ApiDownloadsTests.OptionsOfTheWrongShapeAreRefusedBeforeSeerrIsAsked(body: "{\"tags\":[\"kids\"]}")
+    PASS JE.Tests.Features.Downloads.ApiDownloadsTests.DownloadsHideGuardedEpisodeTitlesPerUserOverTheSharedCache
+    PASS JE.Tests.Features.Downloads.ApiDownloadsTests.RequestRowsSayWhichRequestsTheCallerMayRemove(permissions: REQUEST, admin: False, own: True, others: False)
+    PASS JE.Tests.Features.Downloads.ApiDownloadsTests.HistoryNamesTheInstanceThatFailed
+    PASS JE.Tests.Features.Downloads.ApiDownloadsTests.RequestRowsHideGuardedDatesWhileComingSoonStillWorks
+    PASS JE.Tests.Features.Downloads.ApiDownloadsTests.RequestRowsSayWhichRequestsTheCallerMayRemove(permissions: NONE, admin: True, own: True, others: True)
+    PASS JE.Tests.Features.Downloads.ApiDownloadsTests.HistoryHidesGuardedEpisodeTitlesAndLeavesOtherRowsWhole
+    PASS JE.Tests.Features.Downloads.ApiDownloadsTests.NonAdminQueueAndHistoryShareOneSeerrRequestRead
+    PASS JE.Tests.Features.Downloads.ApiDownloadsTests.OptionsOfTheWrongShapeAreRefusedBeforeSeerrIsAsked(body: "[1]")
+    PASS JE.Tests.Features.Downloads.ApiDownloadsTests.RequestRowsSayWhichRequestsTheCallerMayRemove(permissions: MANAGE_REQUESTS | REQUEST, admin: False, own: True, others: True)
+2026-11-26 02:01:23  JE.Tests.Features.Seerr.ApiSeerrUserStatusTests  on 43b0a5e08+dirty@e91bbd24: PASS
+    PASS JE.Tests.Features.Seerr.ApiSeerrUserStatusTests.TheStatusSaysWhichRequestsSeerrApprovesOnItsOwn(permissions: REQUEST | AUTO_APPROVE_4K, expected: "movie4k,tv4k")
+    PASS JE.Tests.Features.Seerr.ApiSeerrUserStatusTests.TheStatusSaysWhichRequestsSeerrApprovesOnItsOwn(permissions: MANAGE_REQUESTS, expected: "movie,tv,movie4k,tv4k")
+    PASS JE.Tests.Features.Seerr.ApiSeerrUserStatusTests.TheStatusSaysWhichRequestsSeerrApprovesOnItsOwn(permissions: REQUEST | AUTO_APPROVE_MOVIE, expected: "movie")
+    PASS JE.Tests.Features.Seerr.ApiSeerrUserStatusTests.AJellyfinAdministratorIsAnsweredByTheirSeerrPermissionsNotTheirJellyfinRole
+    PASS JE.Tests.Features.Seerr.ApiSeerrUserStatusTests.TheStatusSaysWhichRequestsSeerrApprovesOnItsOwn(permissions: REQUEST | AUTO_APPROVE_TV, expected: "tv")
+    PASS JE.Tests.Features.Seerr.ApiSeerrUserStatusTests.TheStatusSaysWhichRequestsSeerrApprovesOnItsOwn(permissions: REQUEST | AUTO_APPROVE_4K_TV, expected: "tv4k")
+    PASS JE.Tests.Features.Seerr.ApiSeerrUserStatusTests.AnUnlinkedUserGetsNoAutoApproveClaim
+    PASS JE.Tests.Features.Seerr.ApiSeerrUserStatusTests.TheStatusSaysWhichRequestsSeerrApprovesOnItsOwn(permissions: REQUEST, expected: "")
+    PASS JE.Tests.Features.Seerr.ApiSeerrUserStatusTests.TheStatusSaysWhichRequestsSeerrApprovesOnItsOwn(permissions: REQUEST | AUTO_APPROVE, expected: "movie,tv")
+    PASS JE.Tests.Features.Seerr.ApiSeerrUserStatusTests.TheStatusSaysWhichRequestsSeerrApprovesOnItsOwn(permissions: ADMIN, expected: "movie,tv,movie4k,tv4k")
+2026-11-26 02:01:32  tests/frontend/bootstrap/bootstrap-loader-groups.test.mjs  on 43b0a5e08+dirty@e91bbd24: PASS
+    PASS tests/frontend/bootstrap/bootstrap-loader-groups.test.mjs :: boot asks for one bundle of the needed groups in file order, runs them in order, then stage 6 for those groups only
+    PASS tests/frontend/bootstrap/bootstrap-loader-groups.test.mjs :: a group whose rule turns true on a navigation loads alone, initializes once, and is not asked for again
+    PASS tests/frontend/bootstrap/bootstrap-loader-groups.test.mjs :: "after" groups and "with" companions load in one request in file order (Hidden Content on)
+    PASS tests/frontend/bootstrap/bootstrap-loader-groups.test.mjs :: "after" groups and "with" companions load in one request in file order (Hidden Content off)
+    PASS tests/frontend/bootstrap/bootstrap-loader-groups.test.mjs :: batches run strictly in the order they were asked for, even when a later request arrives first
+    PASS tests/frontend/bootstrap/bootstrap-loader-groups.test.mjs :: a stand-in export loads its group, then makes the same call once on the real function
+    PASS tests/frontend/bootstrap/bootstrap-loader-groups.test.mjs :: the Seerr request dialog has a stand-in that loads the seerr group for the Requests page
+    PASS tests/frontend/bootstrap/bootstrap-loader-groups.test.mjs :: a stand-in whose group does not define the function logs that it is not available
+    PASS tests/frontend/bootstrap/bootstrap-loader-groups.test.mjs :: a failed bundle request loads that batch's files one by one, in order, async=false
+    PASS tests/frontend/bootstrap/bootstrap-loader-groups.test.mjs :: a bundle that defines some of its groups loads only the missing groups' files, keeping the run order
+    PASS tests/frontend/bootstrap/bootstrap-loader-groups.test.mjs :: a lazy batch of which nothing arrives is forgotten, and asked for again after a pause, not on every trigger
+    PASS tests/frontend/bootstrap/bootstrap-loader-groups.test.mjs :: a group that keeps failing is retried on a timer with a growing pause, and loads without another trigger once it can
+    PASS tests/frontend/bootstrap/bootstrap-loader-groups.test.mjs :: a failed group the page no longer needs is not retried
+    PASS tests/frontend/bootstrap/bootstrap-loader-groups.test.mjs :: an explicit request for a group that failed to load does not wait for the pause
+    PASS tests/frontend/bootstrap/bootstrap-loader-groups.test.mjs :: core is marked loaded even when none of its files arrives, so boot finishes
+    PASS tests/frontend/bootstrap/bootstrap-loader-groups.test.mjs :: dev mode never asks for a bundle: the needed groups' files load at boot, a lazy group's on demand
+    PASS tests/frontend/bootstrap/bootstrap-loader-groups.test.mjs :: a bootstrap with no ComponentGroups loads the whole manifest as one bundle
+    PASS tests/frontend/bootstrap/bootstrap-loader-groups.test.mjs :: a bootstrap with a repeated group id loads the whole manifest as one bundle
+    PASS tests/frontend/bootstrap/bootstrap-loader-groups.test.mjs :: a bootstrap with a module the manifest lacks loads the whole manifest as one bundle
+    PASS tests/frontend/bootstrap/bootstrap-loader-groups.test.mjs :: a bootstrap with an "after" naming a later group loads the whole manifest as one bundle
+    PASS tests/frontend/bootstrap/bootstrap-loader-groups.test.mjs :: without a bootstrap, a groups file that fails decides between the whole bundle and groups
+    PASS tests/frontend/bootstrap/bootstrap-loader-groups.test.mjs :: without a bootstrap, a groups file that answers decides between the whole bundle and groups
+    PASS tests/frontend/bootstrap/bootstrap-loader-groups.test.mjs :: after a user switch the incoming user's groups load, and initialize, before the tag re-initialization runs
+    PASS tests/frontend/bootstrap/bootstrap-loader-groups.test.mjs :: a user switch with the tags group already loaded restarts the incoming user's tag types once
+    PASS tests/frontend/bootstrap/bootstrap-loader-groups.test.mjs :: a second switch while the first user's groups load initializes nothing for the stale user (next user's tags off)
+    PASS tests/frontend/bootstrap/bootstrap-loader-groups.test.mjs :: a second switch while the first user's groups load initializes nothing for the stale user (next user's tags on)
+    PASS tests/frontend/bootstrap/bootstrap-loader-groups.test.mjs :: the first plan reads the saved settings before JE.loadSettings exists
+    PASS tests/frontend/bootstrap/bootstrap-loader-groups.test.mjs :: a boot batch of several groups runs as one paced list: one wait for idle time, not one per group
+    PASS tests/frontend/bootstrap/bootstrap-loader-groups.test.mjs :: groups loaded for a page the user went to run in idle time; a group asked for directly does not wait for it
+    PASS tests/frontend/bootstrap/bootstrap-loader-groups.test.mjs :: an address that becomes a details page while boot is under way: the boot features start before that page's groups are fetched
+    PASS tests/frontend/bootstrap/bootstrap-loader-groups.test.mjs :: the plan is made again once settings resolve: a group only the resolved settings need loads after the boot features start, before JE.initialized
+    PASS tests/frontend/bootstrap/bootstrap-loader-groups.test.mjs :: the loader registers the eight Home tabs right after core, in the single bundle's order, exactly as the pages' own modules do
+    PASS tests/frontend/bootstrap/bootstrap-loader-groups.test.mjs :: a page loads when the Home tab holding its placeholder becomes the active one
+    PASS tests/frontend/bootstrap/bootstrap-loader-groups.test.mjs :: a page delivered standalone (no Home tab flag) loads at boot
+    PASS tests/frontend/bootstrap/bootstrap-loader-groups.test.mjs :: a <video> that starts loading loads the player group, wherever the address is
+    PASS tests/frontend/bootstrap/bootstrap-loader-groups.test.mjs :: with the real manifest and groups file, boot loads exactly the needed groups' modules once, in order
+    PASS tests/frontend/bootstrap/bootstrap-loader-groups.test.mjs :: window.JE names the plugin once the component scripts have run whenever Bookmarks is enabled, with no group loaded for it
+    PASS tests/frontend/bootstrap/bootstrap-loader-groups.test.mjs :: the tag layout's custom properties are registered as the loader starts, in Chromium's family only
+    PASS tests/frontend/bootstrap/bootstrap-loader-groups.test.mjs :: the status-tag backdrop painter is its own group: no boot and no page change loads it, a direct request loads it alone
+2026-11-26 02:02:03  tests/frontend/requests/request-advanced-options.test.mjs  on 43b0a5e08+dirty@0bd7baa5: FAIL
+    FAIL tests/frontend/requests/request-advanced-options.test.mjs :: the request dialogs say a request will be approved automatically when the user-status says so, per type and 4K : AssertionError: Expected values to be strictly equal:
+    FAIL tests/frontend/requests/request-advanced-options.test.mjs :: without autoApprove in the user-status (an older server, a user not yet cached) no note is claimed : TypeError: h.api.willAutoApprove is not a function
+    FAIL tests/frontend/requests/request-advanced-options.test.mjs :: the advanced options offer the server's tags and the request sends the chosen ones : TypeError: Cannot read properties of null (reading 'hidden')
+    FAIL tests/frontend/requests/request-advanced-options.test.mjs :: a tag chip can be removed, Backspace in the empty box removes the last, and Escape closes only the list : TypeError: Cannot read properties of null (reading 'querySelectorAll')
+    FAIL tests/frontend/requests/request-advanced-options.test.mjs :: administrators choose who a request is for; the list shows names as text and pictures from Jellyfin only : TypeError: Cannot read properties of null (reading 'options')
+    FAIL tests/frontend/requests/request-advanced-options.test.mjs :: anyone else gets no "Request as" and Seerr's user list is never read for them : SyntaxError: "undefined" is not valid JSON
+    FAIL tests/frontend/requests/request-advanced-options.test.mjs :: an existing request's values are chosen instead of the server defaults, until another server is chosen : TypeError: modal.readAdvancedOptions is not a function
+2026-11-26 02:02:08  tests/frontend/requests/requests-approve-with-options.test.mjs  on 43b0a5e08+dirty@0bd7baa5: FAIL
+    FAIL tests/frontend/requests/requests-approve-with-options.test.mjs :: pending requests get Approve with options beside Approve, for those who may approve, and not for collections : AssertionError: Expected values to be strictly deep-equal:
+    PASS tests/frontend/requests/requests-approve-with-options.test.mjs :: without Seerr there is no Approve with options
+    FAIL tests/frontend/requests/requests-approve-with-options.test.mjs :: Approve with options opens the dialog filled with what the request asks for, then approves with the choices : TypeError: P.handleApproveWithOptions is not a function
+    FAIL tests/frontend/requests/requests-approve-with-options.test.mjs :: a request without advanced options starts from the server defaults; only administrators get Request As : TypeError: P.handleApproveWithOptions is not a function
+    FAIL tests/frontend/requests/requests-approve-with-options.test.mjs :: nothing opens for a request this account may not approve : TypeError: P.handleApproveWithOptions is not a function
+    FAIL tests/frontend/requests/requests-approve-with-options.test.mjs :: a refused approval keeps the dialog open and shows the server's reason as text : TypeError: P.handleApproveWithOptions is not a function
+    FAIL tests/frontend/requests/requests-approve-with-options.test.mjs :: when the request cannot be read, the page says so and opens no dialog : TypeError: P.handleApproveWithOptions is not a function
+2026-11-26 02:02:13  tests/frontend/bootstrap/bootstrap-loader-groups.test.mjs :: the Seerr request dialog has a stand-in that loads the seerr group for the Requests page  on 43b0a5e08+dirty@0bd7baa5: FAIL
+    FAIL tests/frontend/bootstrap/bootstrap-loader-groups.test.mjs :: the Seerr request dialog has a stand-in that loads the seerr group for the Requests page : TypeError: Cannot read properties of undefined (reading 'ensureLoaded')
+2026-11-26 02:02:18  tests/frontend/requests/seerr-core-boundaries.test.mjs :: only the documented request settings are forwarded, and is4k inside them still requests 4K  on 43b0a5e08+dirty@0bd7baa5: FAIL
+    FAIL tests/frontend/requests/seerr-core-boundaries.test.mjs :: only the documented request settings are forwarded, and is4k inside them still requests 4K : AssertionError: Expected values to be strictly deep-equal:
+2026-11-26 02:02:51  JE.Tests.Features.Downloads.ApiDownloadsTests  on 43b0a5e08+dirty@0bd7baa5: FAIL
+    PASS JE.Tests.Features.Downloads.ApiDownloadsTests.RequestRowsSayWhichRequestsTheCallerMayRemove(permissions: NONE, admin: True, own: True, others: True)
+    PASS JE.Tests.Features.Downloads.ApiDownloadsTests.NonAdminQueueAndHistoryShareOneSeerrRequestRead
+    FAIL JE.Tests.Features.Downloads.ApiDownloadsTests.ApproveWithOptionsEditsTheRequestThenApprovesIt : Assert.Equal() Failure: Collections differ
+    FAIL JE.Tests.Features.Downloads.ApiDownloadsTests.OptionsOfTheWrongShapeAreRefusedBeforeSeerrIsAsked(body: "[1]") : Assert.Equal() Failure: Values differ
+    PASS JE.Tests.Features.Downloads.ApiDownloadsTests.RequestRowsSayWhichRequestsTheCallerMayRemove(permissions: REQUEST, admin: False, own: True, others: False)
+    PASS JE.Tests.Features.Downloads.ApiDownloadsTests.AFailedDeleteIsReported
+    FAIL JE.Tests.Features.Downloads.ApiDownloadsTests.OptionsOfTheWrongShapeAreRefusedBeforeSeerrIsAsked(body: "{\"userId\":\"someone\"}") : Assert.Equal() Failure: Values differ
+    FAIL JE.Tests.Features.Downloads.ApiDownloadsTests.OptionsOfTheWrongShapeAreRefusedBeforeSeerrIsAsked(body: "{not json") : Assert.Equal() Failure: Values differ
+    PASS JE.Tests.Features.Downloads.ApiDownloadsTests.DownloadsHideGuardedEpisodeTitlesPerUserOverTheSharedCache
+    PASS JE.Tests.Features.Downloads.ApiDownloadsTests.ARequesterRemovesTheirOwnApprovedRequestWithoutManagePermission
+    FAIL JE.Tests.Features.Downloads.ApiDownloadsTests.OnlyAnAdministratorChangesWhoARequestIsFor : Assert.Equal() Failure: Values differ
+    PASS JE.Tests.Features.Downloads.ApiDownloadsTests.HistoryHidesGuardedEpisodeTitlesAndLeavesOtherRowsWhole
+    PASS JE.Tests.Features.Downloads.ApiDownloadsTests.NonAdminQueueAndHistoryFailWhenTheSeerrRequestLookupFails
+    PASS JE.Tests.Features.Downloads.ApiDownloadsTests.AJellyfinAdminRemovesAnyRequest
+    PASS JE.Tests.Features.Downloads.ApiDownloadsTests.RequestRowsSayWhichRequestsTheCallerMayRemove(permissions: MANAGE_REQUESTS | REQUEST, admin: False, own: True, others: True)
+    FAIL JE.Tests.Features.Downloads.ApiDownloadsTests.ASeriesEditKeepsItsSeasonsAndLeavesOutFieldsThatHaveNoValue : Assert.Single() Failure: The collection did not contain any matching items
+    PASS JE.Tests.Features.Downloads.ApiDownloadsTests.ApprovingWithoutOptionsAndDecliningSendOnlyTheAction(action: "approve", body: null)
+    PASS JE.Tests.Features.Downloads.ApiDownloadsTests.ApprovingWithoutOptionsAndDecliningSendOnlyTheAction(action: "decline", body: "{\"profileId\":3}")
+    PASS JE.Tests.Features.Downloads.ApiDownloadsTests.ApprovingWithOptionsNeedsTheRightToApprove
+    PASS JE.Tests.Features.Downloads.ApiDownloadsTests.HistoryNamesTheInstanceThatFailed
+    PASS JE.Tests.Features.Downloads.ApiDownloadsTests.AMissingRequestCountsAsRemovedForManagersOnly
+    PASS JE.Tests.Features.Downloads.ApiDownloadsTests.ARequestDeletedBetweenTheReadAndTheDeleteCountsAsRemoved
+    PASS JE.Tests.Features.Downloads.ApiDownloadsTests.SomeoneElsesRequestNeedsManagePermission
+    PASS JE.Tests.Features.Downloads.ApiDownloadsTests.AnUnlinkedUserCannotRemoveRequests
+    FAIL JE.Tests.Features.Downloads.ApiDownloadsTests.OptionsOfTheWrongShapeAreRefusedBeforeSeerrIsAsked(body: "{\"profileId\":\"3\"}") : Assert.Equal() Failure: Values differ
+    FAIL JE.Tests.Features.Downloads.ApiDownloadsTests.OptionsOfTheWrongShapeAreRefusedBeforeSeerrIsAsked(body: "{\"tags\":[\"kids\"]}") : Assert.Equal() Failure: Values differ
+    PASS JE.Tests.Features.Downloads.ApiDownloadsTests.ApprovingWithoutOptionsAndDecliningSendOnlyTheAction(action: "approve", body: "{}")
+    PASS JE.Tests.Features.Downloads.ApiDownloadsTests.RequestRowsHideGuardedDatesWhileComingSoonStillWorks
+    FAIL JE.Tests.Features.Downloads.ApiDownloadsTests.OptionsOfTheWrongShapeAreRefusedBeforeSeerrIsAsked(body: "{\"rootFolder\":5}") : Assert.Equal() Failure: Values differ
+    FAIL JE.Tests.Features.Downloads.ApiDownloadsTests.ARefusedEditIsReportedAndNothingIsApproved : Assert.Equal() Failure: Values differ
+2026-11-26 02:03:07  JE.Tests.Features.Seerr.ApiSeerrUserStatusTests  on 43b0a5e08+dirty@0bd7baa5: FAIL
+    FAIL JE.Tests.Features.Seerr.ApiSeerrUserStatusTests.AJellyfinAdministratorIsAnsweredByTheirSeerrPermissionsNotTheirJellyfinRole : System.Collections.Generic.KeyNotFoundException : The given key was not present in the dictionary.
+    PASS JE.Tests.Features.Seerr.ApiSeerrUserStatusTests.AnUnlinkedUserGetsNoAutoApproveClaim
+    FAIL JE.Tests.Features.Seerr.ApiSeerrUserStatusTests.TheStatusSaysWhichRequestsSeerrApprovesOnItsOwn(permissions: REQUEST | AUTO_APPROVE, expected: "movie,tv") : System.Collections.Generic.KeyNotFoundException : The given key was not present in the dictionary.
+    FAIL JE.Tests.Features.Seerr.ApiSeerrUserStatusTests.TheStatusSaysWhichRequestsSeerrApprovesOnItsOwn(permissions: ADMIN, expected: "movie,tv,movie4k,tv4k") : System.Collections.Generic.KeyNotFoundException : The given key was not present in the dictionary.
+    FAIL JE.Tests.Features.Seerr.ApiSeerrUserStatusTests.TheStatusSaysWhichRequestsSeerrApprovesOnItsOwn(permissions: REQUEST, expected: "") : System.Collections.Generic.KeyNotFoundException : The given key was not present in the dictionary.
+    FAIL JE.Tests.Features.Seerr.ApiSeerrUserStatusTests.TheStatusSaysWhichRequestsSeerrApprovesOnItsOwn(permissions: MANAGE_REQUESTS, expected: "movie,tv,movie4k,tv4k") : System.Collections.Generic.KeyNotFoundException : The given key was not present in the dictionary.
+    FAIL JE.Tests.Features.Seerr.ApiSeerrUserStatusTests.TheStatusSaysWhichRequestsSeerrApprovesOnItsOwn(permissions: REQUEST | AUTO_APPROVE_MOVIE, expected: "movie") : System.Collections.Generic.KeyNotFoundException : The given key was not present in the dictionary.
+    FAIL JE.Tests.Features.Seerr.ApiSeerrUserStatusTests.TheStatusSaysWhichRequestsSeerrApprovesOnItsOwn(permissions: REQUEST | AUTO_APPROVE_4K, expected: "movie4k,tv4k") : System.Collections.Generic.KeyNotFoundException : The given key was not present in the dictionary.
+    FAIL JE.Tests.Features.Seerr.ApiSeerrUserStatusTests.TheStatusSaysWhichRequestsSeerrApprovesOnItsOwn(permissions: REQUEST | AUTO_APPROVE_TV, expected: "tv") : System.Collections.Generic.KeyNotFoundException : The given key was not present in the dictionary.
+    FAIL JE.Tests.Features.Seerr.ApiSeerrUserStatusTests.TheStatusSaysWhichRequestsSeerrApprovesOnItsOwn(permissions: REQUEST | AUTO_APPROVE_4K_TV, expected: "tv4k") : System.Collections.Generic.KeyNotFoundException : The given key was not present in the dictionary.
+2026-11-26 02:04:40  JE.Tests.Architecture.AuthReadClosureSnapshotTests.TransitiveAuthReadsPerRouteMatchRestructureBase  on 43b0a5e08+dirty@e91bbd24: FAIL
+    FAIL JE.Tests.Architecture.AuthReadClosureSnapshotTests.TransitiveAuthReadsPerRouteMatchRestructureBase : auth-reads-by-route.base.json is anchored to restructure-base and is never regenerated from a later tree. Subject: referenced plugin (current tree).
+2026-11-26 02:07:03  tests/frontend/features/features-api-routes-docs.test.mjs  on 43b0a5e08+dirty@ebedfe3a: PASS
+    PASS tests/frontend/features/features-api-routes-docs.test.mjs :: api.md states the inventory's route total in both places
+    PASS tests/frontend/features/features-api-routes-docs.test.mjs :: api.md has an endpoint table row for every route and none for a route that does not exist
+2026-11-26 02:07:08  tests/frontend/features/media-tags/features-rating-sources.test.mjs  on 43b0a5e08+dirty@ebedfe3a: PASS
+    PASS tests/frontend/features/media-tags/features-rating-sources.test.mjs :: all seven sources keep configured order, native units, bundled logos and style labels
+    PASS tests/frontend/features/media-tags/features-rating-sources.test.mjs :: the four further MDBList sources draw on their own scales with their names, colours and bundled logos
+    PASS tests/frontend/features/media-tags/features-rating-sources.test.mjs :: the further sources compare on the scale of ten, are held to their own maximum, and load their bundled image
+    PASS tests/frontend/features/media-tags/features-rating-sources.test.mjs :: normalization drops unknown ids and duplicates and keeps empty, zero and missing distinct
+    PASS tests/frontend/features/media-tags/features-rating-sources.test.mjs :: minimum uses a scale of ten before ordered caps and score colours yield to explicit styles
+    PASS tests/frontend/features/media-tags/features-rating-sources.test.mjs :: compact source chips retain values and a source dot, and batch DTOs render the same facts
+    PASS tests/frontend/features/media-tags/features-rating-sources.test.mjs :: Spoiler Guard suppresses sources on series and local fallback cache without restoring shared ratings
+    PASS tests/frontend/features/media-tags/features-rating-sources.test.mjs :: every persistent tag entry schema matches the server constant, including IndexedDB restore
+    PASS tests/frontend/features/media-tags/features-rating-sources.test.mjs :: tag cache reference docs name the schema number in exactly one place
+2026-11-26 02:07:43  tests/frontend/requests/request-advanced-options.test.mjs  on 43b0a5e08+dirty@be64efe0: PASS
+    PASS tests/frontend/requests/request-advanced-options.test.mjs :: the request dialogs say a request will be approved automatically when the user-status says so, per type and 4K
+    PASS tests/frontend/requests/request-advanced-options.test.mjs :: without autoApprove in the user-status (an older server, a user not yet cached) no note is claimed
+    PASS tests/frontend/requests/request-advanced-options.test.mjs :: the advanced options offer the server's tags and the request sends the chosen ones
+    PASS tests/frontend/requests/request-advanced-options.test.mjs :: a tag chip can be removed, Backspace in the empty box removes the last, and Escape closes only the list
+    PASS tests/frontend/requests/request-advanced-options.test.mjs :: administrators choose who a request is for; the list shows names as text and pictures from Jellyfin only
+    PASS tests/frontend/requests/request-advanced-options.test.mjs :: "Request as" never falls back to someone else when the signed-in user's Seerr account is not known
+    PASS tests/frontend/requests/request-advanced-options.test.mjs :: anyone else gets no "Request as" and Seerr's user list is never read for them
+    PASS tests/frontend/requests/request-advanced-options.test.mjs :: an existing request's values are chosen instead of the server defaults, until another server is chosen
+2026-11-26 02:07:56  tests/frontend/requests/request-advanced-options.test.mjs :: "Request as" never falls back to someone else when the signed-in user's Seerr account is not known  on 43b0a5e08+dirty@8c22a592: FAIL
+    FAIL tests/frontend/requests/request-advanced-options.test.mjs :: "Request as" never falls back to someone else when the signed-in user's Seerr account is not known : AssertionError: Expected values to be strictly equal:
+2026-11-26 02:08:01  tests/frontend/requests/request-advanced-options.test.mjs :: "Request as" never falls back to someone else when the signed-in user's Seerr account is not known  on 43b0a5e08+dirty@be64efe0: PASS
+    PASS tests/frontend/requests/request-advanced-options.test.mjs :: "Request as" never falls back to someone else when the signed-in user's Seerr account is not known
+2026-11-26 02:12:08  JE.Tests.BundleBudgetTests  on c06ceddba: FAIL
+    FAIL JE.Tests.BundleBudgetTests.ServedBundleIsWithinTheCheckedInBudget : bundle.js is 2,773,496 bytes raw, over the 2,772,818 budget in client/bundle-budget.json. Make it smaller, or raise the budget in a new history entry with a reason.
+    PASS JE.Tests.BundleBudgetTests.BudgetOnlyRisesWithADocumentedReason
+2026-11-26 02:12:24  JE.Tests.PackedResourcesTests.WhatThePluginAssemblyEmbedsIsWithinTheCheckedInSizeBudget  on c06ceddba: FAIL
+    FAIL JE.Tests.PackedResourcesTests.WhatThePluginAssemblyEmbedsIsWithinTheCheckedInSizeBudget : Jellyfin.Plugin.JellyfinEnhanced.dll embeds 12,487,193 bytes, over the 12,459,350 budget in client/assembly-budget.json. Embed less (or pack it), or raise the budget in a new history entry with a reas
+2026-11-26 02:12:51  JE.Tests.BundleBudgetTests.ServedBundleIsWithinTheCheckedInBudget  on c06ceddba+dirty@b6d7470a: FAIL
+    FAIL JE.Tests.BundleBudgetTests.ServedBundleIsWithinTheCheckedInBudget : bundle.js is 764,908 bytes gzip-9, over the 1 budget in client/bundle-budget.json. Make it smaller, or raise the budget in a new history entry with a reason.
+2026-11-26 02:13:27  JE.Tests.BundleBudgetTests  on c06ceddba+dirty@55e06446: PASS
+    PASS JE.Tests.BundleBudgetTests.BudgetOnlyRisesWithADocumentedReason
+    PASS JE.Tests.BundleBudgetTests.ServedBundleIsWithinTheCheckedInBudget
+2026-11-26 02:13:44  JE.Tests.PackedResourcesTests  on c06ceddba+dirty@55e06446: PASS
+    PASS JE.Tests.PackedResourcesTests.OnlyPackedResourcesAsksTheAssemblyForAResource
+    PASS JE.Tests.PackedResourcesTests.EveryClientFileReadsBackByteForByteUnderItsOwnResourceName
+    PASS JE.Tests.PackedResourcesTests.ThePackedLocalesAreWhatTheServerSideCaptionsAreReadFrom
+    PASS JE.Tests.PackedResourcesTests.ScriptsMapsTwinsAndLocalesArePackedAndTheEnumeratedFilesAreNot
+    PASS JE.Tests.PackedResourcesTests.WhatThePluginAssemblyEmbedsIsWithinTheCheckedInSizeBudget
+2026-11-26 02:15:17  JE.Tests.Architecture  on 371b65003+dirty@d0907b92: PASS
+    PASS JE.Tests.Architecture.ServicesDoNotReadUserTests.NonControllerTypesDoNotReadControllerUser
+    PASS JE.Tests.Architecture.ServiceFactorySnapshotTests.SeerrClientKeepsRedirectsAndCookiesOff
+    PASS JE.Tests.Architecture.FolderNamespaceTests.LayerFilesDeclareTheirFolderNamespace
+    PASS JE.Tests.Architecture.FeatureBoundaryTests.SharedAndInfrastructureFeatureReferencesDoNotGrow
+    PASS JE.Tests.Architecture.AuthReadClosureSnapshotTests.TransitiveAuthReadsPerRouteMatchRestructureBase
+    PASS JE.Tests.Architecture.AuthHelperCallSnapshotTests.EveryRoutedActionIsCounted
+    PASS JE.Tests.Architecture.ControllerActivationTests.EveryControllerResolvesFromThePluginServiceCollection
+    PASS JE.Tests.Architecture.RouteAuthSnapshotTests.SnapshotHasTheStepOneShape
+    PASS JE.Tests.Architecture.FolderNamespaceTests.RetiredFoldersStayEmpty
+    PASS JE.Tests.Architecture.AuthHelperCallSnapshotTests.AuthHelperCallsPerActionMatchTheSnapshot
+    PASS JE.Tests.Architecture.FileSizeTests.AllowListOnlyNamesFeatureOrSharedFiles
+    PASS JE.Tests.Architecture.ServiceFactorySnapshotTests.FactoryRegistrationsAndHttpClientsMatchRestructureBase
+    PASS JE.Tests.Architecture.FeatureMapParityTests.BackendTestFoldersMatchTheMap
+    PASS JE.Tests.Architecture.FeatureBoundaryTests.FeatureReferencesStayInsideTheAllowList
+    PASS JE.Tests.Architecture.ServiceRegistrationSnapshotTests.RegistrationsPerTypeOrderAndMvcFiltersMatchTheSnapshot
+    PASS JE.Tests.Architecture.AuthReadClosureSnapshotTests.RoutesMatchGateA
+    PASS JE.Tests.Architecture.FeatureMapParityTests.BackendFoldersMatchTheMap
+    PASS JE.Tests.Architecture.FileSizeTests.FilesStayUnderTheSizeLimits
+    PASS JE.Tests.Architecture.FolderNamespaceTests.ExemptFilesDeclareOnlyScheduledTasks
+    PASS JE.Tests.Architecture.ServiceRegistrationSnapshotTests.OrderSensitiveRegistrationsKeepTheirOrder
+    PASS JE.Tests.Architecture.FolderNamespaceTests.FeatureFilesDeclareTheirFolderNamespace
+    PASS JE.Tests.Architecture.FeatureMapParityTests.EachFeatureHasAtMostOneControllerAndItIsTheMappedOne
+    PASS JE.Tests.Architecture.FeatureBoundaryTests.SourceFoldersPlaceEveryPluginType
+    PASS JE.Tests.Architecture.RouteAuthSnapshotTests.RouteVerbAuthAndBindingMatchTheSnapshot
